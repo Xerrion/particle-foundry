@@ -32,6 +32,7 @@ export type ControlsSandbox = Pick<
 	| "setMaterial"
 	| "setViewMode"
 	| "setWavesEnabled"
+	| "setBoundariesEnabled"
 >;
 
 export function bindControls(
@@ -58,6 +59,7 @@ export function bindControls(
 	const probePressure = requiredElement<HTMLElement>("#probePressure");
 	const probeVelocity = requiredElement<HTMLElement>("#probeVelocity");
 	const waveToggle = requiredElement<HTMLInputElement>("#waveToggle");
+	const boundaryToggle = requiredElement<HTMLInputElement>("#boundaryToggle");
 	const sidebar = requiredElement<HTMLElement>(".tool-panel");
 	requiredElement<HTMLButtonElement>("#showInteractionGuide").addEventListener("click", () => {
 		const details = requiredElement<HTMLDetailsElement>(".selection-details");
@@ -279,6 +281,14 @@ export function bindControls(
 		liveRegion.textContent = waveToggle.checked
 			? "Surface shimmer enabled"
 			: "Surface shimmer disabled";
+	});
+
+	boundaryToggle.addEventListener("change", () => {
+		sandbox.setBoundariesEnabled(boundaryToggle.checked);
+		canvasFrame.classList.toggle("boundaryless", !boundaryToggle.checked);
+		liveRegion.textContent = boundaryToggle.checked
+			? "World boundaries enabled"
+			: "Top and sides opened; pressure can escape";
 	});
 
 	clearButton.addEventListener("click", () => {

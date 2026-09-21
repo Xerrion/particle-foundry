@@ -238,6 +238,11 @@ canvas:focus-visible {
   background: #050b10;
 }
 
+.canvas-frame.boundaryless:not(:fullscreen) {
+  border-color: transparent;
+  box-shadow: none;
+}
+
 .canvas-frame:fullscreen canvas {
   object-fit: contain;
 }

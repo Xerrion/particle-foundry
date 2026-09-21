@@ -57,6 +57,7 @@ describe("browser control flow", () => {
 			clears: 0,
 			seeds: 0,
 			waves: [] as boolean[],
+			boundaries: [] as boolean[],
 			viewModes: [] as string[],
 		};
 		const sandbox: Sandbox = {
@@ -99,6 +100,7 @@ describe("browser control flow", () => {
 			setCellDynamic: () => {},
 			setMaterial: (material) => calls.materials.push(material),
 			setWavesEnabled: (enabled) => calls.waves.push(enabled),
+			setBoundariesEnabled: (enabled) => calls.boundaries.push(enabled),
 			setTemperatureMapEnabled: (enabled) =>
 				calls.viewModes.push(enabled ? "temperature" : "materials"),
 			setViewMode: (mode) => calls.viewModes.push(mode),
@@ -195,6 +197,13 @@ describe("browser control flow", () => {
 		waves.checked = false;
 		waves.dispatchEvent(domEvent(new window.Event("change")));
 		expect(calls.waves.at(-1)).toBe(false);
+		const boundaries = element<HTMLInputElement>("#boundaryToggle");
+		boundaries.checked = false;
+		boundaries.dispatchEvent(domEvent(new window.Event("change")));
+		expect(calls.boundaries.at(-1)).toBe(false);
+		boundaries.checked = true;
+		boundaries.dispatchEvent(domEvent(new window.Event("change")));
+		expect(calls.boundaries.at(-1)).toBe(true);
 
 		element<HTMLButtonElement>("#clearButton").click();
 		element<HTMLButtonElement>("#resetButton").click();

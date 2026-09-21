@@ -44,6 +44,10 @@ GitHub Actions kører lint, checks og build ved push og pull requests.
   sporet energi og største gastryk.
 - **Surface shimmer** giver lysvariation på faktiske frie væskeoverflader. Effekten
   tegner ikke ekstra væske eller huller og skærer ikke gennem olie/vand-grænsen.
+- **World boundaries** under **Settings** kan slås fra for at åbne toppen og
+  siderne, så gas, varm luft og overtryk kan forlade verden. Startscenens gulv
+  bliver stående, også efter **Reset scene**. Verden er stadig et endeligt gitter;
+  stof og energi, som forlader det, bogføres som eksterne udvekslinger.
 - **Temperature map** (`T`) lægger en temperaturfarve oven på scenen, inklusive
   luft, med en fast, ikke-lineær skala fra -200 til 3.000 °C. Ved 22 °C er
   overlejringen usynlig; stærkere afvigelser giver tydeligere farve, mens
