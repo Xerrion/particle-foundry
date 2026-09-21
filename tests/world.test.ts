@@ -88,7 +88,7 @@ describe("world initialization and ownership", () => {
 			expect(() => world.setCell(index, WATER)).toThrow(RangeError);
 			expect(snapshot(world)).toEqual(before);
 		}
-		for (const material of [-1, MOLTEN_METAL + 1, 1.5, NaN, Infinity, HEATER, COOLER, ERASER]) {
+		for (const material of [-1, 16, 1.5, NaN, Infinity, HEATER, COOLER, ERASER]) {
 			expect(() => world.setCell(4, material)).toThrow(RangeError);
 			expect(snapshot(world)).toEqual(before);
 		}

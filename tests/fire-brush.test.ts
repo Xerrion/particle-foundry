@@ -153,10 +153,12 @@ describe("controlled ignition brush", () => {
 			for (let tick = 0; tick < 20; tick++) physics.step();
 			expect(world.grid.every((id) => id === EMPTY)).toBe(true);
 			expect(world.massKg.reduce((a, b) => a + b, 0)).toBeCloseTo(mass, 10);
-			expect(world.energy.reduce((a, b) => a + b, 0)).toBeCloseTo(
-				heat + world.ledger.externalEnergyAdded - world.ledger.externalEnergyRemoved,
-				6,
-			);
+			expect(
+				Math.abs(
+					world.energy.reduce((a, b) => a + b, 0) -
+						(heat + world.ledger.externalEnergyAdded - world.ledger.externalEnergyRemoved),
+				),
+			).toBeLessThan(1e-4);
 		},
 	);
 

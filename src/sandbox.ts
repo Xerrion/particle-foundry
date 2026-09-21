@@ -48,7 +48,7 @@ export function createSandbox(width: number, height: number, options: WorldOptio
 	const physics = createPhysics(world);
 	const waves = createVisualWaves(world);
 	const renderer = createRenderer(world, waves);
-	const brush = createBrush(world, waves.disturb);
+	const brush = createBrush(world, waves.disturb, physics.blast);
 
 	function clear(): void {
 		world.clear();

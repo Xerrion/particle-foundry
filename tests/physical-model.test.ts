@@ -2,8 +2,15 @@ import { describe, expect, test } from "bun:test";
 import { compareConservation, measureWorld } from "../src/diagnostics";
 import { createFluidSolver } from "../src/fluid-solver";
 import { createGasDynamics } from "../src/gas-dynamics";
+import { materialsById } from "../src/material-physics";
 import { EMPTY, LAVA, STEAM, STONE, WATER } from "../src/materials";
-import { AMBIENT_PRESSURE_PA, CELL_VOLUME_M3 } from "../src/physical-scale";
+import {
+	AMBIENT_PRESSURE_PA,
+	CELL_VOLUME_M3,
+	FIXED_TIME_STEP_SECONDS,
+	GRAVITY_M_PER_S2,
+	IDEAL_GAS_CONSTANT,
+} from "../src/physical-scale";
 import { createSeededRandom } from "../src/random";
 import { createSolidMechanics } from "../src/solid-mechanics";
 import { createWorld } from "../src/world";
@@ -53,6 +60,20 @@ describe("physical state ownership and diagnostics", () => {
 			energyWithinTolerance: true,
 		});
 	});
+
+	test("diagnostics detect actual mass and energy changes", () => {
+		const world = createWorld(2, 1);
+		const before = measureWorld(world);
+		world.setCell(0, WATER);
+		world.addExternalEnergy(1, 100);
+		const after = measureWorld(world);
+		const report = compareConservation(before, after);
+		expect(report.massDriftKg).toBeCloseTo(world.ledger.massAddedKg, 12);
+		expect(report.energyDriftKj).toBeGreaterThan(0);
+		expect(report.massWithinTolerance).toBe(false);
+		expect(report.energyWithinTolerance).toBe(false);
+		expect(world.ledger.externalEnergyAdded).toBe(100);
+	});
 });
 
 describe("coupled solvers", () => {
@@ -99,6 +120,40 @@ describe("coupled solvers", () => {
 		expect(world.pressurePa[0]).toBeGreaterThan(coldPressure);
 	});
 
+	test("enclosed steam follows the ideal gas equation for mass, volume and temperature", () => {
+		const world = createWorld(1, 1);
+		world.setCell(0, STEAM);
+		const gas = createGasDynamics(world);
+		const expectedPressure = () =>
+			((world.massKg[0] / materialsById[STEAM].molarMassKgPerMol) *
+				IDEAL_GAS_CONSTANT *
+				(world.temperatureAt(0) + 273.15)) /
+			world.volumeM3[0];
+		expect(world.pressurePa[0]).toBeCloseTo(expectedPressure(), 8);
+		const initialPressure = world.pressurePa[0];
+		world.massKg[0] *= 2;
+		gas.derivePressure();
+		expect(world.pressurePa[0]).toBeCloseTo(2 * initialPressure, 8);
+		world.volumeM3[0] *= 2;
+		gas.derivePressure();
+		expect(world.pressurePa[0]).toBeCloseTo(initialPressure, 8);
+	});
+
+	test("pressure work exchanges stored energy for motion without creating energy", () => {
+		const world = createWorld(40, 1);
+		for (let index = 0; index < world.size; index += 2) {
+			world.setCell(index, STEAM);
+			world.volumeM3[index] = 1e-8;
+		}
+		const before = measureWorld(world);
+		createGasDynamics(world).step();
+		const after = measureWorld(world);
+		const report = compareConservation(before, after);
+		expect(after.kineticEnergyKj).toBeGreaterThan(before.kineticEnergyKj);
+		expect(after.thermalEnergy).toBeLessThan(before.thermalEnergy);
+		expect(Math.abs(report.energyDriftKj)).toBeLessThan(1e-10);
+	});
+
 	test("liquid pressure increases with depth and a horizontal gradient drives velocity", () => {
 		const world = createWorld(2, 2);
 		for (const index of [0, 2, 3]) world.setCell(index, WATER);
@@ -134,5 +189,20 @@ describe("coupled solvers", () => {
 		solver.step();
 		expect(world.grid[1]).toBe(STONE);
 		expect(world.velocityY[1]).toBe(0);
+	});
+
+	test("a dynamic solid converts its impact kinetic energy to heat", () => {
+		const world = createWorld(1, 2);
+		world.setCell(0, STONE);
+		world.setCell(1, STONE);
+		world.setDynamic(0, true);
+		world.velocityY[0] = 3;
+		const initialHeat = world.energy[0];
+		const impactSpeed = 3 + GRAVITY_M_PER_S2 * FIXED_TIME_STEP_SECONDS;
+		const expectedHeat = 0.5 * world.massKg[0] * impactSpeed ** 2;
+		createSolidMechanics(world).step();
+		expect(world.grid[0]).toBe(STONE);
+		expect(world.velocityY[0]).toBe(0);
+		expect(world.energy[0] - initialHeat).toBeCloseTo(expectedHeat, 10);
 	});
 });

@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import { Window } from "happy-dom";
 import { bindControls } from "../src/controls";
-import { WATER } from "../src/materials";
+import { BLAST, GUNPOWDER, WATER } from "../src/materials";
 import type { Sandbox } from "../src/sandbox";
 
 const window = new Window({ url: "http://localhost/" });
@@ -117,6 +117,10 @@ describe("browser control flow", () => {
 		const controls = bindControls(canvas, sandbox);
 		element<HTMLButtonElement>("[data-material='water']").click();
 		expect(calls.materials.at(-1)).toBe(WATER);
+		element<HTMLButtonElement>("[data-material='gunpowder']").click();
+		expect(calls.materials.at(-1)).toBe(GUNPOWDER);
+		window.document.dispatchEvent(new window.KeyboardEvent("keydown", { code: "KeyB" }));
+		expect(calls.materials.at(-1)).toBe(BLAST);
 
 		element<HTMLButtonElement>("#pauseButton").click();
 		expect(controls.isPaused()).toBe(true);

@@ -92,8 +92,18 @@ export function createGasDynamics(world: World) {
 					? 0.25
 					: 0;
 			if (coupling === 0) continue;
-			world.velocityX[index] += pressureDeltaX[index] * coupling;
-			world.velocityY[index] += pressureDeltaY[index] * coupling;
+			const deltaX = pressureDeltaX[index] * coupling;
+			const deltaY = pressureDeltaY[index] * coupling;
+			if (deltaX === 0 && deltaY === 0) continue;
+			const vx = world.velocityX[index];
+			const vy = world.velocityY[index];
+			const nextX = vx + deltaX;
+			const nextY = vy + deltaY;
+			const kineticChangeJ =
+				0.5 * world.massKg[index] * (nextX * nextX + nextY * nextY - vx * vx - vy * vy);
+			world.energy[index] -= kineticChangeJ;
+			world.velocityX[index] = nextX;
+			world.velocityY[index] = nextY;
 		}
 	}
 

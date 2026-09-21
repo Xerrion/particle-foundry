@@ -54,6 +54,9 @@ målinger af parcelvolumen og ejer ikke væske.
   isoleret. Et ændret tidskridt og en ændret geometri gives eksplicit til solveren.
 - Kollisionstab bliver termisk energi. Kemisk energi reduceres, når forbrænding frigiver
   samme energimængde som varme.
+- Trykimpulser omsætter ændringen i kinetisk energi til en modsat ændring i lagret
+  termisk energi. En eksplosion betaler varme og radial bevægelse fra sit kemiske
+  energilager; Blast-værktøjet registrerer i stedet en ekstern energikilde.
 - Pensler er åbne kilder eller tab. De registreres i `world.ledger`.
 - Røg, der forlader modellen ved udløb, registreres som massetab. Verdens kant er åben
   atmosfære for ilt; indvendige, lukkede hulrum har kun deres lagrede ilt.
@@ -140,10 +143,20 @@ materialekataloget. Dette bryder gitterlåste striber, men er ikke en turbulenss
 Reaktionernes markering af ny gas nulstilles før transport, så nye flammer og røg kan
 stige straks uden at reagere to gange i samme trin.
 
+Gunpowder detonerer ved sin temperaturtærskel eller ved direkte flammekontakt.
+Detonation omdanner højst den lagrede kemiske energi til varme og radiale impulser.
+En kort flammefront kan antænde naboceller; en forankret, sammenhængende væg
+stopper fronten. Ny eksplosionsgas starter med højst én celles volumen, så dens
+første tryk ikke sænkes kunstigt af øjeblikkelig fri ekspansion. Modellen løser
+ikke chokbølger, fragmentering eller gasprodukternes kemi, og blastens rækkevidde
+og impulshastighed er kalibrerede spilparametre.
+
 ## Reproducerbarhed og referenceforsøg
 
 Fysisk tilfældighed og kosmetisk farvevariation har separate seedede strømme. Samme seed
 og samme inputsekvens giver samme forløb. Referenceforsøgene ligger i
 `tests/physical-model.test.ts`, `tests/reactions.test.ts`, `tests/thermal.test.ts`,
-`tests/hydrostatics.test.ts` og `tests/physics.test.ts`. De dækker regnskaber, geometri,
-viskositetsrækkefølge, idealgastryk, kollision, forbrænding, diffusion og forbundne kar.
+`tests/hydrostatics.test.ts`, `tests/physics.test.ts` og `tests/explosions.test.ts`.
+De dækker regnskaber, geometri, viskositetsrækkefølge, idealgastryk, kollision,
+forbrænding, eksplosioner, diffusion og forbundne kar. En bestået suite viser, at
+modellen følger disse kontrollerede regler; den beviser ikke eksperimentel nøjagtighed.

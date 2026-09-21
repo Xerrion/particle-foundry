@@ -60,7 +60,7 @@ export interface World {
 	setCell(index: number, material: number): void;
 	/** Marks a solid parcel as movable; terrain remains anchored by default. */
 	setDynamic(index: number, movable: boolean): void;
-	/** Removes matter through an open-system sink while retaining cell thermal energy. */
+	/** Replaces matter with ambient air, recording both the outgoing and incoming mass. */
 	removeMatter(index: number): void;
 	/** Records energy delivered by a brush or another explicit external source. */
 	addExternalEnergy(index: number, delta: number): void;
@@ -187,6 +187,7 @@ export function createWorld(width: number, height: number, options: WorldOptions
 		ledger.massRemovedKg += massKg[index];
 		resetCellPhysics(index, EMPTY);
 		changeMaterial(index, EMPTY);
+		ledger.massAddedKg += massKg[index];
 	}
 
 	function addExternalEnergy(index: number, delta: number): void {

@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test";
+import { measureWorld } from "../src/diagnostics";
 import { EMPTY, FIRE, SMOKE, STONE, WOOD } from "../src/materials";
 import { createReactions } from "../src/reactions";
 import { energyAtTemperature } from "../src/thermal";
@@ -79,9 +80,20 @@ describe("bounded combustion", () => {
 		world.setCell(0, SMOKE);
 		world.lifetime[0] = 1;
 		const energy = world.energy[0];
+		const before = measureWorld(world);
+		const ledgerBefore = { ...world.ledger };
 		createReactions(world).update(0);
+		const after = measureWorld(world);
 		expect(world.grid[0]).toBe(EMPTY);
 		expect(world.energy[0]).toBe(energy);
 		expect(world.ledger.massRemovedKg).toBeGreaterThan(0);
+		expect(
+			world.ledger.massAddedKg -
+				ledgerBefore.massAddedKg -
+				(world.ledger.massRemovedKg - ledgerBefore.massRemovedKg),
+		).toBeCloseTo(
+			after.matterMassKg + after.gasMassKg - before.matterMassKg - before.gasMassKg,
+			12,
+		);
 	});
 });

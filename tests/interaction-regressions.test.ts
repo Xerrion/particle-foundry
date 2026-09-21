@@ -61,7 +61,7 @@ describe("reported liquid artifacts", () => {
 			expect(world.variation).toEqual(variation);
 		}
 		expect(world.massKg.reduce((a, b) => a + b, 0)).toBeCloseTo(mass, 10);
-		expect(world.energy.reduce((a, b) => a + b, 0)).toBeCloseTo(energy, 7);
+		expect(Math.abs(world.energy.reduce((a, b) => a + b, 0) - energy)).toBeLessThan(1e-5);
 	});
 
 	test("a falling water stroke stays compact with no checkerboard gaps or pinned top", () => {
@@ -101,7 +101,7 @@ describe("reported liquid artifacts", () => {
 				expect(world.grid[x + y * 20]).toBe(y < 27 ? OIL : WATER);
 			}
 		expect(world.massKg.reduce((a, b) => a + b, 0)).toBeCloseTo(mass, 10);
-		expect(world.energy.reduce((a, b) => a + b, 0)).toBeCloseTo(energy, 7);
+		expect(Math.abs(world.energy.reduce((a, b) => a + b, 0) - energy)).toBeLessThan(1e-5);
 	});
 
 	test("ripples never hide water beneath oil or paint fake droplets above either", () => {

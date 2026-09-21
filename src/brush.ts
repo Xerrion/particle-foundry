@@ -1,4 +1,6 @@
+import { createExplosions } from "./explosions";
 import {
+	BLAST,
 	COOLER,
 	combustionProfile,
 	EMPTY,
@@ -37,6 +39,7 @@ const waveMaterials: readonly number[] = WAVE_MATERIALS;
 export function createBrush(
 	world: World,
 	onDisturb: (x: number, material: number, strength: number, radius: number) => void,
+	onBlast: (x: number, y: number, radius: number) => void = createExplosions(world).blast,
 ): Brush {
 	let selected = SAND;
 	let brushSize = 4;
@@ -102,6 +105,10 @@ export function createBrush(
 	function paintCircle(cx: number, cy: number): void {
 		requireCoordinates(cx, cy);
 		if (!world.inBounds(cx, cy)) return;
+		if (selected === BLAST) {
+			onBlast(cx, cy, brushSize);
+			return;
+		}
 		const radiusSquared = brushSize * brushSize;
 		const displacedFluids = new Set<number>();
 		for (let dy = -brushSize; dy <= brushSize; dy += 1) {
@@ -145,7 +152,13 @@ export function createBrush(
 	function setMaterial(material: number): void {
 		if (
 			!Number.isInteger(material) ||
-			!(isMatterId(material) || material === HEATER || material === COOLER || material === ERASER)
+			!(
+				isMatterId(material) ||
+				material === BLAST ||
+				material === HEATER ||
+				material === COOLER ||
+				material === ERASER
+			)
 		) {
 			throw new RangeError(`Unknown material or tool: ${material}`);
 		}

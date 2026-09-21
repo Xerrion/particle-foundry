@@ -99,6 +99,15 @@ export function validateMaterialCatalogue(
 				Number.isFinite(material.ignitionBrush.temperatureC) &&
 				probability(material.ignitionBrush.fringeChance), `${label}: invalid ignition brush`);
 		}
+		if (material.explosive) {
+			const profile = material.explosive;
+			require(material.chemicalEnergyKjPerKg > 0 &&
+				Number.isFinite(profile.triggerTemperatureC) &&
+				Number.isInteger(profile.radiusCells) &&
+				profile.radiusCells > 0 &&
+				profile.radiusCells <= 12 &&
+				positive(profile.impulseSpeedMPerS), `${label}: invalid explosive profile`);
+		}
 		if (material.transforms) {
 			require(Object.hasOwn(
 				definitions,

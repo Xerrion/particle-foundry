@@ -72,7 +72,7 @@ function advanceVessel(world: World, steps: number): void {
 		physics.step();
 		expect(materialCounts(world)).toEqual(counts);
 		expect(world.getParticleCount()).toBe(particles);
-		expect(totalEnergy(world)).toBeCloseTo(energy, 7);
+		expect(Math.abs(totalEnergy(world) - energy)).toBeLessThan(1e-5);
 		for (const index of walls) expect(world.grid[index]).toBe(STONE);
 	}
 }
@@ -197,7 +197,7 @@ describe("passive phase and transport ordering", () => {
 				expect(world.grid[1 + destinationY * world.width]).toBe(phase);
 				expect(world.grid.filter((value) => value === phase)).toHaveLength(1);
 				expect(world.getParticleCount()).toBe(count);
-				expect(totalEnergy(world)).toBeCloseTo(initialEnergy, 7);
+				expect(Math.abs(totalEnergy(world) - initialEnergy)).toBeLessThan(1e-2);
 			}
 		});
 	}

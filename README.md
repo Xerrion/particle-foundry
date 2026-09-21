@@ -30,8 +30,8 @@ GitHub Actions kører lint, checks og build ved push og pull requests.
 ## Betjening
 
 - Vælg et materiale og hold musen/fingeren stille for at male kontinuerligt, eller træk
-  en streg. `1`–`9` vælger de mærkede
-  materialer, `0` viskelæder, `H` varme og `C` kulde.
+  en streg. `1`–`9` vælger de mærkede materialer, `0` viskelæder, `H` varme,
+  `C` kulde og `B` **Blast**.
 - `Space` eller pauseknappen stopper og starter simulationen. Hastighedsvælgeren
   ændrer antallet af faste 1/60-sekunders fysiktrin.
 - Varme og kulde ændrer termisk entalpi. Værktøjerne er registrerede eksterne
@@ -55,6 +55,11 @@ GitHub Actions kører lint, checks og build ved push og pull requests.
   gløder og afgiver flammer, mens den begrænsede brændselsenergi bruges. Vand slukker.
   I tom luft giver penslen kun en lille, kortlivet antændelsesflamme uden røg;
   den fastholdte pensel genstarter ikke eksisterende flammers levetid.
+- Mal **Gunpowder** og antænd det med ild, varme eller **Blast**. Det lagrede
+  kemiske energilager bliver til varme, flammer, et kortvarigt overtryk og udadgående
+  hastighed. Blast-værktøjet tilfører registreret ekstern energi; forankrede vægge
+  afskærmer effekten. Dette er en kalibreret sandkasseregel, ikke en præcis
+  sprængningsmodel.
 - **Reset scene** genskaber startscenen med samme seed. **Clear all** nulstiller
   verden til luft ved 22 °C og nulstiller de seedede tilfældighedsstrømme.
 
@@ -85,6 +90,11 @@ vandrette hastighed påvirker dens foretrukne strømningsretning. Gastransport f
 normalpunktet. `reactions.ts`
 bruger et seedet forløb, lagret brændselsenergi og lokal ilt; røg, der forlader
 modellen, registreres som et åbent massetab.
+
+`explosions.ts` omsætter et gunpowder-parcels begrænsede kemiske energi til varme og
+bevægelse. Blast-værktøjet fører sin energi som ekstern kilde i regnskabet. Den første
+udvidelsesfase dækker lokale eksplosioner; [funktionsplanen](ROADMAP.md) beskriver
+elektricitet, syrer og de 118 kemiske grundstoffer i efterfølgende faser.
 
 Ild og damp følger forskellige gasprofiler. Ild flimrer, stiger hurtigere end damp,
 overfører varme konservativt til brændbart nabomateriale og fortsætter kun med at

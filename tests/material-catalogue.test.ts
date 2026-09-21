@@ -166,12 +166,12 @@ describe("material catalogue contracts", () => {
 	});
 
 	test("checked lookups narrow actual IDs and picker membership stays unchanged", () => {
-		for (const id of [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]) {
+		for (const id of [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]) {
 			expect(isMatterId(id)).toBe(true);
 			if (isMatterId(id)) expect(physicalProperties(id)).toBe(materialDefinitions[id]);
 			expect(materialsById[id]).toBe(physicalProperties(id));
 		}
-		for (const id of [-1, 1.5, NaN, Infinity, 15, 253, 254, 255]) {
+		for (const id of [-1, 1.5, NaN, Infinity, 16, 252, 253, 254, 255]) {
 			expect(isMatterId(id)).toBe(false);
 			expect(() => physicalProperties(id)).toThrow(RangeError);
 		}
@@ -188,6 +188,8 @@ describe("material catalogue contracts", () => {
 			ice: 12,
 			glass: 13,
 			moltenMetal: 14,
+			gunpowder: 15,
+			blast: 252,
 			eraser: 255,
 			heat: 254,
 			cool: 253,

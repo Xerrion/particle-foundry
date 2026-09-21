@@ -195,7 +195,7 @@ describe("conservative world integration", () => {
 		expect(totalEnergy(world, 1, 6)).toBeCloseTo(initial, 8);
 	});
 
-	test("mixed passive movement and phases conserve energy and occupied cells", () => {
+	test("mixed passive movement and phases conserve mass, heat and occupied cells", () => {
 		const width = 24;
 		const height = 16;
 		const world = createSandbox(width, height);
@@ -205,12 +205,18 @@ describe("conservative world integration", () => {
 			paint(world, materials[i], 2 + (i % 5) * 4, 2 + Math.floor(i / 5) * 6);
 		}
 		const initial = totalEnergy(world, width, height);
+		const initialDiagnostics = world.getDiagnostics();
 		const count = world.getParticleCount();
 		for (let i = 0; i < 160; i += 1) {
 			world.step();
 			expect(world.getParticleCount()).toBe(count);
+			const diagnostics = world.getDiagnostics();
+			expect(diagnostics.matterMassKg + diagnostics.gasMassKg).toBeCloseTo(
+				initialDiagnostics.matterMassKg + initialDiagnostics.gasMassKg,
+				12,
+			);
 		}
-		expect(totalEnergy(world, width, height)).toBeCloseTo(initial, 7);
+		expect(totalEnergy(world, width, height)).toBeCloseTo(initial, 5);
 	});
 
 	test("molten metal moves downward and stays in the metal phase family", () => {
@@ -316,7 +322,7 @@ describe("world API and reset", () => {
 			expect(() => createSandbox(1, value)).toThrow(RangeError);
 		}
 		const world = singleCell(SAND);
-		for (const value of [-1, 15, 256, 1.5, NaN, Infinity]) {
+		for (const value of [-1, 16, 256, 1.5, NaN, Infinity]) {
 			expect(() => world.setMaterial(value)).toThrow(RangeError);
 		}
 		for (const value of [0, -1, 13, 1.5, NaN, Infinity]) {

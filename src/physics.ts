@@ -1,3 +1,4 @@
+import { createExplosions } from "./explosions";
 import { createFluidSolver } from "./fluid-solver";
 import { createGasDynamics } from "./gas-dynamics";
 import { createMotion, isGas } from "./motion";
@@ -12,6 +13,7 @@ export function createPhysics(world: World) {
 	const boiling = createBoiling(world);
 	const motion = createMotion(world);
 	const reactions = createReactions(world);
+	const explosions = createExplosions(world);
 	const fluids = createFluidSolver(world);
 	const gas = createGasDynamics(world);
 	const solids = createSolidMechanics(world);
@@ -23,6 +25,7 @@ export function createPhysics(world: World) {
 		boiling.step(tick);
 		world.moved.fill(0);
 		gas.step();
+		explosions.step();
 		reactions.beginStep();
 		// Resolve contact before either the flame or the fuel can move away.
 		for (let index = 0; index < world.size; index += 1) reactions.update(index);
@@ -55,6 +58,7 @@ export function createPhysics(world: World) {
 	}
 	return {
 		step,
+		blast: explosions.blast,
 		refreshPressure: gas.derivePressure,
 		reset: (): void => {
 			tick = 0;

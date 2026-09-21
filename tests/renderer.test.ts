@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { pressureColor, velocityColor } from "../src/field-map";
 import {
 	EMPTY,
+	GUNPOWDER,
 	LAVA,
 	METAL,
 	MOLTEN_METAL,
@@ -210,7 +211,7 @@ describe("headless world renderer", () => {
 	});
 
 	test("preserves all palettes, variation indexing and opaque background noise without NaNs", () => {
-		const world = createWorld(MOLTEN_METAL + 1, 4);
+		const world = createWorld(GUNPOWDER + 1, 4);
 		for (let i = 0; i < world.size; i += 1) {
 			const material = i % world.width;
 			world.setCell(i, material);

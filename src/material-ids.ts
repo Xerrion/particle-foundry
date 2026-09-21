@@ -1,10 +1,12 @@
 export type { MaterialId, ToolId } from "./material-definitions";
 export {
+	BLAST,
 	COOLER,
 	EMPTY,
 	ERASER,
 	FIRE,
 	GLASS,
+	GUNPOWDER,
 	HEATER,
 	ICE,
 	isMatterId,

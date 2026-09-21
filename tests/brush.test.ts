@@ -5,6 +5,7 @@ import {
 	EMPTY,
 	ERASER,
 	FIRE,
+	GUNPOWDER,
 	HEATER,
 	ICE,
 	LAVA,
@@ -176,7 +177,7 @@ describe("brush geometry and input boundary", (): void => {
 			expect((): void => brush.setSize(size)).toThrow(RangeError);
 			expect(brush.getSize()).toBe(1);
 		}
-		for (const material of [-1, 15, 252, 256, 1.5, 253.5, NaN, Infinity, -Infinity]) {
+		for (const material of [-1, 16, 251, 256, 1.5, 253.5, NaN, Infinity, -Infinity]) {
 			expect((): void => brush.setMaterial(material)).toThrow(RangeError);
 		}
 		expect(snapshot(world)).toEqual(before);
@@ -191,7 +192,7 @@ describe("brush geometry and input boundary", (): void => {
 describe("brush energy and matter edits", (): void => {
 	test("accepts every matter ID; ignition preserves hotter air while painting initializes energy", (): void => {
 		const { world, brush } = createFixture(1, 1);
-		for (let material = EMPTY; material <= MOLTEN_METAL; material += 1) {
+		for (let material = EMPTY; material <= GUNPOWDER; material += 1) {
 			world.setCell(0, material === EMPTY ? SAND : EMPTY);
 			world.energy[0] = 12345;
 			brush.setMaterial(material);

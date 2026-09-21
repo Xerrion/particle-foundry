@@ -28,6 +28,8 @@ export const STEAM = 11;
 export const ICE = 12;
 export const GLASS = 13;
 export const MOLTEN_METAL = 14;
+export const GUNPOWDER = 15;
+export const BLAST = 252;
 export const COOLER = 253;
 export const HEATER = 254;
 export const ERASER = 255;
@@ -104,6 +106,12 @@ export interface MaterialDefinition {
 		readonly temperatureC: number;
 		readonly lifetimeTicks: readonly [number, number];
 		readonly fringeChance: number;
+	};
+	/** Calibrated game-model detonation, funded by this parcel's chemical energy. */
+	readonly explosive?: {
+		readonly triggerTemperatureC: number;
+		readonly radiusCells: number;
+		readonly impulseSpeedMPerS: number;
 	};
 	readonly falls: boolean;
 	readonly heatGlow?: GlowProfile;
@@ -187,6 +195,7 @@ function define(
 		gasMotion: data.gasMotion,
 		lifetimeTicks: data.lifetimeTicks,
 		ignitionBrush: data.ignitionBrush,
+		explosive: data.explosive,
 	});
 }
 
@@ -499,11 +508,41 @@ export const materialDefinitions = Object.freeze({
 		flow: { interval: 2, spread: 2 },
 		heatGlow: metalGlow,
 	}),
+	[GUNPOWDER]: define({
+		id: GUNPOWDER,
+		key: "gunpowder",
+		name: "Gunpowder",
+		palette: [
+			[72, 76, 71],
+			[58, 63, 59],
+			[90, 88, 77],
+			[49, 55, 53],
+		],
+		heatTransferCoefficient: 0.12,
+		cellHeatCapacity: 0.8,
+		displacementDensity: 1.7,
+		densityKgPerM3: 1700,
+		viscosityPas: 0,
+		state: "granular",
+		chemicalEnergyKjPerKg: 3000,
+		ignitionTemperatureC: 250,
+		explosive: { triggerTemperatureC: 250, radiusCells: 4, impulseSpeedMPerS: 3 },
+	}),
 } satisfies Record<number, MaterialDefinition>);
 
 export type MaterialId = keyof typeof materialDefinitions;
 
 export const toolDefinitions = freezeData([
+	{
+		id: BLAST,
+		key: "blast",
+		name: "Blast",
+		shortcut: "B",
+		palette: [
+			[255, 219, 119],
+			[245, 91, 48],
+		],
+	},
 	{
 		id: ERASER,
 		key: "eraser",
