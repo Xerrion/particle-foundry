@@ -1,0 +1,691 @@
+{
+  "node": "v26.7.0",
+  "scope": "Current dirty working tree, bundled to CommonJS with Bun 1.3.12 and executed with Node v26.7.0. Original checks and their historical location labels are unchanged. No browser or GPU benchmark.",
+  "results": [
+    {
+      "id": "N01",
+      "title": "Uniform pressurized gas in a rigid sealed cavity remains at rest",
+      "kind": "implementation",
+      "locations": [
+        "src/gas-dynamics.ts:144-195"
+      ],
+      "passed": false,
+      "metrics": {
+        "pressurePa": [
+          114370.40064374048,
+          114370.40064374048,
+          114370.40064374048
+        ],
+        "velocityX": [
+          -0.049999999999999996,
+          0,
+          0.049999999999999996
+        ],
+        "velocityY": [
+          0,
+          0,
+          0
+        ]
+      },
+      "error": "Uniform chamber pressure creates motion next to stationary walls."
+    },
+    {
+      "id": "N02",
+      "title": "A monotone pressure gradient accelerates an interior gas cell",
+      "kind": "numerical",
+      "locations": [
+        "src/gas-dynamics.ts:155-166"
+      ],
+      "passed": false,
+      "metrics": {
+        "pressurePa": [
+          101359.33000169406,
+          101393.6600033881,
+          101427.99000508216
+        ],
+        "facePressureClipPa": 0.036120000000000006,
+        "velocityX": [
+          -0.049999999999999996,
+          0,
+          0.049999999999999996
+        ]
+      },
+      "error": "Clipping both positive face tractions to the same impulse erases a nonzero interior gradient."
+    },
+    {
+      "id": "N03",
+      "title": "Cellular liquid falling gives a consistent nonzero downward velocity",
+      "kind": "model-integration",
+      "locations": [
+        "src/motion.ts:47-51,135-159,284-288"
+      ],
+      "passed": true,
+      "metrics": {
+        "row": 1,
+        "velocityY": 0.44260156495872416,
+        "distanceMeters": 0.01
+      }
+    },
+    {
+      "id": "N04",
+      "title": "A vertical cellular swap accounts for gravitational work",
+      "kind": "model-integration",
+      "locations": [
+        "src/motion.ts:47-51",
+        "src/world.ts:264-298"
+      ],
+      "passed": true,
+      "metrics": {
+        "energyChangeJ": 0,
+        "expectedPotentialDropJ": 9.765422843400003E-05
+      }
+    },
+    {
+      "id": "N05",
+      "title": "Horizontal liquid velocity transports an unblocked supported parcel",
+      "kind": "model-integration",
+      "locations": [
+        "src/motion.ts:162-188,268-288"
+      ],
+      "passed": false,
+      "metrics": {
+        "startIndex": 9,
+        "endIndex": 9,
+        "velocityX": 1,
+        "ticks": 10
+      },
+      "error": "A liquid with horizontal velocity remains fixed on a level support, despite an open path."
+    },
+    {
+      "id": "N06",
+      "title": "Nonzero ambient-air velocity transports its temperature marker",
+      "kind": "model-integration",
+      "locations": [
+        "src/motion.ts:59-66,268-297"
+      ],
+      "passed": false,
+      "metrics": {
+        "changedEnergyCells": 0,
+        "markerTemperatureC": 60
+      },
+      "error": "Ambient air is unconditionally excluded from the only transport pass."
+    },
+    {
+      "id": "N07",
+      "title": "Hydrostatic transfer conserves the tracked mechanical/thermal budget",
+      "kind": "model-integration",
+      "locations": [
+        "src/hydrostatics.ts:50-77",
+        "src/fluid-solver.ts:25-42"
+      ],
+      "passed": true,
+      "metrics": {
+        "transfers": 1,
+        "energyChangeJ": 0,
+        "kineticChangeJ": 0.00018969120966918482,
+        "potentialChangeJ": -0.0001953084568679977,
+        "thermalChangeJ": 5.617246667810605E-06
+      }
+    },
+    {
+      "id": "N08",
+      "title": "EOS/phase iteration converges rather than flipping material identity",
+      "kind": "model-consistency",
+      "locations": [
+        "src/gas-dynamics.ts:64-140",
+        "src/world.ts:255-261"
+      ],
+      "passed": false,
+      "metrics": {
+        "states": [
+          {
+            "material": "steam",
+            "pressureUsedPa": 101422.7723005,
+            "energyJ": 3098.676000000001,
+            "volumeInCells": 1667.2240802675587
+          },
+          {
+            "material": "water",
+            "pressureUsedPa": 318087259.7049292,
+            "energyJ": 3098.676000000001,
+            "volumeInCells": 1.0000000000000002
+          },
+          {
+            "material": "steam",
+            "pressureUsedPa": 101422.7723005,
+            "energyJ": 3098.676000000001,
+            "volumeInCells": 1667.2240802675587
+          },
+          {
+            "material": "water",
+            "pressureUsedPa": 318087259.7049292,
+            "energyJ": 3098.676000000001,
+            "volumeInCells": 1.0000000000000002
+          },
+          {
+            "material": "steam",
+            "pressureUsedPa": 101422.7723005,
+            "energyJ": 3098.676000000001,
+            "volumeInCells": 1667.2240802675587
+          },
+          {
+            "material": "water",
+            "pressureUsedPa": 318087259.7049292,
+            "energyJ": 3098.676000000001,
+            "volumeInCells": 1.0000000000000002
+          },
+          {
+            "material": "steam",
+            "pressureUsedPa": 101422.7723005,
+            "energyJ": 3098.676000000001,
+            "volumeInCells": 1667.2240802675587
+          },
+          {
+            "material": "water",
+            "pressureUsedPa": 318087259.7049292,
+            "energyJ": 3098.676000000001,
+            "volumeInCells": 1.0000000000000002
+          }
+        ]
+      },
+      "error": "A fixed-mass, fixed-energy cell alternates between water and steam as pressure is refreshed."
+    },
+    {
+      "id": "N09",
+      "title": "Venting does not silently switch the same parcel to a different EOS volume",
+      "kind": "model-consistency",
+      "locations": [
+        "src/gas-dynamics.ts:80-83,116-118"
+      ],
+      "passed": false,
+      "metrics": {
+        "sealedPressurePa": 318087259.7049292,
+        "openPressurePa": 115643.10558470432,
+        "unchangedParcelMassAndEnergy": true,
+        "volumeInCells": 1667.2240802675587,
+        "geometricEOSPa": 192802970.34781617
+      },
+      "error": "The open path uses reference parcel volume, not the geometric volume used by the sealed path."
+    },
+    {
+      "id": "N10",
+      "title": "Free fall and impact close the solid gravitational energy budget",
+      "kind": "integration/accounting",
+      "locations": [
+        "src/solid-mechanics.ts:20-56",
+        "src/diagnostics.ts:45-47"
+      ],
+      "passed": true,
+      "metrics": {
+        "finalRow": 20,
+        "energyChangeJ": 5.551115123125783E-14,
+        "potentialChangeJ": -0.0050285680807460025,
+        "thermalChangeJ": 0.005028568080794882,
+        "finalSpeed": 0,
+        "finalDisplacement": 0
+      }
+    },
+    {
+      "id": "N11",
+      "title": "Long DC resistor chain satisfies its linear voltage solution",
+      "kind": "numerical",
+      "locations": [
+        "src/electricity.ts:29-30,55-77"
+      ],
+      "passed": false,
+      "metrics": {
+        "deliveredJ": 0.08189662723356066,
+        "midpointVoltageV": 0.04180339015889008,
+        "expectedMidpointVoltageV": 5.9405940594059405,
+        "expectedEnergyJ": 0.023762376237623763,
+        "sourceCurrentA": 0.5978293192336821,
+        "groundCurrentA": 4.991414549916298E-07,
+        "maxInteriorKirchhoffResidualA": 0.021505378711924372,
+        "secondStepMidpointVoltageV": 0.04180339015889008,
+        "restartsSameUnconvergedSolution": true
+      },
+      "error": "128 cold-start iterations leave a large DC error; every tick restarts the same incomplete solve."
+    },
+    {
+      "id": "N12",
+      "title": "Joule heat is distributed in proportion to endpoint half-resistances",
+      "kind": "discretization",
+      "locations": [
+        "src/electricity.ts:90-95,113-117"
+      ],
+      "passed": false,
+      "metrics": {
+        "actualHeatJ": [
+          0.11999999999999744,
+          0.23999999999999488,
+          0.11999999999999744
+        ],
+        "expectedHeatJ": [
+          0.048,
+          0.384,
+          0.048
+        ]
+      },
+      "error": "Equal endpoint heating contradicts unequal endpoint resistances in the same series circuit."
+    },
+    {
+      "id": "N13",
+      "title": "A battery with zero terminal current is not drained",
+      "kind": "implementation",
+      "locations": [
+        "src/electricity.ts:99-111"
+      ],
+      "passed": false,
+      "metrics": {
+        "voltageV": [
+          12,
+          12,
+          0
+        ],
+        "firstBatteryCurrentA": 0,
+        "batteryDebitsJ": [
+          1.2000000000000899,
+          1.2000000000000899
+        ]
+      },
+      "error": "Total heat is debited by stored-capacity share, not each terminal's electrical work."
+    },
+    {
+      "id": "N14",
+      "title": "Unequal acid/base equivalents do not become two fully neutral cells",
+      "kind": "model-domain",
+      "locations": [
+        "src/neutralization.ts:37-51"
+      ],
+      "passed": false,
+      "metrics": {
+        "initialAcidMol": 0.002,
+        "initialBaseMol": 0.001,
+        "releasedJ": 57.20000000000002,
+        "finalMaterials": [
+          "neutralSolution",
+          "neutralSolution"
+        ],
+        "remainingAcidChemicalJ": 57.20000000000002
+      },
+      "error": "A valid variable-mass parcel with excess acid loses its acid identity; equal-volume UI presets are unaffected."
+    },
+    {
+      "id": "N15",
+      "title": "Tangential gas motion transfers shear between adjacent rows",
+      "kind": "model-limitation",
+      "locations": [
+        "src/airflow.ts:18-34,39-49"
+      ],
+      "passed": false,
+      "metrics": {
+        "velocityX": [
+          0.98,
+          0
+        ],
+        "velocityY": [
+          0,
+          0
+        ]
+      },
+      "error": "The adjacency-normal-only exchange transmits no tangential momentum between rows."
+    },
+    {
+      "id": "C01",
+      "title": "Symmetric gas setup retains reflection symmetry",
+      "kind": "control",
+      "locations": [
+        "src/gas-dynamics.ts:155-166"
+      ],
+      "passed": true,
+      "metrics": {
+        "velocityX": [
+          0.05,
+          0,
+          -0.05
+        ]
+      }
+    },
+    {
+      "id": "C02",
+      "title": "Unequal-mass pressure pair preserves total momentum",
+      "kind": "control",
+      "locations": [
+        "src/gas-dynamics.ts:159-166"
+      ],
+      "passed": true,
+      "metrics": {
+        "momentumChange": 0
+      }
+    },
+    {
+      "id": "C03",
+      "title": "Converted and painted steam have equal specific enthalpy at equal temperature",
+      "kind": "control",
+      "locations": [
+        "src/thermal.ts:19-55"
+      ],
+      "passed": true,
+      "metrics": {
+        "massRatio": 1667.224080267559,
+        "energyRatio": 1667.224080267559,
+        "temperaturesC": [
+          150,
+          150
+        ]
+      }
+    },
+    {
+      "id": "C04",
+      "title": "Steam initialization and reading use the same pressure",
+      "kind": "control",
+      "locations": [
+        "src/world.ts:168-170"
+      ],
+      "passed": true,
+      "metrics": {
+        "temperatureC": 149.9999999999999
+      }
+    },
+    {
+      "id": "C05",
+      "title": "A resting supported dynamic solid does not self-heat",
+      "kind": "control",
+      "locations": [
+        "src/solid-mechanics.ts:43-46"
+      ],
+      "passed": true,
+      "metrics": {
+        "heatAddedJ": 0
+      }
+    },
+    {
+      "id": "C06",
+      "title": "Upward solid velocity produces upward transport",
+      "kind": "control",
+      "locations": [
+        "src/solid-mechanics.ts:20-56"
+      ],
+      "passed": true,
+      "metrics": {
+        "endRow": 16,
+        "velocityY": -2.836555833333333
+      }
+    },
+    {
+      "id": "C07",
+      "title": "Liquid drag returns lost kinetic energy to heat",
+      "kind": "control",
+      "locations": [
+        "src/fluid-solver.ts:65-74"
+      ],
+      "passed": true,
+      "metrics": {
+        "energyChangeJ": -5.684341886080802E-14
+      }
+    },
+    {
+      "id": "C08",
+      "title": "Freezing molten metal remains movable",
+      "kind": "control",
+      "locations": [
+        "src/world.ts:173-175"
+      ],
+      "passed": true,
+      "metrics": {
+        "material": "metal",
+        "dynamic": 1
+      }
+    },
+    {
+      "id": "C09",
+      "title": "Painting is balanced by the external-source ledger",
+      "kind": "control",
+      "locations": [
+        "src/world.ts:190-225",
+        "src/diagnostics.ts:66-84"
+      ],
+      "passed": true,
+      "metrics": {
+        "massDriftKg": -1.0842021724855044E-19,
+        "energyDriftKj": -1.7763568394002505E-15,
+        "massWithinTolerance": true,
+        "energyWithinTolerance": true
+      }
+    },
+    {
+      "id": "C10",
+      "title": "Gas totals include steam",
+      "kind": "control",
+      "locations": [
+        "src/diagnostics.ts:37-41"
+      ],
+      "passed": true,
+      "metrics": {
+        "actual": 5.98E-07,
+        "expected": 5.98E-07
+      }
+    },
+    {
+      "id": "C11",
+      "title": "Subambient gas pressure reaches the liquid boundary",
+      "kind": "control",
+      "locations": [
+        "src/gas-dynamics.ts:125-140"
+      ],
+      "passed": true,
+      "metrics": {
+        "gasPressurePa": 76607.3987802812,
+        "liquidPressurePa": 76705.1710807812,
+        "expectedPa": 76705.1710807812
+      }
+    },
+    {
+      "id": "C12",
+      "title": "Gameplay growth creates fuel and records external sources",
+      "kind": "control",
+      "locations": [
+        "src/reactions.ts:81-100"
+      ],
+      "passed": true,
+      "metrics": {
+        "newMaterial": "plant",
+        "chemicalKj": 6.300000000000002,
+        "massDriftKg": -7.589415207398531E-19,
+        "energyDriftKj": 8.881784197001252E-16,
+        "massWithinTolerance": true,
+        "energyWithinTolerance": true
+      }
+    },
+    {
+      "id": "C13",
+      "title": "Insulated diffusion conserves energy and does not overshoot",
+      "kind": "control",
+      "locations": [
+        "src/thermal.ts:309-321,350-389"
+      ],
+      "passed": true,
+      "metrics": {
+        "energyChangeJ": 0,
+        "temperaturesC": [
+          95.5,
+          95.5,
+          95.5,
+          95.5
+        ]
+      }
+    },
+    {
+      "id": "C14",
+      "title": "Hydrogen/oxygen reaction conserves mass, momentum and tracked energy; oxygen scaling 1",
+      "kind": "control",
+      "locations": [
+        "src/element-reactions.ts:26-68"
+      ],
+      "passed": true,
+      "metrics": {
+        "reactions": 1,
+        "finalMaterials": [
+          "steam",
+          "oxygen"
+        ],
+        "momentumXChange": 0,
+        "momentumYChange": 0,
+        "massDriftKg": 0,
+        "energyDriftKj": 0,
+        "massWithinTolerance": true,
+        "energyWithinTolerance": true
+      }
+    },
+    {
+      "id": "C15",
+      "title": "Hydrogen/oxygen reaction conserves mass, momentum and tracked energy; oxygen scaling 0.2",
+      "kind": "control",
+      "locations": [
+        "src/element-reactions.ts:26-68"
+      ],
+      "passed": true,
+      "metrics": {
+        "reactions": 1,
+        "finalMaterials": [
+          "hydrogen",
+          "steam"
+        ],
+        "momentumXChange": 0,
+        "momentumYChange": 5.293955920339377E-23,
+        "massDriftKg": 0,
+        "energyDriftKj": 0,
+        "massWithinTolerance": true,
+        "energyWithinTolerance": true
+      }
+    },
+    {
+      "id": "C16",
+      "title": "Equal-volume acid/base pair conserves tracked energy",
+      "kind": "control",
+      "locations": [
+        "src/neutralization.ts:37-54"
+      ],
+      "passed": true,
+      "metrics": {
+        "releasedJ": 57.20000000000002,
+        "massDriftKg": 0,
+        "energyDriftKj": -2.7755575615628914E-17,
+        "massWithinTolerance": true,
+        "energyWithinTolerance": true
+      }
+    },
+    {
+      "id": "C17",
+      "title": "Short uniform DC circuit reaches its analytic voltages",
+      "kind": "control",
+      "locations": [
+        "src/electricity.ts:55-77"
+      ],
+      "passed": true,
+      "metrics": {
+        "deliveredJ": 0.6000000000000002,
+        "voltageV": [
+          12,
+          8.999999910593033,
+          5.999999910593033,
+          2.9999999552965164,
+          0
+        ]
+      }
+    },
+    {
+      "id": "C18",
+      "title": "Electrical heat equals total battery depletion",
+      "kind": "control",
+      "locations": [
+        "src/electricity.ts:98-119"
+      ],
+      "passed": true,
+      "metrics": {
+        "deliveredJ": 0.48,
+        "massDriftKg": 0,
+        "energyDriftKj": 0,
+        "massWithinTolerance": true,
+        "energyWithinTolerance": true
+      }
+    },
+    {
+      "id": "C19",
+      "title": "Uniform ambient full simulation remains stationary",
+      "kind": "control",
+      "locations": [
+        "src/physics.ts:29-70"
+      ],
+      "passed": true,
+      "metrics": {
+        "massDriftKg": 0,
+        "energyDriftKj": 0,
+        "massWithinTolerance": true,
+        "energyWithinTolerance": true,
+        "maxSpeed": 3.173738607506958E-10
+      }
+    },
+    {
+      "id": "C20",
+      "title": "Thermal round trips work at spawn temperature for every catalogue material",
+      "kind": "control",
+      "locations": [
+        "src/thermal.ts:46-156"
+      ],
+      "passed": true,
+      "metrics": {
+        "checked": 35,
+        "maxErrorC": 4.547473508864641E-13
+      }
+    }
+  ],
+  "fixtureReference": {
+    "archive": "src(1).zip",
+    "sha256": "89bf7a00ab52f86c360ec32d0c83570078e4c6f5c68f552310de34b95275646a"
+  },
+  "currentSource": {
+    "date": "2026-09-21",
+    "baseCommit": "dd75dde7ebd7e5cc26eff895654992c9d5b91388",
+    "workingTree": "dirty",
+    "sha256": {
+      "src/airflow.ts": "1939b02aa984ab57e413a5c4479326380af0c1f2599d14c3418a9b91f9e1df7d",
+      "src/app.ts": "540433e5816a11b0842bc8722b8793ca6eb987f22f9226cf424a14f5f5c568c0",
+      "src/boiling.ts": "c8f3a57a46e931ff75f885ebb9d815d7108548c712d48220b50b996ffb24e38d",
+      "src/brush.ts": "71555cba11897c7157f6801bb79f690a8e159404bab57cd41f69acf2e5600e97",
+      "src/controls.ts": "040f69361905674532e922fe552940573994d26637e50cd253912c517e003d56",
+      "src/diagnostics.ts": "6dbf9658d6e581a3b4b2c5c3b8e1904bcea82d630cc5e3c8ad6e0293636e0adc",
+      "src/electricity.ts": "60dc5d49b6970ed1af0274e86e333cdbf4a2d572418353f39ae79097d86d0a0c",
+      "src/element-reactions.ts": "b709433031b24059e1e773bc4aeccfd44a77f33258a0b86c4b7a568ad8f26abb",
+      "src/element-reference.ts": "6ed0ea5ca3998efab4240ee8bf1dc687ede8772daab940566eee2edee47595a5",
+      "src/explosions.ts": "29a2f03a9ca4b60703b272fb1d15ee6af142cbc28fbf9ee81bc304f2ded71d72",
+      "src/field-map.ts": "e879d6252aa4b8e6af3dbd5d2f8e8e2c3127f4929e5138a2efe09d66d715cbef",
+      "src/fluid-solver.ts": "532930fb0fa5fccc495aa2bf4339577f6afe81d773903aa9aee4a3a8f956bf3c",
+      "src/gas-dynamics.ts": "14758481ced50fa22163897731c0aa2ba3fe016e0ac8c63f6b78ebd3790a6f69",
+      "src/hydrostatics.ts": "b360bec6a8ed07a0bc32065559eca3219cebdb70cb5079171aa7e7ebf7819886",
+      "src/material-definitions.ts": "c13caa19a358796f1ce7f4bd19090375dc7e6c6f5a41995c8047cd272af58a74",
+      "src/material-guide.ts": "773f494786cbde830e19131ce2a383a67b03d4940e36aad31d3bbbd30c59f6d2",
+      "src/material-ids.ts": "7242e8c40cd440c2980d47e45437578a51ba0e9cdfcfa98505af1d071fb8e903",
+      "src/material-physics.ts": "700b2efd21883f514001298177e417a4e9d1fa0ec6bbc71a08a1079f28ae8091",
+      "src/material-presentation.ts": "f90f940abcb2c972c88af26d97c681235b902c62906c77995d80658347b88fa0",
+      "src/materials.ts": "1d9509415464318170ce311058d134f5987ce31e7f8b6297801a2b40609bcfe1",
+      "src/motion.ts": "b4178d2bb819e4ca3567743c2df2ab29e87526f04aaec759d7520e5236c742c5",
+      "src/neutralization.ts": "66302775ee865461dfdf9dbdc9fc31d7dcf6afc2383145559c46d86cba7fc316",
+      "src/physical-scale.ts": "7cef4eabdd399854fbb6958913326f35d15c4f17dd75d9ec68e8ef3459e98f9a",
+      "src/physics.ts": "26d932bb48845ca40b23b86dd36a662e4d6825b616fe58d594d8f62aa0526f87",
+      "src/random.ts": "038558fc03970b0fba65cda0ac7fd07be30c2a662f4f3c68a4106f767ee85c90",
+      "src/reactions.ts": "84141a54045f6efdd8122acc8855fbd5594d0e0ac0cfbf1dd9311f3359917a84",
+      "src/renderer.ts": "ea5521c11c7c001c182b1b18292b156ea0e50fbd0190e8b5444cf822d51d2ec0",
+      "src/sandbox.ts": "341f65c57d22b0ddcadccd1ceab461634973dcf7128407a8bcc587253c79dc6f",
+      "src/simulation-clock.ts": "7bfdf1312f795e54539ea57f9a1b46bbe26c3fc6936369b3a146420210b20b40",
+      "src/solid-mechanics.ts": "08c34e7a9735b5a61aaa60b6590e6fc35365aca8556a632d91931d81d6d6db86",
+      "src/starter-scene.ts": "c7e7f12f6a9ea5411151e463bb09a9743c31ff5fda2e98ffc39c1ed3e4fc2c35",
+      "src/temperature-map.ts": "df8f2c7de5e91a8259282c919b8288a4962808141e4fde8b6074cf37346be130",
+      "src/thermal.ts": "d68fc11187ef3151674bb8ed7ab479b08c464295baf63c06ae1691e862737816",
+      "src/validate-material-catalogue.ts": "bd365b51298c79ff41ef2c514b0fc14e09c6e507b5f98e6663347852d2dd38d8",
+      "src/viewport.ts": "1cab1c38093e421b43dd235b2e4b5d7ac4ab0debcd8f760317b7b5c467de9b6f",
+      "src/visual-waves.ts": "e4ae2adf7bd90b4eeee36c7791c0bd7ca10dcafbf5c030ecf135f6aa9cd566b4",
+      "src/world.ts": "3ef9351f3a90eaa69f9b8d78036376ac0b66dc4db8d2219db94f987c1136f194"
+    }
+  }
+}

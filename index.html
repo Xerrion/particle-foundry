@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#071019" />
+    <meta
+      name="description"
+      content="A tactile falling-sand laboratory with fire, fluids, heat, plants, and molten rock."
+    />
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23071019'/%3E%3Cpath d='M7 22h6v5H7zm6-6h6v6h-6zm6-7h6v7h-6z' fill='%23f5b942'/%3E%3Cpath d='M7 10h6v6H7zm12 12h6v5h-6z' fill='%235ce1e6'/%3E%3C/svg%3E"
+    />
+    <title>Particle Foundry</title>
+    <link rel="stylesheet" href="/src/styles/main.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <div class="brand" role="banner" aria-label="Particle Foundry">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+          <span class="brand-copy"> 
+            <strong>Particle Foundry</strong>
+            <small>Element lab</small>
+          </span>
+        </div>
+
+        <div class="simulation-state" aria-live="polite">
+          <span class="state-light" id="stateLight"></span>
+          <span id="stateText">Simulating</span>
+          <span class="state-divider"></span>
+          <span id="particleCount">0 particles</span>
+          <span class="state-divider"></span>
+          <span id="fpsCounter">60 FPS</span>
+        </div>
+
+        <div class="top-actions">
+          <button class="icon-button" id="pauseButton" type="button" aria-label="Pause simulation" title="Pause (Space)">
+            <svg class="pause-icon" viewBox="0 0 20 20" aria-hidden="true">
+              <path d="M5.5 4h3v12h-3zM11.5 4h3v12h-3z" />
+            </svg>
+            <svg class="play-icon" viewBox="0 0 20 20" aria-hidden="true">
+              <path d="m6 3.8 9.5 6.2L6 16.2z" />
+            </svg>
+          </button>
+          <button class="icon-button" id="fullscreenButton" type="button" aria-label="Enter fullscreen" title="Fullscreen">
+            <svg viewBox="0 0 20 20" aria-hidden="true">
+              <path d="M4 8V4h4M12 4h4v4M16 12v4h-4M8 16H4v-4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </button>
+        </div>
+      </header>
+
+      <main class="workspace">
+        <section class="sim-panel" aria-label="Simulation canvas">
+          <div class="canvas-frame" id="canvasFrame">
+            <canvas
+              id="sandbox"
+              width="960"
+              height="540"
+              aria-label="Interactive falling sand simulation. Draw with mouse or touch. Scroll to zoom and drag with Shift or right mouse button to pan."
+            ></canvas>
+            <div class="canvas-sheen" aria-hidden="true"></div>
+            <div class="view-controls" role="group" aria-label="World view controls">
+              <button id="zoomOutButton" type="button" aria-label="Zoom out" title="Zoom out">−</button>
+              <button id="zoomResetButton" type="button" aria-label="Fit whole world" title="Fit whole world"><span id="zoomLevel">1×</span></button>
+              <button id="zoomInButton" type="button" aria-label="Zoom in" title="Zoom in">+</button>
+            </div>
+            <section class="temperature-legend" id="temperatureLegend" aria-label="Temperature colour scale" hidden></section>
+            <section class="temperature-legend" id="pressureLegend" aria-label="Pressure colour scale" hidden></section>
+            <section class="temperature-legend" id="velocityLegend" aria-label="Velocity colour scale" hidden></section>
+            <div class="canvas-hint" id="canvasHint">
+              <span>Draw to release · scroll to zoom · Shift-drag to pan</span>
+              <kbd>Space</kbd><span>pause</span>
+            </div>
+            <section class="canvas-probe" aria-label="Cell probe">
+              <span>Material <b id="probeMaterial">--</b></span>
+              <span>Temperature <b id="probeTemperature">--</b></span>
+              <span>Pressure <b id="probePressure">--</b></span>
+              <span>Velocity <b id="probeVelocity">--</b></span>
+            </section>
+          </div>
+        </section>
+
+        <aside class="tool-panel" aria-label="Material controls">
+          <section class="selection-dock" aria-label="Selected brush">
+            <div class="section-heading"><h2 id="selectedMaterialLabel">Sand selected</h2><span>Hold to paint</span></div>
+            <p id="selectionDescription">Loose grains settle into piles and sink through water.</p>
+            <div class="range-row"><div><label for="brushSize">Brush radius</label><output id="brushOutput" for="brushSize">4 cells</output></div><input id="brushSize" type="range" min="1" max="12" value="4" /></div>
+            <div id="quickTools" class="quick-tools" role="group" aria-label="Brush tools"></div>
+            <button id="showInteractionGuide" class="text-button" type="button">Interactions &amp; model limits ↓</button>
+          </section>
+          <div class="sidebar-tabs" role="tablist" aria-label="Sandbox controls">
+            <button id="materialsTab" role="tab" type="button" aria-controls="materialsPanel" aria-selected="true" data-panel="materialsPanel">Materials</button>
+            <button id="elementsTab" role="tab" type="button" aria-controls="elementsPanel" aria-selected="false" tabindex="-1" data-panel="elementsPanel">Elements</button>
+            <button id="settingsTab" role="tab" type="button" aria-controls="settingsPanel" aria-selected="false" tabindex="-1" data-panel="settingsPanel">Settings</button>
+          </div>
+          <div class="sidebar-content">
+          <details class="selection-details"><summary>What can I do with this?</summary><ul id="selectionInteractions"></ul></details>
+          <section id="materialsPanel" role="tabpanel" aria-labelledby="materialsTab" class="tool-section materials-section">
+            <div class="section-heading">
+              <h2>Materials</h2>
+              <span>Choose a material</span>
+            </div>
+            <div class="catalogue-filters">
+              <label class="sr-only" for="materialSearch">Search materials and tools</label>
+              <input id="materialSearch" type="search" placeholder="Search materials and tools" autocomplete="off" />
+              <label class="sr-only" for="materialCategory">Material category</label>
+              <select id="materialCategory">
+                <option value="all">All categories</option>
+                <option value="powders">Powders</option>
+                <option value="solids">Solids</option>
+                <option value="liquids">Liquids</option>
+                <option value="chemicals">Chemicals</option>
+                <option value="gases">Gases</option>
+                <option value="energy">Energy</option>
+                <option value="electrical">Electrical</option>
+                <option value="tools">Tools</option>
+              </select>
+            </div>
+            <p class="catalogue-count" id="materialResultCount" aria-live="polite"></p>
+            <div class="material-grid" id="materialGrid"></div>
+            <p id="materialEmptyState" class="empty-state" hidden>No matches. Try another name or clear the filters.</p>
+            <button id="clearFilters" class="text-button" type="button">Clear filters</button>
+          </section>
+          <section id="elementsPanel" role="tabpanel" aria-labelledby="elementsTab" class="tool-section element-reference" hidden>
+            <h2>Elements</h2>
+            <p>Choose an individually modeled element. Open its brush guide to see supported interactions and limits.</p>
+            <label class="sr-only" for="elementSearch">Search chemical elements</label>
+            <input id="elementSearch" type="search" placeholder="Name, symbol or atomic number" autocomplete="off" />
+            <label class="reference-toggle"><input id="showReferenceElements" type="checkbox" /> Show unmodeled elements</label>
+            <p class="catalogue-count" id="elementResultCount" aria-live="polite"></p>
+            <div class="element-grid" id="elementGrid"></div>
+            <p id="elementEmptyState" class="empty-state" hidden>No modeled matches. Enable “Show unmodeled elements” to browse the full reference.</p>
+            <a href="https://periodic-table.rsc.org/" target="_blank" rel="noopener noreferrer">Element property reference ↗</a>
+          </section>
+          <section id="settingsPanel" role="tabpanel" aria-labelledby="settingsTab" class="tool-section settings-section" hidden>
+
+            <div class="speed-row">
+              <label for="speedSelect">Simulation speed</label>
+              <select id="speedSelect">
+                <option value="0.5">0.5×</option>
+                <option value="1" selected>1×</option>
+                <option value="2">2×</option>
+                <option value="4">4×</option>
+              </select>
+            </div>
+
+            <label class="toggle-row" for="waveToggle">
+              <span>
+                <strong>Surface shimmer</strong>
+                <small>Lighting on actual liquid surfaces</small>
+              </span>
+              <input id="waveToggle" type="checkbox" checked />
+              <span class="toggle-track" aria-hidden="true"><span></span></span>
+            </label>
+            <label class="toggle-row" for="temperatureToggle">
+              <span>
+                <strong>Temperature map <kbd>T</kbd></strong>
+                <small>Heat overlay on air, liquids and solids</small>
+              </span>
+              <input id="temperatureToggle" type="checkbox" />
+              <span class="toggle-track" aria-hidden="true"><span></span></span>
+            </label>
+            <label class="toggle-row" for="pressureToggle">
+              <span>
+                <strong>Pressure map <kbd>P</kbd></strong>
+                <small>Pressure overlay on gas and liquids</small>
+              </span>
+              <input id="pressureToggle" type="checkbox" />
+              <span class="toggle-track" aria-hidden="true"><span></span></span>
+            </label>
+            <label class="toggle-row" for="velocityToggle">
+              <span>
+                <strong>Velocity map <kbd>V</kbd></strong>
+                <small>Airflow and material speed with wind arrows</small>
+              </span>
+              <input id="velocityToggle" type="checkbox" />
+              <span class="toggle-track" aria-hidden="true"><span></span></span>
+            </label>
+            <details class="model-notes"><summary>Phase changes & model notes</summary><div id="phaseNotes"></div><p>Element properties are individually specified. Flow is a coarse cellular model. Only reactions listed in each brush guide are implemented.</p></details>
+          </section>
+
+          </div>
+          <section class="tool-section action-section">
+            <button class="secondary-action" id="resetButton" type="button">
+              <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M15.6 6.2A7 7 0 1 0 16.8 12M15.6 6.2V2.8m0 3.4h-3.4" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" /></svg>
+              Reset scene
+            </button>
+            <button class="secondary-action danger" id="clearButton" type="button">
+              <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4.5 6h11M8 3.5h4M6 6l.7 10h6.6L14 6" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" /></svg>
+              Clear all
+            </button>
+          </section>
+
+
+        </aside>
+      </main>
+
+      <footer class="footer-bar">
+		<span>Hold or drag to paint</span>
+		<span class="footer-separator">•</span>
+		<span>1–9 quick materials · B blast · H heat · C cool · T temperature · P pressure · V velocity</span>
+		<span class="footer-spacer"></span>
+		<span id="totalMass">0.000 kg matter</span>
+		<span class="footer-separator">•</span>
+		<span id="totalEnergy">0.0 kJ tracked</span>
+		<span class="footer-separator">•</span>
+		<span id="maxPressure">101 kPa max</span>
+		<span class="footer-separator">•</span>
+		<span>Grid 480 × 270</span>
+      </footer>
+    </div>
+
+    <div class="sr-only" id="liveRegion" aria-live="polite"></div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

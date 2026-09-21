@@ -1,7 +1,7 @@
 import { METAL, WATER } from "../../src/materials";
-import { createPhysics } from "../../src/physics";
-import { energyAtTemperature } from "../../src/thermal";
-import { createWorld } from "../../src/world";
+import { energyAtTemperature } from "../../src/physics/thermal";
+import { createPhysics } from "../../src/simulation/physics";
+import { createWorld } from "../../src/simulation/world";
 
 export function boilingPot(seed = 42, plateTemperature = 600) {
 	const world = createWorld(48, 48, { seed });
@@ -14,7 +14,11 @@ export function boilingPot(seed = 42, plateTemperature = 600) {
 			const index = x + 44 * 48;
 			world.addExternalEnergy(
 				index,
-				Math.max(0, energyAtTemperature(METAL, plateTemperature) - world.energy[index]),
+				Math.max(
+					0,
+					energyAtTemperature(METAL, plateTemperature, undefined, world.massKg[index]) -
+						world.energy[index],
+				),
 			);
 		}
 		physics.step();

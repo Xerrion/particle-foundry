@@ -17,7 +17,7 @@
 		"format": "biome format --write .",
 		"typecheck": "tsc --noEmit",
 		"typecheck:catalogue": "tsc --noEmit -p tsconfig.catalogue.json",
-		"test": "bun test",
+		"test": "bun test ./tests",
 		"check": "bun run typecheck && bun run typecheck:catalogue && bun run test"
 	}
 }

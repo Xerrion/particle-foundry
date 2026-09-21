@@ -1,6 +1,7 @@
 import { EMPTY, FIRE, SMOKE, STONE, WATER } from "../src/materials";
-import { createPhysics } from "../src/physics";
-import { createWorld } from "../src/world";
+import { seedStarterScene } from "../src/scenes/starter-scene";
+import { createPhysics } from "../src/simulation/physics";
+import { createWorld } from "../src/simulation/world";
 
 const WIDTH = 240;
 const HEIGHT = 135;
@@ -28,7 +29,28 @@ function measure(name: string, materialAt: (index: number) => number): object {
 	};
 }
 
+function measureLargeStarter(): object {
+	const width = 480;
+	const height = 270;
+	const world = createWorld(width, height, { seed: 20260920 });
+	seedStarterScene(world);
+	const physics = createPhysics(world);
+	for (let warmup = 0; warmup < 5; warmup += 1) physics.step();
+	const started = performance.now();
+	for (let step = 0; step < STEPS; step += 1) physics.step();
+	const millisecondsPerStep = (performance.now() - started) / STEPS;
+	return {
+		name: "starter-480",
+		cells: world.size,
+		steps: STEPS,
+		millisecondsPerStep: Number(millisecondsPerStep.toFixed(3)),
+		budgetMilliseconds: Number(FRAME_BUDGET_MS.toFixed(3)),
+		withinSingleFrameBudget: millisecondsPerStep <= FRAME_BUDGET_MS,
+	};
+}
+
 const results = [
+	measureLargeStarter(),
 	measure("empty", () => EMPTY),
 	measure("filled", () => WATER),
 	measure("fragmented", (index) => ((index + Math.floor(index / WIDTH)) % 3 === 0 ? STONE : WATER)),

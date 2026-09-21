@@ -1,4 +1,8 @@
 node_modules/
 dist/
 *.log
-.env    
+.env
+
+# Local logs, profiles, screenshots, archives and verification snapshots.
+artifacts/
+.playwright-mcp/

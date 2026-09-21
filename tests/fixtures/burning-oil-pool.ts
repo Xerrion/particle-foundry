@@ -1,7 +1,7 @@
 import { OIL, STONE } from "../../src/materials";
-import { createPhysics } from "../../src/physics";
-import { energyAtTemperature } from "../../src/thermal";
-import { createWorld, type World } from "../../src/world";
+import { energyAtTemperature } from "../../src/physics/thermal";
+import { createPhysics } from "../../src/simulation/physics";
+import { createWorld, type World } from "../../src/simulation/world";
 
 /** Wide, evenly ignited oil surface reproducing the reported detached flame sheets. */
 export function burningOilPool(seed = 42, ignitionTemperature = 800) {
@@ -16,7 +16,12 @@ export function burningOilPool(seed = 42, ignitionTemperature = 800) {
 	for (let x = firstX; x <= lastX; x++) {
 		world.setCell(x + 79 * 64, STONE);
 		for (let y = surfaceY; y < 79; y++) world.setCell(x + y * 64, OIL);
-		world.energy[x + surfaceY * 64] = energyAtTemperature(OIL, ignitionTemperature);
+		world.energy[x + surfaceY * 64] = energyAtTemperature(
+			OIL,
+			ignitionTemperature,
+			undefined,
+			world.massKg[x + surfaceY * 64],
+		);
 	}
 	return { world, physics: createPhysics(world), firstX, lastX, surfaceY };
 }

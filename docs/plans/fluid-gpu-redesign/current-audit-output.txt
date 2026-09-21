@@ -1,0 +1,83 @@
+FAIL N01 Uniform pressurized gas in a rigid sealed cavity remains at rest
+  {"pressurePa":[114370.40064374048,114370.40064374048,114370.40064374048],"velocityX":[-0.049999999999999996,0,0.049999999999999996],"velocityY":[0,0,0]}
+  Uniform chamber pressure creates motion next to stationary walls.
+FAIL N02 A monotone pressure gradient accelerates an interior gas cell
+  {"pressurePa":[101359.33000169406,101393.6600033881,101427.99000508216],"facePressureClipPa":0.036120000000000006,"velocityX":[-0.049999999999999996,0,0.049999999999999996]}
+  Clipping both positive face tractions to the same impulse erases a nonzero interior gradient.
+PASS N03 Cellular liquid falling gives a consistent nonzero downward velocity
+  {"row":1,"velocityY":0.44260156495872416,"distanceMeters":0.01}
+PASS N04 A vertical cellular swap accounts for gravitational work
+  {"energyChangeJ":0,"expectedPotentialDropJ":0.00009765422843400003}
+FAIL N05 Horizontal liquid velocity transports an unblocked supported parcel
+  {"startIndex":9,"endIndex":9,"velocityX":1,"ticks":10}
+  A liquid with horizontal velocity remains fixed on a level support, despite an open path.
+FAIL N06 Nonzero ambient-air velocity transports its temperature marker
+  {"changedEnergyCells":0,"markerTemperatureC":60}
+  Ambient air is unconditionally excluded from the only transport pass.
+PASS N07 Hydrostatic transfer conserves the tracked mechanical/thermal budget
+  {"transfers":1,"energyChangeJ":0,"kineticChangeJ":0.00018969120966918482,"potentialChangeJ":-0.0001953084568679977,"thermalChangeJ":0.000005617246667810605}
+FAIL N08 EOS/phase iteration converges rather than flipping material identity
+  {"states":[{"material":"steam","pressureUsedPa":101422.7723005,"energyJ":3098.676000000001,"volumeInCells":1667.2240802675587},{"material":"water","pressureUsedPa":318087259.7049292,"energyJ":3098.676000000001,"volumeInCells":1.0000000000000002},{"material":"steam","pressureUsedPa":101422.7723005,"energyJ":3098.676000000001,"volumeInCells":1667.2240802675587},{"material":"water","pressureUsedPa":318087259.7049292,"energyJ":3098.676000000001,"volumeInCells":1.0000000000000002},{"material":"steam","pressureUsedPa":101422.7723005,"energyJ":3098.676000000001,"volumeInCells":1667.2240802675587},{"material":"water","pressureUsedPa":318087259.7049292,"energyJ":3098.676000000001,"volumeInCells":1.0000000000000002},{"material":"steam","pressureUsedPa":101422.7723005,"energyJ":3098.676000000001,"volumeInCells":1667.2240802675587},{"material":"water","pressureUsedPa":318087259.7049292,"energyJ":3098.676000000001,"volumeInCells":1.0000000000000002}]}
+  A fixed-mass, fixed-energy cell alternates between water and steam as pressure is refreshed.
+FAIL N09 Venting does not silently switch the same parcel to a different EOS volume
+  {"sealedPressurePa":318087259.7049292,"openPressurePa":115643.10558470432,"unchangedParcelMassAndEnergy":true,"volumeInCells":1667.2240802675587,"geometricEOSPa":192802970.34781617}
+  The open path uses reference parcel volume, not the geometric volume used by the sealed path.
+PASS N10 Free fall and impact close the solid gravitational energy budget
+  {"finalRow":20,"energyChangeJ":5.551115123125783e-14,"potentialChangeJ":-0.0050285680807460025,"thermalChangeJ":0.005028568080794882,"finalSpeed":0,"finalDisplacement":0}
+FAIL N11 Long DC resistor chain satisfies its linear voltage solution
+  {"deliveredJ":0.08189662723356066,"midpointVoltageV":0.04180339015889008,"expectedMidpointVoltageV":5.9405940594059405,"expectedEnergyJ":0.023762376237623763,"sourceCurrentA":0.5978293192336821,"groundCurrentA":4.991414549916298e-7,"maxInteriorKirchhoffResidualA":0.021505378711924372,"secondStepMidpointVoltageV":0.04180339015889008,"restartsSameUnconvergedSolution":true}
+  128 cold-start iterations leave a large DC error; every tick restarts the same incomplete solve.
+FAIL N12 Joule heat is distributed in proportion to endpoint half-resistances
+  {"actualHeatJ":[0.11999999999999744,0.23999999999999488,0.11999999999999744],"expectedHeatJ":[0.048,0.384,0.048]}
+  Equal endpoint heating contradicts unequal endpoint resistances in the same series circuit.
+FAIL N13 A battery with zero terminal current is not drained
+  {"voltageV":[12,12,0],"firstBatteryCurrentA":0,"batteryDebitsJ":[1.2000000000000899,1.2000000000000899]}
+  Total heat is debited by stored-capacity share, not each terminal's electrical work.
+FAIL N14 Unequal acid/base equivalents do not become two fully neutral cells
+  {"initialAcidMol":0.002,"initialBaseMol":0.001,"releasedJ":57.20000000000002,"finalMaterials":["neutralSolution","neutralSolution"],"remainingAcidChemicalJ":57.20000000000002}
+  A valid variable-mass parcel with excess acid loses its acid identity; equal-volume UI presets are unaffected.
+FAIL N15 Tangential gas motion transfers shear between adjacent rows
+  {"velocityX":[0.98,0],"velocityY":[0,0]}
+  The adjacency-normal-only exchange transmits no tangential momentum between rows.
+PASS C01 Symmetric gas setup retains reflection symmetry
+  {"velocityX":[0.05,0,-0.05]}
+PASS C02 Unequal-mass pressure pair preserves total momentum
+  {"momentumChange":0}
+PASS C03 Converted and painted steam have equal specific enthalpy at equal temperature
+  {"massRatio":1667.224080267559,"energyRatio":1667.224080267559,"temperaturesC":[150,150]}
+PASS C04 Steam initialization and reading use the same pressure
+  {"temperatureC":149.9999999999999}
+PASS C05 A resting supported dynamic solid does not self-heat
+  {"heatAddedJ":0}
+PASS C06 Upward solid velocity produces upward transport
+  {"endRow":16,"velocityY":-2.836555833333333}
+PASS C07 Liquid drag returns lost kinetic energy to heat
+  {"energyChangeJ":-5.684341886080802e-14}
+PASS C08 Freezing molten metal remains movable
+  {"material":"metal","dynamic":1}
+PASS C09 Painting is balanced by the external-source ledger
+  {"massDriftKg":-1.0842021724855044e-19,"energyDriftKj":-1.7763568394002505e-15,"massWithinTolerance":true,"energyWithinTolerance":true}
+PASS C10 Gas totals include steam
+  {"actual":5.98e-7,"expected":5.98e-7}
+PASS C11 Subambient gas pressure reaches the liquid boundary
+  {"gasPressurePa":76607.3987802812,"liquidPressurePa":76705.1710807812,"expectedPa":76705.1710807812}
+PASS C12 Gameplay growth creates fuel and records external sources
+  {"newMaterial":"plant","chemicalKj":6.300000000000002,"massDriftKg":-7.589415207398531e-19,"energyDriftKj":8.881784197001252e-16,"massWithinTolerance":true,"energyWithinTolerance":true}
+PASS C13 Insulated diffusion conserves energy and does not overshoot
+  {"energyChangeJ":0,"temperaturesC":[95.5,95.5,95.5,95.5]}
+PASS C14 Hydrogen/oxygen reaction conserves mass, momentum and tracked energy; oxygen scaling 1
+  {"reactions":1,"finalMaterials":["steam","oxygen"],"momentumXChange":0,"momentumYChange":0,"massDriftKg":0,"energyDriftKj":0,"massWithinTolerance":true,"energyWithinTolerance":true}
+PASS C15 Hydrogen/oxygen reaction conserves mass, momentum and tracked energy; oxygen scaling 0.2
+  {"reactions":1,"finalMaterials":["hydrogen","steam"],"momentumXChange":0,"momentumYChange":5.293955920339377e-23,"massDriftKg":0,"energyDriftKj":0,"massWithinTolerance":true,"energyWithinTolerance":true}
+PASS C16 Equal-volume acid/base pair conserves tracked energy
+  {"releasedJ":57.20000000000002,"massDriftKg":0,"energyDriftKj":-2.7755575615628914e-17,"massWithinTolerance":true,"energyWithinTolerance":true}
+PASS C17 Short uniform DC circuit reaches its analytic voltages
+  {"deliveredJ":0.6000000000000002,"voltageV":[12,8.999999910593033,5.999999910593033,2.9999999552965164,0]}
+PASS C18 Electrical heat equals total battery depletion
+  {"deliveredJ":0.48,"massDriftKg":0,"energyDriftKj":0,"massWithinTolerance":true,"energyWithinTolerance":true}
+PASS C19 Uniform ambient full simulation remains stationary
+  {"massDriftKg":0,"energyDriftKj":0,"massWithinTolerance":true,"energyWithinTolerance":true,"maxSpeed":3.173738607506958e-10}
+PASS C20 Thermal round trips work at spawn temperature for every catalogue material
+  {"checked":35,"maxErrorC":4.547473508864641e-13}
+
+35 checks: 24 pass, 11 fail.

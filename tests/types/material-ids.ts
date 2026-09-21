@@ -7,7 +7,7 @@ import {
 	pickerIds,
 	type ToolId,
 	WATER,
-} from "../../src/material-definitions";
+} from "../../src/materials/definitions";
 
 // Compile with strict + noUncheckedIndexedAccess; intentionally not a runtime test.
 const water: MaterialId = WATER;
