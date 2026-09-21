@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import { Window } from "happy-dom";
 import { bindControls } from "../src/controls";
-import { BLAST, GUNPOWDER, WATER } from "../src/materials";
+import { BLAST, GUNPOWDER, HYDROCHLORIC_ACID, WATER } from "../src/materials";
 import type { Sandbox } from "../src/sandbox";
 
 const window = new Window({ url: "http://localhost/" });
@@ -132,8 +132,13 @@ describe("browser control flow", () => {
 		materialCategory.value = "tools";
 		materialCategory.dispatchEvent(domEvent(new window.Event("change")));
 		expect(window.document.querySelectorAll(".material:not([hidden])")).toHaveLength(4);
+		materialCategory.value = "chemicals";
+		materialCategory.dispatchEvent(domEvent(new window.Event("change")));
+		expect(window.document.querySelectorAll(".material:not([hidden])")).toHaveLength(3);
 		materialCategory.value = "all";
 		materialCategory.dispatchEvent(domEvent(new window.Event("change")));
+		element<HTMLButtonElement>("[data-material='hydrochloricAcid']").click();
+		expect(calls.materials.at(-1)).toBe(HYDROCHLORIC_ACID);
 		element<HTMLButtonElement>("[data-material='water']").click();
 		expect(calls.materials.at(-1)).toBe(WATER);
 		element<HTMLButtonElement>("[data-material='gunpowder']").click();

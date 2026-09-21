@@ -123,6 +123,20 @@ export function validateMaterialCatalogue(
 					(electrical.terminal === undefined ||
 						electrical.terminal === "ground"), `${label}: invalid electrical terminal`);
 		}
+		if (material.neutralization) {
+			const profile = material.neutralization;
+			require(material.state === "liquid" &&
+				positive(
+					profile.equivalentsMolPerL,
+				), `${label}: neutralization needs liquid state and positive equivalents`);
+			if (profile.role === "acid")
+				require(positive(profile.heatJPerMol ?? NaN) &&
+					material.chemicalEnergyKjPerKg >
+						0, `${label}: acid needs reaction heat and stored chemical energy`);
+			else
+				require(profile.role === "base" &&
+					profile.heatJPerMol === undefined, `${label}: invalid neutralization base`);
+		}
 		if (material.transforms) {
 			require(Object.hasOwn(
 				definitions,

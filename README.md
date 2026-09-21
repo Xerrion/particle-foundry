@@ -69,6 +69,12 @@ GitHub Actions kører lint, checks og build ved push og pull requests.
   grundstoffer**. Den er foreløbig et opslagsregister: de 118 poster kan ikke
   males som hver sit simulerede stof. Se [IUPACs periodiske tabel](https://iupac.org/what-we-do/periodic-table-of-elements/)
   og [PubChems elementdata](https://pubchem.ncbi.nlm.nih.gov/docs/elements).
+- **Hydrochloric acid 1 M** og **Sulfuric acid 0.5 M** er malbare vandige presets.
+  Begge giver ca. 1 mol syreækvivalenter pr. liter i denne model. Ved kontakt
+  med **Sodium hydroxide 1 M** bliver et par naboceller til neutraliseret
+  opløsning og afgiver begrænset varme. Vand eller en væg imellem dem reagerer
+  ikke. Dette er en cellemodel for neutralisation, endnu uden fortynding,
+  korrosion, pH-felt eller særskilte saltarter.
 - **Reset scene** genskaber startscenen med samme seed. **Clear all** nulstiller
   verden til luft ved 22 °C og nulstiller de seedede tilfældighedsstrømme.
 
@@ -104,7 +110,9 @@ modellen, registreres som et åbent massetab.
 bevægelse. Blast-værktøjet fører sin energi som ekstern kilde i regnskabet.
 `electricity.ts` løser tilstødende ledere som et resistivt netværk og trækker
 Joule-varmen fra batteriets kemiske lager. [Funktionsplanen](ROADMAP.md) beskriver
-de kommende syrer og flere simulerede grundstoffer og spilelementer.
+de næste trin for syrekemi samt flere simulerede grundstoffer og spilelementer.
+`neutralization.ts` reagerer et tilstødende syre/base-par ad gangen og finansierer
+varmen fra syrens begrænsede kemiske lager.
 
 Ild og damp følger forskellige gasprofiler. Ild flimrer, stiger hurtigere end damp,
 overfører varme konservativt til brændbart nabomateriale og fortsætter kun med at
@@ -155,6 +163,7 @@ reaktionstyper kræver stadig en algoritme og tests, ikke kun en ny tabelpost.
 - `gas-dynamics.ts`: idealgastryk og trykimpulser
 - `reactions.ts`: stofomdannelse, ilt og kemisk energi
 - `electricity.ts`: begrænsede batterier, resistive forbindelser og Joule-varme
+- `neutralization.ts`: vandige syre/base-presets og energifinansieret neutralisation
 - `element-reference.ts`: 118 navne, symboler og atomnumre til opslag, ikke fysikdata
 - `diagnostics.ts`: rene masse- og energiregnskaber
 - `random.ts`: reproducerbare, seedede tilfældighedsstrømme

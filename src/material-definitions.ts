@@ -33,6 +33,10 @@ export const WIRE = 16;
 export const BATTERY = 17;
 export const GROUND = 18;
 export const LAMP = 19;
+export const HYDROCHLORIC_ACID = 20;
+export const SULFURIC_ACID = 21;
+export const SODIUM_HYDROXIDE = 22;
+export const NEUTRAL_SOLUTION = 23;
 export const BLAST = 252;
 export const COOLER = 253;
 export const HEATER = 254;
@@ -123,6 +127,12 @@ export interface MaterialDefinition {
 		readonly terminal?: "source" | "ground";
 		readonly voltageV?: number;
 	};
+	/** Fully dissolved aqueous preset, in acid/base equivalents; reactions are cell-pair approximations. */
+	readonly neutralization?: {
+		readonly role: "acid" | "base";
+		readonly equivalentsMolPerL: number;
+		readonly heatJPerMol?: number;
+	};
 	readonly falls: boolean;
 	readonly heatGlow?: GlowProfile;
 }
@@ -207,6 +217,7 @@ function define(
 		ignitionBrush: data.ignitionBrush,
 		explosive: data.explosive,
 		electrical: data.electrical,
+		neutralization: data.neutralization,
 	});
 }
 
@@ -615,6 +626,85 @@ export const materialDefinitions = Object.freeze({
 			warmColor: [255, 199, 102],
 			brightColor: [255, 247, 180],
 		},
+	}),
+	[HYDROCHLORIC_ACID]: define({
+		id: HYDROCHLORIC_ACID,
+		key: "hydrochloricAcid",
+		name: "Hydrochloric acid 1 M",
+		palette: [
+			[130, 214, 174],
+			[106, 193, 150],
+			[151, 224, 184],
+			[90, 178, 136],
+		],
+		heatTransferCoefficient: 0.34,
+		cellHeatCapacity: 4.18,
+		displacementDensity: 1,
+		densityKgPerM3: 1000,
+		viscosityPas: 0.001,
+		state: "liquid",
+		flow: { interval: 1, spread: 4 },
+		chemicalEnergyKjPerKg: 57.2,
+		neutralization: { role: "acid", equivalentsMolPerL: 1, heatJPerMol: 57_200 },
+	}),
+	[SULFURIC_ACID]: define({
+		id: SULFURIC_ACID,
+		key: "sulfuricAcid",
+		name: "Sulfuric acid 0.5 M",
+		palette: [
+			[196, 165, 217],
+			[172, 138, 197],
+			[214, 185, 229],
+			[150, 120, 176],
+		],
+		heatTransferCoefficient: 0.34,
+		cellHeatCapacity: 4.18,
+		displacementDensity: 1,
+		densityKgPerM3: 1000,
+		viscosityPas: 0.001,
+		state: "liquid",
+		flow: { interval: 1, spread: 4 },
+		chemicalEnergyKjPerKg: 57.2,
+		// 0.5 mol/L of H2SO4 contributes two acid equivalents per molecule.
+		neutralization: { role: "acid", equivalentsMolPerL: 1, heatJPerMol: 57_200 },
+	}),
+	[SODIUM_HYDROXIDE]: define({
+		id: SODIUM_HYDROXIDE,
+		key: "sodiumHydroxide",
+		name: "Sodium hydroxide 1 M",
+		palette: [
+			[102, 191, 222],
+			[83, 164, 201],
+			[135, 211, 234],
+			[70, 146, 186],
+		],
+		heatTransferCoefficient: 0.34,
+		cellHeatCapacity: 4.18,
+		displacementDensity: 1,
+		densityKgPerM3: 1000,
+		viscosityPas: 0.001,
+		state: "liquid",
+		flow: { interval: 1, spread: 4 },
+		neutralization: { role: "base", equivalentsMolPerL: 1 },
+	}),
+	[NEUTRAL_SOLUTION]: define({
+		id: NEUTRAL_SOLUTION,
+		key: "neutralSolution",
+		name: "Neutralized solution",
+		palette: [
+			[119, 165, 176],
+			[96, 145, 159],
+			[141, 181, 190],
+			[82, 132, 146],
+		],
+		heatTransferCoefficient: 0.34,
+		cellHeatCapacity: 4.18,
+		displacementDensity: 1,
+		densityKgPerM3: 1000,
+		viscosityPas: 0.001,
+		state: "liquid",
+		selectable: false,
+		flow: { interval: 1, spread: 4 },
 	}),
 } satisfies Record<number, MaterialDefinition>);
 

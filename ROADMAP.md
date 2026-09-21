@@ -34,13 +34,16 @@ skal have tydelig tilstand, kilder til data og afgrænsede regler.
 - Kontakter, gnister, polaritet, længerevarende dynamisk kredsløbsrespons og
   flere energikilder mangler endnu.
 
-## Fase 4: syrer og opløsninger
+## Fase 4: syrer og opløsninger — første del leveret
 
-- Vælg konkrete syre-presets, fx saltsyre og svovlsyre, som opløsninger med
-  koncentration og opløsningsmiddel; brugeren kan placere dem direkte.
-- Tilføj fortynding, neutralisation, korrosion og afgrænsede reaktionsprodukter
-  med stof- og energiregnskab. Test kendte støkiometriske forhold og diffusion
-  gennem åbne forbindelser.
+- Saltsyre 1 M og svovlsyre 0,5 M kan males direkte som vandige opløsninger.
+  Natriumhydroxid 1 M er et base-preset. Kontakt neutraliserer én celle af hver
+  og danner to celler af en uspecificeret neutraliseret opløsning.
+- Reaktionsvarmen følger syre/base-ækvivalenter og et dokumenteret ca. 57,2 kJ/mol
+  niveau. Tests kontrollerer den uafhængige beregning, masse, energi, isolering
+  og engangsreaktion.
+- Fortynding, delvis koncentration, korrosion, specifikke salte og yderligere
+  syre/base-par kræver en senere koncentrations- og stofmængdemodel.
 
 ## Fase 5: grundstoffer og flere Powder Toy-materialer
 

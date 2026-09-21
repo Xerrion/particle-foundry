@@ -157,17 +157,19 @@ export function bindControls(canvas: HTMLCanvasElement, sandbox: Sandbox): Contr
 		}
 		const category =
 			"state" in entry
-				? entry.electrical
-					? "electrical"
-					: entry.key === "fire"
-						? "energy"
-						: entry.state === "granular"
-							? "powders"
-							: entry.state === "ambient" || entry.state === "gas"
-								? "gases"
-								: entry.state === "liquid"
-									? "liquids"
-									: "solids"
+				? entry.neutralization
+					? "chemicals"
+					: entry.electrical
+						? "electrical"
+						: entry.key === "fire"
+							? "energy"
+							: entry.state === "granular"
+								? "powders"
+								: entry.state === "ambient" || entry.state === "gas"
+									? "gases"
+									: entry.state === "liquid"
+										? "liquids"
+										: "solids"
 				: "tools";
 		button.dataset.category = category;
 		materialButtons.push({ entry, button, category });

@@ -56,6 +56,8 @@ målinger af parcelvolumen og ejer ikke væske.
   samme energimængde som varme.
 - Batterier afgiver højst deres lagrede kemiske energi. En elektrisk kant tilfører
   den tilsvarende Joule-varme ligeligt til sine to celler.
+- Neutralisation frigiver kun den varme, der er lagret som syrens kemiske energi.
+  Syre og base skifter materiale-ID, mens parcelmasse og samlet energi bevares.
 - Trykimpulser omsætter ændringen i kinetisk energi til en modsat ændring i lagret
   termisk energi. En eksplosion betaler varme og radial bevægelse fra sit kemiske
   energilager; Blast-værktøjet registrerer i stedet en ekstern energikilde.
@@ -168,13 +170,25 @@ Listen er bygget fra `periodictable` 2.1.0 og kontrolleret mod
 og [PubChem](https://pubchem.ncbi.nlm.nih.gov/docs/elements). Den tilføjer ingen
 stoffysik eller reaktioner til modellen.
 
+Syre/base-presets er vandige enkeltparceller. Hydrochloric acid 1 M og Sulfuric
+acid 0.5 M repræsenterer begge 1 mol syreækvivalenter pr. liter; Sodium hydroxide
+1 M repræsenterer 1 mol baseækvivalenter pr. liter. Et ortogonalt nabopar med
+tilstrækkeligt kemisk energilager reagerer én gang til uspecificeret neutraliseret
+opløsning. Varme beregnes som `min(n_syreeq, n_baseeq) × 57.200 J/mol`, med
+mol ud fra parcelvolumen. Den anvendte stærk syre/stærk base-entalpi ligger i det
+[publicerede interval ca. 57–58 kJ/mol](https://chem.libretexts.org/Bookshelves/Physical_and_Theoretical_Chemistry_Textbook_Maps/Supplemental_Modules_%28Physical_and_Theoretical_Chemistry%29/Thermodynamics/Energies_and_Potentials/Enthalpy/Enthalpy_Change_of_Neutralization).
+Dette er en diskret reaktionsregel, ikke en kontinuert pH- eller diffusionsmodel.
+Produktet sporer ikke særskilte ioner/salte, og delvis neutralisation, fortynding
+og korrosion er endnu ikke modelleret. Svovlsyrens to syreækvivalenter er en
+tilnærmelse ved den valgte koncentration.
+
 ## Reproducerbarhed og referenceforsøg
 
 Fysisk tilfældighed og kosmetisk farvevariation har separate seedede strømme. Samme seed
 og samme inputsekvens giver samme forløb. Referenceforsøgene ligger i
 `tests/physical-model.test.ts`, `tests/reactions.test.ts`, `tests/thermal.test.ts`,
 `tests/hydrostatics.test.ts`, `tests/physics.test.ts`, `tests/explosions.test.ts`
-og `tests/electricity.test.ts`.
+`tests/electricity.test.ts` og `tests/neutralization.test.ts`.
 De dækker regnskaber, geometri, viskositetsrækkefølge, idealgastryk, kollision,
 forbrænding, eksplosioner, diffusion og forbundne kar. En bestået suite viser, at
 modellen følger disse kontrollerede regler; den beviser ikke eksperimentel nøjagtighed.

@@ -10,6 +10,7 @@ import {
 	GROUND,
 	GUNPOWDER,
 	HEATER,
+	HYDROCHLORIC_ACID,
 	ICE,
 	LAMP,
 	LAVA,
@@ -17,14 +18,17 @@ import {
 	MOLTEN_METAL,
 	materialNames,
 	materialsById,
+	NEUTRAL_SOLUTION,
 	OIL,
 	PLANT,
 	palettes,
 	pickerIds,
 	SAND,
 	SMOKE,
+	SODIUM_HYDROXIDE,
 	STEAM,
 	STONE,
+	SULFURIC_ACID,
 	WATER,
 	WAVE_MATERIALS,
 	WIRE,
@@ -61,6 +65,10 @@ const matterIds = [
 	BATTERY,
 	GROUND,
 	LAMP,
+	HYDROCHLORIC_ACID,
+	SULFURIC_ACID,
+	SODIUM_HYDROXIDE,
+	NEUTRAL_SOLUTION,
 ];
 
 function energies(materials: Uint8Array, temperatures: number[]): Float64Array<ArrayBuffer> {
@@ -79,7 +87,7 @@ function expectConserved(energy: Float64Array, initialTotal: number): void {
 
 describe("material integration contract", () => {
 	test("preserves IDs and wave materials, and supplies new matter and tool names", () => {
-		expect(matterIds).toEqual(Array.from({ length: 20 }, (_, i) => i));
+		expect(matterIds).toEqual(Array.from({ length: 24 }, (_, i) => i));
 		expect(BLAST).toBe(252);
 		expect([COOLER, HEATER, ERASER]).toEqual([253, 254, 255]);
 		expect(WAVE_MATERIALS).toEqual([WATER, OIL, LAVA]);
@@ -109,7 +117,8 @@ describe("material integration contract", () => {
 
 	test("uses the specified initial temperatures and round-trips spawn energy", () => {
 		const defaults = [
-			22, 22, 22, 22, 22, 22, 22, 22, 1900, 1500, 180, 150, -20, 22, 1700, 22, 22, 22, 22, 22,
+			22, 22, 22, 22, 22, 22, 22, 22, 1900, 1500, 180, 150, -20, 22, 1700, 22, 22, 22, 22, 22, 22,
+			22, 22, 22,
 		];
 		for (const material of matterIds) {
 			const temperature = initialTemperature(material);
@@ -414,7 +423,7 @@ describe("synchronous conservative diffusion", () => {
 			matterIds.map(() => 22),
 		);
 		const before = energy.slice();
-		const solver = createThermalSolver(5, 4);
+		const solver = createThermalSolver(6, 4);
 		for (let i = 0; i < 20; i += 1) solver.diffuse(materials, energy);
 		expect(energy).toEqual(before);
 		for (const values of [
@@ -514,7 +523,7 @@ describe("boundary validation", () => {
 	});
 
 	test("rejects unknown, noninteger, nonfinite and brush-tool material IDs", () => {
-		for (const material of [-1, 20, 1.5, NaN, Infinity, -Infinity, HEATER, COOLER, ERASER]) {
+		for (const material of [-1, 24, 1.5, NaN, Infinity, -Infinity, HEATER, COOLER, ERASER]) {
 			expect(() => initialTemperature(material)).toThrow(RangeError);
 			expect(() => energyAtTemperature(material, 22)).toThrow(RangeError);
 			expect(() => temperatureFromEnergy(material, 22)).toThrow(RangeError);
@@ -561,7 +570,7 @@ describe("boundary validation", () => {
 
 	test("rejects invalid cells atomically and recovers on the next valid call", () => {
 		const solver = createThermalSolver(2, 1);
-		for (const material of [20, HEATER, COOLER, ERASER]) {
+		for (const material of [24, HEATER, COOLER, ERASER]) {
 			const energy = new Float64Array([100, 0]);
 			expect(() => solver.diffuse(new Uint8Array([EMPTY, material]), energy)).toThrow(RangeError);
 			expect(Array.from(energy)).toEqual([100, 0]);

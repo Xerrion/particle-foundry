@@ -177,7 +177,7 @@ describe("brush geometry and input boundary", (): void => {
 			expect((): void => brush.setSize(size)).toThrow(RangeError);
 			expect(brush.getSize()).toBe(1);
 		}
-		for (const material of [-1, 20, 251, 256, 1.5, 253.5, NaN, Infinity, -Infinity]) {
+		for (const material of [-1, 24, 251, 256, 1.5, 253.5, NaN, Infinity, -Infinity]) {
 			expect((): void => brush.setMaterial(material)).toThrow(RangeError);
 		}
 		expect(snapshot(world)).toEqual(before);

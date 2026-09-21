@@ -3,6 +3,7 @@ import {
 	BATTERY,
 	EMPTY,
 	FIRE,
+	HYDROCHLORIC_ACID,
 	ICE,
 	isMatterId,
 	type MaterialDefinition,
@@ -102,6 +103,21 @@ describe("material catalogue contracts", () => {
 		expect(() => validateMaterialCatalogue(f.definitions, f.tools)).toThrow("stored energy");
 	});
 
+	test("acid presets require valid equivalents and chemical energy", () => {
+		const f = fixture();
+		f.edit(HYDROCHLORIC_ACID, {
+			neutralization: { role: "acid", equivalentsMolPerL: 0, heatJPerMol: 57_200 },
+		});
+		expect(() => validateMaterialCatalogue(f.definitions, f.tools)).toThrow("positive equivalents");
+		f.edit(HYDROCHLORIC_ACID, {
+			neutralization: materialDefinitions[HYDROCHLORIC_ACID].neutralization,
+			chemicalEnergyKjPerKg: 0,
+		});
+		expect(() => validateMaterialCatalogue(f.definitions, f.tools)).toThrow(
+			"stored chemical energy",
+		);
+	});
+
 	test("tool IDs cannot overlap matter IDs", () => {
 		expect(() =>
 			validateMaterialCatalogue(materialDefinitions, [{ id: WATER, key: "new-tool" }]),
@@ -177,12 +193,12 @@ describe("material catalogue contracts", () => {
 	});
 
 	test("checked lookups narrow actual IDs and picker membership stays unchanged", () => {
-		for (const id of Array.from({ length: 20 }, (_, index) => index)) {
+		for (const id of Array.from({ length: 24 }, (_, index) => index)) {
 			expect(isMatterId(id)).toBe(true);
 			if (isMatterId(id)) expect(physicalProperties(id)).toBe(materialDefinitions[id]);
 			expect(materialsById[id]).toBe(physicalProperties(id));
 		}
-		for (const id of [-1, 1.5, NaN, Infinity, 20, 252, 253, 254, 255]) {
+		for (const id of [-1, 1.5, NaN, Infinity, 24, 252, 253, 254, 255]) {
 			expect(isMatterId(id)).toBe(false);
 			expect(() => physicalProperties(id)).toThrow(RangeError);
 		}
@@ -204,6 +220,9 @@ describe("material catalogue contracts", () => {
 			battery: 17,
 			ground: 18,
 			lamp: 19,
+			hydrochloricAcid: 20,
+			sulfuricAcid: 21,
+			sodiumHydroxide: 22,
 			blast: 252,
 			eraser: 255,
 			heat: 254,
