@@ -101,6 +101,7 @@ describe("visible, energy-funded boiling", () => {
 		},
 	);
 
+	// Full 420-tick physics runs can exceed Bun's 5-second default on shared CI runners.
 	test.each([1, 42, 123])(
 		"heated pot produces rising bubbles and escaping steam, not sheets (seed %i)",
 		(seed) => {
@@ -138,6 +139,7 @@ describe("visible, energy-funded boiling", () => {
 			).toBeLessThan(1);
 			for (let x = 9; x <= 38; x++) expect(w.grid[x + 44 * 48]).toBe(METAL);
 		},
+		20_000,
 	);
 
 	test("a below-boiling hot plate does not create steam", () => {
