@@ -30,10 +30,12 @@ export interface WorldLedger {
 
 export interface WorldOptions {
 	readonly seed?: number;
+	readonly boundariesEnabled?: boolean;
 }
 
 /** Internal simulation state. Arrays are owned here; physics modules share them, never mirror them. */
 export interface World {
+	boundariesEnabled: boolean;
 	readonly width: number;
 	readonly height: number;
 	readonly size: number;
@@ -352,6 +354,7 @@ export function createWorld(width: number, height: number, options: WorldOptions
 	}
 
 	return {
+		boundariesEnabled: options.boundariesEnabled ?? true,
 		width,
 		height,
 		size,

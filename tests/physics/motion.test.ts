@@ -18,6 +18,56 @@ import { createPhysics } from "../../src/simulation/physics";
 import { createWorld } from "../../src/simulation/world";
 
 describe("conservative local transport", () => {
+	test("open edges release rising gas and outward moving matter but retain the floor", () => {
+		const world = createWorld(5, 5, { boundariesEnabled: false });
+		world.setCell(world.indexAt(2, 4), SAND);
+		world.setCell(world.indexAt(3, 0), SMOKE);
+		world.setCell(world.indexAt(0, 2), WATER);
+		world.velocityX[world.indexAt(0, 2)] = -1;
+		const before = world.ledger.massRemovedKg;
+		const motion = createMotion(world);
+		motion.update(world.indexAt(2, 4), 0);
+		motion.update(world.indexAt(3, 0), 0);
+		motion.update(world.indexAt(0, 2), 0);
+		expect(world.getParticleCount()).toBe(1);
+		expect(world.getCell(2, 4).material).toBe(SAND);
+		expect(world.ledger.massRemovedKg).toBeGreaterThan(before);
+	});
+
+	test("closed edges retain particles", () => {
+		const world = createWorld(1, 1);
+		world.setCell(0, SAND);
+		createMotion(world).update(0, 0);
+		expect(world.grid[0]).toBe(SAND);
+	});
+
+	test("open top vents heated air pressure while the floor remains solid", () => {
+		const open = createWorld(5, 5, { boundariesEnabled: false });
+		const closed = createWorld(5, 5);
+		for (const world of [open, closed]) {
+			for (let x = 0; x < 5; x += 1) world.setCell(world.indexAt(x, 4), STONE);
+			world.addExternalEnergy(world.indexAt(2, 0), 100);
+			createPhysics(world).step();
+		}
+		expect(open.pressurePa[open.indexAt(2, 0)]).toBeCloseTo(101_325, 3);
+		expect(closed.pressurePa[closed.indexAt(2, 0)]).toBeGreaterThan(101_325);
+		expect(open.grid[open.indexAt(2, 4)]).toBe(STONE);
+	});
+
+	test("pressure from inside the world dissipates through open edges", () => {
+		const open = createWorld(9, 9, { boundariesEnabled: false });
+		const closed = createWorld(9, 9);
+		for (const world of [open, closed]) {
+			for (let x = 0; x < 9; x += 1) world.setCell(world.indexAt(x, 8), STONE);
+			world.addExternalEnergy(world.indexAt(4, 2), 500);
+			const physics = createPhysics(world);
+			for (let step = 0; step < 20; step += 1) physics.step();
+		}
+		expect(open.pressurePa[open.indexAt(4, 2)]).toBeLessThan(
+			closed.pressurePa[closed.indexAt(4, 2)],
+		);
+		expect(open.grid[open.indexAt(4, 8)]).toBe(STONE);
+	});
 	test.each([-1, 1])("liquid momentum prefers the %i horizontal outlet", (direction) => {
 		const world = createWorld(5, 2);
 		world.setCell(2, WATER);

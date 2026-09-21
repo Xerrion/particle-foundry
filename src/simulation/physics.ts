@@ -1,3 +1,4 @@
+import { EMPTY } from "../materials";
 import { isGas } from "../materials/queries";
 import { createAirflow } from "../physics/airflow";
 import { createBoiling } from "../physics/boiling";
@@ -11,6 +12,7 @@ import { createNeutralization } from "../physics/neutralization";
 import { createReactions } from "../physics/reactions";
 import { createSolidMechanics } from "../physics/solid-mechanics";
 import { createThermalSolver } from "../physics/thermal";
+import { AMBIENT_PRESSURE_PA, AMBIENT_TEMPERATURE_C } from "./physical-scale";
 import type { World } from "./world";
 
 /** Orders one fixed 1/60-second model tick. No browser, brush, or visual state belongs here. */
@@ -28,6 +30,29 @@ export function createPhysics(world: World) {
 	const gas = createGasDynamics(world);
 	const solids = createSolidMechanics(world);
 	let tick = 0;
+	function ventOpenEdges(): boolean {
+		if (world.boundariesEnabled) return false;
+		let changed = false;
+		function vent(index: number): void {
+			if (!isGas(world.grid[index])) return;
+			if (
+				world.grid[index] === EMPTY &&
+				Math.abs(world.pressurePa[index] - AMBIENT_PRESSURE_PA) < 1e-6 &&
+				Math.abs(world.temperatureAt(index) - AMBIENT_TEMPERATURE_C) < 1e-6 &&
+				world.velocityX[index] === 0 &&
+				world.velocityY[index] === 0
+			)
+				return;
+			world.setCell(index, EMPTY);
+			changed = true;
+		}
+		for (let x = 0; x < world.width; x += 1) vent(x);
+		for (let y = 1; y < world.height; y += 1) {
+			vent(y * world.width);
+			if (world.width > 1) vent(y * world.width + world.width - 1);
+		}
+		return changed;
+	}
 	function step(): void {
 		gas.derivePressure();
 		thermal.diffuse(world.grid, world.energy, world.pressurePa, world.massKg);
@@ -69,6 +94,7 @@ export function createPhysics(world: World) {
 		fluids.step(tick);
 		solids.step();
 		gas.derivePressure();
+		if (ventOpenEdges()) gas.derivePressure();
 		tick += 1;
 	}
 	return {

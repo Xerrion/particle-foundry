@@ -273,6 +273,23 @@ export function createMotion(world: World) {
 	function update(index: number, tick: number): void {
 		if (moved[index] || grid[index] === EMPTY) return;
 		const material = grid[index];
+		if (!world.boundariesEnabled) {
+			const x = index % width;
+			const exitsTop = index < width && isGas(material);
+			const mobile =
+				isLiquid(material) ||
+				isGas(material) ||
+				materialsById[material].falls ||
+				world.dynamic[index] !== 0;
+			const exitsSide =
+				mobile &&
+				((x === 0 && world.velocityX[index] < -0.15) ||
+					(x === width - 1 && world.velocityX[index] > 0.15));
+			if (exitsTop || exitsSide) {
+				world.setCell(index, EMPTY);
+				return;
+			}
+		}
 		const pressureDirection =
 			isLiquid(material) && Math.abs(world.velocityX[index]) > 1e-6
 				? Math.sign(world.velocityX[index])

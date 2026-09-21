@@ -37,6 +37,7 @@ export interface Sandbox {
 	/** Opts a solid cell into rigid-parcel mechanics; invalid/outside coordinates throw. */
 	setCellDynamic(x: number, y: number, movable: boolean): void;
 	setWavesEnabled(enabled: boolean): void;
+	setBoundariesEnabled(enabled: boolean): void;
 	setTemperatureMapEnabled(enabled: boolean): void;
 	setViewMode(mode: ViewMode): void;
 	/** Advances one fixed 1/60-second model tick, independent of drawing. */
@@ -66,6 +67,12 @@ export function createSandbox(width: number, height: number, options: WorldOptio
 		physics.reset();
 		waves.reset();
 		waves.update();
+	}
+
+	function setBoundariesEnabled(enabled: boolean): void {
+		if (world.boundariesEnabled === enabled) return;
+		world.boundariesEnabled = enabled;
+		physics.refreshPressure();
 	}
 
 	function step(): void {
@@ -102,6 +109,7 @@ export function createSandbox(width: number, height: number, options: WorldOptio
 			world.setDynamic(world.indexAt(x, y), movable);
 		},
 		setWavesEnabled: waves.setEnabled,
+		setBoundariesEnabled,
 		setTemperatureMapEnabled: renderer.setTemperatureMapEnabled,
 		setViewMode: renderer.setViewMode,
 		render: (ctx, pointer, visible) => renderer.render(ctx, pointer, brush.getSize(), visible),

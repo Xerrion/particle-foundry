@@ -333,6 +333,26 @@ describe("world API and reset", () => {
 		expect(totalEnergy(world, 240, 135)).toBe(energy);
 	});
 
+	test("opening the top and sides preserves the starter floor across resets", () => {
+		const world = createSandbox(240, 135);
+		world.seed();
+		const ambientMaximumPressure = world.getDiagnostics().maximumPressurePa;
+		expect(world.getCell(0, 134).material).toBe(STONE);
+		world.setBoundariesEnabled(false);
+		expect(world.getCell(0, 134).material).toBe(STONE);
+		expect(world.getDiagnostics().maximumPressurePa).toBeLessThan(ambientMaximumPressure * 2);
+		world.step();
+		expect(world.getDiagnostics().maximumPressurePa).toBeLessThan(ambientMaximumPressure * 2);
+		world.seed();
+		expect(world.getCell(0, 134).material).toBe(STONE);
+		world.setBoundariesEnabled(true);
+		expect(world.getCell(0, 134).material).toBe(STONE);
+		world.clear();
+		world.setBoundariesEnabled(false);
+		world.setBoundariesEnabled(true);
+		expect(world.getCell(0, 134).material).toBe(EMPTY);
+	});
+
 	test("cell readings are detached and separate worlds cannot share state", () => {
 		const first = singleCell(WATER);
 		const second = singleCell(WATER);
