@@ -29,6 +29,10 @@ export const ICE = 12;
 export const GLASS = 13;
 export const MOLTEN_METAL = 14;
 export const GUNPOWDER = 15;
+export const WIRE = 16;
+export const BATTERY = 17;
+export const GROUND = 18;
+export const LAMP = 19;
 export const BLAST = 252;
 export const COOLER = 253;
 export const HEATER = 254;
@@ -113,6 +117,12 @@ export interface MaterialDefinition {
 		readonly radiusCells: number;
 		readonly impulseSpeedMPerS: number;
 	};
+	/** Resistance and optional fixed-potential circuit terminal for the game circuit solver. */
+	readonly electrical?: {
+		readonly resistanceOhms: number;
+		readonly terminal?: "source" | "ground";
+		readonly voltageV?: number;
+	};
 	readonly falls: boolean;
 	readonly heatGlow?: GlowProfile;
 }
@@ -196,6 +206,7 @@ function define(
 		lifetimeTicks: data.lifetimeTicks,
 		ignitionBrush: data.ignitionBrush,
 		explosive: data.explosive,
+		electrical: data.electrical,
 	});
 }
 
@@ -338,6 +349,7 @@ export const materialDefinitions = Object.freeze({
 		shortcut: "6",
 		phaseFamily: phaseFamilies.metal,
 		heatGlow: metalGlow,
+		electrical: { resistanceOhms: 0.8 },
 	}),
 	[PLANT]: define({
 		id: PLANT,
@@ -527,6 +539,82 @@ export const materialDefinitions = Object.freeze({
 		chemicalEnergyKjPerKg: 3000,
 		ignitionTemperatureC: 250,
 		explosive: { triggerTemperatureC: 250, radiusCells: 4, impulseSpeedMPerS: 3 },
+	}),
+	[WIRE]: define({
+		id: WIRE,
+		key: "wire",
+		name: "Wire",
+		palette: [
+			[197, 123, 67],
+			[228, 154, 91],
+			[161, 95, 51],
+			[205, 137, 73],
+		],
+		heatTransferCoefficient: 0.7,
+		cellHeatCapacity: 0.9,
+		displacementDensity: 2.5,
+		densityKgPerM3: 8960,
+		state: "solid",
+		electrical: { resistanceOhms: 1 },
+	}),
+	[BATTERY]: define({
+		id: BATTERY,
+		key: "battery",
+		name: "Battery",
+		palette: [
+			[97, 193, 204],
+			[65, 158, 170],
+			[118, 216, 224],
+			[53, 126, 140],
+		],
+		heatTransferCoefficient: 0.25,
+		cellHeatCapacity: 1.2,
+		displacementDensity: 2.5,
+		densityKgPerM3: 2000,
+		state: "solid",
+		chemicalEnergyKjPerKg: 1000,
+		electrical: { resistanceOhms: 1, terminal: "source", voltageV: 12 },
+	}),
+	[GROUND]: define({
+		id: GROUND,
+		key: "ground",
+		name: "Ground",
+		palette: [
+			[75, 103, 115],
+			[89, 119, 132],
+			[56, 79, 90],
+			[107, 134, 146],
+		],
+		heatTransferCoefficient: 0.3,
+		cellHeatCapacity: 1.2,
+		displacementDensity: 2.5,
+		densityKgPerM3: 2000,
+		state: "solid",
+		electrical: { resistanceOhms: 1, terminal: "ground" },
+	}),
+	[LAMP]: define({
+		id: LAMP,
+		key: "lamp",
+		name: "Lamp",
+		palette: [
+			[116, 118, 112],
+			[134, 136, 125],
+			[91, 96, 94],
+			[153, 152, 137],
+		],
+		heatTransferCoefficient: 0.14,
+		cellHeatCapacity: 0.65,
+		displacementDensity: 2.5,
+		densityKgPerM3: 2500,
+		state: "solid",
+		electrical: { resistanceOhms: 4 },
+		heatGlow: {
+			startsC: 30,
+			fullC: 85,
+			brightAboveC: 55,
+			warmColor: [255, 199, 102],
+			brightColor: [255, 247, 180],
+		},
 	}),
 } satisfies Record<number, MaterialDefinition>);
 

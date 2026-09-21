@@ -108,6 +108,21 @@ export function validateMaterialCatalogue(
 				profile.radiusCells <= 12 &&
 				positive(profile.impulseSpeedMPerS), `${label}: invalid explosive profile`);
 		}
+		if (material.electrical) {
+			const electrical = material.electrical;
+			require(material.state === "solid" &&
+				positive(
+					electrical.resistanceOhms,
+				), `${label}: electrical conductors need solid state and positive resistance`);
+			if (electrical.terminal === "source")
+				require(positive(electrical.voltageV ?? NaN) &&
+					material.chemicalEnergyKjPerKg >
+						0, `${label}: electrical sources need voltage and stored energy`);
+			else
+				require(electrical.voltageV === undefined &&
+					(electrical.terminal === undefined ||
+						electrical.terminal === "ground"), `${label}: invalid electrical terminal`);
+		}
 		if (material.transforms) {
 			require(Object.hasOwn(
 				definitions,

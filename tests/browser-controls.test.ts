@@ -115,6 +115,25 @@ describe("browser control flow", () => {
 		});
 
 		const controls = bindControls(canvas, sandbox);
+		expect(window.document.querySelectorAll(".element-tile")).toHaveLength(118);
+		const elementSearch = element<HTMLInputElement>("#elementSearch");
+		elementSearch.value = "oganesson";
+		elementSearch.dispatchEvent(domEvent(new window.Event("input")));
+		expect(window.document.querySelectorAll(".element-tile:not([hidden])")).toHaveLength(1);
+		expect(element<HTMLElement>("#elementResultCount").textContent).toContain("1 of 118");
+
+		const materialSearch = element<HTMLInputElement>("#materialSearch");
+		materialSearch.value = "gunpowder";
+		materialSearch.dispatchEvent(domEvent(new window.Event("input")));
+		expect(window.document.querySelectorAll(".material:not([hidden])")).toHaveLength(1);
+		const materialCategory = element<HTMLSelectElement>("#materialCategory");
+		materialSearch.value = "";
+		materialSearch.dispatchEvent(domEvent(new window.Event("input")));
+		materialCategory.value = "tools";
+		materialCategory.dispatchEvent(domEvent(new window.Event("change")));
+		expect(window.document.querySelectorAll(".material:not([hidden])")).toHaveLength(4);
+		materialCategory.value = "all";
+		materialCategory.dispatchEvent(domEvent(new window.Event("change")));
 		element<HTMLButtonElement>("[data-material='water']").click();
 		expect(calls.materials.at(-1)).toBe(WATER);
 		element<HTMLButtonElement>("[data-material='gunpowder']").click();

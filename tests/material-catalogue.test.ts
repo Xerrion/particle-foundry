@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import {
+	BATTERY,
 	EMPTY,
 	FIRE,
 	ICE,
@@ -18,6 +19,7 @@ import {
 	toolDefinitions,
 	WATER,
 	WAVE_MATERIALS,
+	WIRE,
 } from "../src/material-definitions";
 import { validateMaterialCatalogue } from "../src/validate-material-catalogue";
 
@@ -89,6 +91,15 @@ describe("material catalogue contracts", () => {
 		expect(() => validateMaterialCatalogue(f.definitions, f.tools)).toThrow("chemical energy");
 		f.edit(OIL, { ignitionTemperatureC: Infinity });
 		expect(() => validateMaterialCatalogue(f.definitions, f.tools)).not.toThrow();
+	});
+
+	test("electrical profiles reject invalid resistance and unfunded voltage sources", () => {
+		const f = fixture();
+		f.edit(WIRE, { electrical: { resistanceOhms: 0 } });
+		expect(() => validateMaterialCatalogue(f.definitions, f.tools)).toThrow("positive resistance");
+		f.edit(WIRE, { electrical: { resistanceOhms: 1 } });
+		f.edit(BATTERY, { chemicalEnergyKjPerKg: 0 });
+		expect(() => validateMaterialCatalogue(f.definitions, f.tools)).toThrow("stored energy");
 	});
 
 	test("tool IDs cannot overlap matter IDs", () => {
@@ -166,12 +177,12 @@ describe("material catalogue contracts", () => {
 	});
 
 	test("checked lookups narrow actual IDs and picker membership stays unchanged", () => {
-		for (const id of [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]) {
+		for (const id of Array.from({ length: 20 }, (_, index) => index)) {
 			expect(isMatterId(id)).toBe(true);
 			if (isMatterId(id)) expect(physicalProperties(id)).toBe(materialDefinitions[id]);
 			expect(materialsById[id]).toBe(physicalProperties(id));
 		}
-		for (const id of [-1, 1.5, NaN, Infinity, 16, 252, 253, 254, 255]) {
+		for (const id of [-1, 1.5, NaN, Infinity, 20, 252, 253, 254, 255]) {
 			expect(isMatterId(id)).toBe(false);
 			expect(() => physicalProperties(id)).toThrow(RangeError);
 		}
@@ -189,6 +200,10 @@ describe("material catalogue contracts", () => {
 			glass: 13,
 			moltenMetal: 14,
 			gunpowder: 15,
+			wire: 16,
+			battery: 17,
+			ground: 18,
+			lamp: 19,
 			blast: 252,
 			eraser: 255,
 			heat: 254,

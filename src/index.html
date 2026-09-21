@@ -85,8 +85,33 @@
               <h2>Materials</h2>
               <span id="selectedMaterialLabel">Sand selected</span>
             </div>
+            <div class="catalogue-filters">
+              <label class="sr-only" for="materialSearch">Search materials and tools</label>
+              <input id="materialSearch" type="search" placeholder="Search materials and tools" autocomplete="off" />
+              <label class="sr-only" for="materialCategory">Material category</label>
+              <select id="materialCategory">
+                <option value="all">All categories</option>
+                <option value="powders">Powders</option>
+                <option value="solids">Solids</option>
+                <option value="liquids">Liquids</option>
+                <option value="gases">Gases</option>
+                <option value="energy">Energy</option>
+                <option value="electrical">Electrical</option>
+                <option value="tools">Tools</option>
+              </select>
+            </div>
+            <p class="catalogue-count" id="materialResultCount" aria-live="polite"></p>
             <div class="material-grid" id="materialGrid"></div>
-            <p class="thermal-hint">Hold to pour or paint any material. Fire ignites wood, plants and oil. Heat / Cool change energy. While paused, click or drag to edit.</p>
+            <p class="thermal-hint">Hold to pour or paint any material. Fire ignites fuel; Gunpowder explodes. Connect Battery through Wire or Metal and a Lamp to Ground to make heat and light. Heat / Cool change energy.</p>
+            <details class="element-reference">
+              <summary>Periodic table · 118 elements</summary>
+              <p>Names and symbols for reference. Element-specific simulation is being added in phases.</p>
+              <label class="sr-only" for="elementSearch">Search chemical elements</label>
+              <input id="elementSearch" type="search" placeholder="Name, symbol or atomic number" autocomplete="off" />
+              <p class="catalogue-count" id="elementResultCount" aria-live="polite"></p>
+              <div class="element-grid" id="elementGrid"></div>
+              <a href="https://iupac.org/what-we-do/periodic-table-of-elements/" target="_blank" rel="noopener noreferrer">IUPAC periodic table ↗</a>
+            </details>
           </section>
 
           <section class="tool-section settings-section">
@@ -166,7 +191,7 @@
       <footer class="footer-bar">
 		<span>Hold or drag to paint</span>
 		<span class="footer-separator">•</span>
-		<span>0–9 materials · H heat · C cool · T temperature · P pressure · V velocity</span>
+		<span>1–9 quick materials · B blast · H heat · C cool · T temperature · P pressure · V velocity</span>
 		<span class="footer-spacer"></span>
 		<span id="totalMass">0.000 kg matter</span>
 		<span class="footer-separator">•</span>

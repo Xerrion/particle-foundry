@@ -14,21 +14,25 @@ skal have tydelig tilstand, kilder til data og afgrænsede regler.
 - Næste trin i samme område: flere brændstoffer og oxidanter, røg/ild-produkter,
   temperaturafhængige rater og scenarier til visuel sammenligning.
 
-## Fase 2: katalog og betjening til mange materialer
+## Fase 2: katalog og betjening til mange materialer — første del leveret
 
 - Udvid materiale-ID'er ud over `Uint8Array`-grænsen på 256 værdier og migrér
   eventuelle gemte scener. Hold værktøjs-ID'er adskilt fra stof-ID'er.
-- Tilføj kategorier, søgning, favoritter og beskrivelser, så hundredvis af poster
-  kan vælges uden en uoverskuelig knapvæg.
+- Kategorier og søgning for malbare materialer og værktøjer er tilføjet. Favoritter,
+  beskrivelser og flere materialer følger senere.
+- En søgbar tabel med alle 118 navne, symboler og atomnumre er leveret som
+  reference. Ingen af posterne tæller som en implementeret simulering endnu.
 - Indfør maskinlæsbare datakilder og validering af enheder, manglende værdier,
   faseforbindelser og dublerede identiteter.
 
-## Fase 3: elektricitet
+## Fase 3: elektricitet — første del leveret
 
-- Ledningsevne, isolatorer, energikilder, kontakter og en begrænset
-  ladnings-/strømmodel. Elektrisk energi, varme og gnister skal stå i regnskabet.
-- Test åbne og lukkede kredsløb, polaritet hvor relevant, isolering gennem vægge,
-  energioverførsel og reproducerbarhed mod selvstændige referenceberegninger.
+- Battery, Ground, Wire, Lamp og Metal danner et resistivt netværk over fire
+  naboretninger. Batteriets finite kemiske lager finansierer Joule-varmen.
+  Et åbent kredsløb, isolering, batteritømning og et lukket kredsløb testes mod
+  Ohms lov og et selvstændigt energiregnskab.
+- Kontakter, gnister, polaritet, længerevarende dynamisk kredsløbsrespons og
+  flere energikilder mangler endnu.
 
 ## Fase 4: syrer og opløsninger
 

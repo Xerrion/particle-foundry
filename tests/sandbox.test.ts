@@ -322,7 +322,7 @@ describe("world API and reset", () => {
 			expect(() => createSandbox(1, value)).toThrow(RangeError);
 		}
 		const world = singleCell(SAND);
-		for (const value of [-1, 16, 256, 1.5, NaN, Infinity]) {
+		for (const value of [-1, 20, 256, 1.5, NaN, Infinity]) {
 			expect(() => world.setMaterial(value)).toThrow(RangeError);
 		}
 		for (const value of [0, -1, 13, 1.5, NaN, Infinity]) {

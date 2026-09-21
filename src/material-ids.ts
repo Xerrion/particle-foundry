@@ -1,15 +1,18 @@
 export type { MaterialId, ToolId } from "./material-definitions";
 export {
+	BATTERY,
 	BLAST,
 	COOLER,
 	EMPTY,
 	ERASER,
 	FIRE,
 	GLASS,
+	GROUND,
 	GUNPOWDER,
 	HEATER,
 	ICE,
 	isMatterId,
+	LAMP,
 	LAVA,
 	MATTER_COUNT,
 	METAL,
@@ -22,5 +25,6 @@ export {
 	STONE,
 	WATER,
 	WAVE_MATERIALS,
+	WIRE,
 	WOOD,
 } from "./material-definitions";

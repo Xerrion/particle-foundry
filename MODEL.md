@@ -54,6 +54,8 @@ målinger af parcelvolumen og ejer ikke væske.
   isoleret. Et ændret tidskridt og en ændret geometri gives eksplicit til solveren.
 - Kollisionstab bliver termisk energi. Kemisk energi reduceres, når forbrænding frigiver
   samme energimængde som varme.
+- Batterier afgiver højst deres lagrede kemiske energi. En elektrisk kant tilfører
+  den tilsvarende Joule-varme ligeligt til sine to celler.
 - Trykimpulser omsætter ændringen i kinetisk energi til en modsat ændring i lagret
   termisk energi. En eksplosion betaler varme og radial bevægelse fra sit kemiske
   energilager; Blast-værktøjet registrerer i stedet en ekstern energikilde.
@@ -151,12 +153,28 @@ første tryk ikke sænkes kunstigt af øjeblikkelig fri ekspansion. Modellen lø
 ikke chokbølger, fragmentering eller gasprodukternes kemi, og blastens rækkevidde
 og impulshastighed er kalibrerede spilparametre.
 
+Elektricitet i `electricity.ts` forbinder kun ortogonalt tilstødende solide ledere.
+Battery har en fast 12 V-terminal, Ground 0 V, og Wire, Metal og Lamp har positive,
+kalibrerede resistanser. En iterativ løsning estimerer potentialet i hver leder.
+Kantstrøm følger Ohms lov med middelmodstanden fra de to celler; varme er
+`(ΔV)² / R · (1/60 s)` og trækkes fra batteriets kemiske energi. Ved tomt batteri
+stopper strømmen. Grænser: potentialerne er kvasistatiske, iterationerne er
+begrænsede, og modellen har ikke kapacitans, induktans, gnister eller realistisk
+elektrokemi. En uforbundet komponent trækker ingen energi.
+
+De 118 grundstoffer i `element-reference.ts` er kun navn, symbol og atomnummer.
+Listen er bygget fra `periodictable` 2.1.0 og kontrolleret mod
+[IUPACs periodiske tabel](https://iupac.org/what-we-do/periodic-table-of-elements/)
+og [PubChem](https://pubchem.ncbi.nlm.nih.gov/docs/elements). Den tilføjer ingen
+stoffysik eller reaktioner til modellen.
+
 ## Reproducerbarhed og referenceforsøg
 
 Fysisk tilfældighed og kosmetisk farvevariation har separate seedede strømme. Samme seed
 og samme inputsekvens giver samme forløb. Referenceforsøgene ligger i
 `tests/physical-model.test.ts`, `tests/reactions.test.ts`, `tests/thermal.test.ts`,
-`tests/hydrostatics.test.ts`, `tests/physics.test.ts` og `tests/explosions.test.ts`.
+`tests/hydrostatics.test.ts`, `tests/physics.test.ts`, `tests/explosions.test.ts`
+og `tests/electricity.test.ts`.
 De dækker regnskaber, geometri, viskositetsrækkefølge, idealgastryk, kollision,
 forbrænding, eksplosioner, diffusion og forbundne kar. En bestået suite viser, at
 modellen følger disse kontrollerede regler; den beviser ikke eksperimentel nøjagtighed.

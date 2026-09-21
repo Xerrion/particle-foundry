@@ -1,4 +1,5 @@
 import type { PhysicalTotals } from "./diagnostics";
+import { chemicalElements, searchChemicalElements } from "./element-reference";
 import { PRESSURE_SCALE, VELOCITY_SCALE } from "./field-map";
 import {
 	materialDefinitions,
@@ -99,6 +100,12 @@ export function bindControls(canvas: HTMLCanvasElement, sandbox: Sandbox): Contr
 	const pressureLegend = requiredElement<HTMLElement>("#pressureLegend");
 	const velocityLegend = requiredElement<HTMLElement>("#velocityLegend");
 	const materialGrid = requiredElement<HTMLElement>("#materialGrid");
+	const materialSearch = requiredElement<HTMLInputElement>("#materialSearch");
+	const materialCategory = requiredElement<HTMLSelectElement>("#materialCategory");
+	const materialResultCount = requiredElement<HTMLElement>("#materialResultCount");
+	const elementGrid = requiredElement<HTMLElement>("#elementGrid");
+	const elementSearch = requiredElement<HTMLInputElement>("#elementSearch");
+	const elementResultCount = requiredElement<HTMLElement>("#elementResultCount");
 	const clearButton = requiredElement<HTMLButtonElement>("#clearButton");
 	const resetButton = requiredElement<HTMLButtonElement>("#resetButton");
 	const fullscreenButton = requiredElement<HTMLButtonElement>("#fullscreenButton");
@@ -123,6 +130,11 @@ export function bindControls(canvas: HTMLCanvasElement, sandbox: Sandbox): Contr
 	// as the simulation. A new selectable material needs no HTML/CSS entry.
 	materialGrid.replaceChildren();
 	const pickerEntries = [...selectableMaterials, ...toolDefinitions];
+	const materialButtons: Array<{
+		entry: (typeof pickerEntries)[number];
+		button: HTMLButtonElement;
+		category: string;
+	}> = [];
 	for (const entry of pickerEntries) {
 		const button = document.createElement("button");
 		button.type = "button";
@@ -143,8 +155,65 @@ export function bindControls(canvas: HTMLCanvasElement, sandbox: Sandbox): Contr
 			button.setAttribute("aria-keyshortcuts", entry.shortcut);
 			button.append(shortcut);
 		}
+		const category =
+			"state" in entry
+				? entry.electrical
+					? "electrical"
+					: entry.key === "fire"
+						? "energy"
+						: entry.state === "granular"
+							? "powders"
+							: entry.state === "ambient" || entry.state === "gas"
+								? "gases"
+								: entry.state === "liquid"
+									? "liquids"
+									: "solids"
+				: "tools";
+		button.dataset.category = category;
+		materialButtons.push({ entry, button, category });
 		materialGrid.append(button);
 	}
+	function filterMaterials(): void {
+		const term = materialSearch.value.trim().toLocaleLowerCase();
+		let visible = 0;
+		for (const { entry, button, category } of materialButtons) {
+			const matches =
+				(materialCategory.value === "all" || category === materialCategory.value) &&
+				`${entry.name} ${entry.key}`.toLocaleLowerCase().includes(term);
+			button.hidden = !matches;
+			if (matches) visible += 1;
+		}
+		materialResultCount.textContent = `${visible} of ${materialButtons.length} materials and tools`;
+	}
+	materialSearch.addEventListener("input", filterMaterials);
+	materialCategory.addEventListener("change", filterMaterials);
+	filterMaterials();
+
+	elementGrid.replaceChildren();
+	const elementTiles = chemicalElements.map((element) => {
+		const tile = document.createElement("div");
+		tile.className = "element-tile";
+		tile.dataset.atomicNumber = String(element.atomicNumber);
+		tile.title = `${element.name} (${element.symbol}), atomic number ${element.atomicNumber} · reference only`;
+		const number = document.createElement("span");
+		number.textContent = String(element.atomicNumber);
+		const symbol = document.createElement("strong");
+		symbol.textContent = element.symbol;
+		const name = document.createElement("small");
+		name.textContent = element.name;
+		tile.append(number, symbol, name);
+		elementGrid.append(tile);
+		return tile;
+	});
+	function filterElements(): void {
+		const matches = new Set(
+			searchChemicalElements(elementSearch.value).map((element) => element.atomicNumber),
+		);
+		for (const tile of elementTiles) tile.hidden = !matches.has(Number(tile.dataset.atomicNumber));
+		elementResultCount.textContent = `${matches.size} of ${chemicalElements.length} elements · reference only`;
+	}
+	elementSearch.addEventListener("input", filterElements);
+	filterElements();
 	const legendScale = document.createElement("div");
 	legendScale.className = "temperature-scale";
 	legendScale.style.background = `linear-gradient(to right, ${TEMPERATURE_SCALE.map((stop, i) => `rgb(${stop.color.join(",")}) ${(100 * i) / (TEMPERATURE_SCALE.length - 1)}%`).join(",")})`;

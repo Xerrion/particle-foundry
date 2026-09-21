@@ -60,6 +60,15 @@ GitHub Actions kører lint, checks og build ved push og pull requests.
   hastighed. Blast-værktøjet tilfører registreret ekstern energi; forankrede vægge
   afskærmer effekten. Dette er en kalibreret sandkasseregel, ikke en præcis
   sprængningsmodel.
+- Søg eller filtrér materialerne efter kategori. Byg en sammenhængende kreds fra
+  **Battery** gennem **Wire** eller **Metal** og **Lamp** til **Ground**. Batteriets
+  begrænsede kemiske energi bliver til varme i lederne, så lampen kan gløde.
+  Luft, sten og diagonale berøringer lukker ikke kredsen. Resistans og 12 V er
+  kalibrerede spilværdier.
+- Den søgbare periodiske tabel viser navn, symbol og atomnummer for **118
+  grundstoffer**. Den er foreløbig et opslagsregister: de 118 poster kan ikke
+  males som hver sit simulerede stof. Se [IUPACs periodiske tabel](https://iupac.org/what-we-do/periodic-table-of-elements/)
+  og [PubChems elementdata](https://pubchem.ncbi.nlm.nih.gov/docs/elements).
 - **Reset scene** genskaber startscenen med samme seed. **Clear all** nulstiller
   verden til luft ved 22 °C og nulstiller de seedede tilfældighedsstrømme.
 
@@ -92,9 +101,10 @@ bruger et seedet forløb, lagret brændselsenergi og lokal ilt; røg, der forlad
 modellen, registreres som et åbent massetab.
 
 `explosions.ts` omsætter et gunpowder-parcels begrænsede kemiske energi til varme og
-bevægelse. Blast-værktøjet fører sin energi som ekstern kilde i regnskabet. Den første
-udvidelsesfase dækker lokale eksplosioner; [funktionsplanen](ROADMAP.md) beskriver
-elektricitet, syrer og de 118 kemiske grundstoffer i efterfølgende faser.
+bevægelse. Blast-værktøjet fører sin energi som ekstern kilde i regnskabet.
+`electricity.ts` løser tilstødende ledere som et resistivt netværk og trækker
+Joule-varmen fra batteriets kemiske lager. [Funktionsplanen](ROADMAP.md) beskriver
+de kommende syrer og flere simulerede grundstoffer og spilelementer.
 
 Ild og damp følger forskellige gasprofiler. Ild flimrer, stiger hurtigere end damp,
 overfører varme konservativt til brændbart nabomateriale og fortsætter kun med at
@@ -115,7 +125,7 @@ Materialevælgeren og dens farveprøver genereres fra kataloget.
 værktøjer. `isMatterId(number)` indsnævrer typen; `physicalProperties(number)` er
 det kontrollerede opslag for ukendt input. `materialsById` er et ID-indekseret
 hot-path-opslag til de samme komplette definitioner, ikke en separat fysiktabel.
-`pickerIds` omfatter kun valgbare materialer og værktøjer; indholdet er uændret.
+`pickerIds` omfatter kun valgbare materialer og værktøjer.
 Katalogets delte profiler og de afledte opslag er frosset ved runtime.
 
 `validate-material-catalogue.ts` kører én gang ved import, også i udvikling og
@@ -144,6 +154,8 @@ reaktionstyper kræver stadig en algoritme og tests, ikke kun en ny tabelpost.
 - `solid-mechanics.ts`: dynamiske faste parceller, opdrift og kollision
 - `gas-dynamics.ts`: idealgastryk og trykimpulser
 - `reactions.ts`: stofomdannelse, ilt og kemisk energi
+- `electricity.ts`: begrænsede batterier, resistive forbindelser og Joule-varme
+- `element-reference.ts`: 118 navne, symboler og atomnumre til opslag, ikke fysikdata
 - `diagnostics.ts`: rene masse- og energiregnskaber
 - `random.ts`: reproducerbare, seedede tilfældighedsstrømme
 - `brush.ts` / `starter-scene.ts`: brugerredigering og starttilstand
