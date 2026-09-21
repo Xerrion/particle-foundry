@@ -1,12 +1,19 @@
 import { EMPTY } from "./material-ids";
 import { materialsById } from "./material-physics";
 import { isGas, isLiquid } from "./motion";
-import { AMBIENT_PRESSURE_PA, FIXED_TIME_STEP_SECONDS, IDEAL_GAS_CONSTANT } from "./physical-scale";
+import {
+	AMBIENT_PRESSURE_PA,
+	CELL_WIDTH_METERS,
+	FIXED_TIME_STEP_SECONDS,
+	GRAVITY_M_PER_S2,
+	IDEAL_GAS_CONSTANT,
+} from "./physical-scale";
 import type { World } from "./world";
 
-/** Ideal-gas pressure and conservative pressure impulses on neighboring parcels. */
+/** Gas and liquid pressure with bounded impulses across neighboring mobile parcels. */
 export function createGasDynamics(world: World) {
-	const pressureDelta = new Float64Array(world.size);
+	const pressureDeltaX = new Float64Array(world.size);
+	const pressureDeltaY = new Float64Array(world.size);
 
 	function derivePressure(): void {
 		for (let index = 0; index < world.size; index += 1) {
@@ -25,43 +32,57 @@ export function createGasDynamics(world: World) {
 			world.pressurePa[index] =
 				(moles * IDEAL_GAS_CONSTANT * kelvin) / Math.max(Number.MIN_VALUE, world.volumeM3[index]);
 		}
+		// Integrate a liquid column from its free surface. A solid interrupts
+		// the column; neighboring gas sets the pressure at an exposed cell.
 		for (let index = 0; index < world.size; index += 1) {
 			if (!isLiquid(world.grid[index])) continue;
 			const x = index % world.width;
 			let boundaryPressure = AMBIENT_PRESSURE_PA;
-			for (const neighbor of [
-				x > 0 ? index - 1 : -1,
-				x + 1 < world.width ? index + 1 : -1,
-				index >= world.width ? index - world.width : -1,
-				index + world.width < world.size ? index + world.width : -1,
-			]) {
-				if (neighbor >= 0 && isGas(world.grid[neighbor])) {
-					boundaryPressure = Math.max(boundaryPressure, world.pressurePa[neighbor]);
-				}
+			if (x > 0 && isGas(world.grid[index - 1]))
+				boundaryPressure = Math.max(boundaryPressure, world.pressurePa[index - 1]);
+			if (x + 1 < world.width && isGas(world.grid[index + 1]))
+				boundaryPressure = Math.max(boundaryPressure, world.pressurePa[index + 1]);
+			if (index >= world.width && isGas(world.grid[index - world.width]))
+				boundaryPressure = Math.max(boundaryPressure, world.pressurePa[index - world.width]);
+			if (index + world.width < world.size && isGas(world.grid[index + world.width]))
+				boundaryPressure = Math.max(boundaryPressure, world.pressurePa[index + world.width]);
+			const above = index - world.width;
+			if (above >= 0 && isLiquid(world.grid[above])) {
+				boundaryPressure = Math.max(boundaryPressure, world.pressurePa[above]);
 			}
-			world.pressurePa[index] = boundaryPressure;
+			const density = materialsById[world.grid[index]].densityKgPerM3;
+			world.pressurePa[index] = boundaryPressure + density * GRAVITY_M_PER_S2 * CELL_WIDTH_METERS;
 		}
 	}
 
-	function exchange(a: number, b: number): void {
+	function exchange(a: number, b: number, horizontal: boolean): void {
 		const aGas = isGas(world.grid[a]);
 		const bGas = isGas(world.grid[b]);
-		if (!aGas && !bGas) return;
-		const difference = world.pressurePa[a] - world.pressurePa[b];
+		const aLiquid = isLiquid(world.grid[a]);
+		const bLiquid = isLiquid(world.grid[b]);
+		if ((!aGas && !aLiquid && !world.dynamic[a]) || (!bGas && !bLiquid && !world.dynamic[b]))
+			return;
+		// The vertical liquid gradient already balances gravity in a resting pool.
+		if (!horizontal && aLiquid && bLiquid) return;
+		const pressureA = aGas || aLiquid ? world.pressurePa[a] : AMBIENT_PRESSURE_PA;
+		const pressureB = bGas || bLiquid ? world.pressurePa[b] : AMBIENT_PRESSURE_PA;
+		const difference = pressureA - pressureB;
 		const impulse =
 			Math.max(-50, Math.min(50, difference / AMBIENT_PRESSURE_PA)) * FIXED_TIME_STEP_SECONDS;
-		pressureDelta[a] -= impulse;
-		pressureDelta[b] += impulse;
+		const delta = horizontal ? pressureDeltaX : pressureDeltaY;
+		delta[a] -= impulse;
+		delta[b] += impulse;
 	}
 
 	function step(): void {
 		derivePressure();
-		pressureDelta.fill(0);
+		pressureDeltaX.fill(0);
+		pressureDeltaY.fill(0);
 		for (let y = 0; y < world.height; y += 1) {
 			for (let x = 0; x < world.width; x += 1) {
 				const index = x + y * world.width;
-				if (x + 1 < world.width) exchange(index, index + 1);
-				if (y + 1 < world.height) exchange(index, index + world.width);
+				if (x + 1 < world.width) exchange(index, index + 1, true);
+				if (y + 1 < world.height) exchange(index, index + world.width, false);
 			}
 		}
 		for (let index = 0; index < world.size; index += 1) {
@@ -71,7 +92,8 @@ export function createGasDynamics(world: World) {
 					? 0.25
 					: 0;
 			if (coupling === 0) continue;
-			world.velocityY[index] += pressureDelta[index] * coupling;
+			world.velocityX[index] += pressureDeltaX[index] * coupling;
+			world.velocityY[index] += pressureDeltaY[index] * coupling;
 		}
 	}
 

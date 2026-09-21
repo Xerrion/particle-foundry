@@ -123,9 +123,16 @@ parceller har tyngde, densitetsbaseret opdrift, kollision og dissipativt energit
 endnu ikke deformerbare eller brudbare sammenhængende legemer.
 
 Gas bruger den ideelle gaslov og udleder tryk af masse, molarmasse, temperatur og
-volumen. Vandets kogepunkt kobles til trykket med en Clausius-Clapeyron-tilnærmelse
-omkring normalpunktet. Trykgradienter giver impulser til gas, væske og dynamiske faste
-celler. Den cellulære gastransport følger åbne naboceller og kan ikke krydse en fast væg.
+volumen. Væskecellers tryk øges med densitet, tyngde og celledybde langs en lodret
+sammenhængende søjle; tilstødende gas kan sætte randtrykket. Det er en lokal
+hydrostatisk tilnærmelse, ikke en fuld trykløsning for forbundne kar. Vandets kogepunkt
+kobles til trykket med en Clausius-Clapeyron-tilnærmelse omkring normalpunktet.
+Trykgradienter giver vandrette og lodrette impulser mellem gas, væske og dynamiske
+faste parceller; forankrede vægge blokerer koblingen. Dynamiske faste parceller
+bruger atmosfæretrykket som reference på den faste side af grænsen.
+Lodrette gradienter mellem to væskeceller anvendes ikke som ekstra impuls oven i
+tyngden. Vandret væskehastighed vælger første forsøgsretning ved sideværts transport.
+Den cellulære gastransport følger åbne naboceller og kan ikke krydse en fast væg.
 Gasplumer genbruger frigivet luft også efter diagonale skridt. Opdrift kan fortrænge
 tungere gas, der allerede er skubbet ned i samme trin. Opstigningen har en lille seedet
 sideværts drift, og vandret diffusion er intermitterende; sandsynlighederne står i

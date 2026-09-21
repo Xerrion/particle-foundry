@@ -44,6 +44,10 @@ GitHub Actions kører lint, checks og build ved push og pull requests.
   fast, ikke-lineær farveskala fra -200 til 3.000 °C. Farver uden for intervallet
   mættes; cellemåleren viser den faktiske temperatur og materialet. Kortet ændrer
   ingen energi og virker også under pause.
+- **Pressure map** (`P`) viser over- og undertryk i kPa i gas og væske. Trykket i
+  væskesøjler stiger med dybden; faste celler vises mørke. **Velocity map** (`V`)
+  viser parcelfart i m/s. Cellemåleren viser tryk samt fart og de vandrette/lodrette
+  hastighedskomponenter. Kortene er visninger af modeltilstanden og virker under pause.
 - Opvarm vand eller bunden af et kar med **Heat** (`H`). Når der er lagret nok
   latent varme, dannes individuelle dampbobler, som stiger gennem vandet og bryder
   overfladen. Vand under kogepunktet får ikke kunstige bobler.
@@ -74,9 +78,11 @@ viskositetsdæmpning. Transport flytter masse, entalpi og impuls samlet.
 dynamiske. Det holder terræn og malede kar forankrede. Modellen anvender tyngde,
 densitetsbaseret opdrift, kollision og omdanner kollisionsenergi til varme.
 
-`gas-dynamics.ts` udleder tryk med idealgasloven og kobler trykgradienter til gas,
-væske og dynamiske faste celler. Gastransport følger åbninger i gitteret og krydser
-ikke vægge. Vandets kogepunkt følger trykket omkring normalpunktet. `reactions.ts`
+`gas-dynamics.ts` udleder gastryk med idealgasloven og væsketryk af søjledybde.
+Trykforskelle giver vandrette og lodrette impulser gennem åbne naboceller; væskens
+vandrette hastighed påvirker dens foretrukne strømningsretning. Gastransport følger
+åbninger i gitteret og krydser ikke vægge. Vandets kogepunkt følger trykket omkring
+normalpunktet. `reactions.ts`
 bruger et seedet forløb, lagret brændselsenergi og lokal ilt; røg, der forlader
 modellen, registreres som et åbent massetab.
 

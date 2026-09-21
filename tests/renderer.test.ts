@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test";
+import { pressureColor, velocityColor } from "../src/field-map";
 import {
 	EMPTY,
 	LAVA,
@@ -88,6 +89,31 @@ function pixel(buffer: Uint8ClampedArray, width: number, x: number, y: number): 
 }
 
 describe("headless world renderer", () => {
+	test("pressure and speed maps use model fields without changing them", () => {
+		const world = createWorld(3, 1);
+		world.setCell(1, WATER);
+		world.setCell(2, STONE);
+		world.pressurePa.set([101_325, 111_325, 0]);
+		world.velocityX[1] = 0.3;
+		world.velocityY[1] = 0.4;
+		const beforePressure = world.pressurePa.slice();
+		const beforeX = world.velocityX.slice();
+		const beforeY = world.velocityY.slice();
+		const renderer = createRenderer(world, createVisualWaves(world));
+		const canvas = canvasMock();
+		renderer.setViewMode("pressure");
+		renderer.render(canvas.ctx, outside, 1);
+		expect(pixel(canvas.buffers[0], 3, 0, 0)).toEqual([...pressureColor(101_325), 255]);
+		expect(pixel(canvas.buffers[0], 3, 1, 0)).toEqual([...pressureColor(111_325), 255]);
+		expect(pixel(canvas.buffers[0], 3, 2, 0)).toEqual([18, 25, 30, 255]);
+		renderer.setViewMode("velocity");
+		renderer.render(canvas.ctx, outside, 1);
+		expect(pixel(canvas.buffers[0], 3, 1, 0)).toEqual([...velocityColor(0.3, 0.4), 255]);
+		expect(world.pressurePa).toEqual(beforePressure);
+		expect(world.velocityX).toEqual(beforeX);
+		expect(world.velocityY).toEqual(beforeY);
+	});
+
 	test("a moving lava parcel keeps its shade instead of blinking between palette entries", () => {
 		const world = createWorld(7, 1);
 		world.setCell(0, LAVA);

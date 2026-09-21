@@ -50,10 +50,12 @@ export function createPhysics(world: World) {
 		// stroke must not be pinned in midair by a hydrostatic transfer path.
 		fluids.step(tick);
 		solids.step();
+		gas.derivePressure();
 		tick += 1;
 	}
 	return {
 		step,
+		refreshPressure: gas.derivePressure,
 		reset: (): void => {
 			tick = 0;
 			fluids.reset();

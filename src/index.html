@@ -64,6 +64,8 @@
             ></canvas>
             <div class="canvas-sheen" aria-hidden="true"></div>
             <section class="temperature-legend" id="temperatureLegend" aria-label="Temperature colour scale" hidden></section>
+            <section class="temperature-legend" id="pressureLegend" aria-label="Pressure colour scale" hidden></section>
+            <section class="temperature-legend" id="velocityLegend" aria-label="Velocity colour scale" hidden></section>
             <div class="canvas-hint" id="canvasHint">
               <span>Draw to release</span>
               <kbd>Space</kbd><span>pause</span>
@@ -71,6 +73,8 @@
             <section class="canvas-probe" aria-label="Cell probe">
               <span>Material <b id="probeMaterial">--</b></span>
               <span>Temperature <b id="probeTemperature">--</b></span>
+              <span>Pressure <b id="probePressure">--</b></span>
+              <span>Velocity <b id="probeVelocity">--</b></span>
             </section>
           </div>
         </section>
@@ -120,6 +124,22 @@
               <input id="temperatureToggle" type="checkbox" />
               <span class="toggle-track" aria-hidden="true"><span></span></span>
             </label>
+            <label class="toggle-row" for="pressureToggle">
+              <span>
+                <strong>Pressure map <kbd>P</kbd></strong>
+                <small>Gauge pressure in gas and liquids</small>
+              </span>
+              <input id="pressureToggle" type="checkbox" />
+              <span class="toggle-track" aria-hidden="true"><span></span></span>
+            </label>
+            <label class="toggle-row" for="velocityToggle">
+              <span>
+                <strong>Velocity map <kbd>V</kbd></strong>
+                <small>Speed in m/s; inspect direction below</small>
+              </span>
+              <input id="velocityToggle" type="checkbox" />
+              <span class="toggle-track" aria-hidden="true"><span></span></span>
+            </label>
           </section>
 
           <section class="tool-section action-section">
@@ -146,7 +166,7 @@
       <footer class="footer-bar">
 		<span>Hold or drag to paint</span>
 		<span class="footer-separator">•</span>
-		<span>0–9 materials · H heat · C cool · T temperature</span>
+		<span>0–9 materials · H heat · C cool · T temperature · P pressure · V velocity</span>
 		<span class="footer-spacer"></span>
 		<span id="totalMass">0.000 kg matter</span>
 		<span class="footer-separator">•</span>

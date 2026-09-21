@@ -17,6 +17,18 @@ import { createPhysics } from "../src/physics";
 import { createWorld } from "../src/world";
 
 describe("conservative local transport", () => {
+	test.each([-1, 1])("liquid momentum prefers the %i horizontal outlet", (direction) => {
+		const world = createWorld(5, 2);
+		world.setCell(2, WATER);
+		world.setCell(7, WATER);
+		world.setCell(5, STONE);
+		world.setCell(9, STONE);
+		world.velocityX[7] = direction;
+		createMotion(world).update(7, 0);
+		expect(world.grid[7 + direction]).toBe(WATER);
+		expect(world.velocityX[7 + direction]).toBe(direction);
+	});
+
 	test.each([WATER, OIL, LAVA, MOLTEN_METAL])(
 		"resting material %i does not shuffle across level ground",
 		(material) => {

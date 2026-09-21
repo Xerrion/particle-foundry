@@ -55,13 +55,14 @@ describe("browser control flow", () => {
 			clears: 0,
 			seeds: 0,
 			waves: [] as boolean[],
-			temperatureMaps: [] as boolean[],
+			viewModes: [] as string[],
 		};
 		const sandbox: Sandbox = {
 			clear: () => {
 				calls.clears += 1;
 			},
 			getCell: () => ({ material: WATER, temperature: 20, energy: 417.6 }),
+			getCellPhysics: () => ({ pressurePa: 102_000, velocityX: 0.3, velocityY: -0.4 }),
 			getDiagnostics: () => ({
 				matterMassKg: 1,
 				gasMassKg: 0,
@@ -88,7 +89,9 @@ describe("browser control flow", () => {
 			setCellDynamic: () => {},
 			setMaterial: (material) => calls.materials.push(material),
 			setWavesEnabled: (enabled) => calls.waves.push(enabled),
-			setTemperatureMapEnabled: (enabled) => calls.temperatureMaps.push(enabled),
+			setTemperatureMapEnabled: (enabled) =>
+				calls.viewModes.push(enabled ? "temperature" : "materials"),
+			setViewMode: (mode) => calls.viewModes.push(mode),
 			step: () => {},
 		};
 		const canvas = element<HTMLCanvasElement>("#sandbox");
@@ -188,16 +191,27 @@ describe("browser control flow", () => {
 		const temperatureToggle = element<HTMLInputElement>("#temperatureToggle");
 		temperatureToggle.checked = true;
 		temperatureToggle.dispatchEvent(domEvent(new window.Event("change")));
-		expect(calls.temperatureMaps.at(-1)).toBe(true);
+		expect(calls.viewModes.at(-1)).toBe("temperature");
 		expect(element<HTMLElement>("#temperatureLegend").hidden).toBe(false);
 		expect(element<HTMLElement>("#temperatureLegend").textContent).toContain("includes air");
 		window.document.dispatchEvent(new window.KeyboardEvent("keydown", { code: "KeyT" }));
-		expect(calls.temperatureMaps.at(-1)).toBe(false);
+		expect(calls.viewModes.at(-1)).toBe("materials");
 		expect(element<HTMLElement>("#temperatureLegend").hidden).toBe(true);
+		const pressureToggle = element<HTMLInputElement>("#pressureToggle");
+		pressureToggle.checked = true;
+		pressureToggle.dispatchEvent(domEvent(new window.Event("change")));
+		expect(calls.viewModes.at(-1)).toBe("pressure");
+		expect(element<HTMLElement>("#pressureLegend").hidden).toBe(false);
+		window.document.dispatchEvent(new window.KeyboardEvent("keydown", { code: "KeyV" }));
+		expect(calls.viewModes.at(-1)).toBe("velocity");
+		expect(pressureToggle.checked).toBe(false);
+		expect(element<HTMLElement>("#velocityLegend").hidden).toBe(false);
 
 		controls.updateProbe();
 		controls.updateStats(1, 60, sandbox.getDiagnostics());
 		expect(window.document.querySelector("#probeMaterial")?.textContent).toBe("Water");
+		expect(window.document.querySelector("#probePressure")?.textContent).toBe("102.0 kPa");
+		expect(window.document.querySelector("#probeVelocity")?.textContent).toContain("0.50 m/s");
 		expect(window.document.querySelector("#totalMass")?.textContent).toBe("1.000 kg matter");
 	});
 });

@@ -1,3 +1,4 @@
+import { pressureColor, velocityColor } from "./field-map";
 import {
 	type Color,
 	combustionProfile,
@@ -7,6 +8,7 @@ import {
 	STONE,
 	surfaceAppearance,
 } from "./materials";
+import { isGas, isLiquid } from "./motion";
 import { temperatureColor } from "./temperature-map";
 import type { VisualWaves } from "./visual-waves";
 import type { World } from "./world";
@@ -16,6 +18,8 @@ export type PointerState = {
 	x: number;
 	y: number;
 };
+
+export type ViewMode = "materials" | "temperature" | "pressure" | "velocity";
 
 function heatColor(base: Color, temperature: number, material: number): Color {
 	const profile = materialsById[material]?.heatGlow;
@@ -43,9 +47,10 @@ export function createRenderer(
 ): {
 	render(ctx: CanvasRenderingContext2D, pointer: PointerState, brushSize: number): void;
 	setTemperatureMapEnabled(enabled: boolean): void;
+	setViewMode(mode: ViewMode): void;
 } {
 	let image: ImageData | undefined;
-	let temperatureMapEnabled = false;
+	let viewMode: ViewMode = "materials";
 
 	function render(ctx: CanvasRenderingContext2D, pointer: PointerState, brushSize: number): void {
 		image ??= ctx.createImageData(world.width, world.height);
@@ -55,8 +60,15 @@ export function createRenderer(
 			const y = Math.floor(i / world.width);
 			const material = waves.materialAt(x, y, world.grid[i]);
 			const pixel = i * 4;
-			if (temperatureMapEnabled) {
-				const color = temperatureColor(world.temperatureAt(i));
+			if (viewMode !== "materials") {
+				const color =
+					viewMode === "temperature"
+						? temperatureColor(world.temperatureAt(i))
+						: viewMode === "pressure"
+							? isGas(world.grid[i]) || isLiquid(world.grid[i])
+								? pressureColor(world.pressurePa[i])
+								: ([18, 25, 30] as Color)
+							: velocityColor(world.velocityX[i], world.velocityY[i]);
 				pixels[pixel] = color[0];
 				pixels[pixel + 1] = color[1];
 				pixels[pixel + 2] = color[2];
@@ -114,7 +126,10 @@ export function createRenderer(
 	return {
 		render,
 		setTemperatureMapEnabled: (enabled) => {
-			temperatureMapEnabled = enabled;
+			viewMode = enabled ? "temperature" : "materials";
+		},
+		setViewMode: (mode) => {
+			viewMode = mode;
 		},
 	};
 }

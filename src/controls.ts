@@ -1,4 +1,5 @@
 import type { PhysicalTotals } from "./diagnostics";
+import { PRESSURE_SCALE, VELOCITY_SCALE } from "./field-map";
 import {
 	materialDefinitions,
 	materialNames,
@@ -8,6 +9,7 @@ import {
 	selectableMaterials,
 	toolDefinitions,
 } from "./materials";
+import type { ViewMode } from "./renderer";
 import type { PointerState, Sandbox } from "./sandbox";
 import { TEMPERATURE_SCALE } from "./temperature-map";
 
@@ -87,9 +89,15 @@ export function bindControls(canvas: HTMLCanvasElement, sandbox: Sandbox): Contr
 	const canvasFrame = requiredElement<HTMLElement>("#canvasFrame");
 	const probeMaterial = requiredElement<HTMLElement>("#probeMaterial");
 	const probeTemperature = requiredElement<HTMLElement>("#probeTemperature");
+	const probePressure = requiredElement<HTMLElement>("#probePressure");
+	const probeVelocity = requiredElement<HTMLElement>("#probeVelocity");
 	const waveToggle = requiredElement<HTMLInputElement>("#waveToggle");
 	const temperatureToggle = requiredElement<HTMLInputElement>("#temperatureToggle");
 	const temperatureLegend = requiredElement<HTMLElement>("#temperatureLegend");
+	const pressureToggle = requiredElement<HTMLInputElement>("#pressureToggle");
+	const velocityToggle = requiredElement<HTMLInputElement>("#velocityToggle");
+	const pressureLegend = requiredElement<HTMLElement>("#pressureLegend");
+	const velocityLegend = requiredElement<HTMLElement>("#velocityLegend");
 	const materialGrid = requiredElement<HTMLElement>("#materialGrid");
 	const clearButton = requiredElement<HTMLButtonElement>("#clearButton");
 	const resetButton = requiredElement<HTMLButtonElement>("#resetButton");
@@ -150,15 +158,79 @@ export function bindControls(canvas: HTMLCanvasElement, sandbox: Sandbox): Contr
 	const legendTitle = document.createElement("div");
 	legendTitle.textContent = "Temperature °C · fixed, nonlinear scale · includes air";
 	temperatureLegend.replaceChildren(legendTitle, legendScale, legendLabels);
-
-	function setTemperatureMap(enabled: boolean): void {
-		temperatureToggle.checked = enabled;
-		sandbox.setTemperatureMapEnabled(enabled);
-		temperatureLegend.hidden = !enabled;
-		canvasFrame.classList.toggle("temperature-map", enabled);
-		liveRegion.textContent = enabled ? "Temperature map enabled" : "Material colours enabled";
+	function makeFieldLegend(
+		element: HTMLElement,
+		title: string,
+		stops: readonly {
+			readonly value: number;
+			readonly label: string;
+			readonly color: readonly number[];
+		}[],
+	): void {
+		const titleElement = document.createElement("div");
+		titleElement.textContent = title;
+		const scale = document.createElement("div");
+		scale.className = "temperature-scale";
+		const minimum = stops[0].value;
+		const span = stops[stops.length - 1].value - minimum;
+		scale.style.background = `linear-gradient(to right, ${stops.map((stop) => `rgb(${stop.color.join(",")}) ${(100 * (stop.value - minimum)) / span}%`).join(",")})`;
+		const labels = document.createElement("div");
+		labels.className = "field-labels";
+		for (const [index, stop] of stops.entries()) {
+			if (!stop.label) continue;
+			const label = document.createElement("span");
+			label.textContent = stop.label;
+			label.style.left = `${(100 * (stop.value - minimum)) / span}%`;
+			if (index === 0) label.className = "first";
+			if (index === stops.length - 1) label.className = "last";
+			labels.append(label);
+		}
+		element.replaceChildren(titleElement, scale, labels);
 	}
-	temperatureToggle.addEventListener("change", () => setTemperatureMap(temperatureToggle.checked));
+	makeFieldLegend(
+		pressureLegend,
+		"Gauge pressure kPa · solids excluded",
+		PRESSURE_SCALE.map((stop) => ({
+			value: stop.gaugeKPa,
+			label: String(stop.gaugeKPa),
+			color: stop.color,
+		})),
+	);
+	makeFieldLegend(
+		velocityLegend,
+		"Speed m/s · magnitude of parcel velocity",
+		VELOCITY_SCALE.map((stop) => ({
+			value: stop.metersPerSecond,
+			label: stop.metersPerSecond === 0.25 ? "" : String(stop.metersPerSecond),
+			color: stop.color,
+		})),
+	);
+
+	let viewMode: ViewMode = "materials";
+	function setViewMode(mode: ViewMode): void {
+		viewMode = mode;
+		sandbox.setViewMode(mode);
+		temperatureToggle.checked = mode === "temperature";
+		pressureToggle.checked = mode === "pressure";
+		velocityToggle.checked = mode === "velocity";
+		temperatureLegend.hidden = mode !== "temperature";
+		pressureLegend.hidden = mode !== "pressure";
+		velocityLegend.hidden = mode !== "velocity";
+		canvasFrame.classList.toggle("temperature-map", mode !== "materials");
+		liveRegion.textContent =
+			mode === "materials"
+				? "Material colours enabled"
+				: `${mode[0].toUpperCase()}${mode.slice(1)} map enabled`;
+	}
+	temperatureToggle.addEventListener("change", () =>
+		setViewMode(temperatureToggle.checked ? "temperature" : "materials"),
+	);
+	pressureToggle.addEventListener("change", () =>
+		setViewMode(pressureToggle.checked ? "pressure" : "materials"),
+	);
+	velocityToggle.addEventListener("change", () =>
+		setViewMode(velocityToggle.checked ? "velocity" : "materials"),
+	);
 
 	let paused = false;
 	let drawing = false;
@@ -331,7 +403,15 @@ export function bindControls(canvas: HTMLCanvasElement, sandbox: Sandbox): Contr
 			return;
 		}
 		if (event.code === "KeyT" && !event.repeat) {
-			setTemperatureMap(!temperatureToggle.checked);
+			setViewMode(viewMode === "temperature" ? "materials" : "temperature");
+			return;
+		}
+		if (event.code === "KeyP" && !event.repeat) {
+			setViewMode(viewMode === "pressure" ? "materials" : "pressure");
+			return;
+		}
+		if (event.code === "KeyV" && !event.repeat) {
+			setViewMode(viewMode === "velocity" ? "materials" : "velocity");
 			return;
 		}
 		const entry = pickerEntries.find(
@@ -356,11 +436,17 @@ export function bindControls(canvas: HTMLCanvasElement, sandbox: Sandbox): Contr
 			if (!pointer.isInside) {
 				probeMaterial.textContent = "--";
 				probeTemperature.textContent = "--";
+				probePressure.textContent = "--";
+				probeVelocity.textContent = "--";
 				return;
 			}
 			const cell = sandbox.getCell(pointer.x, pointer.y);
 			probeMaterial.textContent = materialNames[cell.material];
 			probeTemperature.textContent = `${cell.temperature.toFixed(1)} °C`;
+			const physics = sandbox.getCellPhysics(pointer.x, pointer.y);
+			probePressure.textContent =
+				physics.pressurePa > 0 ? `${(physics.pressurePa / 1000).toFixed(1)} kPa` : "--";
+			probeVelocity.textContent = `${Math.hypot(physics.velocityX, physics.velocityY).toFixed(2)} m/s (${physics.velocityX.toFixed(2)}, ${physics.velocityY.toFixed(2)})`;
 		},
 		updateStats: (particleTotal, framesPerSecond, diagnostics) => {
 			fpsCounter.textContent = `${framesPerSecond} FPS`;

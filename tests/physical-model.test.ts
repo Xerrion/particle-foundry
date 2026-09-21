@@ -99,6 +99,27 @@ describe("coupled solvers", () => {
 		expect(world.pressurePa[0]).toBeGreaterThan(coldPressure);
 	});
 
+	test("liquid pressure increases with depth and a horizontal gradient drives velocity", () => {
+		const world = createWorld(2, 2);
+		for (const index of [0, 2, 3]) world.setCell(index, WATER);
+		const gas = createGasDynamics(world);
+		expect(world.pressurePa[2]).toBeGreaterThan(world.pressurePa[0]);
+		expect(world.pressurePa[2]).toBeGreaterThan(world.pressurePa[3]);
+		gas.step();
+		expect(world.velocityX[2]).toBeLessThan(0);
+		expect(world.velocityX[3]).toBeGreaterThan(0);
+	});
+
+	test("a solid wall blocks pressure impulse between gas cells", () => {
+		const world = createWorld(3, 1);
+		world.setCell(0, STEAM);
+		world.setCell(1, STONE);
+		const gas = createGasDynamics(world);
+		gas.step();
+		expect(world.velocityX[0]).toBe(0);
+		expect(world.velocityX[2]).toBe(0);
+	});
+
 	test("only explicitly dynamic solids fall and dissipate impact energy", () => {
 		const world = createWorld(1, 3);
 		world.setCell(0, STONE);

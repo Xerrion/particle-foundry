@@ -1,7 +1,7 @@
 import { createBrush } from "./brush";
 import { measureWorld, type PhysicalTotals } from "./diagnostics";
 import { createPhysics } from "./physics";
-import { createRenderer, type PointerState } from "./renderer";
+import { createRenderer, type PointerState, type ViewMode } from "./renderer";
 import { seedStarterScene } from "./starter-scene";
 import { createVisualWaves } from "./visual-waves";
 import { type CellReading, createWorld, type WorldOptions } from "./world";
@@ -13,6 +13,10 @@ export interface Sandbox {
 	clear(): void;
 	/** Returns a detached reading; invalid or out-of-bounds coordinates throw RangeError. */
 	getCell(x: number, y: number): CellReading;
+	getCellPhysics(
+		x: number,
+		y: number,
+	): { pressurePa: number; velocityX: number; velocityY: number };
 	getParticleCount(): number;
 	getDiagnostics(): PhysicalTotals;
 	/** Paints at integer coordinates; outside centers are ignored, invalid coordinates throw. */
@@ -29,6 +33,7 @@ export interface Sandbox {
 	setCellDynamic(x: number, y: number, movable: boolean): void;
 	setWavesEnabled(enabled: boolean): void;
 	setTemperatureMapEnabled(enabled: boolean): void;
+	setViewMode(mode: ViewMode): void;
 	/** Advances one fixed 1/60-second model tick, independent of drawing. */
 	step(): void;
 }
@@ -68,10 +73,27 @@ export function createSandbox(width: number, height: number, options: WorldOptio
 		seed,
 		step,
 		getCell: world.getCell,
+		getCellPhysics: (x, y) => {
+			if (!world.inBounds(x, y) || !Number.isSafeInteger(x) || !Number.isSafeInteger(y)) {
+				throw new RangeError("Cell is outside the world");
+			}
+			const index = x + y * world.width;
+			return {
+				pressurePa: world.pressurePa[index],
+				velocityX: world.velocityX[index],
+				velocityY: world.velocityY[index],
+			};
+		},
 		getParticleCount: world.getParticleCount,
 		getDiagnostics: () => measureWorld(world),
-		paintCircle: brush.paintCircle,
-		paintLine: brush.paintLine,
+		paintCircle: (x, y) => {
+			brush.paintCircle(x, y);
+			physics.refreshPressure();
+		},
+		paintLine: (fromX, fromY, toX, toY) => {
+			brush.paintLine(fromX, fromY, toX, toY);
+			physics.refreshPressure();
+		},
 		setBrushSize: brush.setSize,
 		setMaterial: brush.setMaterial,
 		setCellDynamic: (x, y, movable) => {
@@ -80,6 +102,7 @@ export function createSandbox(width: number, height: number, options: WorldOptio
 		},
 		setWavesEnabled: waves.setEnabled,
 		setTemperatureMapEnabled: renderer.setTemperatureMapEnabled,
+		setViewMode: renderer.setViewMode,
 		render: (ctx, pointer) => renderer.render(ctx, pointer, brush.getSize()),
 	};
 }

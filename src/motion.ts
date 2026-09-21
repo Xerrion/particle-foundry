@@ -194,13 +194,19 @@ export function createMotion(world: World) {
 	function update(index: number, tick: number): void {
 		if (moved[index] || grid[index] === EMPTY) return;
 		const material = grid[index];
-		const direction = isGas(material)
-			? world.random.next() < 0.5
-				? -1
-				: 1
-			: (tick + (index % width) + Math.floor(index / width)) % 2 === 0
-				? -1
-				: 1;
+		const pressureDirection =
+			isLiquid(material) && Math.abs(world.velocityX[index]) > 1e-6
+				? Math.sign(world.velocityX[index])
+				: 0;
+		const direction =
+			pressureDirection ||
+			(isGas(material)
+				? world.random.next() < 0.5
+					? -1
+					: 1
+				: (tick + (index % width) + Math.floor(index / width)) % 2 === 0
+					? -1
+					: 1);
 		if (isLiquid(material)) {
 			const profile = liquidMotion[material];
 			if (!profile || tick % profile.interval !== 0) return;
