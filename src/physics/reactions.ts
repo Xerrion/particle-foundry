@@ -158,7 +158,19 @@ export function createReactions(world: World) {
 	}
 
 	function releaseChemicalEnergy(index: number, thermalUnits: number): boolean {
-		const requestedKj = Math.min(thermalUnits / 1000, world.chemicalEnergyKj[index]);
+		const maximumProductEnergy = energyAtTemperature(
+			SMOKE,
+			combustionProfile.maximumProductTemperatureC,
+			world.pressurePa[index] || undefined,
+			world.massKg[index],
+		);
+		const thermalRoom = maximumProductEnergy - energy[index];
+		if (thermalRoom <= 1e-12) return true;
+		const requestedKj = Math.min(
+			thermalUnits / 1000,
+			world.chemicalEnergyKj[index],
+			thermalRoom / 1000,
+		);
 		// Approximate oxygen per kJ (not per J). The former factor was 1000x
 		// too large, so an ordinary interior flame could never burn its fuel.
 		const oxygenPerKj = combustionProfile.oxygenKgPerKj;

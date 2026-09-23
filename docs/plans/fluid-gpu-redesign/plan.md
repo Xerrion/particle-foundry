@@ -2,34 +2,38 @@
 
 Implementation proposal · Particle Foundry · 21 September 2026
 
-**Brief:** Create an implementation plan for the fluid/GPU redesign, using the supplied physics review and executable checks as evidence.
+**Phase:** P1, the first implementation phase. Start at [the developer entrypoint](../../START_HERE.md). Follow M0-M7 before the normal work queue proceeds to P2. The original numerical plan is retained and extended for future composition/nuclear support.
 
-**Recommendation:** Build a small conservative fluid solver on the CPU, then implement the same equations on WebGPU. Keep the existing sandbox available while the new backend gains thermodynamics, granular coupling, and material coverage. Promote the new backend only after numerical, interaction, and performance gates pass.
+**Selected implementation:** retain the TypeScript frontend, implement the conservative CPU reference in Rust f64, compile the browser engine/bridge to WASM, and execute equivalent WGSL/f32 stages plus direct rendering through Rust wgpu. Keep legacy scenes available while the new backend gains thermodynamics, granular coupling and material coverage. Promote only after numerical, interaction and measured performance gates pass. [ADR-001](../../architecture/adr-001-rust-wasm-wgpu.md) supersedes the previous TypeScript-reference default.
 
-This task produces a plan and baseline evidence. It does not implement the redesign. Proposed paths and numerical thresholds below are design decisions, not existing capabilities or measured GPU results.
+The [E00-E14 migration work packages](../rust-wasm-migration/plan.md) execute M0-M7 and add workspace, bindings, catalogue projection, async lifecycle, renderer and recovery work. The [engine boundary](../../architecture/engine-boundary.md) is binding for integration. Do not create a separate line-by-line Rust port before the numerical redesign.
 
-**Planned follow-up:** [Pressure waves and material breakage](../pressure-waves-breakage/plan.md) adds a separate compressible model after the initial GPU demonstrator, with breakage enabled by default and a user toggle. The demonstrator and low-Mach scope below remain unchanged; resolved shocks belong to that follow-up.
+This is a planning document with preserved historical evidence and a new [static review of src(3).zip](../../validation/source-review-2026-09-21.md). This revision does not implement the redesign, rerun the audit, or measure Rust/GPU performance. Proposed paths and numerical thresholds are design decisions, not existing capabilities.
 
-## 1. Baseline verified in this workspace
+**Planned follow-up:** [Pressure waves and material breakage](../pressure-waves-breakage/plan.md) adds a separate compressible model after P1/M7 in the default execution queue, with breakage enabled by default and a user toggle. A fixed-wall prototype is technically possible after M3, but is not part of the M3 deliverable. The demonstrator and low-Mach scope below remain unchanged; resolved shocks belong to that follow-up.
 
-The review describes an earlier source snapshot. Seventeen of its 39 hashed source files differ from the current working tree. The current checkout has substantial pre-existing changes; its base commit is `dd75dde7ebd7e5cc26eff895654992c9d5b91388`. A future implementation must preserve and capture this working state before starting; branching from that commit alone would omit it.
+## 1. Preserved baseline from the supplied documentation
 
-I ran the supplied 35 checks against the current sources: **24 pass and 11 fail**, compared with the report's 20 pass and 15 fail. All 20 original controls still pass. N03, N04, N07, and N10 now pass: liquid falling acquires velocity, cellular transport accounts for gravitational work, hydrostatic transfers close their tested budget, and the tested solid impact closes its budget. These narrow results are not proof of general physical validity.
+The audit results in this section describe the earlier audited snapshot. They are not a fresh test of the statically inspected src(3).zip. The [source review and hashes](../../validation/source-review-2026-09-21.md) separate current-upload observations from historical results. Confirm the full repository at M0 and record new evidence separately.
 
-| Remaining issue | Current evidence | Planned resolution |
+The review describes an earlier source snapshot. Seventeen of its 39 hashed source files differ from the audited working tree. The audited checkout had substantial pre-existing changes; its base commit is `dd75dde7ebd7e5cc26eff895654992c9d5b91388`. A future implementation must preserve and capture this working state before starting; branching from that commit alone would omit it.
+
+The supplied audit records 35 checks against its source snapshot: **24 pass and 11 fail**, compared with the earlier report's 20 pass and 15 fail. All 20 original controls still pass. N03, N04, N07, and N10 now pass: liquid falling acquires velocity, cellular transport accounts for gravitational work, hydrostatic transfers close their tested budget, and the tested solid impact closes its budget. These narrow results are not proof of general physical validity.
+
+| Remaining issue | Historical audit evidence | Planned resolution |
 | --- | --- | --- |
 | Pressure equilibrium and clipped gradients | N01, N02 fail | Compatible MAC operators and boundary tests, M2 |
 | Fluid velocity does not determine transport | N05, N06 fail | Shared conservative face fluxes, M2 |
 | Phase cycle and open/sealed volume mismatch | N08, N09 fail | Conserved mass/internal energy/actual volume closure, M4 |
-| Electrical convergence, heat allocation, terminal work | N11–N13 fail | Small independent prerequisite, M1 |
+| Electrical convergence, heat allocation, terminal work | N11-N13 fail | Small independent prerequisite, M1 |
 | Excess acid loses its identity | N14 fails | Species amounts and reaction extents, M6 |
 | Tangential gas shear absent | N15 fails | Explicit viscous stress, M2 |
 
-The current entry points confirm the architectural problem. `src/simulation/world.ts` stores one material ID and parcel per cell. `src/simulation/physics.ts` invokes pressure derivation four times, runs cellular gas/liquid motion, and then hydrostatic relocation. `src/physics/motion.ts` still searches liquid regions per sinking grain. `src/simulation/sandbox.ts` exposes synchronous probes and mutations. `src/main.ts` advances whole synchronous ticks at 480 × 270; `src/rendering/renderer.ts` reads CPU fields into ImageData.
+The audited entry points illustrate the architectural problem. `src/simulation/world.ts` stores one material ID and parcel per cell. The supplied source has four unconditional pressure derivations per tick when the nested call inside `gas.step()` is included, plus a possible fifth after venting; it also runs cellular gas/liquid motion and hydrostatic relocation. [Exact call sites](../../validation/source-review-2026-09-21.md#pressure-count-clarification). `src/physics/motion.ts` still searches liquid regions per sinking grain. `src/simulation/sandbox.ts` exposes synchronous probes and mutations. `src/main.ts` advances whole synchronous ticks at 480 × 270; `src/rendering/renderer.ts` reads CPU fields into ImageData.
 
-Evidence beside this plan includes the unchanged `audit.cjs`, current output, and JSON results with current source hashes. The harness's source-line labels refer to its original snapshot. The JSON separates that fixture reference from current source provenance. Validation used Bun 1.3.12 for CommonJS bundling and Node v26.7.0 for execution; `bun run typecheck` also passed. The original TypeScript compile command is incompatible with the installed TypeScript 7's removed node10 resolution option.
+Evidence beside this plan includes the unchanged `audit.cjs`, `current-audit-output.txt`, and JSON results. Here, filenames containing "current" mean current at the earlier audit, not at this revision. The harness's source-line labels and JSON source provenance belong to that historical snapshot. The earlier documentation reports validation with Bun 1.3.12 for CommonJS bundling and Node v26.7.0 for execution, and a passing `bun run typecheck`. It also reports a TypeScript 7 node10-resolution incompatibility. This revision did not repeat or independently verify those environment-specific claims; inspect the real checkout at E00.
 
-The supplied Linux timings and 58.89% inclusive outlet-search profile remain historical evidence. I have not rerun the benchmark, measured browser latency, or measured GPU performance for this plan.
+The supplied Linux timings and 58.89% inclusive outlet-search profile remain historical evidence. Neither the original planning evidence nor this documentation revision provides a new browser/GPU benchmark. This revision did not rerun the application checks.
 
 ## 2. Model and ownership decisions
 
@@ -41,7 +45,7 @@ The supplied Linux timings and 58.89% inclusive outlet-search profile remain his
 
 ### Conserved state
 
-Keep the current 0.01 m cell width, 0.01 m represented depth, and 1/60 s outer clock. Introduce a versioned `FluidState` independent of the legacy parcel arrays. Each backend has exactly one authoritative copy of its evolving state; the CPU reference and GPU run separate test worlds.
+Keep the current 0.01 m cell width, 0.01 m represented depth, and 1/60 s outer clock. Introduce a versioned Rust-owned `FluidState` contract independent of the legacy parcel arrays. A CPU backend owns Rust arrays; a GPU backend owns wgpu buffers, not a fully current duplicate Rust world. Reference and GPU tests use separate instances. Checkpoints are occasional snapshots, not a second ticking authority.
 
 | Field | Location and meaning | Authority |
 | --- | --- | --- |
@@ -81,7 +85,7 @@ Initially π describes incompressible mechanics with a fixed pressure reference.
 
 M4 first solves isolated pure-water vessels from mass, U, and actual available volume. Resolve temperature, pressure, and liquid/vapor amounts together, allowing partial evaporation. A liquid-only sealed vessel also needs finite compressibility or an explicitly unsupported state; perfectly incompressible water in a full rigid heated cell is not enough to determine pressure.
 
-Generate a bounded property table from [IAPWS IF97](https://iapws.org/technical-guidance/release/IF97-Rev). Proposed initial water domain: 273.15–623.15 K and 0.01–20 MPa, covering liquid/vapor equilibrium below the critical point. Validate interpolation against source properties, including near saturation. This subset deliberately excludes ice, extreme fire temperatures, supercritical water, and the report's 318 MPa state. Extending coverage or keeping a scene on the legacy backend is an explicit gate, not arbitrary clamping.
+Generate a bounded property table from [IAPWS IF97](https://iapws.org/technical-guidance/release/IF97-Rev). Proposed initial water domain: 273.15-623.15 K and 0.01-20 MPa, covering liquid/vapor equilibrium below the critical point. Validate interpolation against source properties, including near saturation. This subset deliberately excludes ice, extreme fire temperatures, supercritical water, and the report's 318 MPa state. Extending coverage or keeping a scene on the legacy backend is an explicit gate, not arbitrary clamping.
 
 Then add noncondensable carrier air: define an ideal-mixture approximation, vapor partial pressure, and mixture energy. A pure-water saturation lookup using total air-plus-steam pressure is not a mixture closure. Chambers share p0 but may retain local temperature and composition. Rediscover components after geometry/interface changes and reduce extensive quantities; chamber summaries never own duplicate mass or energy.
 
@@ -105,35 +109,39 @@ Start geometric VOF with CFL ≤ 0.5 and verify the actual multidimensional sche
 
 ## 3. Milestones and exit gates
 
-### M0 — Freeze evidence and acceptance fixtures
+### M0  -  Freeze evidence and acceptance fixtures
 
 **Dependency:** none. **Primary surface:** tests and benchmark harnesses.
 
-Capture the dirty working tree as a reproducible patch/snapshot, source hashes, tool versions, and command log. Preserve original audit cases and port the invariant assertions into Bun tests with stable IDs. Classify changed-model tests separately from implementation regressions. Run the full existing checks before any code changes; the planning run only performed typechecking and the external audit.
+Capture the dirty working tree with tracked and untracked content, source hashes, tool versions and command log. Preserve the original Bun/TypeScript regression coverage and translate backend-neutral invariant assertions into Rust reference fixtures with stable IDs. Classify changed-model tests separately from regressions. Inspect actual scripts before running checks: the source-only upload lacks package/lockfiles and test infrastructure. E00 establishes fresh evidence; this documentation revision ran no application checks.
 
 Create backend-neutral fixtures for uniform pressure, gravity-balanced pools, periodic markers, dam break, disconnected pools, narrow channels, and wall edits. Track actual simulated time, cell visits, connected-component rebuilds, pressure solves, and transfers. Benchmark the current 480×270 scenes on this machine before using the historical Linux timings for prioritization.
 
-**Exit:** reproducible baseline and a pass/fail ledger showing the current 24/11 result; the four newly passing cases and all C01–C20 remain protected.
+**Exit:** reproducible fresh baseline with a pass/fail ledger compared to the historical 24/11 result; protect the controls and record any differences against the actual checkout. Never force a changed source tree to reproduce old totals.
 
-### M1 — State contract, backend seam, and isolated prerequisites
+### M1  -  State contract, backend seam, and isolated prerequisites
 
-**Dependency:** M0. **Primary surfaces:** proposed `src/simulation/backend.ts`, `src/fluid/state.ts`, `src/simulation/sandbox.ts`, `docs/model.md`; isolated changes in `src/physics/electricity.ts`.
+**Dependency:** M0. **Primary surfaces:** proposed `crates/sim/`, `crates/sim-cpu/`, `crates/wasm/`, the existing `src/simulation/sandbox.ts` adapter, generated catalogue/binding outputs, and root Rust/build configuration. Execute E01-E04.
 
-Define array layouts, units, phase/species references, face indexing, boundary configuration, snapshot schema, and command sequencing. Backend selection is per scene: `legacy`, `fluid-cpu`, or `fluid-gpu`. A supported scene declares its material/feature set. Convert scenes once at load; never reconcile a full legacy World with GPU state every tick.
+Bootstrap the native Rust and browser WASM toolchain, pin compatible dependencies and generate bindings consumed by the existing frontend build. Establish a real browser init/dispose smoke test before the solver port. Keep the TypeScript UI and source layout; a workspace reorganization or Rust GUI is not a prerequisite.
 
-Make a CPU/worker seam before changing rendering assumptions. Commands include a sequence number and intended tick. Probes and statistics return their completed simulation tick; the UI shows the latest completed result without forcing synchronous field access. Keep deterministic command replay and a seeded counter-based random scheme for future granular/reaction events.
+Define array layouts, units, phase/species references, face indexing, boundary configuration, snapshot schema, and command sequencing. Backend selection is per scene. Retain `legacy`, `fluid-cpu` and `fluid-gpu` as UI/compatibility labels; map new sessions to execution `cpu-reference` or `wgpu` plus a separate physical model and actual device backend. A supported scene declares its material/feature set. Convert scenes once at load; never reconcile a full legacy World with GPU state every tick.
 
-As a small separate change, fix N11–N13 using a residual-controlled resistor solve, resistance-weighted edge heat, and each terminal's V×I work. Include exhausted-source re-solving and unpowered/disconnected components. This prerequisite can progress independently of the fluid equations; it does not justify delaying the minimal fluid demonstrator.
+Before freezing this layout, implement the minimal [matter identity contract](../../architecture/matter-model.md): distinct element, nuclide, species, material-form and runtime-component IDs; stable snapshot references; active-component indexing; source/domain metadata; and an optional versioned nuclear extension that is not allocated when disabled. Preserve legacy material IDs. Test the seam with the demonstrator's small component set; do not build full chemistry or nuclide populations in M1. Unknown properties must not compile as zero. The later P3 pipeline expands this contract rather than redesigning the world again.
+
+Make a Rust/WASM command and observation seam before changing rendering assumptions. Use a main-thread browser deployment for the first demonstrator; preserve a scheduler-independent contract for the worker deployment assessed in M6. Commands include a sequence number and intended tick. Probes and statistics return their completed simulation tick; the UI shows the latest completed result without forcing synchronous field access. Keep deterministic command ordering and a seeded counter-based random scheme for future granular/reaction events. Record replay provenance, but do not promise bit-identical numerical trajectories across CPU/GPU devices or backends.
+
+As an independent M1 branch (E04), implement the corrected Rust CPU circuit reference for N11-N13 using a residual-controlled resistor solve, resistance-weighted edge heat and each terminal's V x I work. Include exhausted-source re-solving and unpowered/disconnected components. Do not require a duplicate TypeScript repair before the Rust implementation. The M1 state-contract subset gates M2; circuit completion gates M6 integration, not the minimal fluid demonstrator.
 
 Introduce explicit versions for topology, composition/mass, and thermal state. Reuse connectivity only while its geometry version matches. Recompute EOS when mass or U changes; rebuild operator coefficients when density/apertures change. Audit direct typed-array writes and route mutations through tracked stages. Compare cached and forced-rebuild paths in tests before removing any pressure refresh.
 
-**Exit:** the backend contract can host an isolated CPU test world; no two transport owners operate in one scene; electrical analytical fixtures pass; invalidation tests match unconditional recomputation.
+**Exit:** native/WASM bootstrap and bindings smoke tests pass; the backend contract hosts an isolated Rust CPU test world; async facade/ID/snapshot contracts and invalidation tests pass; no two transport owners operate in one scene. E04 electrical analytical fixtures complete the independent branch and are mandatory before M6. M2 may start after the contract branch without waiting for E04.
 
-### M2 — Conservative CPU fluid reference
+### M2  -  Conservative CPU fluid reference
 
-**Dependency:** M1 contract. **Primary surfaces:** proposed `src/fluid/cpu/`, `src/fluid/operators.ts`, `tests/fluid/`.
+**Dependency:** M1 state/facade contract, E03. **Primary surfaces:** proposed `crates/sim/src/fluid/`, `crates/sim-cpu/src/fluid/`, Rust integration tests and shared fixtures. Execute E05-E06.
 
-Implement Float64 cell fields and staggered velocities for one liquid and carrier gas. Build matching D/G operators and a matrix-free diagonally preconditioned conjugate-gradient solve. Use a simple relaxation method only as a tiny-grid oracle. Residuals and post-projection divergence determine success; an iteration cap reports failure. Evaluate geometric multigrid as a preconditioner if iterations grow excessively with grid size; [Basilisk's Poisson solver](https://basilisk.fr/src/poisson.h) is a reference, not a drop-in implementation.
+Implement Rust f64 cell fields and staggered velocities for one liquid and carrier gas. Do not first implement another TypeScript reference. Build matching D/G operators and a matrix-free diagonally preconditioned conjugate-gradient solve. Use a simple relaxation method only as a tiny-grid oracle. Residuals and post-projection divergence determine success; an iteration cap reports failure. Evaluate geometric multigrid as a preconditioner if iterations grow excessively with grid size; [Basilisk's Poisson solver](https://basilisk.fr/src/poisson.h) is a reference, not a drop-in implementation.
 
 Add geometric VOF, conservative phase-associated tracers, compatible momentum transport, and tangential viscous stress. Test fractional occupancy, horizontal transport, ambient-air markers, disconnected topology, and gravity. Retire cellular fluid fall/spread, gas rise, airflow damping, and hydrostatic relocation inside this backend from its first step.
 
@@ -141,9 +149,13 @@ Keep full energy/phase physics disabled here; markers validate transport, not th
 
 **Exit:** pressure/operator, volume, tracer, shear, hydrostatic-rest, symmetry, and dam-break/refinement tests pass in Float64. The base fluid core has one transport owner and no per-grain search path.
 
-### M3 — WebGPU demonstrator and direct rendering
+### M3  -  WebGPU demonstrator and direct rendering
 
-**Dependency:** M2. **Primary surfaces:** proposed `src/fluid/gpu/`, WGSL kernels, `src/rendering/gpu-renderer.ts`, browser test page.
+**Dependency:** M2. **Primary surfaces:** proposed `crates/sim-gpu/`, `shaders/fluid/`, `shaders/render/`, `crates/wasm/` and the existing TypeScript host adapter. Execute E07-E08.
+
+Use one Rust/wgpu device for compute and direct presentation. Choose the renderer before the app acquires a canvas context, or replace the canvas and rebind controls. The current Canvas-2D-first startup cannot be retained unchanged. [Canvas ownership](../../architecture/engine-boundary.md#8-canvas-and-renderer-migration).
+
+Initialization, probes and snapshots use asynchronous owned requests. Command/advance receipts describe admission/submission, not completed GPU work. Bound in-flight batches, expose accepted tick/time, and prevent failed candidate states from being published. Rust controls resource handles; it does not mirror the full GPU world in WASM memory.
 
 Implement the same stage graph in f32, using separate dispatches for global dependencies. Face kernels write one flux each; cell kernels gather into their own output. Pressure iterations use ping-pong buffers and GPU reductions. Do not replace the convergent CPU solver with a fixed-count unconverged shader loop.
 
@@ -151,15 +163,15 @@ Keep residual/CFL reductions on the GPU. A bounded batch can include convergence
 
 Choose the canvas backend before calling getContext: the current app acquires a 2D context immediately. Use a GPU simulation canvas and a separate DOM/2D overlay for the cursor and controls. Render material fractions, temperature marker, pressure, and velocity directly from GPU resources, retaining zoom/pan and point-sampled appearance.
 
-Use a staging-buffer ring for asynchronous probes/reductions and occasional snapshots, with tick IDs and bounded in-flight requests. Mapping live simulation resources is forbidden by the design. WebGPU mapping is asynchronous and mapped buffers cannot be used by the GPU until unmapped; see [GPUBuffer.mapAsync](https://developer.mozilla.org/en-US/docs/Web/API/GPUBuffer/mapAsync). WGSL's available numeric types and synchronization rules require f32 and separate whole-grid stages; see the [WGSL specification](https://www.w3.org/TR/WGSL/).
+Use a staging-buffer ring for asynchronous probes/reductions and occasional snapshots, with tick IDs and bounded in-flight requests. Mapping live simulation resources is forbidden by the design. WebGPU mapping is asynchronous and mapped buffers cannot be used by the GPU until unmapped; see [GPUBuffer.mapAsync](https://developer.mozilla.org/en-US/docs/Web/API/GPUBuffer/mapAsync). This plan selects portable f32 for physics and separate dispatches for whole-grid dependencies; see the [WGSL specification](https://www.w3.org/TR/WGSL/).
 
 One 480×270 f32 cell field is 518,400 bytes; a u/v face pair is 1,039,800 bytes. Twenty cell-equivalent fields use approximately 9.89 MiB before ping-pong, solver, multigrid, species, render, and staging resources. Produce an actual allocation manifest; this estimate is not the final memory budget.
 
 **Exit:** CPU/GPU comparisons pass at the same physical times; rendering requires no full-world frame-loop readback; the demonstrator runs at 480×270 and emits end-to-end timings. This is the first usable GPU artifact, not the default sandbox.
 
-### M4 — Closed/open thermodynamics and partial phase state
+### M4  -  Closed/open thermodynamics and partial phase state
 
-**Dependency:** M2 state/transport; GPU parity follows M3. **Primary surfaces:** proposed `src/thermodynamics/`, `src/fluid/chambers.ts`, adapters around `src/physics/thermal.ts` and `src/physics/boiling.ts`.
+**Dependency:** M2 state/transport; GPU parity follows M3. **Primary surfaces:** proposed Rust thermal/chamber contracts and references in `crates/sim/` and `crates/sim-cpu/`, wgpu pipelines in `crates/sim-gpu/`, and `shaders/thermal/`. Legacy `src/physics/thermal.ts` and `src/physics/boiling.ts` supply regression context, not the new state owner. Execute E09.
 
 Build the property-table generator with versioned source data and interpolation tests. Implement isolated pure-water volume/energy closure first, then air/steam mixtures, then flow coupling. Remove material-ID toggling as the phase authority; rendering derives appearance from actual phase fractions. Any later nucleation rule changes resolved phase amounts within the same conservation contract.
 
@@ -169,9 +181,9 @@ Port each validated closure stage to GPU and repeat energy/volume/property tests
 
 **Exit:** fixed-mass/fixed-U/fixed-volume cases converge without a water/steam cycle; a vent has finite, ledgered exchange; gas/liquid volumes fit available geometry; moving-wall work and phase source terms close their documented budgets.
 
-### M5 — Sand, moving solids, and additional liquids
+### M5  -  Sand, moving solids, and additional liquids
 
-**Dependency:** M2; M4 for heated/phase-changing coupling. **Primary surfaces:** proposed `src/granular/`; retirement seams in `src/physics/motion.ts`, `src/physics/hydrostatics.ts`, and `src/physics/solid-mechanics.ts`.
+**Dependency:** M2; M4 for heated/phase-changing coupling. **Primary surfaces:** proposed Rust granular/solid references in `crates/sim-cpu/`, wgpu pipelines and `shaders/granular/`; retirement seams in legacy `src/physics/motion.ts`, `src/physics/hydrostatics.ts`, and `src/physics/solid-mechanics.ts`. Execute E10.
 
 Replace per-grain outlet searches with a topology snapshot, shared component/outlet-capacity calculation, movement proposals, conflict resolution, and commit. Outlet capacity must be reserved across all accepted grains, not just each destination. Resolve source, destination, and any routing/path conflicts deterministically. If volume cannot be accommodated, defer the move instead of deleting fluid or teleporting it through walls.
 
@@ -183,21 +195,21 @@ Add an oil/water two-liquid fixture with explicit phase fractions, density order
 
 **Exit:** many grains competing for one opening neither duplicate occupants nor lose water; sealed/no-outlet, narrow-tube, disconnected-pool, sinking, impact, and oil/water tests pass. Instrumented searches scale by batches/regions, not one overlapping traversal per grain. Publish operation counts and timings, not an unproved linear-time claim.
 
-### M6 — Reactions, circuits, and product integration
+### M6  -  Reactions, circuits, and product integration
 
-**Dependency:** M4 and M5 for full-scene coverage. **Primary surfaces:** `src/physics/reactions.ts`, `src/physics/element-reactions.ts`, `src/physics/neutralization.ts`, `src/tools/brush.ts`, `src/app/controls.ts`, `src/simulation/sandbox.ts`, `src/main.ts`.
+**Dependency:** M4 and M5 for full-scene coverage, plus the E04 circuit-reference branch. **Primary surfaces:** Rust reaction/circuit contracts and bounded CPU algorithms, wgpu source pipelines and WGSL chemistry, `crates/wasm/`, and the retained TypeScript tool/control/sandbox/main adapters. Legacy reaction modules are source/regression context, not the GPU scene owner. Execute E11-E12.
 
 Transport reactant amounts; use limiting reaction extent and preserve excess reagent identity. Migrate oxygen, fuel, chemical energy, steam production, extinguishing, freezing, and ignition to the new state contract. Maintain source ledgers for painting/removal and energy-limited gameplay blasts. Shock propagation remains unsupported; document the impulse model and its stability limits.
 
-Keep small circuit graphs on CPU initially. Synchronize only changed conductor topology and required thermal/material samples at a defined tick barrier; upload sparse heat events. Melting or conductor motion invalidates the graph before the next electrical solve. If circuits become dense enough that this transfer is no longer sparse, measure and choose a GPU circuit solve or restrict that experimental mode; do not hide full-world synchronization.
+Keep small circuit graphs in Rust CPU code initially, reusing the corrected E04 reference. Synchronize only changed conductor topology and required thermal/material samples at a defined tick barrier; upload sparse heat events. Melting or conductor motion invalidates the graph before the next electrical solve. If circuits become dense enough that this transfer is no longer sparse, measure and choose a GPU circuit solve or restrict that experimental mode; do not hide full-world synchronization.
 
-A worker owns the simulation scheduler where supported, with bounded command queues and OffscreenCanvas when available. Check adapter availability in the chosen context: [requestAdapter](https://developer.mozilla.org/en-US/docs/Web/API/GPU/requestAdapter) can return null and is available in workers. Provide a main-thread GPU path if the worker/canvas path is unavailable, and a corrected CPU fallback for supported new-model scenes.
+Assess a worker-owned Rust/WASM scheduler and OffscreenCanvas deployment in E12, with bounded queues and adapter checks in the actual context. Keep the main-thread wgpu path from M3 where worker/canvas support is unavailable. Use a corrected Rust CPU fallback only for compatible, validated scenes; retain legacy TypeScript/Canvas for legacy scenes. WebGL2 cannot execute the WGSL compute backend. [Browser/fallback contract](../../architecture/adr-001-rust-wasm-wgpu.md#browser-and-fallback-policy).
 
 Update probes for partial phases, pressure type, and delayed tick-stamped results. Define particle count as occupied matter cells with a stated threshold, separate from total mass; fractional fluids invalidate the old exact material-count interpretation. Port starter scenes via commands. Preserve pause, single-step behavior, speed controls, paint-while-paused, clear/seed, maps, zoom/pan, and cosmetic waves without modifying occupancy.
 
 **Exit:** all intended starter scenes and tools work with explicit feature coverage, no legacy pass mutates fluid-owned state, and chemistry/circuit/source-ledger controls remain valid.
 
-### M7 — Promotion, recovery, and retirement
+### M7  -  Promotion, recovery, and retirement
 
 **Dependency:** all feature and numerical gates for the scenes being promoted.
 
@@ -205,7 +217,7 @@ Run numerical and browser suites, sustained benchmarks, and device-loss tests on
 
 Proposed product gate: 480×270 at 1×, p95 displayed frame interval ≤33.3 ms and at least 1.0 simulated second per wall-second on the agreed baseline device. These are targets to validate, not predicted results. Include painting, worst-case sand pools, boiling/venting, disconnected cavities, and dense circuits; a fast ambient frame is insufficient.
 
-On GPU loss, stop accepting new tick commits, preserve the last valid CPU checkpoint and ordered command log, and recover using the corrected CPU model or restart with a clear notice. Never hot-swap partially evolved GPU fields into the legacy parcel engine. Keep backend selection and versioned snapshots reversible through the experimental period.
+On GPU loss, stop accepting new tick commits, cancel pending readbacks and preserve the last valid committed checkpoint plus command log. The newest device state may be unavailable. Recover only through a compatible validated Rust CPU or restored wgpu backend, with an explicit checkpoint rollback notice, or restart with a clear notice. Replay restores commands, not a promise of bit-identical cross-device trajectories. Never hot-swap partially evolved GPU fields into the legacy parcel engine. Keep backend selection and versioned snapshots reversible through the experimental period.
 
 Promote supported scenes gradually. Remove the legacy fluid branches only after the full feature matrix is covered. Update `docs/model.md`, `README.md`, `docs/elements.md`, and benchmark documentation to the implemented contracts and measured limits.
 
@@ -227,7 +239,7 @@ The following are proposed starting gates, not measurements. Freeze fixture scal
 | Coupled energy budget | Report U, kinetic, potential, chemical, boundary work/flux and numerical loss separately | Initial closed-fixture drift target ≤1e-4 of a declared physical energy scale; no negative state or hidden heat repair |
 | Dam break and refinement | Bounded/conservative; front and center-of-mass converge as dx/dt decrease | Match CPU envelopes at equal physical times; inspect snapshots |
 | Sand contention / topology | Exact unique occupancy; mass conservation | Same winning proposals for fixed seed/input; conservative fluid accommodation |
-| Circuit analytics | N11–N13 and C17/C18, plus exhaustion/network edits | CPU circuit path retains these gates |
+| Circuit analytics | N11-N13 and C17/C18, plus exhaustion/network edits | CPU circuit path retains these gates |
 | Device absent/lost, pause and reset | Correct fallback and command ordering | No stale probe presented as current; no partially committed tick |
 
 For totals near zero, each fixture defines absolute tolerances in the same physical units and a nonzero characteristic scale. Use pairwise/compensated CPU totals and hierarchical GPU reductions. Do not normalize thermal error by a huge arbitrary reference enthalpy that conceals meaningful heating error.
@@ -249,9 +261,9 @@ Some old tests must be translated. N01 becomes sealed uniform-pressure rest; N02
 
 Defaults for review: preserve falling-sand visual style; prioritize stable pools, boilers, trapped gas, and thermal transport; defer resolved shocks, surface tension, adaptive meshes, and arbitrary moving cut-cell geometry. Start with grid-aligned geometry and substep solid moves. Surface tension and wetting need their own balanced-force tests before addition.
 
-**Decide with the project owner before M4:** adopt the proposed bounded physical water model, or retain a fully calibrated gameplay thermodynamic model. The recommendation is bounded physical water with explicit unsupported-domain behavior while other materials migrate. This changes some existing boiling/heating behavior and cannot be hidden inside a shader port.
+**Record before M4:** use the proposed bounded physical water model as the provisional development default; document any explicit project decision to retain a calibrated gameplay model instead. The recommendation is bounded physical water with explicit unsupported-domain behavior while other materials migrate. This changes some existing boiling/heating behavior and cannot be hidden inside a shader port.
 
-**Decide with the project owner before M7:** name the baseline integrated/discrete GPU and browser, approve the performance target, and confirm the material/scene coverage required for default promotion. These choices do not block the CPU reference or first GPU demonstrator.
+**Record before M7, preferably during M0:** name the baseline integrated/discrete GPU and browser, confirm the provisional performance target, and freeze the material/scene coverage required for this promotion. Future P4-P8 content is not required for the M7 gate. These choices do not block the CPU reference or first GPU demonstrator.
 
 ## 6. Reproduce this planning baseline
 
@@ -288,3 +300,28 @@ node docs/plans/fluid-gpu-redesign/audit.cjs $auditBuild (Join-Path $auditBuild 
 The source tree was reorganized after this baseline was captured. Paths in the narrative and commands above follow the new layout; recorded source hashes, audit locations, and outputs retain their historical provenance.
 
 The raw harness emits historical archive labels even when run against another tree. Use the source hashes and corrected provenance in `current-audit-results.json` for this run; capture fresh hashes for subsequent runs. Full implementation validation additionally requires `bun run check`, relevant lint/build checks, numerical fixtures, and browser/GPU tests on actual hardware.
+
+
+## 7. Forward-compatible composition without widening M3
+
+The [full roadmap](../../roadmap.md) adds 40, then 83 elemental-material identities, followed by 20 nuclear-first and 15 exotic identities. Those counts are not per-cell field counts and not M3 deliverables. The registry already contains 118 names; support remains explicit per form, mechanism, backend, and domain.
+
+Use a compact global catalogue and a scene-local active-component layout. Component masses, associated phase volumes, energy and nuclide signatures follow the same accepted face fluxes. Default signatures can remain fixed and radioactive evolution off until P6. Derived display labels and aggregate inventories do not own a second amount store.
+
+At 480 x 270, 118 dense f32 component quantities require 61,171,200 bytes, about 58.34 MiB, for one quantity in one buffer generation. Do not preallocate all elements, phases and nuclides densely by default. Begin with a small active-set SoA; introduce tiled sparse pages only after measurement. Pack tables within queried adapter limits. The chosen maximum component count and any capacity failure are visible capabilities, not a reason to delete material.
+
+Compile required reaction/decay products into the active set before enabling a network. Expansion or remapping is an ordered transaction at a safe boundary with snapshot-version handling. Failed source or allocation updates cannot partly commit. Do not hard-code chemistry, isotope, or phase identity into a rendering colour or material ID.
+
+In M6, amount-based existing reactions use this state contract but do not imply the entire P4/P5 chemistry scope is delivered. Nuclear modules introduced later own source calculations, not a second fluid transport loop. All energy/composition events have stable IDs and are applied exactly once by the owning backend.
+
+Execution labels `fluid-cpu` and `fluid-gpu` map to Rust CPU and Rust/wgpu implementations of the low-Mach model; browser wgpu uses WebGPU. Physical model and actual device backend remain distinct fields. P2 adds a different `compressible` physical model through the same backend boundary. Do not conflate physical-model selection with CPU/GPU selection.
+
+Save data must include stable component definitions, catalogue/data versions, accepted physical time, source ledgers and optional extension versions. GPU loss recovery uses a consistent committed checkpoint and ordered command replay; unsupported extensions are rejected rather than discarded.
+
+**Additional M1/M3 acceptance:** identity round trip, independent material/element IDs, inactive nuclear extension with no allocation, active-component mapping round trip, explicit overflow behavior, allocation manifest, and zero full-world readback in the normal render loop. Full isotope/reaction correctness is gated in P3/P6, not claimed by a placeholder field.
+
+## 8. Rust/WASM integration gates
+
+The [engine migration acceptance](../../validation/backend-migration.md) adds MIG-01 through MIG-14 to the numerical matrix. Validate native reference tests, WASM/bindings builds, byte layout, browser execution, command epochs/commit semantics, canvas ownership, same-device rendering, bounded transfers, source transactions and checkpoint recovery. Native wgpu performance is not browser performance.
+
+The authoritative P1 work tracker is [E00-E14](../../data/engine-migration-work.json). Later phases reuse the Rust contracts, CPU references, wgpu resources and WGSL patterns rather than introduce another simulation owner. No performance gain is proven by this stack decision alone.

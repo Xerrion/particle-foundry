@@ -1,0 +1,140 @@
+# Engine boundary, execution and state contracts
+
+**Status:** proposed implementation contract under [ADR-001](adr-001-rust-wasm-wgpu.md). No interface below is claimed to exist in the supplied source. This extends the [matter model](matter-model.md), not the numerical equations in the [GPU plan](../plans/fluid-gpu-redesign/plan.md).
+
+## 1. Concrete separation
+
+```text
+Existing src/app/, src/styles/, src/main.ts
+  TypeScript UI, input, presentation and browser lifecycle
+                   |
+         commands / versioned observations
+                   |
+       crates/wasm: wasm-bindgen facade
+                   |
+       sim contracts and session orchestration
+                   |
+        one selected authoritative backend
+          /                            \
+ sim-cpu: Rust f64              sim-gpu: Rust wgpu
+ reference / supported CPU     WGSL compute + rendering
+                                      |
+                         GPU buffers stay resident
+```
+
+Keep `src/` in place during P1. The proposed `apps/web/` layout is optional later housekeeping, not a prerequisite. Exact proposed paths and source replacements are in [project structure](../project-structure.md).
+
+## 2. Identity and configuration
+
+Use independent axes for execution and physics. New sessions select execution `cpu-reference` or `wgpu` and a supported model such as `lowMach` or, from P2, `compressible`. The retained legacy adapter has model `legacy-cellular`. Record the actual wgpu runtime backend separately, such as browser WebGPU or a native backend. Preserve older `fluid-cpu`/`fluid-gpu` labels through an explicit alias map, not a new schema for every label.
+
+A session owns an epoch, command sequence, accepted tick/substep and physical time. Load, reset and replacement advance the epoch so late callbacks cannot affect a new world. Keep safe integer validation at the JS boundary; wider serialized counters need an explicit string/BigInt encoding rather than precision-losing numeric conversion.
+
+Capability reports include material/forms, property domains, model, source networks, boundary types, precision, active-component capacity, GPU requirements and validated combinations. Device presence is not physics support. Native success is not browser support.
+
+## 3. Proposed browser-facing facade
+
+The following TypeScript is an illustrative interface contract, not a supplied implementation or a drop-in API. Referenced payload types must be defined and generated/tested in M1.
+
+```ts
+interface EngineFacade {
+  // Accepts a bounded batch. Acceptance into the queue is not physical commit.
+  enqueue(commands: readonly EngineCommand[]): QueueReceipt;
+
+  // Requests fixed outer ticks. Returns immediately, without waiting for GPU work.
+  advance(requestedTicks: number): AdvanceReceipt;
+
+  // Cached, detached data. Includes epoch, completed tick, time and sample age.
+  latestStatus(): EngineStatus;
+
+  // Encodes presentation of committed state, without reading the world into JS.
+  render(view: RenderView): void;
+
+  // Resolves a small detached sample or an explicit stale/cancelled error.
+  probe(x: number, y: number, signal?: AbortSignal): Promise<ProbeReading>;
+
+  // Full-state transfers are explicit snapshot operations, not frame-loop work.
+  save(): Promise<Uint8Array>;
+  load(snapshot: Uint8Array): Promise<LoadReport>;
+
+  // Stops scheduling and cancels pending requests; teardown releases resources.
+  dispose(): void;
+}
+```
+
+Initialization is asynchronous and returns an engine plus a capability/load report. The generated WASM API may use lower-level payloads; keep its TypeScript adapter thin and free of physics. Validate public input on both sides. Rust async exports can return JavaScript Promises; use that for initialization and readback operations rather than blocking waits. [Binding reference](../sources.md#wasm-bindgen-async).
+
+Do not preserve `const probe = sim.probe(x, y)` as an always-fresh synchronous GPU read. The UI can synchronously read a cached observation but must show its epoch/tick and staleness. Coalesce pointer probes and discard obsolete results. A `step()` convenience wrapper, if retained, submits a request; the receipt must not claim the GPU finished.
+
+The native reference API may run synchronously in tests. Shared semantics matter more than forcing identical blocking behavior across native and browser surfaces.
+
+## 4. Commands, input, and accepted time
+
+Commands cover brush strokes, material placement, external energy, settings, reset/seed, dynamic-solid edits and pause/single-step requests. Batch pointer samples or a stroke description instead of crossing JS/WASM once per painted cell. Rust validates and rasterizes physical brush edits; TypeScript keeps pointer mapping and UI preview.
+
+A batch contains epoch, monotonic sequence IDs and scheduling intent. Commands commit in order at an accepted control/tick boundary and receive an acknowledgement. Rejected input, stale epochs, unsupported material/domain and capacity exhaustion are explicit results. Duplicate delivery/retry must not apply a source twice.
+
+Preserve paint-while-paused through a control-only commit with no physical-time increment. A held heat/ignition source is scheduled once per accepted tick or by accepted physical duration, not once per RAF, submitted batch, or retry. Freeze the intended legacy interaction semantics in tests before changing them.
+
+The host clock expresses demand. The engine reports actual accepted time. Limit pending work and drop/defer excess demand with telemetry rather than accumulate unbounded catch-up. Pause and hidden-tab transitions stop new physical work; a submitted batch may finish. Expose that distinction. Do not let a UI clock advance simulation state that the solver rejected.
+
+## 5. State authority and transfers
+
+| Data | GPU session owner | CPU/JS visibility |
+| --- | --- | --- |
+| Component/phase masses, U, compatible momentum and active radiation | GPU state buffers | Explicit checkpoint/export only |
+| Derived temperature, pressure, display label | GPU derived state | Small probe or reduction |
+| Immutable properties and scene component mapping | Rust metadata plus uploaded tables | Compact read-only UI projection |
+| Command queue and source acknowledgements | Rust session / GPU transaction metadata | Receipts and bounded events |
+| Small circuit graph | Rust CPU graph owner | Sparse state samples and funded source events |
+| Reference world | A separate CPU test session | Never a continuously synchronized GPU mirror |
+
+No normal step, render, probe or statistics refresh may copy the full physical world GPU -> WASM -> JavaScript. Initial import, an explicit save, controlled backend migration and periodic recovery checkpoints are exceptions with measured bytes and duration. In a genuinely CPU-owned fallback, exporting a compact render image is a different documented path; it must not cause GPU full-state readback.
+
+Use a single wgpu device/queue for simulation and renderer resources in a GPU session. Rendering consumes the committed buffers or a GPU-produced display texture. Rust ownership is ownership of those handles and their rules, not proof that the latest data is in WASM linear memory. [Mapping costs](../sources.md#wgpu-buffers).
+
+## 6. Buffer ABI and precision
+
+Rust f64 is the reference default. WGSL uses portable f32 and integer indexing/ownership. Keep units, operator definitions, boundaries, stage order and fixtures shared; do not assume bit-identical arithmetic. A Rust f32 diagnostic run can help separate precision errors from shader errors, but is not a second required production solver.
+
+Define and version the Rust/WGSL ABI explicitly: byte offsets, alignment, strides, padding, bindings, integer encodings and resource usages. `repr(C)` alone does not prove WGSL layout compatibility. Do not transfer a Rust `Vec`, enum or bool by raw struct copy. Use explicit scalar layouts, safe packing and shader sentinel round-trips. Test structure padding and vec3-related alignment deliberately. [WGSL rules](../sources.md#wgsl).
+
+Use distinct stable IDs wider than the legacy byte material field and a compact active-set mapping. Do not allocate one dense field for all 118 elements or every nuclide. Check actual device limits, aggregate allocations and binding counts before committing a scene. Allocation below a stated device maximum can still fail. [Limits](../sources.md#wgpu-limits).
+
+## 7. GPU scheduling and failure
+
+Use separately dispatched stages for whole-grid dependencies. Owned face fluxes, gather updates and reductions avoid conflicting floating-point scatter. Pressure/closure success depends on residuals and invariants, not a fixed arbitrary number of iterations.
+
+M3 should begin with one bounded batch in flight. GPU status/validation records decide whether a candidate state can become committed; later passes must not consume a failed candidate as valid. Read only small completion/diagnostic records asynchronously when needed. Retry from the same committed state and do not consume command/source IDs twice. This synchronization cost is measured, not hidden.
+
+Separate host encoding, submission, GPU completion, solver acceptance and presentation. A `performance.now()` measurement around `advance()` is submission overhead, not completed physics time. No blocking polling loop on the browser event thread and no blocking native executor copied into the WASM adapter.
+
+Keep no mutable borrowed WASM-world view alive across an await or memory growth. An asynchronous readback completion should resolve an owned request via the session queue, not reenter an already borrowed simulation object. Bound staging buffers, callbacks and cancellation state.
+
+## 8. Canvas and renderer migration
+
+The current `main.ts` acquires a 2D context before creating the engine. Choose the renderer before the first context acquisition, or create a fresh/replacement canvas. The HTML canvas contract does not permit acquiring a different context type after one has been selected. [Canvas reference](../sources.md#html-canvas-context).
+
+Keep a Canvas renderer only for the legacy/CPU path. A GPU scene renders with wgpu directly; it does not call the old `render(ctx)` through an ImageData conversion. Share the viewport, pixel-art sampling intent and field-view semantics through small render parameters.
+
+A pointer/brush overlay can use a separate overlay canvas or a small GPU draw. Neither may read full state. If backend switching replaces a canvas, dispose/rebind event listeners and restore focus, pointer capture policy, pan/zoom, device-pixel ratio and accessibility status. Resize display resources independently of the physical grid.
+
+## 9. CPU graph coupling
+
+Keep circuit solving in Rust CPU code initially. For a GPU scene, send topology-change events and only the thermal/material samples the graph needs. Validate graph version at a declared stage barrier before emitting funded heat transactions. A topology edit caused by melting or motion invalidates the relevant graph before the next solve.
+
+Sparse messages are a design target, not an assumption that every circuit scene is sparse. Record event-buffer overflow and dense-circuit transfer costs. On overflow, retry or reject without losing conductor changes. Choose a GPU graph solve or explicit feature limit if measurements justify it; do not hide a full-world download in the circuit adapter.
+
+## 10. Snapshot, loss and recovery
+
+A save captures one committed epoch/tick across every required buffer, schema, catalogue/component mapping, settings, RNG/source state and ledgers. Pause at a barrier or copy all buffers from the same committed generation into staging before asynchronous serialization. Never assemble a snapshot from unrelated ticks. Include nuclear/radiation state only when that extension is active.
+
+Load performs schema/domain/capacity validation and prepares new resources before atomically replacing the session. Failure leaves the current world intact. Mid-scene model/backend switching requires an explicit supported conversion, not an automatic reinterpretation of arrays.
+
+On device loss, stop new work, reject/cancel affected readbacks and report the latest recoverable checkpoint. The newest state in a lost device may be unavailable. Resume a compatible backend from that checkpoint with an explicit rollback notice, or restart with user-visible loss information. Command replay can restore intent, but floating-point/driver differences may change trajectories; do not promise bit-exact recovery across backends.
+
+## 11. Data and tests
+
+Keep `src/materials/definitions.ts` as the single legacy catalogue while bootstrapping. M1 adds a reproducible validated export/projection for the small supported scene, not a second handwritten Rust or WGSL catalogue. P3 deliberately migrates scientific source records to the full data pipeline and regenerates each consumer. Version/hash the outputs and test IDs, units and precision conversion. UI presentation may remain authored in TypeScript when joined by stable IDs.
+
+All phases use the same boundary. Chemistry, phase changes and nuclear stages produce validated amount/energy transactions in the owning backend; none gets its own world transport loop. See [backend acceptance](../validation/backend-migration.md) and the [work-package mapping](../plans/rust-wasm-migration/plan.md).

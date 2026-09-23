@@ -1,125 +1,68 @@
-# Restarbejde og leveret historik
+# Active work and delivered-history boundary
 
-**Statusdato: 21. september 2026.** Den tidligere backlog R1–R8 er leveret som
-en afgrænset hybridmodel. Det afslutter ikke fysikredesignet: konservativ
-fluidtransport, GPU-backend, opløste chokbølger og materialebrud er fortsat planlagt
-arbejde. Den aktuelle model og dens begrænsninger beskrives i [model.md](model.md).
+**Status date:** 21 September 2026. **Next task:** R9, P1/M0. All active items below are planned, not implemented by this documentation update. Follow [START_HERE.md](START_HERE.md) and [the roadmap](roadmap.md).
 
-## Aktivt restarbejde
+## Current active queue
 
-Implementeringsrækkefølgen følger [GPU-redesignet](plans/fluid-gpu-redesign/plan.md)
-og den efterfølgende [plan for trykbølger og materialebrud](plans/pressure-waves-breakage/plan.md).
-Ingen af nedenstående punkter er markeret som implementeret.
+| Work item | Phase / milestones | Deliverable and acceptance | Status |
+| --- | --- | --- | --- |
+| R9 | P1 / M0-M1, E00-E04 | Fresh baseline; Rust/WASM workspace and browser smoke test; async facade, IDs/ABI/data projection, independent Rust circuit reference and invalidation | Planned |
+| R10 | P1 / M2-M3, E05-E08 | Rust f64 conservative reference and equivalent Rust/wgpu WGSL demonstrator; direct rendering, async probes, equal-time parity and measured transfers | Planned |
+| R11 | P1 / M4-M7, E09-E14 | Rust/GPU thermodynamics, solids and sources; bounded Rust CPU circuits, TypeScript host/worker integration, recovery and measured promotion | Planned |
+| R12 | P2 / W0-W2 | Compressible CPU reference and GPU parity; local waves/reflection, finite exchange, stable time integration | Planned |
+| R13 | P2 / W3 | Reactive source integration, stress-based failure, fragments, conservative solid/fluid coupling | Planned |
+| R14 | P2 / W4 | Breakage toggle, slow motion/substep inspection, supported scenes, browser/recovery/performance evidence | Planned |
+| R15 | P3 / C0-C2 | Source-qualified registries, composition/isotope-preservation, product closure, explicit reaction engine, CPU/GPU table compilation | Planned |
+| R16 | P4 / C3-C6 | Migrate eight legacy elements; deliver 40 bounded core forms and essential compound/reaction scenarios | Planned |
+| R17 | P5 / C7-C9 | Add exact 43-element cohort; 83 total forms, bounded advanced systems, coverage and capacity tests | Planned |
+| R18 | P6 / N0-N3 | Nuclide data, decay, radiation and isotope UI; add 20 nuclear-first identities for 103 total | Planned |
+| R19 | P7 / N4-N6 | Selected fusion/fission channels, independent references, energy partition, bounded host coupling | Planned |
+| R20 | P8 / N7-N8 | Final 15 exotic identities; explicit unknown/predicted/creative behavior and stabilization persistence | Planned |
+| R21 | P9 / Q0-Q2 | Combined-feature matrix, scenario/persistence polish, device measurements, source/model/documentation reconciliation | Planned |
 
-| Punkt | Leverance og afslutningskrav | Afhængighed |
+Default work order is sequential by phase. P2's fixed-wall prototype has a technical dependency on M3 and fragments additionally on M5, but it must not enlarge the first GPU demonstrator. The full P3 pipeline comes later; its minimal identity/storage seam is already required in M1. Basic existing chemistry integration remains part of M6.
+
+No phase completion can be inferred from roster counts. [development-phases.json](data/development-phases.json) records planned phases and evidence references; [element-roadmap.json](data/element-roadmap.json) records exact cohort membership. Update both only with supported changes.
+
+## Immediate work checklist
+
+- [ ] Inspect actual repository instructions, source, scripts, lockfile, and Git changes.
+- [ ] Capture a recoverable tracked/untracked snapshot and fresh hashes.
+- [ ] Run existing checks and the historical audit in a new evidence directory; record differences without overwriting old files.
+- [ ] Freeze initial reference fixtures, precision-specific tolerances, and hardware/performance measurement conventions.
+- [ ] Follow [E00-E14](plans/rust-wasm-migration/plan.md): create the Rust/WASM bootstrap, async facade and identity/data contract, then Rust f64 reference before the WGSL solver port.
+- [ ] Preserve the TypeScript UI and legacy scenes; do not rewrite every old solver or relocate the app first.
+- [ ] Use [source observations](validation/source-review-2026-09-21.md) to cover canvas ownership, nested pressure calls, command timing and mixed energy conventions.
+
+Use [the milestone evidence template](templates/phase-evidence.md) for every completed slice. If hardware is unavailable, record that gate as unrun; a CPU test cannot stand in for browser or GPU validation.
+
+## Legacy delivered history
+
+The supplied documentation reports these earlier changes as delivered. The latest uploaded source was inspected statically, but delivery/test claims remain unverified against a runnable full checkout until M0. Their original descriptions, file references, and detailed visual-regression history are preserved in [the complete input archive](history/README.md).
+
+| Historical item | Reported delivered scope | Important limit |
 | --- | --- | --- |
-| R9 · baseline og backend | Bevar den eksisterende arbejdsmappe, genskab audit/check-baseline, og indfør versioneret tilstand, kommandoer og ét autoritativt tilstandsejerskab pr. scene. | GPU M0–M1 |
-| R10 · konservativ fluid og GPU | CPU-reference, GPU-paritet og direkte rendering; dokumentér numeriske fejl og faktisk ydelse. Første demonstrator har faste vægge og ingen chokbølger eller brud. | GPU M2–M3 |
-| R11 · komplet fluidintegration | Termodynamik, delvise faser, endelig udluftning, korn, bevægelige faste materialer, reaktioner, recovery og valideret overgang til ny backend. | GPU M4–M7 |
-| R12 · kompressible trykbølger | Særskilt kompressibel CPU/GPU-model med lokal trykudbredelse, refleksion, udstrømning og energifinansieret forbrænding. Validér mod shock-tube-reference og indelukket antændelse med åbning. | Efter M3; egen CPU-reference før GPU-port |
-| R13 · materialebrud | Spændings- og geometriafhængigt brud for metal, glas, sten og træ; bevægelige fragmenter og regnskab for elastisk energi, brud og dissipation. | Kompressibel reference og M5's solid/fluid-kobling |
-| R14 · betjening og accept | Breakage-toggle som standard til, langsom gengivelse, deltrinsinspektion, trykvisning, CPU/GPU-sammenligning og målt 480×270-ydelse. | R12–R13 før understøttede scener promoveres |
+| R1 | Shared scale, parcel inventories, source/loss ledger | Does not establish continuum transport |
+| R2 | Hybrid columns/cellular fluids and isolated cosmetic waves | Velocity does not consistently determine all transport |
+| R3 | Mass-scaled thermal/latent accounting and phase mass preservation | Not a general internal-energy/EOS model |
+| R4 | Anchored versus dynamic solid cells, collision and buoyancy | Not deformable/breakable connected solids |
+| R5 | Ideal-gas chamber pressure and paired impulses | Open/sealed volume mismatch; no resolved shocks |
+| R6 | Finite fuel/oxygen/chemical stores and external growth accounting | Not complete species chemistry or photosynthesis |
+| R7 | Seeded replay, diagnostics, reference fixtures, browser controls, benchmarks and CI | Tests establish only their stated invariants |
+| R8 | Material/state/solver module responsibilities and UI documentation | New backend and full data model remain future work |
 
-Breakage-toggle stopper nye brud uden at hele skader eller standse eksisterende
-fragmenter; clear/reset bevarer valget. Første kompressible scener understøtter
-gas, reaktive korn og faste materialer. Kompressible scener med væske kræver senere
-valideret flerfasekobling. Den eksisterende backend bevares til øvrige scener;
-to transportsystemer må ikke eje samme scenetilstand.
+Additional documented work includes continuous brushes, energy-funded Fire behavior, oil/water displacement, stable pool colour/occupancy, gas-plume regressions, asynchronous flame emission, pressure-consistent water latent behavior, rising boiling bubbles, temperature maps, typed/frozen catalogue lookups, grouped modules, and input-coordinate validation. Preserve those regression families during the redesign.
 
-## Leverede ændringer i den oprindelige hybridmodel
+The original roadmap's partly delivered explosion, picker/catalogue, circuit, and acid/base work is legacy history. It is not a different P1-P4 execution sequence. The current documentation consistently identifies eight legacy element models; an earlier reference to five and the implication that no element had any implementation have been corrected.
 
-| Punkt | Resultat | Primære filer |
-| --- | --- | --- |
-| R1 · skala og bevarelse | Fælles 1 cm celleskala, 1 cm dybde og 60 Hz; masse, volumen, hastighed, tryk, ilt og kemisk energi ejes af verden og flyttes atomisk. Kilde-/tabsledger og numeriske tolerancer er defineret. | `src/simulation/physical-scale.ts`, `src/simulation/world.ts`, `src/simulation/diagnostics.ts`, `docs/model.md` |
-| R2 · væske og bølger | Hybrid væskesolver afleder volumen, højde og lodret hastighed pr. søjle fra autoritative celleparceller. Forbindelser følger gittergeometri, transport flytter hele parceltilstanden, og viskositet dæmper impuls materialeforskelligt. Den visuelle bølgeeffekt er fortsat tydeligt isoleret. | `src/physics/fluid-solver.ts`, `src/physics/hydrostatics.ts`, `src/physics/motion.ts` |
-| R3 · termisk skala | Diffusion har eksplicit tidskridt, cellestørrelse og repræsenteret dybde. Masse og volumen bevares gennem fase-ID-skift, og volumen opdateres efter fasens densitet. Latent varme bevares. | `src/physics/thermal.ts`, `src/simulation/world.ts`, `src/simulation/physical-scale.ts` |
-| R4 · faste materialer | Forankret terræn er adskilt fra udtrykkeligt dynamiske faste parceller. Dynamiske sten, metal og glas får tyngde, densitetsbaseret opdrift, kollision og termisk dissipering. | `src/physics/solid-mechanics.ts`, `src/simulation/world.ts` |
-| R5 · gastryk | Gasmasse, volumen og temperatur giver tryk med idealgasloven. Trykgradienter kobles som impuls til gas, væske og dynamiske faste parceller; cellulær transport respekterer vægge og åbninger. | `src/physics/gas-dynamics.ts` |
-| R6 · reaktioner | Træ, olie og planter har begrænset kemisk energi. Forbrænding kræver ilt, overfører kemisk energi til varme og stopper uden brændsel/ilt. Røgudløb registreres som massetab. Biologisk vækst er fortsat markeret som en spilregel. | `src/physics/reactions.ts`, `src/materials/physical-properties.ts` |
-| R7 · validering | Fysisk og kosmetisk tilfældighed er separate seedede strømme. Diagnostik måler alle sporede energikomponenter, masse, tryk og fart. Nye referenceforsøg dækker replay, regnskaber, væskesøjler, viskositet, idealgas, dynamiske faste celler og afgrænset forbrænding. En headless DOM-test dækker materialevalg, pause, hastighed, reset/clear, bølger og touch. Et reproducerbart benchmark måler tomme, fyldte og fragmenterede verdener mod 60 Hz-budgettet. CI kører lint, typer, tests og build. | `src/simulation/random.ts`, `src/simulation/diagnostics.ts`, `tests/integration/physical-model.test.ts`, `tests/physics/reactions.test.ts`, `tests/app/browser-controls.test.ts`, `benchmarks/physics.bench.ts`, `.github/workflows/ci.yml` |
-| R8 · filansvar | Materiale-ID'er, fysiske data og præsentation er adskilt. De foreslåede solver- og diagnostikmoduler har egne ansvar. README og UI beskriver og viser den nye model. | `src/materials/ids.ts`, `src/materials/physical-properties.ts`, `src/materials/presentation.ts`, `README.md` |
+## Historical audit, not fresh evidence
 
-## Bevidste modelgrænser
+The unchanged audit files report 24 passes and 11 failures for 35 checks at their recorded source state. New baseline results may differ. Preserve N/C test IDs and classify a replaced physical model separately from an implementation regression. Do not demand the old pass/fail totals from a newer source tree, and do not call the historical source tree the current checkout.
 
-Den leverede R1–R8-historik beskriver afgrænsede mekanismer, ikke en fuld
-kontinuumssolver. Følgende er den nuværende models begrænsninger; de punkter, som
-redesignet skal erstatte, fremgår nu eksplicit af det aktive restarbejde ovenfor:
+Record new results separately and update [model.md](model.md) only when implementation changes are confirmed. [Acceptance](validation/acceptance.md) defines numerical, functional, statistical, and hardware gates for new work.
 
-- Den hybride væskemodel har én diskret parcelplacering pr. celle og kan ikke vise en
-  glat fri overflade under celleopløsningen.
-- Dynamiske faste celler er stive parceller, ikke deformerbare eller brudbare legemer.
-- Eksplosioner giver lokal varme og radiale impulser, men ingen opløste chokbølger.
-- Idealgasloven bruges uden fugtigheds-, realgas- eller flerkomponentkorrektioner.
-- Vandets kogepunkt følger en Clausius-Clapeyron-tilnærmelse omkring normalpunktet;
-  flerkomponentvæsker og kritiske tilstande er ikke modelleret.
-- Stråling, avanceret konvektion og en reversibel glasmodel er fravalgt. De kan tilføjes
-  som nye modeludvidelser, hvis der vælges konkrete materialer og referenceforsøg.
-- Plantevækst er en separat spilregel. Den indgår ikke i et fuldt kulstof- og
-  fotosynteseregnskab.
+## Selected engine migration and status
 
-Disse grænser står også i [model.md](model.md), så UI eller dokumentation ikke kan
-forveksles med en påstand om laboratorienøjagtighed.
+All E00-E14 work packages in [the engine tracker](data/engine-migration-work.json) are planned. E00 is next. The source-only review and docs validation do not mark any application milestone complete. The stack decision is settled by [ADR-001](architecture/adr-001-rust-wasm-wgpu.md); numerical details remain governed by the phase plans.
 
-## Verifikation
-
-### Modulopdeling 21. september 2026
-
-Kildekode og tests er grupperet efter ansvar; navngivning og placeringer fremgår af
-[projektstrukturen](project-structure.md). Materialeklassifikation er flyttet ud af
-bevægelsessolveren, og materialevælger, feltvisninger og koordinatkonvertering er
-adskilt fra inputstyringen. DOM-opslag og cellekoordinatvalidering har fælles ejere.
-En regression beskytter mod, at brøkkoordinater ændrer en anden celles dynamiske
-tilstand. Dette er vedligeholdelse af den eksisterende model, ikke levering af
-GPU-redesign, kompressible bølger eller materialebrud.
-
-Historikken nedenfor beskriver eksisterende regressioner. Den er ikke dokumentation
-for, at GPU-redesign, kompressible bølger eller materialebrud er implementeret eller
-valideret. Nye acceptkrav omfatter chokreference, refleksion, endelig udstrømning,
-strukturbrud, toggle-adfærd og bevarelse med fragmenter. CPU/GPU sammenlignes ved
-samme fysiske tidspunkt; FPS og simulerede sekunder pr. vægurssekund måles separat.
-
-### Rettelser efter visuel afprøvning
-
-- Alle pensler maler kontinuerligt ved fastholdt mus/touch.
-- Ild antænder træ uden at erstatte det; brændende træ afgiver flammer og kan
-  antænde nabotræ. Olie/vand fortrænger hinanden uden at blive blandet til ét stof.
-- Ildpenslen bruger en separat, kortlivet antændelsesprofil fra materialekataloget.
-  Fastholdt input giver en lille flamme uden røg i tom luft; almindelige brændselsbrande
-  bevares. `tests/tools/fire-brush.test.ts` dækker tre penselstørrelser, slip/slukning,
-  tilstandstransport, masse/varme og vedvarende antændelse af træ, olie og planter.
-- Faldende vand holdes sammen; hydrostatik fastholder ikke frit faldende strøg.
-- Overfladelys tegner ikke falske huller eller dråber ved væskegrænser.
-- Lava og andre væsker bytter ikke længere hvilepositioner frem og tilbage;
-  farvenuancer følger parcellerne, og udligning virker også under lettere væsker.
-- Ild/røg/damp frigiver luft efter diagonal bevægelse; ny gas kan bevæge sig straks.
-  Seedet drift og intermitterende diffusion modvirker gitterlåste skakbrætmønstre.
-  Gasregressioner dækker sammenhængende plumer, lofter, lukkede hjørner og replay.
-- Brede, ensartet opvarmede olieflader afgiver flammer asynkront i stedet for
-  vandrette lag. Regressioner følger både opstart og vedvarende brand ved tre
-  temperaturer og tre seeds, inklusive kontrol af varme- og brændselsregnskabet.
-- Vand/damp kræver fuldført latent varmeovergang, også ved ændringer i tryk.
-- Kogende vand danner individuelle energifinansierede dampbobler. Hydrostatikken
-  sender ikke længere neddykkede bobler direkte til overfladen. Et opvarmet kar
-  testes med tre seeds, inklusive synlig opstigning, dampafgivelse, fravær af
-  synkrone damplag og bevarelse af masse/varme (`tests/physics/boiling.test.ts`).
-- Temperaturkort med `T`, fast farveforklaring og temperaturvisning inklusive luft.
-- Ét materialekatalog driver fysik, fasekurver, reaktionstærskler og materialevælger.
-- Kataloget er hærdet med konkrete `MaterialId`-/`ToolId`-typer, tydelige navne for
-  kalibrerede celleegenskaber, opstartsvalidering og frosne delte profiler/opslag.
-  `tests/materials/material-catalogue.test.ts` samt en særskilt typekontrol med
-  `noUncheckedIndexedAccess` beskytter nye materialeændringer uden at ændre værdier.
-
-Regressioner findes i `tests/integration/interaction-regressions.test.ts` samt kontrol-,
-rendering- og termiske tests. Det er afgrænsede fejlrettelser i cellemodellen;
-de udgør ikke en fuld kontinuerlig væske- eller gassolver.
-
-Kør følgende før levering:
-
-```text
-bun run lint
-bun run check
-bun run build
-```
-
-Referenceforsøgene er deterministiske og kræver ingen manuel tegning. De oprindelige
-kar-, barriere-, rendering-, fase- og klokketests er bevaret som regressionstests.
+P2 references and later chemistry/nuclear algorithms are implemented in Rust CPU code first where a reference is required, then equivalent WGSL where justified. UI remains TypeScript. See [the execution mapping](plans/rust-wasm-migration/plan.md#how-every-later-phase-uses-the-chosen-stack).

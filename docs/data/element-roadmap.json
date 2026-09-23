@@ -1,0 +1,1555 @@
+{
+  "$schema": "./element-roadmap.schema.json",
+  "schemaVersion": 1,
+  "updatedAt": "2026-09-21",
+  "kind": "planning-manifest-not-runtime-properties",
+  "description": "Delivery cohorts, not stability classifications or validated simulation claims. Existing eight legacy models are documented, not re-tested in this docs-only update.",
+  "tierCounts": {
+    "core": 40,
+    "extended": 43,
+    "nuclear": 20,
+    "exotic": 15
+  },
+  "cumulativeTargets": [
+    40,
+    83,
+    103,
+    118
+  ],
+  "elements": [
+    {
+      "atomicNumber": 1,
+      "symbol": "H",
+      "name": "Hydrogen",
+      "tier": "core",
+      "targetPhase": "P4",
+      "targetRepresentation": "elemental-material",
+      "legacyModelDocumented": true,
+      "newBackendStatus": "planned",
+      "sourceIds": [
+        "iupac-periodic-table"
+      ]
+    },
+    {
+      "atomicNumber": 2,
+      "symbol": "He",
+      "name": "Helium",
+      "tier": "core",
+      "targetPhase": "P4",
+      "targetRepresentation": "elemental-material",
+      "legacyModelDocumented": true,
+      "newBackendStatus": "planned",
+      "sourceIds": [
+        "iupac-periodic-table"
+      ]
+    },
+    {
+      "atomicNumber": 3,
+      "symbol": "Li",
+      "name": "Lithium",
+      "tier": "core",
+      "targetPhase": "P4",
+      "targetRepresentation": "elemental-material",
+      "legacyModelDocumented": false,
+      "newBackendStatus": "planned",
+      "sourceIds": [
+        "iupac-periodic-table"
+      ]
+    },
+    {
+      "atomicNumber": 4,
+      "symbol": "Be",
+      "name": "Beryllium",
+      "tier": "extended",
+      "targetPhase": "P5",
+      "targetRepresentation": "elemental-material",
+      "legacyModelDocumented": false,
+      "newBackendStatus": "planned",
+      "sourceIds": [
+        "iupac-periodic-table"
+      ]
+    },
+    {
+      "atomicNumber": 5,
+      "symbol": "B",
+      "name": "Boron",
+      "tier": "core",
+      "targetPhase": "P4",
+      "targetRepresentation": "elemental-material",
+      "legacyModelDocumented": false,
+      "newBackendStatus": "planned",
+      "sourceIds": [
+        "iupac-periodic-table"
+      ]
+    },
+    {
+      "atomicNumber": 6,
+      "symbol": "C",
+      "name": "Carbon",
+      "tier": "core",
+      "targetPhase": "P4",
+      "targetRepresentation": "elemental-material",
+      "legacyModelDocumented": true,
+      "newBackendStatus": "planned",
+      "sourceIds": [
+        "iupac-periodic-table"
+      ]
+    },
+    {
+      "atomicNumber": 7,
+      "symbol": "N",
+      "name": "Nitrogen",
+      "tier": "core",
+      "targetPhase": "P4",
+      "targetRepresentation": "elemental-material",
+      "legacyModelDocumented": true,
+      "newBackendStatus": "planned",
+      "sourceIds": [
+        "iupac-periodic-table"
+      ]
+    },
+    {
+      "atomicNumber": 8,
+      "symbol": "O",
+      "name": "Oxygen",
+      "tier": "core",
+      "targetPhase": "P4",
+      "targetRepresentation": "elemental-material",
+      "legacyModelDocumented": true,
+      "newBackendStatus": "planned",
+      "sourceIds": [
+        "iupac-periodic-table"
+      ]
+    },
+    {
+      "atomicNumber": 9,
+      "symbol": "F",
+      "name": "Fluorine",
+      "tier": "core",
+      "targetPhase": "P4",
+      "targetRepresentation": "elemental-material",
+      "legacyModelDocumented": false,
+      "newBackendStatus": "planned",
+      "sourceIds": [
+        "iupac-periodic-table"
+      ]
+    },
+    {
+      "atomicNumber": 10,
+      "symbol": "Ne",
+      "name": "Neon",
+      "tier": "core",
+      "targetPhase": "P4",
+      "targetRepresentation": "elemental-material",
+      "legacyModelDocumented": false,
+      "newBackendStatus": "planned",
+      "sourceIds": [
+        "iupac-periodic-table"
+      ]
+    },
+    {
+      "atomicNumber": 11,
+      "symbol": "Na",
+      "name": "Sodium",
+      "tier": "core",
+      "targetPhase": "P4",
+      "targetRepresentation": "elemental-material",
+      "legacyModelDocumented": false,
+      "newBackendStatus": "planned",
+      "sourceIds": [
+        "iupac-periodic-table"
+      ]
+    },
+    {
+      "atomicNumber": 12,
+      "symbol": "Mg",
+      "name": "Magnesium",
+      "tier": "core",
+      "targetPhase": "P4",
+      "targetRepresentation": "elemental-material",
+      "legacyModelDocumented": false,
+      "newBackendStatus": "planned",
+      "sourceIds": [
+        "iupac-periodic-table"
+      ]
+    },
+    {
+      "atomicNumber": 13,
+      "symbol": "Al",
+      "name": "Aluminium",
+      "tier": "core",
+      "targetPhase": "P4",
+      "targetRepresentation": "elemental-material",
+      "legacyModelDocumented": false,
+      "newBackendStatus": "planned",
+      "sourceIds": [
+        "iupac-periodic-table"
+      ]
+    },
+    {
+      "atomicNumber": 14,
+      "symbol": "Si",
+      "name": "Silicon",
+      "tier": "core",
+      "targetPhase": "P4",
+      "targetRepresentation": "elemental-material",
+      "legacyModelDocumented": false,
+      "newBackendStatus": "planned",
+      "sourceIds": [
+        "iupac-periodic-table"
+      ]
+    },
+    {
+      "atomicNumber": 15,
+      "symbol": "P",
+      "name": "Phosphorus",
+      "tier": "core",
+      "targetPhase": "P4",
+      "targetRepresentation": "elemental-material",
+      "legacyModelDocumented": false,
+      "newBackendStatus": "planned",
+      "sourceIds": [
+        "iupac-periodic-table"
+      ]
+    },
+    {
+      "atomicNumber": 16,
+      "symbol": "S",
+      "name": "Sulfur",
+      "tier": "core",
+      "targetPhase": "P4",
+      "targetRepresentation": "elemental-material",
+      "legacyModelDocumented": true,
+      "newBackendStatus": "planned",
+      "sourceIds": [
+        "iupac-periodic-table"
+      ]
+    },
+    {
+      "atomicNumber": 17,
+      "symbol": "Cl",
+      "name": "Chlorine",
+      "tier": "core",
+      "targetPhase": "P4",
+      "targetRepresentation": "elemental-material",
+      "legacyModelDocumented": false,
+      "newBackendStatus": "planned",
+      "sourceIds": [
+        "iupac-periodic-table"
+      ]
+    },
+    {
+      "atomicNumber": 18,
+      "symbol": "Ar",
+      "name": "Argon",
+      "tier": "core",
+      "targetPhase": "P4",
+      "targetRepresentation": "elemental-material",
+      "legacyModelDocumented": false,
+      "newBackendStatus": "planned",
+      "sourceIds": [
+        "iupac-periodic-table"
+      ]
+    },
+    {
+      "atomicNumber": 19,
+      "symbol": "K",
+      "name": "Potassium",
+      "tier": "core",
+      "targetPhase": "P4",
+      "targetRepresentation": "elemental-material",
+      "legacyModelDocumented": false,
+      "newBackendStatus": "planned",
+      "sourceIds": [
+        "iupac-periodic-table"
+      ]
+    },
+    {
+      "atomicNumber": 20,
+      "symbol": "Ca",
+      "name": "Calcium",
+      "tier": "core",
+      "targetPhase": "P4",
+      "targetRepresentation": "elemental-material",
+      "legacyModelDocumented": false,
+      "newBackendStatus": "planned",
+      "sourceIds": [
+        "iupac-periodic-table"
+      ]
+    },
+    {
+      "atomicNumber": 21,
+      "symbol": "Sc",
+      "name": "Scandium",
+      "tier": "extended",
+      "targetPhase": "P5",
+      "targetRepresentation": "elemental-material",
+      "legacyModelDocumented": false,
+      "newBackendStatus": "planned",
+      "sourceIds": [
+        "iupac-periodic-table"
+      ]
+    },
+    {
+      "atomicNumber": 22,
+      "symbol": "Ti",
+      "name": "Titanium",
+      "tier": "core",
+      "targetPhase": "P4",
+      "targetRepresentation": "elemental-material",
+      "legacyModelDocumented": false,
+      "newBackendStatus": "planned",
+      "sourceIds": [
+        "iupac-periodic-table"
+      ]
+    },
+    {
+      "atomicNumber": 23,
+      "symbol": "V",
+      "name": "Vanadium",
+      "tier": "extended",
+      "targetPhase": "P5",
+      "targetRepresentation": "elemental-material",
+      "legacyModelDocumented": false,
+      "newBackendStatus": "planned",
+      "sourceIds": [
+        "iupac-periodic-table"
+      ]
+    },
+    {
+      "atomicNumber": 24,
+      "symbol": "Cr",
+      "name": "Chromium",
+      "tier": "core",
+      "targetPhase": "P4",
+      "targetRepresentation": "elemental-material",
+      "legacyModelDocumented": false,
+      "newBackendStatus": "planned",
+      "sourceIds": [
+        "iupac-periodic-table"
+      ]
+    },
+    {
+      "atomicNumber": 25,
+      "symbol": "Mn",
+      "name": "Manganese",
+      "tier": "extended",
+      "targetPhase": "P5",
+      "targetRepresentation": "elemental-material",
+      "legacyModelDocumented": false,
+      "newBackendStatus": "planned",
+      "sourceIds": [
+        "iupac-periodic-table"
+      ]
+    },
+    {
+      "atomicNumber": 26,
+      "symbol": "Fe",
+      "name": "Iron",
+      "tier": "core",
+      "targetPhase": "P4",
+      "targetRepresentation": "elemental-material",
+      "legacyModelDocumented": true,
+      "newBackendStatus": "planned",
+      "sourceIds": [
+        "iupac-periodic-table"
+      ]
+    },
+    {
+      "atomicNumber": 27,
+      "symbol": "Co",
+      "name": "Cobalt",
+      "tier": "core",
+      "targetPhase": "P4",
+      "targetRepresentation": "elemental-material",
+      "legacyModelDocumented": false,
+      "newBackendStatus": "planned",
+      "sourceIds": [
+        "iupac-periodic-table"
+      ]
+    },
+    {
+      "atomicNumber": 28,
+      "symbol": "Ni",
+      "name": "Nickel",
+      "tier": "core",
+      "targetPhase": "P4",
+      "targetRepresentation": "elemental-material",
+      "legacyModelDocumented": false,
+      "newBackendStatus": "planned",
+      "sourceIds": [
+        "iupac-periodic-table"
+      ]
+    },
+    {
+      "atomicNumber": 29,
+      "symbol": "Cu",
+      "name": "Copper",
+      "tier": "core",
+      "targetPhase": "P4",
+      "targetRepresentation": "elemental-material",
+      "legacyModelDocumented": true,
+      "newBackendStatus": "planned",
+      "sourceIds": [
+        "iupac-periodic-table"
+      ]
+    },
+    {
+      "atomicNumber": 30,
+      "symbol": "Zn",
+      "name": "Zinc",
+      "tier": "core",
+      "targetPhase": "P4",
+      "targetRepresentation": "elemental-material",
+      "legacyModelDocumented": false,
+      "newBackendStatus": "planned",
+      "sourceIds": [
+        "iupac-periodic-table"
+      ]
+    },
+    {
+      "atomicNumber": 31,
+      "symbol": "Ga",
+      "name": "Gallium",
+      "tier": "core",
+      "targetPhase": "P4",
+      "targetRepresentation": "elemental-material",
+      "legacyModelDocumented": false,
+      "newBackendStatus": "planned",
+      "sourceIds": [
+        "iupac-periodic-table"
+      ]
+    },
+    {
+      "atomicNumber": 32,
+      "symbol": "Ge",
+      "name": "Germanium",
+      "tier": "extended",
+      "targetPhase": "P5",
+      "targetRepresentation": "elemental-material",
+      "legacyModelDocumented": false,
+      "newBackendStatus": "planned",
+      "sourceIds": [
+        "iupac-periodic-table"
+      ]
+    },
+    {
+      "atomicNumber": 33,
+      "symbol": "As",
+      "name": "Arsenic",
+      "tier": "extended",
+      "targetPhase": "P5",
+      "targetRepresentation": "elemental-material",
+      "legacyModelDocumented": false,
+      "newBackendStatus": "planned",
+      "sourceIds": [
+        "iupac-periodic-table"
+      ]
+    },
+    {
+      "atomicNumber": 34,
+      "symbol": "Se",
+      "name": "Selenium",
+      "tier": "extended",
+      "targetPhase": "P5",
+      "targetRepresentation": "elemental-material",
+      "legacyModelDocumented": false,
+      "newBackendStatus": "planned",
+      "sourceIds": [
+        "iupac-periodic-table"
+      ]
+    },
+    {
+      "atomicNumber": 35,
+      "symbol": "Br",
+      "name": "Bromine",
+      "tier": "core",
+      "targetPhase": "P4",
+      "targetRepresentation": "elemental-material",
+      "legacyModelDocumented": false,
+      "newBackendStatus": "planned",
+      "sourceIds": [
+        "iupac-periodic-table"
+      ]
+    },
+    {
+      "atomicNumber": 36,
+      "symbol": "Kr",
+      "name": "Krypton",
+      "tier": "extended",
+      "targetPhase": "P5",
+      "targetRepresentation": "elemental-material",
+      "legacyModelDocumented": false,
+      "newBackendStatus": "planned",
+      "sourceIds": [
+        "iupac-periodic-table"
+      ]
+    },
+    {
+      "atomicNumber": 37,
+      "symbol": "Rb",
+      "name": "Rubidium",
+      "tier": "extended",
+      "targetPhase": "P5",
+      "targetRepresentation": "elemental-material",
+      "legacyModelDocumented": false,
+      "newBackendStatus": "planned",
+      "sourceIds": [
+        "iupac-periodic-table"
+      ]
+    },
+    {
+      "atomicNumber": 38,
+      "symbol": "Sr",
+      "name": "Strontium",
+      "tier": "extended",
+      "targetPhase": "P5",
+      "targetRepresentation": "elemental-material",
+      "legacyModelDocumented": false,
+      "newBackendStatus": "planned",
+      "sourceIds": [
+        "iupac-periodic-table"
+      ]
+    },
+    {
+      "atomicNumber": 39,
+      "symbol": "Y",
+      "name": "Yttrium",
+      "tier": "extended",
+      "targetPhase": "P5",
+      "targetRepresentation": "elemental-material",
+      "legacyModelDocumented": false,
+      "newBackendStatus": "planned",
+      "sourceIds": [
+        "iupac-periodic-table"
+      ]
+    },
+    {
+      "atomicNumber": 40,
+      "symbol": "Zr",
+      "name": "Zirconium",
+      "tier": "extended",
+      "targetPhase": "P5",
+      "targetRepresentation": "elemental-material",
+      "legacyModelDocumented": false,
+      "newBackendStatus": "planned",
+      "sourceIds": [
+        "iupac-periodic-table"
+      ]
+    },
+    {
+      "atomicNumber": 41,
+      "symbol": "Nb",
+      "name": "Niobium",
+      "tier": "extended",
+      "targetPhase": "P5",
+      "targetRepresentation": "elemental-material",
+      "legacyModelDocumented": false,
+      "newBackendStatus": "planned",
+      "sourceIds": [
+        "iupac-periodic-table"
+      ]
+    },
+    {
+      "atomicNumber": 42,
+      "symbol": "Mo",
+      "name": "Molybdenum",
+      "tier": "extended",
+      "targetPhase": "P5",
+      "targetRepresentation": "elemental-material",
+      "legacyModelDocumented": false,
+      "newBackendStatus": "planned",
+      "sourceIds": [
+        "iupac-periodic-table"
+      ]
+    },
+    {
+      "atomicNumber": 43,
+      "symbol": "Tc",
+      "name": "Technetium",
+      "tier": "nuclear",
+      "targetPhase": "P6",
+      "targetRepresentation": "nuclide-first",
+      "legacyModelDocumented": false,
+      "newBackendStatus": "planned",
+      "sourceIds": [
+        "iupac-periodic-table"
+      ]
+    },
+    {
+      "atomicNumber": 44,
+      "symbol": "Ru",
+      "name": "Ruthenium",
+      "tier": "extended",
+      "targetPhase": "P5",
+      "targetRepresentation": "elemental-material",
+      "legacyModelDocumented": false,
+      "newBackendStatus": "planned",
+      "sourceIds": [
+        "iupac-periodic-table"
+      ]
+    },
+    {
+      "atomicNumber": 45,
+      "symbol": "Rh",
+      "name": "Rhodium",
+      "tier": "extended",
+      "targetPhase": "P5",
+      "targetRepresentation": "elemental-material",
+      "legacyModelDocumented": false,
+      "newBackendStatus": "planned",
+      "sourceIds": [
+        "iupac-periodic-table"
+      ]
+    },
+    {
+      "atomicNumber": 46,
+      "symbol": "Pd",
+      "name": "Palladium",
+      "tier": "extended",
+      "targetPhase": "P5",
+      "targetRepresentation": "elemental-material",
+      "legacyModelDocumented": false,
+      "newBackendStatus": "planned",
+      "sourceIds": [
+        "iupac-periodic-table"
+      ]
+    },
+    {
+      "atomicNumber": 47,
+      "symbol": "Ag",
+      "name": "Silver",
+      "tier": "core",
+      "targetPhase": "P4",
+      "targetRepresentation": "elemental-material",
+      "legacyModelDocumented": false,
+      "newBackendStatus": "planned",
+      "sourceIds": [
+        "iupac-periodic-table"
+      ]
+    },
+    {
+      "atomicNumber": 48,
+      "symbol": "Cd",
+      "name": "Cadmium",
+      "tier": "extended",
+      "targetPhase": "P5",
+      "targetRepresentation": "elemental-material",
+      "legacyModelDocumented": false,
+      "newBackendStatus": "planned",
+      "sourceIds": [
+        "iupac-periodic-table"
+      ]
+    },
+    {
+      "atomicNumber": 49,
+      "symbol": "In",
+      "name": "Indium",
+      "tier": "extended",
+      "targetPhase": "P5",
+      "targetRepresentation": "elemental-material",
+      "legacyModelDocumented": false,
+      "newBackendStatus": "planned",
+      "sourceIds": [
+        "iupac-periodic-table"
+      ]
+    },
+    {
+      "atomicNumber": 50,
+      "symbol": "Sn",
+      "name": "Tin",
+      "tier": "core",
+      "targetPhase": "P4",
+      "targetRepresentation": "elemental-material",
+      "legacyModelDocumented": false,
+      "newBackendStatus": "planned",
+      "sourceIds": [
+        "iupac-periodic-table"
+      ]
+    },
+    {
+      "atomicNumber": 51,
+      "symbol": "Sb",
+      "name": "Antimony",
+      "tier": "extended",
+      "targetPhase": "P5",
+      "targetRepresentation": "elemental-material",
+      "legacyModelDocumented": false,
+      "newBackendStatus": "planned",
+      "sourceIds": [
+        "iupac-periodic-table"
+      ]
+    },
+    {
+      "atomicNumber": 52,
+      "symbol": "Te",
+      "name": "Tellurium",
+      "tier": "extended",
+      "targetPhase": "P5",
+      "targetRepresentation": "elemental-material",
+      "legacyModelDocumented": false,
+      "newBackendStatus": "planned",
+      "sourceIds": [
+        "iupac-periodic-table"
+      ]
+    },
+    {
+      "atomicNumber": 53,
+      "symbol": "I",
+      "name": "Iodine",
+      "tier": "core",
+      "targetPhase": "P4",
+      "targetRepresentation": "elemental-material",
+      "legacyModelDocumented": false,
+      "newBackendStatus": "planned",
+      "sourceIds": [
+        "iupac-periodic-table"
+      ]
+    },
+    {
+      "atomicNumber": 54,
+      "symbol": "Xe",
+      "name": "Xenon",
+      "tier": "core",
+      "targetPhase": "P4",
+      "targetRepresentation": "elemental-material",
+      "legacyModelDocumented": false,
+      "newBackendStatus": "planned",
+      "sourceIds": [
+        "iupac-periodic-table"
+      ]
+    },
+    {
+      "atomicNumber": 55,
+      "symbol": "Cs",
+      "name": "Caesium",
+      "tier": "extended",
+      "targetPhase": "P5",
+      "targetRepresentation": "elemental-material",
+      "legacyModelDocumented": false,
+      "newBackendStatus": "planned",
+      "sourceIds": [
+        "iupac-periodic-table"
+      ]
+    },
+    {
+      "atomicNumber": 56,
+      "symbol": "Ba",
+      "name": "Barium",
+      "tier": "extended",
+      "targetPhase": "P5",
+      "targetRepresentation": "elemental-material",
+      "legacyModelDocumented": false,
+      "newBackendStatus": "planned",
+      "sourceIds": [
+        "iupac-periodic-table"
+      ]
+    },
+    {
+      "atomicNumber": 57,
+      "symbol": "La",
+      "name": "Lanthanum",
+      "tier": "extended",
+      "targetPhase": "P5",
+      "targetRepresentation": "elemental-material",
+      "legacyModelDocumented": false,
+      "newBackendStatus": "planned",
+      "sourceIds": [
+        "iupac-periodic-table"
+      ]
+    },
+    {
+      "atomicNumber": 58,
+      "symbol": "Ce",
+      "name": "Cerium",
+      "tier": "extended",
+      "targetPhase": "P5",
+      "targetRepresentation": "elemental-material",
+      "legacyModelDocumented": false,
+      "newBackendStatus": "planned",
+      "sourceIds": [
+        "iupac-periodic-table"
+      ]
+    },
+    {
+      "atomicNumber": 59,
+      "symbol": "Pr",
+      "name": "Praseodymium",
+      "tier": "extended",
+      "targetPhase": "P5",
+      "targetRepresentation": "elemental-material",
+      "legacyModelDocumented": false,
+      "newBackendStatus": "planned",
+      "sourceIds": [
+        "iupac-periodic-table"
+      ]
+    },
+    {
+      "atomicNumber": 60,
+      "symbol": "Nd",
+      "name": "Neodymium",
+      "tier": "extended",
+      "targetPhase": "P5",
+      "targetRepresentation": "elemental-material",
+      "legacyModelDocumented": false,
+      "newBackendStatus": "planned",
+      "sourceIds": [
+        "iupac-periodic-table"
+      ]
+    },
+    {
+      "atomicNumber": 61,
+      "symbol": "Pm",
+      "name": "Promethium",
+      "tier": "nuclear",
+      "targetPhase": "P6",
+      "targetRepresentation": "nuclide-first",
+      "legacyModelDocumented": false,
+      "newBackendStatus": "planned",
+      "sourceIds": [
+        "iupac-periodic-table"
+      ]
+    },
+    {
+      "atomicNumber": 62,
+      "symbol": "Sm",
+      "name": "Samarium",
+      "tier": "extended",
+      "targetPhase": "P5",
+      "targetRepresentation": "elemental-material",
+      "legacyModelDocumented": false,
+      "newBackendStatus": "planned",
+      "sourceIds": [
+        "iupac-periodic-table"
+      ]
+    },
+    {
+      "atomicNumber": 63,
+      "symbol": "Eu",
+      "name": "Europium",
+      "tier": "extended",
+      "targetPhase": "P5",
+      "targetRepresentation": "elemental-material",
+      "legacyModelDocumented": false,
+      "newBackendStatus": "planned",
+      "sourceIds": [
+        "iupac-periodic-table"
+      ]
+    },
+    {
+      "atomicNumber": 64,
+      "symbol": "Gd",
+      "name": "Gadolinium",
+      "tier": "extended",
+      "targetPhase": "P5",
+      "targetRepresentation": "elemental-material",
+      "legacyModelDocumented": false,
+      "newBackendStatus": "planned",
+      "sourceIds": [
+        "iupac-periodic-table"
+      ]
+    },
+    {
+      "atomicNumber": 65,
+      "symbol": "Tb",
+      "name": "Terbium",
+      "tier": "extended",
+      "targetPhase": "P5",
+      "targetRepresentation": "elemental-material",
+      "legacyModelDocumented": false,
+      "newBackendStatus": "planned",
+      "sourceIds": [
+        "iupac-periodic-table"
+      ]
+    },
+    {
+      "atomicNumber": 66,
+      "symbol": "Dy",
+      "name": "Dysprosium",
+      "tier": "extended",
+      "targetPhase": "P5",
+      "targetRepresentation": "elemental-material",
+      "legacyModelDocumented": false,
+      "newBackendStatus": "planned",
+      "sourceIds": [
+        "iupac-periodic-table"
+      ]
+    },
+    {
+      "atomicNumber": 67,
+      "symbol": "Ho",
+      "name": "Holmium",
+      "tier": "extended",
+      "targetPhase": "P5",
+      "targetRepresentation": "elemental-material",
+      "legacyModelDocumented": false,
+      "newBackendStatus": "planned",
+      "sourceIds": [
+        "iupac-periodic-table"
+      ]
+    },
+    {
+      "atomicNumber": 68,
+      "symbol": "Er",
+      "name": "Erbium",
+      "tier": "extended",
+      "targetPhase": "P5",
+      "targetRepresentation": "elemental-material",
+      "legacyModelDocumented": false,
+      "newBackendStatus": "planned",
+      "sourceIds": [
+        "iupac-periodic-table"
+      ]
+    },
+    {
+      "atomicNumber": 69,
+      "symbol": "Tm",
+      "name": "Thulium",
+      "tier": "extended",
+      "targetPhase": "P5",
+      "targetRepresentation": "elemental-material",
+      "legacyModelDocumented": false,
+      "newBackendStatus": "planned",
+      "sourceIds": [
+        "iupac-periodic-table"
+      ]
+    },
+    {
+      "atomicNumber": 70,
+      "symbol": "Yb",
+      "name": "Ytterbium",
+      "tier": "extended",
+      "targetPhase": "P5",
+      "targetRepresentation": "elemental-material",
+      "legacyModelDocumented": false,
+      "newBackendStatus": "planned",
+      "sourceIds": [
+        "iupac-periodic-table"
+      ]
+    },
+    {
+      "atomicNumber": 71,
+      "symbol": "Lu",
+      "name": "Lutetium",
+      "tier": "extended",
+      "targetPhase": "P5",
+      "targetRepresentation": "elemental-material",
+      "legacyModelDocumented": false,
+      "newBackendStatus": "planned",
+      "sourceIds": [
+        "iupac-periodic-table"
+      ]
+    },
+    {
+      "atomicNumber": 72,
+      "symbol": "Hf",
+      "name": "Hafnium",
+      "tier": "extended",
+      "targetPhase": "P5",
+      "targetRepresentation": "elemental-material",
+      "legacyModelDocumented": false,
+      "newBackendStatus": "planned",
+      "sourceIds": [
+        "iupac-periodic-table"
+      ]
+    },
+    {
+      "atomicNumber": 73,
+      "symbol": "Ta",
+      "name": "Tantalum",
+      "tier": "extended",
+      "targetPhase": "P5",
+      "targetRepresentation": "elemental-material",
+      "legacyModelDocumented": false,
+      "newBackendStatus": "planned",
+      "sourceIds": [
+        "iupac-periodic-table"
+      ]
+    },
+    {
+      "atomicNumber": 74,
+      "symbol": "W",
+      "name": "Tungsten",
+      "tier": "core",
+      "targetPhase": "P4",
+      "targetRepresentation": "elemental-material",
+      "legacyModelDocumented": false,
+      "newBackendStatus": "planned",
+      "sourceIds": [
+        "iupac-periodic-table"
+      ]
+    },
+    {
+      "atomicNumber": 75,
+      "symbol": "Re",
+      "name": "Rhenium",
+      "tier": "extended",
+      "targetPhase": "P5",
+      "targetRepresentation": "elemental-material",
+      "legacyModelDocumented": false,
+      "newBackendStatus": "planned",
+      "sourceIds": [
+        "iupac-periodic-table"
+      ]
+    },
+    {
+      "atomicNumber": 76,
+      "symbol": "Os",
+      "name": "Osmium",
+      "tier": "extended",
+      "targetPhase": "P5",
+      "targetRepresentation": "elemental-material",
+      "legacyModelDocumented": false,
+      "newBackendStatus": "planned",
+      "sourceIds": [
+        "iupac-periodic-table"
+      ]
+    },
+    {
+      "atomicNumber": 77,
+      "symbol": "Ir",
+      "name": "Iridium",
+      "tier": "extended",
+      "targetPhase": "P5",
+      "targetRepresentation": "elemental-material",
+      "legacyModelDocumented": false,
+      "newBackendStatus": "planned",
+      "sourceIds": [
+        "iupac-periodic-table"
+      ]
+    },
+    {
+      "atomicNumber": 78,
+      "symbol": "Pt",
+      "name": "Platinum",
+      "tier": "core",
+      "targetPhase": "P4",
+      "targetRepresentation": "elemental-material",
+      "legacyModelDocumented": false,
+      "newBackendStatus": "planned",
+      "sourceIds": [
+        "iupac-periodic-table"
+      ]
+    },
+    {
+      "atomicNumber": 79,
+      "symbol": "Au",
+      "name": "Gold",
+      "tier": "core",
+      "targetPhase": "P4",
+      "targetRepresentation": "elemental-material",
+      "legacyModelDocumented": false,
+      "newBackendStatus": "planned",
+      "sourceIds": [
+        "iupac-periodic-table"
+      ]
+    },
+    {
+      "atomicNumber": 80,
+      "symbol": "Hg",
+      "name": "Mercury",
+      "tier": "core",
+      "targetPhase": "P4",
+      "targetRepresentation": "elemental-material",
+      "legacyModelDocumented": false,
+      "newBackendStatus": "planned",
+      "sourceIds": [
+        "iupac-periodic-table"
+      ]
+    },
+    {
+      "atomicNumber": 81,
+      "symbol": "Tl",
+      "name": "Thallium",
+      "tier": "extended",
+      "targetPhase": "P5",
+      "targetRepresentation": "elemental-material",
+      "legacyModelDocumented": false,
+      "newBackendStatus": "planned",
+      "sourceIds": [
+        "iupac-periodic-table"
+      ]
+    },
+    {
+      "atomicNumber": 82,
+      "symbol": "Pb",
+      "name": "Lead",
+      "tier": "core",
+      "targetPhase": "P4",
+      "targetRepresentation": "elemental-material",
+      "legacyModelDocumented": false,
+      "newBackendStatus": "planned",
+      "sourceIds": [
+        "iupac-periodic-table"
+      ]
+    },
+    {
+      "atomicNumber": 83,
+      "symbol": "Bi",
+      "name": "Bismuth",
+      "tier": "core",
+      "targetPhase": "P4",
+      "targetRepresentation": "elemental-material",
+      "legacyModelDocumented": false,
+      "newBackendStatus": "planned",
+      "sourceIds": [
+        "iupac-periodic-table"
+      ]
+    },
+    {
+      "atomicNumber": 84,
+      "symbol": "Po",
+      "name": "Polonium",
+      "tier": "nuclear",
+      "targetPhase": "P6",
+      "targetRepresentation": "nuclide-first",
+      "legacyModelDocumented": false,
+      "newBackendStatus": "planned",
+      "sourceIds": [
+        "iupac-periodic-table"
+      ]
+    },
+    {
+      "atomicNumber": 85,
+      "symbol": "At",
+      "name": "Astatine",
+      "tier": "nuclear",
+      "targetPhase": "P6",
+      "targetRepresentation": "nuclide-first",
+      "legacyModelDocumented": false,
+      "newBackendStatus": "planned",
+      "sourceIds": [
+        "iupac-periodic-table"
+      ]
+    },
+    {
+      "atomicNumber": 86,
+      "symbol": "Rn",
+      "name": "Radon",
+      "tier": "nuclear",
+      "targetPhase": "P6",
+      "targetRepresentation": "nuclide-first",
+      "legacyModelDocumented": false,
+      "newBackendStatus": "planned",
+      "sourceIds": [
+        "iupac-periodic-table"
+      ]
+    },
+    {
+      "atomicNumber": 87,
+      "symbol": "Fr",
+      "name": "Francium",
+      "tier": "nuclear",
+      "targetPhase": "P6",
+      "targetRepresentation": "nuclide-first",
+      "legacyModelDocumented": false,
+      "newBackendStatus": "planned",
+      "sourceIds": [
+        "iupac-periodic-table"
+      ]
+    },
+    {
+      "atomicNumber": 88,
+      "symbol": "Ra",
+      "name": "Radium",
+      "tier": "nuclear",
+      "targetPhase": "P6",
+      "targetRepresentation": "nuclide-first",
+      "legacyModelDocumented": false,
+      "newBackendStatus": "planned",
+      "sourceIds": [
+        "iupac-periodic-table"
+      ]
+    },
+    {
+      "atomicNumber": 89,
+      "symbol": "Ac",
+      "name": "Actinium",
+      "tier": "nuclear",
+      "targetPhase": "P6",
+      "targetRepresentation": "nuclide-first",
+      "legacyModelDocumented": false,
+      "newBackendStatus": "planned",
+      "sourceIds": [
+        "iupac-periodic-table"
+      ]
+    },
+    {
+      "atomicNumber": 90,
+      "symbol": "Th",
+      "name": "Thorium",
+      "tier": "core",
+      "targetPhase": "P4",
+      "targetRepresentation": "elemental-material",
+      "legacyModelDocumented": false,
+      "newBackendStatus": "planned",
+      "sourceIds": [
+        "iupac-periodic-table"
+      ]
+    },
+    {
+      "atomicNumber": 91,
+      "symbol": "Pa",
+      "name": "Protactinium",
+      "tier": "nuclear",
+      "targetPhase": "P6",
+      "targetRepresentation": "nuclide-first",
+      "legacyModelDocumented": false,
+      "newBackendStatus": "planned",
+      "sourceIds": [
+        "iupac-periodic-table"
+      ]
+    },
+    {
+      "atomicNumber": 92,
+      "symbol": "U",
+      "name": "Uranium",
+      "tier": "core",
+      "targetPhase": "P4",
+      "targetRepresentation": "elemental-material",
+      "legacyModelDocumented": false,
+      "newBackendStatus": "planned",
+      "sourceIds": [
+        "iupac-periodic-table"
+      ]
+    },
+    {
+      "atomicNumber": 93,
+      "symbol": "Np",
+      "name": "Neptunium",
+      "tier": "nuclear",
+      "targetPhase": "P6",
+      "targetRepresentation": "nuclide-first",
+      "legacyModelDocumented": false,
+      "newBackendStatus": "planned",
+      "sourceIds": [
+        "iupac-periodic-table"
+      ]
+    },
+    {
+      "atomicNumber": 94,
+      "symbol": "Pu",
+      "name": "Plutonium",
+      "tier": "nuclear",
+      "targetPhase": "P6",
+      "targetRepresentation": "nuclide-first",
+      "legacyModelDocumented": false,
+      "newBackendStatus": "planned",
+      "sourceIds": [
+        "iupac-periodic-table"
+      ]
+    },
+    {
+      "atomicNumber": 95,
+      "symbol": "Am",
+      "name": "Americium",
+      "tier": "nuclear",
+      "targetPhase": "P6",
+      "targetRepresentation": "nuclide-first",
+      "legacyModelDocumented": false,
+      "newBackendStatus": "planned",
+      "sourceIds": [
+        "iupac-periodic-table"
+      ]
+    },
+    {
+      "atomicNumber": 96,
+      "symbol": "Cm",
+      "name": "Curium",
+      "tier": "nuclear",
+      "targetPhase": "P6",
+      "targetRepresentation": "nuclide-first",
+      "legacyModelDocumented": false,
+      "newBackendStatus": "planned",
+      "sourceIds": [
+        "iupac-periodic-table"
+      ]
+    },
+    {
+      "atomicNumber": 97,
+      "symbol": "Bk",
+      "name": "Berkelium",
+      "tier": "nuclear",
+      "targetPhase": "P6",
+      "targetRepresentation": "nuclide-first",
+      "legacyModelDocumented": false,
+      "newBackendStatus": "planned",
+      "sourceIds": [
+        "iupac-periodic-table"
+      ]
+    },
+    {
+      "atomicNumber": 98,
+      "symbol": "Cf",
+      "name": "Californium",
+      "tier": "nuclear",
+      "targetPhase": "P6",
+      "targetRepresentation": "nuclide-first",
+      "legacyModelDocumented": false,
+      "newBackendStatus": "planned",
+      "sourceIds": [
+        "iupac-periodic-table"
+      ]
+    },
+    {
+      "atomicNumber": 99,
+      "symbol": "Es",
+      "name": "Einsteinium",
+      "tier": "nuclear",
+      "targetPhase": "P6",
+      "targetRepresentation": "nuclide-first",
+      "legacyModelDocumented": false,
+      "newBackendStatus": "planned",
+      "sourceIds": [
+        "iupac-periodic-table"
+      ]
+    },
+    {
+      "atomicNumber": 100,
+      "symbol": "Fm",
+      "name": "Fermium",
+      "tier": "nuclear",
+      "targetPhase": "P6",
+      "targetRepresentation": "nuclide-first",
+      "legacyModelDocumented": false,
+      "newBackendStatus": "planned",
+      "sourceIds": [
+        "iupac-periodic-table"
+      ]
+    },
+    {
+      "atomicNumber": 101,
+      "symbol": "Md",
+      "name": "Mendelevium",
+      "tier": "nuclear",
+      "targetPhase": "P6",
+      "targetRepresentation": "nuclide-first",
+      "legacyModelDocumented": false,
+      "newBackendStatus": "planned",
+      "sourceIds": [
+        "iupac-periodic-table"
+      ]
+    },
+    {
+      "atomicNumber": 102,
+      "symbol": "No",
+      "name": "Nobelium",
+      "tier": "nuclear",
+      "targetPhase": "P6",
+      "targetRepresentation": "nuclide-first",
+      "legacyModelDocumented": false,
+      "newBackendStatus": "planned",
+      "sourceIds": [
+        "iupac-periodic-table"
+      ]
+    },
+    {
+      "atomicNumber": 103,
+      "symbol": "Lr",
+      "name": "Lawrencium",
+      "tier": "nuclear",
+      "targetPhase": "P6",
+      "targetRepresentation": "nuclide-first",
+      "legacyModelDocumented": false,
+      "newBackendStatus": "planned",
+      "sourceIds": [
+        "iupac-periodic-table"
+      ]
+    },
+    {
+      "atomicNumber": 104,
+      "symbol": "Rf",
+      "name": "Rutherfordium",
+      "tier": "exotic",
+      "targetPhase": "P8",
+      "targetRepresentation": "nuclide-and-labelled-creative-material",
+      "legacyModelDocumented": false,
+      "newBackendStatus": "planned",
+      "sourceIds": [
+        "iupac-periodic-table"
+      ]
+    },
+    {
+      "atomicNumber": 105,
+      "symbol": "Db",
+      "name": "Dubnium",
+      "tier": "exotic",
+      "targetPhase": "P8",
+      "targetRepresentation": "nuclide-and-labelled-creative-material",
+      "legacyModelDocumented": false,
+      "newBackendStatus": "planned",
+      "sourceIds": [
+        "iupac-periodic-table"
+      ]
+    },
+    {
+      "atomicNumber": 106,
+      "symbol": "Sg",
+      "name": "Seaborgium",
+      "tier": "exotic",
+      "targetPhase": "P8",
+      "targetRepresentation": "nuclide-and-labelled-creative-material",
+      "legacyModelDocumented": false,
+      "newBackendStatus": "planned",
+      "sourceIds": [
+        "iupac-periodic-table"
+      ]
+    },
+    {
+      "atomicNumber": 107,
+      "symbol": "Bh",
+      "name": "Bohrium",
+      "tier": "exotic",
+      "targetPhase": "P8",
+      "targetRepresentation": "nuclide-and-labelled-creative-material",
+      "legacyModelDocumented": false,
+      "newBackendStatus": "planned",
+      "sourceIds": [
+        "iupac-periodic-table"
+      ]
+    },
+    {
+      "atomicNumber": 108,
+      "symbol": "Hs",
+      "name": "Hassium",
+      "tier": "exotic",
+      "targetPhase": "P8",
+      "targetRepresentation": "nuclide-and-labelled-creative-material",
+      "legacyModelDocumented": false,
+      "newBackendStatus": "planned",
+      "sourceIds": [
+        "iupac-periodic-table"
+      ]
+    },
+    {
+      "atomicNumber": 109,
+      "symbol": "Mt",
+      "name": "Meitnerium",
+      "tier": "exotic",
+      "targetPhase": "P8",
+      "targetRepresentation": "nuclide-and-labelled-creative-material",
+      "legacyModelDocumented": false,
+      "newBackendStatus": "planned",
+      "sourceIds": [
+        "iupac-periodic-table"
+      ]
+    },
+    {
+      "atomicNumber": 110,
+      "symbol": "Ds",
+      "name": "Darmstadtium",
+      "tier": "exotic",
+      "targetPhase": "P8",
+      "targetRepresentation": "nuclide-and-labelled-creative-material",
+      "legacyModelDocumented": false,
+      "newBackendStatus": "planned",
+      "sourceIds": [
+        "iupac-periodic-table"
+      ]
+    },
+    {
+      "atomicNumber": 111,
+      "symbol": "Rg",
+      "name": "Roentgenium",
+      "tier": "exotic",
+      "targetPhase": "P8",
+      "targetRepresentation": "nuclide-and-labelled-creative-material",
+      "legacyModelDocumented": false,
+      "newBackendStatus": "planned",
+      "sourceIds": [
+        "iupac-periodic-table"
+      ]
+    },
+    {
+      "atomicNumber": 112,
+      "symbol": "Cn",
+      "name": "Copernicium",
+      "tier": "exotic",
+      "targetPhase": "P8",
+      "targetRepresentation": "nuclide-and-labelled-creative-material",
+      "legacyModelDocumented": false,
+      "newBackendStatus": "planned",
+      "sourceIds": [
+        "iupac-periodic-table"
+      ]
+    },
+    {
+      "atomicNumber": 113,
+      "symbol": "Nh",
+      "name": "Nihonium",
+      "tier": "exotic",
+      "targetPhase": "P8",
+      "targetRepresentation": "nuclide-and-labelled-creative-material",
+      "legacyModelDocumented": false,
+      "newBackendStatus": "planned",
+      "sourceIds": [
+        "iupac-periodic-table"
+      ]
+    },
+    {
+      "atomicNumber": 114,
+      "symbol": "Fl",
+      "name": "Flerovium",
+      "tier": "exotic",
+      "targetPhase": "P8",
+      "targetRepresentation": "nuclide-and-labelled-creative-material",
+      "legacyModelDocumented": false,
+      "newBackendStatus": "planned",
+      "sourceIds": [
+        "iupac-periodic-table"
+      ]
+    },
+    {
+      "atomicNumber": 115,
+      "symbol": "Mc",
+      "name": "Moscovium",
+      "tier": "exotic",
+      "targetPhase": "P8",
+      "targetRepresentation": "nuclide-and-labelled-creative-material",
+      "legacyModelDocumented": false,
+      "newBackendStatus": "planned",
+      "sourceIds": [
+        "iupac-periodic-table"
+      ]
+    },
+    {
+      "atomicNumber": 116,
+      "symbol": "Lv",
+      "name": "Livermorium",
+      "tier": "exotic",
+      "targetPhase": "P8",
+      "targetRepresentation": "nuclide-and-labelled-creative-material",
+      "legacyModelDocumented": false,
+      "newBackendStatus": "planned",
+      "sourceIds": [
+        "iupac-periodic-table"
+      ]
+    },
+    {
+      "atomicNumber": 117,
+      "symbol": "Ts",
+      "name": "Tennessine",
+      "tier": "exotic",
+      "targetPhase": "P8",
+      "targetRepresentation": "nuclide-and-labelled-creative-material",
+      "legacyModelDocumented": false,
+      "newBackendStatus": "planned",
+      "sourceIds": [
+        "iupac-periodic-table"
+      ]
+    },
+    {
+      "atomicNumber": 118,
+      "symbol": "Og",
+      "name": "Oganesson",
+      "tier": "exotic",
+      "targetPhase": "P8",
+      "targetRepresentation": "nuclide-and-labelled-creative-material",
+      "legacyModelDocumented": false,
+      "newBackendStatus": "planned",
+      "sourceIds": [
+        "iupac-periodic-table"
+      ]
+    }
+  ]
+}

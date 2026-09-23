@@ -1,0 +1,316 @@
+{
+  "schemaVersion": 1,
+  "kind": "planning-work-packages-not-implementation-status",
+  "decision": "architecture/adr-001-rust-wasm-wgpu.md",
+  "plan": "plans/rust-wasm-migration/plan.md",
+  "nextWorkItem": "E00",
+  "workItems": [
+    {
+      "id": "E00",
+      "phase": "P1",
+      "milestone": "M0",
+      "dependsOn": [],
+      "sourceObservations": [
+        "SRC-01",
+        "SRC-04",
+        "SRC-05",
+        "SRC-09"
+      ],
+      "title": "Capture baseline and legacy regression contracts",
+      "work": "Inspect the full repository, preserve tracked/untracked changes, identify real scripts/toolchains, reproduce controls/audit in a fresh directory, and establish named browser/device fixtures. Instrument actual pressure calls and outlet visits.",
+      "acceptance": "Recorded source/config hashes, original checks, fresh failures, equal-time scene definitions and explicit unrun checks. Quoted timings stay historical.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "E01",
+      "phase": "P1",
+      "milestone": "M1",
+      "dependsOn": [
+        "E00"
+      ],
+      "sourceObservations": [
+        "SRC-01",
+        "SRC-03"
+      ],
+      "title": "Bootstrap Rust workspace and browser WASM",
+      "work": "Create the minimal proposed crates without relocating src/. Pin Rust/wgpu/wasm-bindgen after native and browser smoke tests. Integrate reproducible WASM generation with the existing frontend build.",
+      "acceptance": "Native core tests and a real browser WASM initialize/dispose cycle pass; generated declarations compile in the existing TypeScript application. No UI rewrite.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "E02",
+      "phase": "P1",
+      "milestone": "M1",
+      "dependsOn": [
+        "E01"
+      ],
+      "sourceObservations": [
+        "SRC-07",
+        "SRC-08"
+      ],
+      "title": "Define state, identity, ABI and snapshot contracts",
+      "work": "Define backend/model axes, Rust state schemas, stable identities, SI units, active-component mapping, command/status types, snapshot versions and shader packing.",
+      "acceptance": "Legacy-ID round trips, malformed-input rejection, optional-extension no-allocation, layout/offset tests and documented H-to-U conversion/rejection rules.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "E03",
+      "phase": "P1",
+      "milestone": "M1",
+      "dependsOn": [
+        "E02"
+      ],
+      "sourceObservations": [
+        "SRC-02",
+        "SRC-03",
+        "SRC-09",
+        "SRC-10"
+      ],
+      "title": "Introduce facade, command lifecycle and one catalogue projection",
+      "work": "Adapt the existing sandbox seam with a separate legacy adapter; add queued commands, async observations, epoch cancellation, feature preflight and minimal generated catalogue projections. Prepare canvas ownership selection.",
+      "acceptance": "Legacy UI remains usable; no duplicate handwritten catalogue or ticking world; mock/CPU contract tests cover backpressure, paused paint, reset and stale callbacks.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "E04",
+      "phase": "P1",
+      "milestone": "M1",
+      "dependsOn": [
+        "E02"
+      ],
+      "sourceObservations": [
+        "SRC-11"
+      ],
+      "title": "Build corrected Rust CPU circuit reference",
+      "work": "Translate the analytical N11-N13 and C17/C18 contracts into Rust tests and implement the corrected bounded graph solver, work and heat allocation. Integrate into GPU scenes at E11.",
+      "acceptance": "Residual, branch heat, terminal work, source exhaustion and topology-change tests pass. This independent branch does not block E05/E06.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "E05",
+      "phase": "P1",
+      "milestone": "M2",
+      "dependsOn": [
+        "E03"
+      ],
+      "sourceObservations": [
+        "SRC-04",
+        "SRC-06"
+      ],
+      "title": "Implement Rust f64 pressure and boundary reference",
+      "work": "Build matching MAC D/G operators, density/aperture coefficients, gravity balance, sealed-component compatibility, scaled residuals and cache invalidation in sim-cpu.",
+      "acceptance": "Analytic/manufactured operator fixtures and hydrostatic rest pass; forced-rebuild comparisons validate cache correctness.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "E06",
+      "phase": "P1",
+      "milestone": "M2",
+      "dependsOn": [
+        "E05"
+      ],
+      "sourceObservations": [
+        "SRC-05",
+        "SRC-06",
+        "SRC-08"
+      ],
+      "title": "Implement conservative Rust transport and substeps",
+      "work": "Add bounded VOF, shared mass/tracer/compatible momentum fluxes, viscosity and rollback. Keep phase chemistry off and thermal transport passive.",
+      "acceptance": "M2 conservation, marker displacement, shear, symmetry, dam-break/refinement and failure tests pass before the equivalent solver is ported.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "E07",
+      "phase": "P1",
+      "milestone": "M3",
+      "dependsOn": [
+        "E06"
+      ],
+      "sourceObservations": [
+        "SRC-06",
+        "SRC-07"
+      ],
+      "title": "Implement WGSL stage graph under Rust wgpu",
+      "work": "Implement matching f32 operators/transport with owned writes, reductions, convergence flags, candidate/committed generations and bounded submission. Validate Rust/WGSL ABI on hardware.",
+      "acceptance": "Small-fixture CPU/GPU comparisons at equal time, failure/no-partial-commit tests and adapter-limit checks pass. Native testing does not waive browser testing.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "E08",
+      "phase": "P1",
+      "milestone": "M3",
+      "dependsOn": [
+        "E07"
+      ],
+      "sourceObservations": [
+        "SRC-02",
+        "SRC-03",
+        "SRC-09",
+        "SRC-12"
+      ],
+      "title": "Deliver direct GPU rendering and asynchronous observations",
+      "work": "Render from the same wgpu device/state. Add tick/epoch-stamped probes/reductions, startup fallback, viewport/overlay behavior, async checkpoint prototype and completed-work telemetry.",
+      "acceptance": "480 x 270 experimental scene works; no full-state normal-frame readback, no reused 2D context, no stale-as-current observations, measured transfer bytes and completed-time throughput.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "E09",
+      "phase": "P1",
+      "milestone": "M4",
+      "dependsOn": [
+        "E08"
+      ],
+      "sourceObservations": [
+        "SRC-08"
+      ],
+      "title": "Add full supported thermodynamics and phase closure",
+      "work": "Implement Rust reference then GPU parity for bounded properties, partial phases, available-volume closure, chamber pressure and finite venting.",
+      "acceptance": "M4 closed/open energy/mass/volume fixtures pass, invalid EOS domains are explicit, and table provenance/conversion limits are recorded.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "E10",
+      "phase": "P1",
+      "milestone": "M5",
+      "dependsOn": [
+        "E09"
+      ],
+      "sourceObservations": [
+        "SRC-05",
+        "SRC-06"
+      ],
+      "title": "Add granular and solid-fluid coupling",
+      "work": "Replace repeated per-grain search with the M5 batched proposal/reservation/commit design; preserve mass, composition, swept volume and work.",
+      "acceptance": "Contention, sealed/no-outlet, motion, impact and multiphase fixtures pass; publish visit counts and transfers instead of asserting a complexity gain.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "E11",
+      "phase": "P1",
+      "milestone": "M6",
+      "dependsOn": [
+        "E04",
+        "E10"
+      ],
+      "sourceObservations": [
+        "SRC-10",
+        "SRC-11"
+      ],
+      "title": "Integrate chemistry and bounded CPU circuits",
+      "work": "Port supported existing sources and amount-based chemistry into the owning state. Couple Rust CPU circuit graphs through bounded topology/sample events and funded heat transactions.",
+      "acceptance": "M6 finite-source, excess-reagent, conductor-change and graph overflow/dense-cost fixtures pass; no whole-world circuit mirror.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "E12",
+      "phase": "P1",
+      "milestone": "M6",
+      "dependsOn": [
+        "E11"
+      ],
+      "sourceObservations": [
+        "SRC-01",
+        "SRC-03",
+        "SRC-09"
+      ],
+      "title": "Complete browser host and optional worker deployment",
+      "work": "Preserve controls, held tools, maps, zoom/pan, paused edits and browser lifecycle. Evaluate worker/OffscreenCanvas against main-thread wgpu using the same contracts.",
+      "acceptance": "Interaction and lifecycle tests pass on supported contexts; unsupported worker paths use explicit main-thread GPU or compatible CPU/legacy routes.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "E13",
+      "phase": "P1",
+      "milestone": "M7",
+      "dependsOn": [
+        "E12"
+      ],
+      "sourceObservations": [
+        "SRC-03",
+        "SRC-07"
+      ],
+      "title": "Validate snapshots, device loss and reversible rollout",
+      "work": "Complete consistent saves/loads, component/version preflight, rollback/recovery notices, teardown, reset races and checkpoint replay policy.",
+      "acceptance": "Failure injection never publishes partial state; late callbacks cannot affect a new epoch; rollback limits are visible and no incompatible legacy hot swap occurs.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "E14",
+      "phase": "P1",
+      "milestone": "M7",
+      "dependsOn": [
+        "E13"
+      ],
+      "sourceObservations": [
+        "SRC-09",
+        "SRC-12"
+      ],
+      "title": "Measure and promote only supported scenes",
+      "work": "Run native reference, browser GPU, regression, memory/readback, sustained and input-latency tests on agreed devices. Retain unsupported legacy coverage until a complete replacement passes.",
+      "acceptance": "GPU-M7 evidence supports the coverage actually promoted. No promised speed multiplier, no submitted-time benchmark, no premature legacy deletion.",
+      "status": "planned",
+      "evidence": []
+    }
+  ],
+  "phaseExecution": [
+    {
+      "phase": "P1",
+      "ownership": "Rust reference -> Rust/wgpu + WGSL backend; existing TypeScript host",
+      "milestones": "M0-M7"
+    },
+    {
+      "phase": "P2",
+      "ownership": "sim-cpu compressible/solid references; sim-gpu and shaders/waves, shaders/solids; TypeScript breakage controls",
+      "milestones": "W0-W4"
+    },
+    {
+      "phase": "P3",
+      "ownership": "sim matter/schema and offline data compiler; generated TS/Rust/WGSL projections; sim-cpu reference reactions",
+      "milestones": "C0-C2"
+    },
+    {
+      "phase": "P4",
+      "ownership": "shared data/forms and sim-cpu/sim-gpu chemistry; TypeScript palette and probes",
+      "milestones": "C3-C6"
+    },
+    {
+      "phase": "P5",
+      "ownership": "same engine modules with measured active-set capacity; advanced mechanism kernels only when justified",
+      "milestones": "C7-C9"
+    },
+    {
+      "phase": "P6",
+      "ownership": "sim nuclide/network contracts; Rust decay/radiation reference and WGSL transport/deposition",
+      "milestones": "N0-N3"
+    },
+    {
+      "phase": "P7",
+      "ownership": "Rust selected nuclear reaction references and shared tables; GPU population/source stages in supported domains",
+      "milestones": "N4-N6"
+    },
+    {
+      "phase": "P8",
+      "ownership": "shared catalogue/network/override persistence; TypeScript labels; no special second physics engine",
+      "milestones": "N7-N8"
+    },
+    {
+      "phase": "P9",
+      "ownership": "Rust/native plus browser WASM/GPU matrix, TypeScript product regressions and package/recovery evidence",
+      "milestones": "Q0-Q2"
+    }
+  ]
+}

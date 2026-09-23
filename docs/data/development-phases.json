@@ -1,0 +1,170 @@
+{
+  "schemaVersion": 1,
+  "updatedAt": "2026-09-21",
+  "kind": "planning-manifest",
+  "nextPhase": "P1",
+  "nextMilestone": "M0",
+  "phases": [
+    {
+      "id": "P1",
+      "title": "Rust/WASM + wgpu and conservative-fluid redesign",
+      "dependsOn": [],
+      "milestones": [
+        "M0",
+        "M1",
+        "M2",
+        "M3",
+        "M4",
+        "M5",
+        "M6",
+        "M7"
+      ],
+      "document": "plans/fluid-gpu-redesign/plan.md",
+      "gate": "GPU-M7",
+      "rosterTarget": null,
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "P2",
+      "title": "Compressible pressure waves and material breakage",
+      "dependsOn": [
+        "P1"
+      ],
+      "milestones": [
+        "W0",
+        "W1",
+        "W2",
+        "W3",
+        "W4"
+      ],
+      "document": "plans/pressure-waves-breakage/plan.md",
+      "gate": "WAVE-W4",
+      "rosterTarget": null,
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "P3",
+      "title": "Matter identities, composition, and scientific-data pipeline",
+      "dependsOn": [
+        "P2"
+      ],
+      "milestones": [
+        "C0",
+        "C1",
+        "C2"
+      ],
+      "document": "plans/materials-and-chemistry/plan.md",
+      "gate": "MAT-C2",
+      "rosterTarget": null,
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "P4",
+      "title": "Core 40 elemental materials and essential compounds",
+      "dependsOn": [
+        "P3"
+      ],
+      "milestones": [
+        "C3",
+        "C4",
+        "C5",
+        "C6"
+      ],
+      "document": "plans/materials-and-chemistry/plan.md",
+      "gate": "MAT-C6",
+      "rosterTarget": 40,
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "P5",
+      "title": "Extended materials and chemistry: 83 elements",
+      "dependsOn": [
+        "P4"
+      ],
+      "milestones": [
+        "C7",
+        "C8",
+        "C9"
+      ],
+      "document": "plans/materials-and-chemistry/plan.md",
+      "gate": "MAT-C9",
+      "rosterTarget": 83,
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "P6",
+      "title": "Nuclide populations, decay, and radiation: 103 elements",
+      "dependsOn": [
+        "P5"
+      ],
+      "milestones": [
+        "N0",
+        "N1",
+        "N2",
+        "N3"
+      ],
+      "document": "plans/nuclear-simulation/plan.md",
+      "gate": "NUC-N3",
+      "rosterTarget": 103,
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "P7",
+      "title": "Explicit fusion and fission reaction networks",
+      "dependsOn": [
+        "P6"
+      ],
+      "milestones": [
+        "N4",
+        "N5",
+        "N6"
+      ],
+      "document": "plans/nuclear-simulation/plan.md",
+      "gate": "NUC-N6",
+      "rosterTarget": 103,
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "P8",
+      "title": "Superheavy and creative-mode coverage: 118 elements",
+      "dependsOn": [
+        "P7"
+      ],
+      "milestones": [
+        "N7",
+        "N8"
+      ],
+      "document": "plans/nuclear-simulation/plan.md",
+      "gate": "NUC-N8",
+      "rosterTarget": 118,
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "P9",
+      "title": "Whole-product validation and release hardening",
+      "dependsOn": [
+        "P8"
+      ],
+      "milestones": [
+        "Q0",
+        "Q1",
+        "Q2"
+      ],
+      "document": "validation/acceptance.md",
+      "gate": "REL-Q2",
+      "rosterTarget": 118,
+      "status": "planned",
+      "evidence": []
+    }
+  ],
+  "architectureDecision": "architecture/adr-001-rust-wasm-wgpu.md",
+  "engineMigrationWork": "data/engine-migration-work.json"
+}

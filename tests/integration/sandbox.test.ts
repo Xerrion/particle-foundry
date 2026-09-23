@@ -266,14 +266,13 @@ describe("conservative world integration", () => {
 		expect(world.getParticleCount()).toBe(count);
 	});
 
-	test("smoke decay retains energy while combustion adds explicit source energy", () => {
+	test("vented smoke carries its heat away while combustion adds explicit source energy", () => {
 		const smoke = singleCell(SMOKE);
-		const smokeHeat = smoke.getCell(0, 0).energy;
 		for (let i = 0; i < 300; i += 1) smoke.step();
 		expect(smoke.getCell(0, 0)).toEqual({
 			material: EMPTY,
-			temperature: smokeHeat / (1000 * spawnMass(EMPTY)),
-			energy: smokeHeat,
+			temperature: 22,
+			energy: ambientEnergy,
 		});
 		const wood = singleCell(WOOD);
 		brush(wood, HEATER, 6);

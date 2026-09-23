@@ -10,7 +10,7 @@ describe("asynchronous combustion emission", () => {
 		const world = createWorld(1, 3);
 		world.random.next = () => 0.99;
 		world.setCell(2, OIL);
-		world.energy[2] = energyAtTemperature(OIL, 800, undefined, world.massKg[2]);
+		world.energy[2] = energyAtTemperature(OIL, 400, undefined, world.massKg[2]);
 		const thermal = world.energy[2];
 		const chemical = world.chemicalEnergyKj[2];
 		const airEnergy = world.energy[1];
@@ -44,7 +44,7 @@ describe("asynchronous combustion emission", () => {
 			const world = createWorld(48, 3, { seed: 42 });
 			for (let x = 0; x < 48; x++) {
 				world.setCell(x + 96, material);
-				world.energy[x + 96] = energyAtTemperature(material, 800, undefined, world.massKg[x + 96]);
+				world.energy[x + 96] = energyAtTemperature(material, 400, undefined, world.massKg[x + 96]);
 			}
 			const totalEnergy = () =>
 				world.energy.reduce((a, b) => a + b, 0) +

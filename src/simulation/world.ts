@@ -253,6 +253,12 @@ export function createWorld(width: number, height: number, options: WorldOptions
 		ledger.massRemovedKg += massKg[index];
 		resetCellPhysics(index, EMPTY);
 		changeMaterial(index, EMPTY);
+		energy[index] = energyAtTemperature(
+			EMPTY,
+			AMBIENT_TEMPERATURE_C,
+			AMBIENT_PRESSURE_PA,
+			massKg[index],
+		);
 		ledger.massAddedKg += massKg[index];
 		recordExternalEnergy(trackedCellEnergy(index) - previousEnergy);
 	}

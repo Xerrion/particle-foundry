@@ -1,8 +1,8 @@
 import { describe, expect, test } from "bun:test";
-import { EMPTY, FIRE, SMOKE, STONE, WOOD } from "../../src/materials";
+import { combustionProfile, EMPTY, FIRE, SMOKE, STONE, WOOD } from "../../src/materials";
 import { createReactions } from "../../src/physics/reactions";
 import { energyAtTemperature } from "../../src/physics/thermal";
-import { measureWorld } from "../../src/simulation/diagnostics";
+import { compareConservation, measureWorld } from "../../src/simulation/diagnostics";
 import { createWorld } from "../../src/simulation/world";
 
 describe("bounded combustion", () => {
@@ -42,6 +42,22 @@ describe("bounded combustion", () => {
 		expect(first.chemicalEnergyKj[0]).toBeLessThan(11.2);
 	});
 
+	test("pauses combustion at the product temperature ceiling without discarding fuel", () => {
+		const world = createWorld(1, 1);
+		world.setCell(0, WOOD);
+		world.energy[0] = energyAtTemperature(WOOD, 400, undefined, world.massKg[0]);
+		const reactions = createReactions(world);
+		for (let tick = 0; tick < 300; tick += 1) reactions.update(0);
+		const maximumProductEnergy = energyAtTemperature(
+			SMOKE,
+			combustionProfile.maximumProductTemperatureC,
+			undefined,
+			world.massKg[0],
+		);
+		expect(world.energy[0]).toBeCloseTo(maximumProductEnergy, 9);
+		expect(world.chemicalEnergyKj[0]).toBeGreaterThan(0);
+	});
+
 	test("a sealed fire with no fuel or oxygen becomes smoke", () => {
 		const world = createWorld(3, 3);
 		for (let index = 0; index < world.size; index += 1) world.setCell(index, WOOD);
@@ -79,23 +95,21 @@ describe("bounded combustion", () => {
 		const world = createWorld(1, 1);
 		world.setCell(0, SMOKE);
 		world.lifetime[0] = 1;
-		const energy = world.energy[0];
 		const before = measureWorld(world);
-		const ledgerBefore = { ...world.ledger };
 		createReactions(world).update(0);
 		const after = measureWorld(world);
 		expect(world.grid[0]).toBe(EMPTY);
-		expect(world.energy[0]).toBe(energy);
+		expect(world.temperatureAt(0)).toBe(22);
+		expect(world.energy[0]).toBe(energyAtTemperature(EMPTY, 22, undefined, world.massKg[0]));
 		expect(world.ledger.massRemovedKg).toBeGreaterThan(0);
-		expect(
-			world.ledger.massAddedKg -
-				ledgerBefore.massAddedKg -
-				(world.ledger.massRemovedKg - ledgerBefore.massRemovedKg),
-		).toBeCloseTo((after.totalMassKg ?? 0) - (before.totalMassKg ?? 0), 12);
+		expect(compareConservation(before, after, true)).toMatchObject({
+			massWithinTolerance: true,
+			energyWithinTolerance: true,
+		});
 	});
 
 	test("dense smoke in an open room vents instead of becoming heavy ambient air", () => {
-		const world = createWorld(7, 5);
+		const world = createWorld(7, 5, { boundariesEnabled: false });
 		const index = 3 + 2 * world.width;
 		world.setCell(index, SMOKE);
 		world.massKg[index] = 0.0017;
@@ -106,6 +120,7 @@ describe("bounded combustion", () => {
 		reactions.update(index);
 		expect(world.grid[index]).toBe(EMPTY);
 		expect(world.massKg[index]).toBeCloseTo(world.massKg[0], 12);
+		expect(world.temperatureAt(index)).toBe(22);
 		expect(world.ledger.massRemovedKg - removedBefore).toBeCloseTo(0.0017, 12);
 	});
 });
