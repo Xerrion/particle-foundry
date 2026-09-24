@@ -1,6 +1,6 @@
 # Active work and delivered-history boundary
 
-**Status date:** 21 September 2026. **Next task:** R9, P1/M0. All active items below are planned, not implemented by this documentation update. Follow [START_HERE.md](START_HERE.md) and [the roadmap](roadmap.md).
+**Status date:** 23 September 2026. **Next task:** R9, P1/M0. All active items below are planned, not implemented by this documentation update. Follow [START_HERE.md](START_HERE.md) and [the roadmap](roadmap.md).
 
 ## Current active queue
 
@@ -20,7 +20,7 @@
 | R20 | P8 / N7-N8 | Final 15 exotic identities; explicit unknown/predicted/creative behavior and stabilization persistence | Planned |
 | R21 | P9 / Q0-Q2 | Combined-feature matrix, scenario/persistence polish, device measurements, source/model/documentation reconciliation | Planned |
 
-Default work order is sequential by phase. P2's fixed-wall prototype has a technical dependency on M3 and fragments additionally on M5, but it must not enlarge the first GPU demonstrator. The full P3 pipeline comes later; its minimal identity/storage seam is already required in M1. Basic existing chemistry integration remains part of M6.
+Default work order is sequential by phase. P2's fixed-wall prototype has a technical dependency on M3 and fragments additionally on M5, but it must not enlarge the first GPU demonstrator. The full P3 pipeline comes later; its minimal identity/storage seam is already required in M1. Corrected basic chemistry and fire integration remain part of M6. [FIRE-W00-W08](plans/fire-combustion/plan.md#8-work-packages) specialize R9/R11/R16; the separate [fire manifest](data/fire-combustion-work.json) records planned tasks and corrected fixtures.
 
 No phase completion can be inferred from roster counts. [development-phases.json](data/development-phases.json) records planned phases and evidence references; [element-roadmap.json](data/element-roadmap.json) records exact cohort membership. Update both only with supported changes.
 
@@ -29,6 +29,7 @@ No phase completion can be inferred from roster counts. [development-phases.json
 - [ ] Inspect actual repository instructions, source, scripts, lockfile, and Git changes.
 - [ ] Capture a recoverable tracked/untracked snapshot and fresh hashes.
 - [ ] Run existing checks and the historical audit in a new evidence directory; record differences without overwriting old files.
+- [ ] Preserve the imported F01-F12 fire characterization; add distinct corrected FIRE-A assertions for full-pipeline boundary/ignition bugs and useful controls. Record new runs separately.
 - [ ] Freeze initial reference fixtures, precision-specific tolerances, and hardware/performance measurement conventions.
 - [ ] Follow [E00-E14](plans/rust-wasm-migration/plan.md): create the Rust/WASM bootstrap, async facade and identity/data contract, then Rust f64 reference before the WGSL solver port.
 - [ ] Preserve the TypeScript UI and legacy scenes; do not rewrite every old solver or relocate the app first.
@@ -66,3 +67,16 @@ Record new results separately and update [model.md](model.md) only when implemen
 All E00-E14 work packages in [the engine tracker](data/engine-migration-work.json) are planned. E00 is next. The source-only review and docs validation do not mark any application milestone complete. The stack decision is settled by [ADR-001](architecture/adr-001-rust-wasm-wgpu.md); numerical details remain governed by the phase plans.
 
 P2 references and later chemistry/nuclear algorithms are implemented in Rust CPU code first where a reference is required, then equivalent WGSL where justified. UI remains TypeScript. See [the execution mapping](plans/rust-wasm-migration/plan.md#how-every-later-phase-uses-the-chosen-stack).
+
+## Fire audit follow-through
+
+| Existing queue | Required fire work | Exit obligation |
+| --- | --- | --- |
+| R9 / M0-M1 | FIRE-W00-W01 | Baseline versus corrected assertions separated; minimal component/source/boundary/visual contracts |
+| R10 / M2-M3 | Passive conservative transport only | No combustion or whole-catalogue allocation added to the demonstrator |
+| R11 / M4 | FIRE-W02 | FIRE-PRECONDITIONS: finite ventilation and explicit hot-scene property coverage |
+| R11 / M6 | FIRE-W03-W06 | FIRE-M6: Rust reference, WGSL parity, inventory/product correctness and integrated state-derived visuals |
+| R11 / M7 | FIRE-W07 | FIRE-M7: supported fire-scene tests, persistence/recovery and measured GPU evidence |
+| R16 / P4 | FIRE-W08 | Extend fuel/char/soot/radiation mechanisms and revalidate each newly enabled channel |
+
+All entries remain planned. The [12-case audit](evidence/fire-review-2026-09-23/FIRE_REVIEW.md) is immutable characterization, not delivered fixes. Do not port legacy fire rules unchanged, require a full duplicate TypeScript repair, or defer basic oxidizer/product/ignition correctness until the 40-element expansion.

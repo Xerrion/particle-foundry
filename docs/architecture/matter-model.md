@@ -26,7 +26,9 @@ Graphite and diamond illustrate why one element can have different material prop
 
 **Do not implement now:** a full nuclide database in every cell, a universal chemistry framework, arbitrary isotopologue enumeration, plasma physics, or all 118 material behaviors. M1 only needs a concrete extension point tested with a second component and a future-extension round trip. Reject unknown extension versions explicitly rather than discarding their contents.
 
-An opaque legacy preset can use a named pseudo-species with an honest status. It must not advertise exact atom or isotope conservation until it has a defined composition.
+The M1 subset also defines the [FIRE-W01 contracts](../plans/fire-combustion/plan.md#3-authoritative-matter-and-energy-contracts): one component-mass authority for fuel/O2/products and any physical soot/residue, unified boundary fluxes, a chemical-energy reference, source transactions and derived visual outputs. This reserves capabilities without enabling chemistry in M3 or allocating full-catalogue fields.
+
+An opaque legacy preset can use a named pseudo-species with an honest status. It must not advertise exact atom or isotope conservation until it has a defined composition. A reacting physical-mode pseudo-fuel must supply a balanced declared constituent/yield model; otherwise its combustion remains unsupported rather than silently passing scalar-mass checks.
 
 ## 3. Immutable definitions and source-qualified properties
 
@@ -126,3 +128,11 @@ M1 needs a small subset proving the seam. P3 and P6 progressively expand it. The
 Keep one authored data source with generated Rust/TypeScript/GPU projections. The existing TypeScript catalogue remains the legacy source until the explicit data-pipeline migration. Do not manually copy every material into a Rust match and a separate WGSL switch. Version the GPU layout and test byte offsets, strides, IDs, units and precision conversions. Active fields in a GPU session are not mirrored each frame into the Rust reference.
 
 No chemistry/nuclear phase may add synchronous full-world probes or its own transport authority. Its new state is part of the selected backend and its snapshot/capability contracts. Native f64 references and browser GPU parity remain separate evidence requirements.
+
+## 12. Combustion inventory and visual identity
+
+[The fire plan](../plans/fire-combustion/plan.md) specializes these contracts in P1/M6. O2 is an actual component, not a consumable counter independent from an OXYGEN material mass. Fuel depletion and oxidation update defined products and residuals in the same transaction. All compatible fuel channels use the same transported oxidizer amounts and reserve shared reagents before commit.
+
+`FIRE` remains a legacy/tool identity and a derived visual state, not authority for ignition or fuel. A cooled label cannot trigger a reaction. Smoke/soot visibility is separate from its physical inventory; expiration of a cosmetic particle cannot change component masses or replenish air. Define physical removal/deposition/reaction explicitly when supported.
+
+Persist reaction-network and property versions, approximations, component mappings, condensed residues/soot and source state. Gate hot fire/water combinations against the full supported property domains at load and during source application. P4 extends these same records and gates rather than creating a separate oxygen, fuel or smoke system.

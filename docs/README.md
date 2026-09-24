@@ -9,6 +9,7 @@
 | [Engine boundary](architecture/engine-boundary.md) | State authority, async commands/probes, ABI, renderer and recovery |
 | [Rust/WASM migration work](plans/rust-wasm-migration/plan.md) | E00-E14 dependencies inside P1 and execution ownership for P2-P9 |
 | [Roadmap](roadmap.md) and [active work](remaining-work.md) | P1-P9 delivery gates and R-work-item tracking |
+| [Fire integration](plans/fire-combustion/plan.md) and [fire acceptance](validation/fire-combustion.md) | FIRE-W00-W08 tasks, FIRE-A01-A14 gates and preserved audit traceability |
 | [Source review](validation/source-review-2026-09-21.md) | Static source findings, exact locations and evidence limits |
 | [Project structure](project-structure.md) | Existing modules, proposed Rust/WGSL owners and migration map |
 | [Physical model](model.md) | Legacy versus planned numerical/physical contracts |
@@ -20,7 +21,7 @@
 | [Acceptance](validation/acceptance.md) and [backend migration](validation/backend-migration.md) | Numerical, runtime, product and measurement gates |
 | [Sources](sources.md), [change log](CHANGELOG.md), [history](history/README.md) | Provenance, revisions and unchanged historical evidence |
 
-Planning manifests: [phases](data/development-phases.json), [engine work](data/engine-migration-work.json), [element roster](data/element-roadmap.json), [roster schema](data/element-roadmap.schema.json) and [source review](data/source-review-manifest.json). These are not runtime material properties or evidence of implementation.
+Planning manifests: [phases](data/development-phases.json), [engine work](data/engine-migration-work.json), [element roster](data/element-roadmap.json), [roster schema](data/element-roadmap.schema.json), [source review](data/source-review-manifest.json), [fire work](data/fire-combustion-work.json) and [fire evidence provenance](data/fire-review-manifest.json). Planning entries are not runtime material properties or evidence of implementation; the fire evidence manifest identifies preserved historical observations.
 
 From the extracted package or repository root:
 
@@ -34,4 +35,4 @@ To additionally verify the exact read-only source archive used for the review:
 python docs/scripts/validate-docs.py --source-archive "path/to/src(3).zip"
 ```
 
-The validator checks documents, manifests, local links, generated HTML freshness and preserved evidence. It does not compile the game or validate numerical physics/GPU performance. The source upload was inspected statically and was not modified. See [package-checks.txt](validation/package-checks.txt) for this revision's documentation-check output.
+The validator checks documents, manifests, local links, generated HTML freshness and preserved evidence. It does not compile the game or validate numerical physics/GPU performance. The source upload was not modified. The earlier static review and the separately imported 12-check fire audit are identified as historical evidence; this revision reruns only documentation/package validation, not the game or audit. See [package-checks.txt](validation/package-checks.txt) for this revision's documentation-check output.

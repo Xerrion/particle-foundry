@@ -17,10 +17,13 @@
         "SRC-09"
       ],
       "title": "Capture baseline and legacy regression contracts",
-      "work": "Inspect the full repository, preserve tracked/untracked changes, identify real scripts/toolchains, reproduce controls/audit in a fresh directory, and establish named browser/device fixtures. Instrument actual pressure calls and outlet visits.",
-      "acceptance": "Recorded source/config hashes, original checks, fresh failures, equal-time scene definitions and explicit unrun checks. Quoted timings stay historical.",
+      "work": "Inspect the full repository, preserve tracked/untracked changes, identify real scripts/toolchains, reproduce controls/audit in a fresh directory, and establish named browser/device fixtures. Instrument actual pressure calls and outlet visits. Include FIRE-W00: preserve the 12 imported F-check observations, verify their source hash and add distinct corrected FIRE-A specifications without rewriting legacy fire first.",
+      "acceptance": "Recorded source/config hashes, original checks, fresh failures, equal-time scene definitions and explicit unrun checks. Quoted timings stay historical. Fire characterization and corrected acceptance are separately named; full-tick bugs and positive controls are retained, and the water edge case remains reaction-only.",
       "status": "planned",
-      "evidence": []
+      "evidence": [],
+      "fireWorkItems": [
+        "FIRE-W00"
+      ]
     },
     {
       "id": "E01",
@@ -37,7 +40,8 @@
       "work": "Create the minimal proposed crates without relocating src/. Pin Rust/wgpu/wasm-bindgen after native and browser smoke tests. Integrate reproducible WASM generation with the existing frontend build.",
       "acceptance": "Native core tests and a real browser WASM initialize/dispose cycle pass; generated declarations compile in the existing TypeScript application. No UI rewrite.",
       "status": "planned",
-      "evidence": []
+      "evidence": [],
+      "fireWorkItems": []
     },
     {
       "id": "E02",
@@ -51,10 +55,13 @@
         "SRC-08"
       ],
       "title": "Define state, identity, ABI and snapshot contracts",
-      "work": "Define backend/model axes, Rust state schemas, stable identities, SI units, active-component mapping, command/status types, snapshot versions and shader packing.",
-      "acceptance": "Legacy-ID round trips, malformed-input rejection, optional-extension no-allocation, layout/offset tests and documented H-to-U conversion/rejection rules.",
+      "work": "Define backend/model axes, Rust state schemas, stable identities, SI units, active-component mapping, command/status types, snapshot versions and shader packing. Include FIRE-W01: one fuel/O2/product/physical-soot inventory, shared boundary fluxes, source transactions, chemical reference and derived visual contracts, without activating chemistry in M3.",
+      "acceptance": "Legacy-ID round trips, malformed-input rejection, optional-extension no-allocation, layout/offset tests and documented H-to-U conversion/rejection rules. Fire inventory/schema round trips, product-capacity checks and legacy FIRE-as-tool/visual mapping pass without an independent spendable oxygen counter.",
       "status": "planned",
-      "evidence": []
+      "evidence": [],
+      "fireWorkItems": [
+        "FIRE-W01"
+      ]
     },
     {
       "id": "E03",
@@ -73,7 +80,8 @@
       "work": "Adapt the existing sandbox seam with a separate legacy adapter; add queued commands, async observations, epoch cancellation, feature preflight and minimal generated catalogue projections. Prepare canvas ownership selection.",
       "acceptance": "Legacy UI remains usable; no duplicate handwritten catalogue or ticking world; mock/CPU contract tests cover backpressure, paused paint, reset and stale callbacks.",
       "status": "planned",
-      "evidence": []
+      "evidence": [],
+      "fireWorkItems": []
     },
     {
       "id": "E04",
@@ -89,7 +97,8 @@
       "work": "Translate the analytical N11-N13 and C17/C18 contracts into Rust tests and implement the corrected bounded graph solver, work and heat allocation. Integrate into GPU scenes at E11.",
       "acceptance": "Residual, branch heat, terminal work, source exhaustion and topology-change tests pass. This independent branch does not block E05/E06.",
       "status": "planned",
-      "evidence": []
+      "evidence": [],
+      "fireWorkItems": []
     },
     {
       "id": "E05",
@@ -106,7 +115,8 @@
       "work": "Build matching MAC D/G operators, density/aperture coefficients, gravity balance, sealed-component compatibility, scaled residuals and cache invalidation in sim-cpu.",
       "acceptance": "Analytic/manufactured operator fixtures and hydrostatic rest pass; forced-rebuild comparisons validate cache correctness.",
       "status": "planned",
-      "evidence": []
+      "evidence": [],
+      "fireWorkItems": []
     },
     {
       "id": "E06",
@@ -124,7 +134,8 @@
       "work": "Add bounded VOF, shared mass/tracer/compatible momentum fluxes, viscosity and rollback. Keep phase chemistry off and thermal transport passive.",
       "acceptance": "M2 conservation, marker displacement, shear, symmetry, dam-break/refinement and failure tests pass before the equivalent solver is ported.",
       "status": "planned",
-      "evidence": []
+      "evidence": [],
+      "fireWorkItems": []
     },
     {
       "id": "E07",
@@ -141,7 +152,8 @@
       "work": "Implement matching f32 operators/transport with owned writes, reductions, convergence flags, candidate/committed generations and bounded submission. Validate Rust/WGSL ABI on hardware.",
       "acceptance": "Small-fixture CPU/GPU comparisons at equal time, failure/no-partial-commit tests and adapter-limit checks pass. Native testing does not waive browser testing.",
       "status": "planned",
-      "evidence": []
+      "evidence": [],
+      "fireWorkItems": []
     },
     {
       "id": "E08",
@@ -160,7 +172,8 @@
       "work": "Render from the same wgpu device/state. Add tick/epoch-stamped probes/reductions, startup fallback, viewport/overlay behavior, async checkpoint prototype and completed-work telemetry.",
       "acceptance": "480 x 270 experimental scene works; no full-state normal-frame readback, no reused 2D context, no stale-as-current observations, measured transfer bytes and completed-time throughput.",
       "status": "planned",
-      "evidence": []
+      "evidence": [],
+      "fireWorkItems": []
     },
     {
       "id": "E09",
@@ -173,10 +186,13 @@
         "SRC-08"
       ],
       "title": "Add full supported thermodynamics and phase closure",
-      "work": "Implement Rust reference then GPU parity for bounded properties, partial phases, available-volume closure, chamber pressure and finite venting.",
-      "acceptance": "M4 closed/open energy/mass/volume fixtures pass, invalid EOS domains are explicit, and table provenance/conversion limits are recorded.",
+      "work": "Implement Rust reference then GPU parity for bounded properties, partial phases, available-volume closure, chamber pressure and finite venting. Execute FIRE-W02: conservative passive O2/product transport, finite ventilation and explicit high-temperature reactant/product/water domain coverage or supported-scene rejection.",
+      "acceptance": "M4 closed/open energy/mass/volume fixtures pass, invalid EOS domains are explicit, and table provenance/conversion limits are recorded. FIRE-PRECONDITIONS (FIRE-A03 and FIRE-A12) pass before coupled fire scenes; no connected-interior O2 refill or silent hot-state clamp.",
       "status": "planned",
-      "evidence": []
+      "evidence": [],
+      "fireWorkItems": [
+        "FIRE-W02"
+      ]
     },
     {
       "id": "E10",
@@ -193,7 +209,8 @@
       "work": "Replace repeated per-grain search with the M5 batched proposal/reservation/commit design; preserve mass, composition, swept volume and work.",
       "acceptance": "Contention, sealed/no-outlet, motion, impact and multiphase fixtures pass; publish visit counts and transfers instead of asserting a complexity gain.",
       "status": "planned",
-      "evidence": []
+      "evidence": [],
+      "fireWorkItems": []
     },
     {
       "id": "E11",
@@ -208,10 +225,15 @@
         "SRC-11"
       ],
       "title": "Integrate chemistry and bounded CPU circuits",
-      "work": "Port supported existing sources and amount-based chemistry into the owning state. Couple Rust CPU circuit graphs through bounded topology/sample events and funded heat transactions.",
-      "acceptance": "M6 finite-source, excess-reagent, conductor-change and graph overflow/dense-cost fixtures pass; no whole-world circuit mirror.",
+      "work": "Port supported existing sources and amount-based chemistry into the owning state. Couple Rust CPU circuit graphs through bounded topology/sample events and funded heat transactions. Execute FIRE-W03-FIRE-W05: corrected Rust gas combustion, bounded condensed-fuel release, thermal suppression and persistent products/soot, then WGSL parity with shared-reactant reservations and exactly-once energy/amount commits.",
+      "acceptance": "M6 finite-source, excess-reagent, conductor-change and graph overflow/dense-cost fixtures pass; no whole-world circuit mirror. FIRE-A01-FIRE-A13 pass for the supported combustion slice; no cold-label ignition, unledgered O2, missing products, contact-only water kill switch or per-substep duplication of per-tick burn rates.",
       "status": "planned",
-      "evidence": []
+      "evidence": [],
+      "fireWorkItems": [
+        "FIRE-W03",
+        "FIRE-W04",
+        "FIRE-W05"
+      ]
     },
     {
       "id": "E12",
@@ -226,10 +248,13 @@
         "SRC-09"
       ],
       "title": "Complete browser host and optional worker deployment",
-      "work": "Preserve controls, held tools, maps, zoom/pan, paused edits and browser lifecycle. Evaluate worker/OffscreenCanvas against main-thread wgpu using the same contracts.",
-      "acceptance": "Interaction and lifecycle tests pass on supported contexts; unsupported worker paths use explicit main-thread GPU or compatible CPU/legacy routes.",
+      "work": "Preserve controls, held tools, maps, zoom/pan, paused edits and browser lifecycle. Evaluate worker/OffscreenCanvas against main-thread wgpu using the same contracts. Execute FIRE-W06: funded Fire commands, tick-stamped composition/heat-release probes and derived particle/shader flames with no physical changes from visual lifetime or quality settings.",
+      "acceptance": "Interaction and lifecycle tests pass on supported contexts; unsupported worker paths use explicit main-thread GPU or compatible CPU/legacy routes. FIRE-M6 integrated fire scenes and render-on/off inventory equivalence pass; cosmetic effects do not become combustion authority.",
       "status": "planned",
-      "evidence": []
+      "evidence": [],
+      "fireWorkItems": [
+        "FIRE-W06"
+      ]
     },
     {
       "id": "E13",
@@ -243,10 +268,13 @@
         "SRC-07"
       ],
       "title": "Validate snapshots, device loss and reversible rollout",
-      "work": "Complete consistent saves/loads, component/version preflight, rollback/recovery notices, teardown, reset races and checkpoint replay policy.",
-      "acceptance": "Failure injection never publishes partial state; late callbacks cannot affect a new epoch; rollback limits are visible and no incompatible legacy hot swap occurs.",
+      "work": "Complete consistent saves/loads, component/version preflight, rollback/recovery notices, teardown, reset races and checkpoint replay policy. Include fire network/property versions, active products, physical smoke/residue and source/approximation settings in the FIRE-W07 save/recovery scope.",
+      "acceptance": "Failure injection never publishes partial state; late callbacks cannot affect a new epoch; rollback limits are visible and no incompatible legacy hot swap occurs. FIRE-A14 snapshot/transaction cases reject unsupported data or roll back explicitly without duplicate burning or lost products.",
       "status": "planned",
-      "evidence": []
+      "evidence": [],
+      "fireWorkItems": [
+        "FIRE-W07"
+      ]
     },
     {
       "id": "E14",
@@ -260,10 +288,13 @@
         "SRC-12"
       ],
       "title": "Measure and promote only supported scenes",
-      "work": "Run native reference, browser GPU, regression, memory/readback, sustained and input-latency tests on agreed devices. Retain unsupported legacy coverage until a complete replacement passes.",
-      "acceptance": "GPU-M7 evidence supports the coverage actually promoted. No promised speed multiplier, no submitted-time benchmark, no premature legacy deletion.",
+      "work": "Run native reference, browser GPU, regression, memory/readback, sustained and input-latency tests on agreed devices. Retain unsupported legacy coverage until a complete replacement passes. Complete FIRE-W07 using FIRE-M7 for each promoted combustion scene, including hot-domain eligibility, water/smoke capability coverage and measured transfer/performance limits.",
+      "acceptance": "GPU-M7 evidence supports the coverage actually promoted. No promised speed multiplier, no submitted-time benchmark, no premature legacy deletion. FIRE-M7 evidence is new corrected acceptance, not the retained F01-F12 characterization; unsupported fire scenes remain explicitly separate.",
       "status": "planned",
-      "evidence": []
+      "evidence": [],
+      "fireWorkItems": [
+        "FIRE-W07"
+      ]
     }
   ],
   "phaseExecution": [
@@ -312,5 +343,7 @@
       "ownership": "Rust/native plus browser WASM/GPU matrix, TypeScript product regressions and package/recovery evidence",
       "milestones": "Q0-Q2"
     }
-  ]
+  ],
+  "updatedAt": "2026-09-23",
+  "fireWorkManifest": "data/fire-combustion-work.json"
 }

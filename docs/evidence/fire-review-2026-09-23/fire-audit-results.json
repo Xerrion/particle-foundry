@@ -1,0 +1,129 @@
+{
+  "sourceArchive": "src(3).zip",
+  "scope": "12 targeted headless checks, including 2 full physics-tick checks; not the original application test suite",
+  "results": [
+    {
+      "id": "F01",
+      "description": "Closed boundary flag does not stop oxygen replenishment or wood combustion",
+      "status": "observed-and-asserted",
+      "classification": "bug",
+      "boundariesEnabled": true,
+      "initialOxygenKg": 0,
+      "replenishedOxygenKg": 0.000013407744000000016,
+      "releasedJ": 99.99999999999964,
+      "oxygenConsumedDuringBurnKg": 0,
+      "ledgerDelta": 0
+    },
+    {
+      "id": "F02",
+      "description": "The closed-boundary oxygen issue occurs through the real full physics tick",
+      "status": "observed-and-asserted",
+      "classification": "integration-confirmation",
+      "releasedJ": 99.99999999999964,
+      "oxygenAfterKg": 0.000013407744000000016
+    },
+    {
+      "id": "F03",
+      "description": "Explicit stone enclosure with no oxygen does stop wood combustion",
+      "status": "observed-and-asserted",
+      "classification": "positive-control",
+      "releasedJ": 0,
+      "burning": 0
+    },
+    {
+      "id": "F04",
+      "description": "Generic combustion depletes an O2 inventory without converting O2 mass into products",
+      "status": "observed-and-asserted",
+      "classification": "composition-defect",
+      "oxygenConsumedKg": 0.0000013212000000000002,
+      "releasedJ": 18.874285714286287,
+      "oxygenMaterialStill": "OXYGEN",
+      "remainingOxygenCellMassKg": 0.0000013212000000000002,
+      "fuelMassLostKg": 0,
+      "co2Cells": 0,
+      "waterOrSteamCells": 0,
+      "totalTrackedEnergyErrorJ": -1.8189894035458565e-12
+    },
+    {
+      "id": "F05",
+      "description": "Wood-generated flames relabel ambient air without transporting fuel mass or chemical inventory",
+      "status": "observed-and-asserted",
+      "classification": "model-limitation",
+      "flameMassKg": 0.0000012040000000000002,
+      "previousAirMassKg": 0.0000012040000000000002,
+      "flameChemicalEnergyKj": 0,
+      "fuelMassLostKg": 0,
+      "flameHeatGeneratedJ": 0
+    },
+    {
+      "id": "F06",
+      "description": "A tiny water neighbor cancels burning without a thermal or phase-change debit in reactions",
+      "status": "observed-and-asserted",
+      "classification": "model-limitation",
+      "fixture": "reaction-only; thermal solver excluded deliberately",
+      "waterMassKg": 1e-12,
+      "fuelTemperatureC": 499.99999999999994,
+      "burning": 0,
+      "fuelEnergyChangeJ": 0,
+      "waterEnergyChangeJ": 0
+    },
+    {
+      "id": "F07",
+      "description": "A cold FIRE label ignites hydrogen/O2 before the generic fire pass can quench it",
+      "status": "observed-and-asserted",
+      "classification": "ignition-defect",
+      "initialReactantTemperatureC": 22,
+      "initialFireTemperatureC": 22,
+      "reactions": 1,
+      "releasedJ": 9.984918769841272
+    },
+    {
+      "id": "F08",
+      "description": "The cold FIRE ignition defect also occurs through the full ordered physics pipeline",
+      "status": "observed-and-asserted",
+      "classification": "integration-confirmation",
+      "allInitialTemperaturesC": 22,
+      "releasedJ": 9.984918769841272
+    },
+    {
+      "id": "F09",
+      "description": "Hot hydrogen cannot consume oxygen from explicitly sealed ordinary air",
+      "status": "observed-and-asserted",
+      "classification": "documented-model-limitation",
+      "hydrogenTemperatureC": 600,
+      "adjacentOxygenKg": 2.7932800000000005e-7,
+      "reactions": 0
+    },
+    {
+      "id": "F10",
+      "description": "Expired smoke in a sealed cavity becomes ambient-air identity at unchanged mass and heat",
+      "status": "observed-and-asserted",
+      "classification": "composition-loss",
+      "finalMaterial": "EMPTY/Air",
+      "massPreserved": true,
+      "heatPreserved": true,
+      "oxygenAddedKg": 0
+    },
+    {
+      "id": "F11",
+      "description": "Ignition brush in air spends external heat, preserves mass, and expires without smoke",
+      "status": "observed-and-asserted",
+      "classification": "positive-control",
+      "massPreserved": true,
+      "externalHeatAddedJ": 0.5153119999999944,
+      "expiredAfterTicks": 10,
+      "finalMaterial": "EMPTY/Air",
+      "smokeCells": 0
+    },
+    {
+      "id": "F12",
+      "description": "Explicit hot H2/O2 reaction conserves tracked mass, momentum, and total energy",
+      "status": "observed-and-asserted",
+      "classification": "positive-control",
+      "massErrorKg": 0,
+      "trackedTotalEnergyErrorJ": 0,
+      "momentumXErrorKgMPerS": 0,
+      "momentumYErrorKgMPerS": 0
+    }
+  ]
+}

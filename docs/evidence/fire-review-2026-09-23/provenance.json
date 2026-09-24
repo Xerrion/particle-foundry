@@ -1,0 +1,185 @@
+{
+  "source_archive": "src(3).zip",
+  "source_archive_sha256": "cfb5c27cb3608fa21a45db1b4663e1c1757f7ec96a299e07246c0429359f9627",
+  "source_files_checked_unchanged": 43,
+  "files": [
+    {
+      "path": "src/app/controls.ts",
+      "sha256": "68a86916824395a9deb8eabf43a465df900f32096a104a4a1e9b3a97a02362c1"
+    },
+    {
+      "path": "src/app/dom.ts",
+      "sha256": "97d3d7d29f33083505c93ecccdf9fc586960d630daee177f00d883f223bc5702"
+    },
+    {
+      "path": "src/app/material-picker.ts",
+      "sha256": "54a3539e44abac942d02ce85da5dc1dbfe9522787fde45b3559625f8b757801a"
+    },
+    {
+      "path": "src/app/pointer-mapping.ts",
+      "sha256": "3556ba4b6a4204b664a10942718ce888920ba4d14eb7693596e3ff149ec9cfd3"
+    },
+    {
+      "path": "src/app/view-controls.ts",
+      "sha256": "a33a4070bc5ec19133842ea9c5aea5efb85d6359a45e62983660fe11e03c7586"
+    },
+    {
+      "path": "src/app/viewport.ts",
+      "sha256": "1cab1c38093e421b43dd235b2e4b5d7ac4ab0debcd8f760317b7b5c467de9b6f"
+    },
+    {
+      "path": "src/main.ts",
+      "sha256": "e82d9c2827934988c89b2296a93abe91bfcf917e96d567c4bbc053e928618e5c"
+    },
+    {
+      "path": "src/materials/definitions.ts",
+      "sha256": "42d1656eb3d923a25c182f4f0d3bd1329950be3f9f8a5bc6ce90044143cb5a71"
+    },
+    {
+      "path": "src/materials/element-reference.ts",
+      "sha256": "6ed0ea5ca3998efab4240ee8bf1dc687ede8772daab940566eee2edee47595a5"
+    },
+    {
+      "path": "src/materials/guide.ts",
+      "sha256": "822a9e458987d5b8046dbbbc2bbe8d41187d7528769d159573f37beecc4562b1"
+    },
+    {
+      "path": "src/materials/ids.ts",
+      "sha256": "8209ee53fc924c2d6702b36e845fa3cabb7edd662eb2001cce3a005169d6e43b"
+    },
+    {
+      "path": "src/materials/index.ts",
+      "sha256": "0b4435fc95b46fe470a8afd23f191676ada03959e92a472d42597db103215f90"
+    },
+    {
+      "path": "src/materials/physical-properties.ts",
+      "sha256": "919531c3f2713f4ea831e2c8287153cf9e4d9bfc938ccaa8975e3931cd875926"
+    },
+    {
+      "path": "src/materials/presentation.ts",
+      "sha256": "31c852ebb021d843244bfd90414b36e59dbd1fd696530e4634cad5638957882a"
+    },
+    {
+      "path": "src/materials/queries.ts",
+      "sha256": "6d5d2f54650e64ce0b707b77d434773b37ac91f7dd3c23c5a3410728f3291591"
+    },
+    {
+      "path": "src/materials/validation.ts",
+      "sha256": "08923e451e8bd8c331f2d23bf002c5a8e8f4e9be3373f7d99dee05af426bc33a"
+    },
+    {
+      "path": "src/physics/airflow.ts",
+      "sha256": "548cfe59c63b82fce65f9c9e59064c06c6d3d9dd803aae58f958c9f08f803c46"
+    },
+    {
+      "path": "src/physics/boiling.ts",
+      "sha256": "1aa9a3c8a493adf84753f9cf6d5d25f42b6bfced8b0240a8c29d3456f6454cb5"
+    },
+    {
+      "path": "src/physics/electricity.ts",
+      "sha256": "89363a2c1a9f096ca344074167bf66924ea4aa74d764c3383a13a311def12d98"
+    },
+    {
+      "path": "src/physics/element-reactions.ts",
+      "sha256": "b156fefec00a3ab7807be8314f7b9fbf49c7a4e233fce15f1782e33e420c308e"
+    },
+    {
+      "path": "src/physics/explosions.ts",
+      "sha256": "ab95eed582fe600637a7c3424ca5e65410cfa3052856870a7eb92aa2b02dc142"
+    },
+    {
+      "path": "src/physics/fluid-solver.ts",
+      "sha256": "66520f7fd742991250b056516c9e7747516c2910e5974d979128f4d719bc5cf6"
+    },
+    {
+      "path": "src/physics/gas-dynamics.ts",
+      "sha256": "ffd355e1c1345627c131acc7513335794b4bd5a3ab07bc57563a2f12952d30ab"
+    },
+    {
+      "path": "src/physics/hydrostatics.ts",
+      "sha256": "a7f968c4de679f9c91e1763f22e800b9817705e1b2c55d061fc6a9b6a88bb317"
+    },
+    {
+      "path": "src/physics/motion.ts",
+      "sha256": "a11bbb26e1ed66406eec97a4c286cdb6463554964e94e03c54ad13c8582637e6"
+    },
+    {
+      "path": "src/physics/neutralization.ts",
+      "sha256": "9dc00aa6cca12b9128c152a61cb2e48ed629bb075411f49477f7289ce874cf15"
+    },
+    {
+      "path": "src/physics/reactions.ts",
+      "sha256": "e628cdd88d4bf2b6eab1b5818965459385d4845184873f4f76536c3eb9ecb8b3"
+    },
+    {
+      "path": "src/physics/solid-mechanics.ts",
+      "sha256": "940dd1ed4bf89d79043df7ae3369477ced35e1cab0f86e49680d9dc7e73dccf5"
+    },
+    {
+      "path": "src/physics/thermal.ts",
+      "sha256": "2a8e43e92238b86d24a86f852716d1eede9cafca1e02e200b43a19bfd2ba77ca"
+    },
+    {
+      "path": "src/rendering/field-map.ts",
+      "sha256": "bababbb2bac2d63e7e008d57c7ad958f9354161ba290d697c7a1767635a6d574"
+    },
+    {
+      "path": "src/rendering/renderer.ts",
+      "sha256": "e92afb18313349938aa213be58a28f486d7fbe1d5d30ba74f32c3cb90ca43d8f"
+    },
+    {
+      "path": "src/rendering/temperature-map.ts",
+      "sha256": "007df893582c8c5fbc768b89125e2f23b0bf485ca1a3b1318c0b34232486ac8d"
+    },
+    {
+      "path": "src/rendering/visual-waves.ts",
+      "sha256": "8ec89bbe49d7f406b245bc31829e6ce2c2563686059de2f077ce98b209c6dee1"
+    },
+    {
+      "path": "src/scenes/starter-scene.ts",
+      "sha256": "3d09f2fd06dd3591b36bd4ea1f956b2098da3e617cbe526fbd52e95b78a7bf4a"
+    },
+    {
+      "path": "src/simulation/diagnostics.ts",
+      "sha256": "a61c57939059dd2fa27d47edcc8322eba0f6676c1ac233c47bd9306101086985"
+    },
+    {
+      "path": "src/simulation/physical-scale.ts",
+      "sha256": "7cef4eabdd399854fbb6958913326f35d15c4f17dd75d9ec68e8ef3459e98f9a"
+    },
+    {
+      "path": "src/simulation/physics.ts",
+      "sha256": "4dbea82cb64157b2d1d735e5b162d36b89c9389f7bc363b9670f523abf770f56"
+    },
+    {
+      "path": "src/simulation/random.ts",
+      "sha256": "038558fc03970b0fba65cda0ac7fd07be30c2a662f4f3c68a4106f767ee85c90"
+    },
+    {
+      "path": "src/simulation/sandbox.ts",
+      "sha256": "d029d2b9a21fda230f29574884301a5fdb3717cb81399975033fc5deffa76625"
+    },
+    {
+      "path": "src/simulation/simulation-clock.ts",
+      "sha256": "7bfdf1312f795e54539ea57f9a1b46bbe26c3fc6936369b3a146420210b20b40"
+    },
+    {
+      "path": "src/simulation/world.ts",
+      "sha256": "f1406cf9b45b92f26ec98db7ca33ee45a235c88fe30c9fcbf9d68d4871a0dfda"
+    },
+    {
+      "path": "src/styles/main.css",
+      "sha256": "aef8f020b8e9298c48149963e589d0594d7d9e54a1778d92afcf5a7197fe7319"
+    },
+    {
+      "path": "src/tools/brush.ts",
+      "sha256": "82c4310d0651689479258bdd6d2e0d3b584fb55a5c032c895eb07c321b19ce4a"
+    }
+  ],
+  "node": "v22.16.0",
+  "typescript": "Version 5.8.3",
+  "application_build_run": false,
+  "headless_modules_compiled": true,
+  "original_application_suite_run": false,
+  "browser_gpu_visual_tests_run": false
+}

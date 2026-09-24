@@ -27,3 +27,11 @@ Current implementation descriptions remain qualified as documented by the suppli
 [previous-elements-roadmap.zip](previous-elements-roadmap.zip) preserves the exact documentation package supplied before this Rust/WASM update. Its SHA-256 is in [previous-revision.json](previous-revision.json). It includes the original input archive and audit; neither was altered.
 
 That previous package's TypeScript-reference defaults and proposed src/fluid paths are superseded by ADR-001 in the active docs. Archived text is historical, not a competing instruction set. The source upload itself is not duplicated into this documentation ZIP; its read-only hashes/locations are recorded in the active source manifest.
+
+## Fire review preserved in this revision
+
+[fire-review-2026-09-23.zip](fire-review-2026-09-23.zip) preserves the supplied fire-audit archive byte-for-byte. Its five extracted files are available under [evidence/fire-review-2026-09-23](../evidence/fire-review-2026-09-23/FIRE_REVIEW.md), with archive/file hashes in [the fire review manifest](../data/fire-review-manifest.json).
+
+The report's statements that no existing docs archive was rewritten describe the original audit session. This later documentation revision does integrate its findings into the active plan. The 12 checks were run during that prior review, not during this edit. Their assertions reproduce observations, including bugs; FIRE-A gates separately define corrected acceptance.
+
+Existing static-source records and the older 35-check audit remain unchanged. No application source is modified or copied into this package. The active fire plan supersedes incomplete legacy fire descriptions; archived copies preserve what was previously written and are not competing developer instructions.

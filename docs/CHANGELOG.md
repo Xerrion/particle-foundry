@@ -1,5 +1,17 @@
 # Documentation change log
 
+## 23 September 2026: fire-audit integration into the GPU-first plan
+
+Added a dedicated bounded combustion plan, nine FIRE-W tasks and fourteen corrected FIRE-A fixture specifications. Linked them to the existing E00-E14 work and P1/M0/M1/M4/M6/M7, with one extension task in P4/C5. M3 remains nonreactive; the selected TypeScript/Rust/WASM/wgpu split, P1-P9 sequence and 40/83/103/118 element cohorts are unchanged.
+
+Made closed-boundary O2, shared finite reactants, cold-FIRE ignition, product/energy accounting, condensed-fuel release, amount/thermal water suppression, physical-time rates and persistent smoke explicit requirements. Derived particle/shader visuals and the funded Fire brush remain supported without becoming physical state authorities. Added FIRE-PRECONDITIONS, FIRE-M6 and FIRE-M7, including hot-property-domain and transactional recovery requirements.
+
+Corrected active model text that implied the legacy boundary flag sealed combustion oxygen or that all atmospheric inputs were ledgered. Preserved the distinction between two full-pipeline bugs, composition issues, documented limitations, the reaction-only water test and positive controls. Scalar mass/energy conservation is not presented as proof of chemical correctness.
+
+Imported all five fire-review files and the original review ZIP unchanged, with hash/source-provenance verification. Their twelve checks remain prior characterization evidence, not tests rerun in this revision or passes of the corrected specification. Existing static-source and historical audit files, element roster/schema/guide and original archives remain unchanged.
+
+Updated entrypoint, roadmap, active work, architecture, GPU milestones, migration work, materials plan, validation, evidence template and source provenance. Regenerated the GPU HTML and extended documentation validation to fire work/fixture references, parent milestones, gate coverage and imported audit integrity. No application source, build, Rust/WASM compilation, numerical simulation, fire audit or GPU test was executed by this docs-only change.
+
 ## 21 September 2026: Rust/WASM + wgpu migration revision
 
 Selected ADR-001: retain the TypeScript application, use Rust references/engine ownership, WASM browser bindings, and Rust wgpu-managed WGSL compute/direct rendering. This replaces the previous TypeScript CPU-reference default without changing P1-P9 order or the 40/83/103/118 roster.

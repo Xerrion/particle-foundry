@@ -96,3 +96,11 @@ Each phase requires implementation, independent reference tests, conservation ch
 P1 E00-E14 in [the migration work plan](plans/rust-wasm-migration/plan.md) implements M0-M7. Rust/bootstrap, generated data and the async command boundary are M1 work; M2 is the Rust f64 reference; M3 is WGSL parity and browser integration. E04's circuit reference is an independent branch required by M6, not a blocker for M2's fluid contract.
 
 P2-P9 extend the same engine contracts. Each later plan now specifies Rust/reference, GPU and TypeScript presentation ownership. A new chemistry or nuclear feature never receives its own whole-world transport loop. See the [cross-phase ownership table](plans/rust-wasm-migration/plan.md#how-every-later-phase-uses-the-chosen-stack) and [backend acceptance](validation/backend-migration.md).
+
+## Fire-specific integration and phase gates
+
+[The fire integration plan](plans/fire-combustion/plan.md) adds FIRE-W00-W08 within the existing sequence. M0 preserves the 12 prior characterization cases and creates corrected fixtures; M1 reserves fuel/O2/product/boundary/source/visual contracts; M4 passes finite ventilation and hot-domain preconditions; M6 implements coherent Rust then WGSL combustion and derived visuals; M7 requires FIRE-M7 before any fire-scene promotion.
+
+The [FIRE-A gates](validation/fire-combustion.md#corrected-gates) explicitly cover closed-boundary oxygen, cold-FIRE ignition, shared finite O2, product formation, condensed-fuel release, water-dose suppression, smoke persistence, substep rates, contention, CPU/GPU parity and recovery. Passing scalar energy checks is not a substitute for composition correctness. The provisional 350 C water ceiling does not authorize legacy 450 C flame/water scenes.
+
+P4/C3-C6 extends fuel chemistry, char, soot and selected radiative transfer with FIRE-W08. It does not defer P1 oxygen/product/ignition correctness. P2 uses the same finite-reactant/source accounting with independently validated compressible physics. M3 and the 40/83/103/118 delivery cohorts are unchanged. No implementation status is advanced by this documentation update.

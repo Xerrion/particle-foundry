@@ -2,7 +2,7 @@
 """Validate the documentation package without third-party dependencies.
 
 Checks planning manifests, table synchronization, local links/anchors, generated
-HTML freshness, migration/source manifest consistency, and original evidence integrity. Does not execute the supplied
+HTML freshness, migration/source/fire manifest consistency, and original evidence integrity. Does not execute the supplied
 audit harness or run application, numerical, browser, or GPU tests.
 """
 from __future__ import annotations
@@ -20,6 +20,7 @@ from zipfile import BadZipFile, ZipFile
 
 ROOT = Path(__file__).resolve().parents[1]
 ORIGINAL_SHA256 = "f0c353534cca10736d98c449fa96b5e2ed07c241a3ba7cd4463f897ab9860eb5"
+FIRE_REVIEW_SHA256 = "977396260ed156adc2cd4eb439cfe7e645de449e6f5126130c667097e92cadb0"
 EXPECTED_SYMBOLS = "H He Li Be B C N O F Ne Na Mg Al Si P S Cl Ar K Ca Sc Ti V Cr Mn Fe Co Ni Cu Zn Ga Ge As Se Br Kr Rb Sr Y Zr Nb Mo Tc Ru Rh Pd Ag Cd In Sn Sb Te I Xe Cs Ba La Ce Pr Nd Pm Sm Eu Gd Tb Dy Ho Er Tm Yb Lu Hf Ta W Re Os Ir Pt Au Hg Tl Pb Bi Po At Rn Fr Ra Ac Th Pa U Np Pu Am Cm Bk Cf Es Fm Md No Lr Rf Db Sg Bh Hs Mt Ds Rg Cn Nh Fl Mc Lv Ts Og".split()
 EXPECTED_COUNTS = {"core":40, "extended":43, "nuclear":20, "exotic":15}
 TIER_PHASE = {"core":"P4", "extended":"P5", "nuclear":"P6", "exotic":"P8"}
@@ -182,6 +183,102 @@ def main() -> int:
             require(entry["milestones"] == f"{phase['milestones'][0]}-{phase['milestones'][-1]}", f"Wrong engine execution milestones: {entry['phase']}")
             require(bool(entry["ownership"]), f"Missing runtime ownership: {entry['phase']}")
         checked.append("E00-E14 DAG, source traceability, Markdown work/acceptance synchronization and P1-P9 runtime ownership")
+
+        # Fire evidence is immutable characterization, separate from future acceptance.
+        fire_evidence = json.loads((ROOT / "data/fire-review-manifest.json").read_text(encoding="utf-8"))
+        require(fire_evidence["kind"] == "historical-characterization-evidence-not-corrected-acceptance", "Fire evidence must be labelled as characterization")
+        require(not any(fire_evidence["documentationRevision"].values()), "Fire import must not claim newly executed implementation checks")
+        require(fire_evidence["sourceArchive"]["sha256"] == source_review["sourceArchive"]["sha256"], "Static and fire reviews refer to different source archives")
+        require(fire_evidence["sourceArchive"]["fileCount"] == 43, "Fire source file count mismatch")
+        historical_fire = json.loads((ROOT / fire_evidence["results"]).read_text(encoding="utf-8"))
+        fire_results = historical_fire["results"]
+        historical_ids = [r["id"] for r in fire_results]
+        require(historical_ids == [f"F{i:02d}" for i in range(1,13)], "Historical F01-F12 IDs changed")
+        require(fire_evidence["checkIds"] == historical_ids and fire_evidence["checkCount"] == 12, "Fire check inventory inconsistent")
+        require(fire_evidence["fullPhysicsTickChecks"] == ["F02", "F08"] and fire_evidence["isolatedSubsystemCheckCount"] == 10, "Fire execution-scope qualification changed")
+        require(all(r["status"] == "observed-and-asserted" for r in fire_results), "Historical fire observations must not become corrected passes")
+        fire_provenance = json.loads((ROOT / fire_evidence["provenance"]).read_text(encoding="utf-8"))
+        require(fire_provenance["source_archive_sha256"] == source_review["sourceArchive"]["sha256"], "Fire provenance source hash changed")
+        require({f["path"]: f["sha256"] for f in fire_provenance["files"]} == {n: m["sha256"] for n,m in source_files.items()}, "Fire/static review per-file source fingerprints differ")
+        fire_archive = ROOT / fire_evidence["reviewArchive"]["path"]
+        fire_archive_hash = hashlib.sha256(fire_archive.read_bytes()).hexdigest()
+        require(fire_archive_hash == fire_evidence["reviewArchive"]["sha256"] == FIRE_REVIEW_SHA256, "Preserved fire review ZIP changed")
+        expected_review_files = {"FIRE_REVIEW.md", "audit-fire.cjs", "run-review.py", "fire-audit-results.json", "provenance.json"}
+        with ZipFile(fire_archive) as archive:
+            require(archive.testzip() is None, "CRC error in original fire review ZIP")
+            names = [i.filename for i in archive.infolist() if not i.is_dir()]
+            require(len(names) == len(set(names)) and set(names) == expected_review_files, "Original fire review entry set changed")
+            require(len(fire_evidence["files"]) == 5, "Fire evidence manifest must contain exactly five files")
+            for record in fire_evidence["files"]:
+                evidence_path = ROOT / record["path"]
+                require(evidence_path.resolve().is_relative_to(ROOT.resolve()), "Fire evidence path escapes docs")
+                content = evidence_path.read_bytes()
+                require(hashlib.sha256(content).hexdigest() == record["sha256"] and len(content) == record["bytes"], f"Fire evidence file changed: {record['path']}")
+                require(evidence_path.name in expected_review_files, f"Unknown fire evidence file: {evidence_path.name}")
+                require(content == archive.read(evidence_path.name), f"Imported fire evidence differs from original archive: {evidence_path.name}")
+        checked.append("Unchanged fire review ZIP and five evidence files; F01-F12 characterization scope and 43 source hashes")
+
+        fire = json.loads((ROOT / "data/fire-combustion-work.json").read_text(encoding="utf-8"))
+        require(fire["kind"] == "planning-fire-work-not-implementation-evidence", "Fire work is not clearly planning data")
+        for key in ("plan", "acceptance", "sourceEvidence", "architectureDecision"):
+            require((ROOT / fire[key]).is_file(), f"Missing fire controlling document: {key}")
+        require(fire["architectureDecision"] == work["decision"], "Fire plan changed the selected engine architecture")
+        require(phase_manifest["fireWork"] == "data/fire-combustion-work.json" and work["fireWorkManifest"] == phase_manifest["fireWork"], "Phase/engine fire-manifest links disagree")
+        fire_work = fire["workItems"]
+        fire_fixtures = fire["fixtures"]
+        fire_work_ids = [i["id"] for i in fire_work]
+        fire_fixture_ids = [i["id"] for i in fire_fixtures]
+        require(fire_work_ids == [f"FIRE-W{i:02d}" for i in range(9)], "Fire work IDs must be FIRE-W00-W08")
+        require(fire_fixture_ids == [f"FIRE-A{i:02d}" for i in range(1,15)], "Corrected fire fixture IDs must be FIRE-A01-A14")
+        require(fire["nextWorkItem"] == "FIRE-W00", "First fire task is not baseline capture")
+        fire_plan_text = (ROOT / fire["plan"]).read_text(encoding="utf-8")
+        fire_acceptance_text = (ROOT / fire["acceptance"]).read_text(encoding="utf-8")
+        previous_fire: set[str] = set()
+        phase_by_id = {p["id"]:p for p in phases}
+        valid_statuses = {"planned", "in-progress", "implemented", "validated", "blocked"}
+        for item in fire_work:
+            fid = item["id"]
+            require(set(item["dependsOn"]).issubset(previous_fire), f"Fire dependency cycle/order error: {fid}")
+            require(item["phase"] in phase_by_id and item["milestone"] in phase_by_id[item["phase"]]["milestones"], f"Unknown fire phase/milestone: {fid}")
+            require(set(item["sourceChecks"]).issubset(historical_ids), f"Unknown historical fire check: {fid}")
+            require(set(item["requiredFixtures"]).issubset(fire_fixture_ids), f"Unknown corrected fire fixture: {fid}")
+            require(item["status"] in valid_statuses, f"Bad fire work status: {fid}")
+            if item["status"] == "validated":
+                require(bool(item["evidence"]), f"Validated fire work lacks new evidence: {fid}")
+            for eid in item["engineWorkItems"]:
+                require(eid in work_by_id, f"Unknown parent engine item: {fid}/{eid}")
+                if eid in work_by_id:
+                    require((item["phase"],item["milestone"]) == (work_by_id[eid]["phase"],work_by_id[eid]["milestone"]), f"Parent fire/engine milestone differs: {fid}/{eid}")
+            require(f"### {fid}: {item['title']}" in fire_plan_text, f"Fire title out of sync: {fid}")
+            require(item["work"] in fire_plan_text and item["acceptance"] in fire_plan_text, f"Fire work/acceptance out of sync: {fid}")
+            previous_fire.add(fid)
+        require(all(i["phase"] == "P1" and i["milestone"] != "M3" for i in fire_work[:8]), "First eight fire tasks must refine P1 without active M3 combustion")
+        require(fire_work[-1]["phase"] == "P4" and fire_work[-1]["milestone"] == "C5", "Fire extension task must remain in P4/C5")
+        require(phase_by_id["P4"]["fireWorkItems"] == ["FIRE-W08"], "P4 fire work mapping missing")
+        for item in items:
+            expected = [i["id"] for i in fire_work if item["id"] in i["engineWorkItems"]]
+            require(item["fireWorkItems"] == expected, f"Bidirectional E/FIRE mapping differs: {item['id']}")
+        for fixture in fire_fixtures:
+            fid = fixture["id"]
+            require(fixture["phase"] == "P1" and fixture["firstMilestone"] in phase_by_id["P1"]["milestones"], f"Unknown fire fixture milestone: {fid}")
+            require(set(fixture["sourceChecks"]).issubset(historical_ids), f"Bad source context: {fid}")
+            require(fixture["status"] in valid_statuses, f"Bad corrected-fixture status: {fid}")
+            if fixture["status"] == "validated":
+                require(bool(fixture["evidence"]), f"Validated FIRE-A fixture lacks evidence: {fid}")
+            require(f"### {fid}: {fixture['title']}" in fire_acceptance_text, f"Corrected fixture title out of sync: {fid}")
+            require(fixture["specification"] in fire_acceptance_text and fixture["measurement"] in fire_acceptance_text, f"Corrected fire requirement/measurement out of sync: {fid}")
+        bundles = fire["gateBundles"]
+        expected_bundle_ids = ["FIRE-PRECONDITIONS", "FIRE-M6", "FIRE-M7"]
+        require([b["id"] for b in bundles] == phase_by_id["P1"]["supplementalGates"] == expected_bundle_ids, "P1 supplemental fire gates are inconsistent")
+        require(bundles[0]["fixtures"] == ["FIRE-A03", "FIRE-A12"], "Fire preconditions must include finite ventilation and thermal domain")
+        require(bundles[1]["fixtures"] == fire_fixture_ids[:13], "FIRE-M6 has incomplete corrected coverage")
+        require(bundles[2]["fixtures"] == fire_fixture_ids, "FIRE-M7 has incomplete corrected coverage")
+        for b,ms in zip(bundles,["M4","M6","M7"]):
+            require(b["phase"] == "P1" and b["milestone"] == ms, f"Fire aggregate gate mapped to wrong milestone: {b['id']}")
+            require(b["status"] in valid_statuses, f"Bad fire aggregate status: {b['id']}")
+            if b["status"] == "validated":
+                require(bool(b["evidence"]), f"Validated fire aggregate lacks evidence: {b['id']}")
+        checked.append("Nine FIRE-W tasks, fourteen FIRE-A specifications, E-parent DAG, synchronized prose and M4/M6/M7 gate coverage")
 
         if args.source_archive is not None:
             archive_bytes = args.source_archive.read_bytes()

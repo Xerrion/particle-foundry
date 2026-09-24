@@ -1,38 +1,27 @@
-Particle Foundry documentation package validation
-Revision: 21 September 2026, Rust/WASM + wgpu migration
-
-Scope: docs, manifests, generated HTML, static source fingerprint, and archives.
-The supplied source was read for planning only. No application source was changed.
-No application build, Rust/WASM compilation, numerical test, browser test,
-benchmark or GPU test was run. Historical audit results were preserved, not rerun.
-
-Executed documentation checks:
-- Complete Draft 2020-12 JSON Schema check and element roster validation: PASS
-- Syntax parsing of both documentation Python scripts: PASS
-- Every delivered JSON file parses: PASS
-- Validator with and without the optional source archive: PASS
-- Source archive and all 43 extracted reference files match recorded hashes: PASS
-- Original docs.zip and the previous generated ZIP remain byte-for-byte unchanged: PASS
+Documentation validation: 23 September 2026
+Base: particle-foundry-docs-rust-wasm-wgpu.zip
+Imported evidence: particle-foundry-fire-review.zip
 
 CHECKED: 118 element identities, tier counts, target phases and historical status
 CHECKED: Markdown element roster matches the JSON manifest
 CHECKED: P1-P9 dependency order and synchronized roadmap table
 CHECKED: 43-file static source manifest and 12 bounded source observations; not runtime verification
 CHECKED: E00-E14 DAG, source traceability, Markdown work/acceptance synchronization and P1-P9 runtime ownership
+CHECKED: Unchanged fire review ZIP and five evidence files; F01-F12 characterization scope and 43 source hashes
+CHECKED: Nine FIRE-W tasks, fourteen FIRE-A specifications, E-parent DAG, synchronized prose and M4/M6/M7 gate coverage
 CHECKED: Provided source ZIP CRC/SHA-256 and every source file hash/size/line count; source was not executed
-CHECKED: 23 authored Markdown/HTML documents and 244 local links/anchors
+CHECKED: 26 authored Markdown/HTML documents and 319 local links/anchors
 CHECKED: Generated GPU HTML matches the current Markdown source hash
 CHECKED: Input archive CRC/SHA-256, all original paths, and three unchanged audit files
 CHECKED: Prior documentation ZIP CRC/SHA-256 and byte-preserved element roster, schema and element guide
 PASS: documentation package checks. No application, numerical, browser or GPU tests were run.
-
-Independent-package checks:
-- Final ZIP has unique, safe relative docs/ paths and no application source tree: PASS
-- ZIP CRC and member-byte comparison against the assembled docs directory: PASS
-- Independent extraction and validator execution with the source archive: PASS
-- Original archive, prior documentation, audit evidence and element data preserved: PASS
-
-These checks establish documentation consistency and byte preservation only.
-Implementation and scientific/GPU validation remain future milestone work.
-Run python docs/scripts/validate-docs.py for self-contained documentation checks.
-Add --source-archive /path/to/src.zip to verify the inspected source snapshot.
+CHECKED: element roadmap against its complete Draft 2020-12 JSON Schema.
+CHECKED: validator rejects fire evidence modified.
+CHECKED: validator rejects fire dependency cycle.
+CHECKED: validator rejects lost E11/fire mapping.
+CHECKED: validator rejects missing FIRE-M7 recovery fixture.
+CHECKED: GPU-plan HTML regeneration is byte-reproducible.
+CHECKED: all original document paths retained; approved roster/schema/guide, static source evidence and older audit files remain byte-identical.
+CHECKED: source ZIP SHA-256 remains cfb5c27cb3608fa21a45db1b4663e1c1757f7ec96a299e07246c0429359f9627.
+No application source was modified or included. No application build, Rust/WASM compilation, numerical/combustion test or GPU test was run.
+CHECKED: output ZIP CRC and unique safe paths, all extracted bytes, and documentation validation after independent extraction.

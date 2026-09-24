@@ -1,0 +1,73 @@
+{
+  "schemaVersion": 1,
+  "kind": "historical-characterization-evidence-not-corrected-acceptance",
+  "importedAt": "2026-09-23",
+  "reviewDate": "2026-09-23",
+  "sourceArchive": {
+    "filename": "src(3).zip",
+    "sha256": "cfb5c27cb3608fa21a45db1b4663e1c1757f7ec96a299e07246c0429359f9627",
+    "fileCount": 43
+  },
+  "reviewArchive": {
+    "path": "history/fire-review-2026-09-23.zip",
+    "sha256": "977396260ed156adc2cd4eb439cfe7e645de449e6f5126130c667097e92cadb0"
+  },
+  "report": "evidence/fire-review-2026-09-23/FIRE_REVIEW.md",
+  "results": "evidence/fire-review-2026-09-23/fire-audit-results.json",
+  "provenance": "evidence/fire-review-2026-09-23/provenance.json",
+  "checkIds": [
+    "F01",
+    "F02",
+    "F03",
+    "F04",
+    "F05",
+    "F06",
+    "F07",
+    "F08",
+    "F09",
+    "F10",
+    "F11",
+    "F12"
+  ],
+  "checkCount": 12,
+  "fullPhysicsTickChecks": [
+    "F02",
+    "F08"
+  ],
+  "isolatedSubsystemCheckCount": 10,
+  "files": [
+    {
+      "path": "evidence/fire-review-2026-09-23/FIRE_REVIEW.md",
+      "sha256": "57cd39b47eb9d90849039c1196edafa97bbbc4c05ce0eaf06eb40c31886ca045",
+      "bytes": 15867
+    },
+    {
+      "path": "evidence/fire-review-2026-09-23/audit-fire.cjs",
+      "sha256": "46b65353602060199fde3fb88d75e083a823bb2cbf8e68afb65ddb16fa2fc0fb",
+      "bytes": 10722
+    },
+    {
+      "path": "evidence/fire-review-2026-09-23/fire-audit-results.json",
+      "sha256": "87a73080de407038391db1ba500629e446ae58083dbe328a557f4e3b344c41a0",
+      "bytes": 4675
+    },
+    {
+      "path": "evidence/fire-review-2026-09-23/provenance.json",
+      "sha256": "31f710a8aa7f4df88eebbe9b4112aae6b09b032db20284161bd56bfb5428c6c4",
+      "bytes": 6384
+    },
+    {
+      "path": "evidence/fire-review-2026-09-23/run-review.py",
+      "sha256": "49a961327142849e4e80e36f1d8347d06695177d7b0aa3392110bc698e69c910",
+      "bytes": 3001
+    }
+  ],
+  "documentationRevision": {
+    "sourceModified": false,
+    "historicalChecksRerun": false,
+    "correctedAcceptanceRun": false,
+    "applicationBuildRun": false,
+    "gpuTestsRun": false
+  },
+  "interpretation": "The imported harness asserts observations of the old implementation, including bugs. Its success does not satisfy corrected FIRE-A gates. Measurements are from the prior review, not this documentation edit."
+}

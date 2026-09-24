@@ -1,6 +1,6 @@
 # Physical model specification
 
-**Revision:** 21 September 2026, Rust/WASM update. **Status boundary:** legacy descriptions combine retained documentation with the [static review of src(3).zip](validation/source-review-2026-09-21.md). No application or physical tests were run. All redesign, expanded chemistry and nuclear capabilities remain planned.
+**Revision:** 23 September 2026, fire-audit integration. **Status boundary:** legacy descriptions combine retained documentation, the [static review of src(3).zip](validation/source-review-2026-09-21.md), and the [separately executed fire characterization](validation/fire-combustion.md). No application or physical tests were rerun for this docs update. All redesign, expanded chemistry and nuclear capabilities remain planned.
 
 This is a reproducible coarse-grained sandbox, not a validated engineering simulator. [START_HERE.md](START_HERE.md) is the developer entrypoint; [roadmap.md](roadmap.md) controls phase order. The full original model description is preserved in [the input archive](history/README.md).
 
@@ -29,7 +29,7 @@ A new parcel begins at one geometric cell volume. Phase changes preserve mass an
 
 ## Legacy conservation and source accounting
 
-Thermal diffusion makes paired opposite transfers. Collision/drag losses become thermal energy. Combustion spends a finite chemical inventory; batteries fund Joule heat from stored chemical energy. Painting, erasure, Blast, atmosphere exchange, and explicitly modelled biomass growth are external sources/sinks recorded in the ledger.
+Thermal diffusion makes paired opposite transfers. Collision/drag losses become thermal energy. Combustion spends a finite chemical inventory; batteries fund Joule heat from stored chemical energy. Painting, erasure, Blast and explicitly modelled biomass growth have external source/sink accounting, and some atmosphere-exchange paths are ledgered. The generic combustion fresh-air shortcut is an exception: the fire audit found oxygen supplied without a matching inventory debit or external flux ledger. Do not describe the legacy ledger as complete. [F01/F02 evidence](validation/fire-combustion.md#finding-to-work-traceability).
 
 Diagnostics measure thermal, chemical, kinetic, and gravitational energies and total mass. `matterMassKg` means non-air matter, while `gasMassKg` includes all gases; these overlap and must not be added. Compare conserved totals after subtracting source-ledger changes. The original absolute/relative tolerances, 1e-9 and 1e-10, apply to their original controlled tests, not every future f32 or stochastic calculation.
 
@@ -43,7 +43,7 @@ The water family uses a bounded Clausius-Clapeyron approximation around its norm
 
 Gas pressure is derived from an ideal-gas relation. Sealed connected gas shares a chamber pressure. Open/sealed volume conventions differ, and finite conservative expansion/venting is missing. Pressure gives paired momentum impulses with a legacy acceleration cap of 3 m/s squared per neighboring pair. Hydrostatic pressure is locally approximated from vertical liquid columns, not a compatible global MAC solve. These impulses and cellular gas swaps do not resolve acoustic or shock waves.
 
-Gas rise and diffusion include seeded side drift and intermittent motion to avoid grid artefacts. Hot ambient-air parcels now carry their enthalpy upward through colder air and can leave an open top; stationary room-temperature air still skips transport. Newly created gas may move immediately without reacting twice. The documented 2 percent per-step gas drag converts lost kinetic energy to heat; it is a calibrated model, not resolved turbulence.
+Gas rise and diffusion include seeded side drift and intermittent motion to avoid grid artefacts. Newly created gas may move immediately without reacting twice. The documented 2 percent per-step gas drag converts lost kinetic energy to heat; it is a calibrated model, not resolved turbulence.
 
 ## Legacy solids and rendering
 
@@ -53,9 +53,13 @@ These are rigid cell parcels, not connected deformable or breakable bodies. Ther
 
 ## Legacy chemistry, fire, and circuits
 
-Generic wood, plant, and oil have finite chemical-energy stores and require oxygen to burn. Open-edge atmosphere supplies oxygen to connected gas; sealed pockets do not receive unlimited replacement. This is a ventilation rule, not a full air-species transport solver. Fuel keeps its form while burning, and flame emission spends energy. Independent seeded emission avoids synchronized flame layers.
+Generic wood, plant and oil have finite chemical-energy stores. In the reviewed source, oxygen handling is not physically coherent: gas connected to geometric world edges is replenished even when `boundariesEnabled` is true, and the generic fresh-air path grants oxygen without a debit or source flux. An explicitly stone-enclosed zero-O2 cavity did not burn. The boundary flag and a drawn enclosure therefore have different semantics. [F01-F03](validation/fire-combustion.md#finding-to-work-traceability).
 
-The Fire brush is an external ignition source. Its short-lived ignition parcels are distinct from sustained fuel combustion and return to air without manufacturing soot. Closed expired smoke retains its mass/heat when converted to the model's air representation; open expired smoke/air replacement is ledgered. That simplification does not claim full species conservation.
+Generic burning decreases the separate oxygen and chemical-energy counters without progressively converting fuel/O2 material masses into declared products. Scalar mass or energy checks alone can pass while composition remains inconsistent. Emitted generic flames are heated-air proxies with no chemical fuel; the transferred heat is funded by the burning parcel. A cold FIRE label can nevertheless ignite cold H2/O2 before generic fire quenching, including in a complete physics tick. [F04/F05/F07/F08](validation/fire-combustion.md#finding-to-work-traceability).
+
+The Fire brush is a ledgered external ignition source. Its short-lived air effects do not contain chemical fuel and expire without manufacturing soot in the recorded control. Preserve that contract. Generic smoke expiration in a sealed cavity retains mass/heat and did not add oxygen in the audit, but loses the smoke identity. Water contact disables generic burning regardless of dose within the reaction module; the tiny-water observation is reaction-only and does not test the separate thermal solver. Hydrogen's inability to use O2 in enclosed ordinary air is a disclosed legacy limitation, unlike generic-fuel behavior. [F06/F09-F11](validation/fire-combustion.md#finding-to-work-traceability).
+
+These observations describe a bounded legacy game model with two full-pipeline bugs, not a validated combustion system. The new backend must replace them under [the fire integration plan](plans/fire-combustion/plan.md), keeping finite-energy controls and explicit-reaction conservation while unifying species, boundaries, ignition, products and suppression.
 
 The legacy Gunpowder/Blast behavior releases finite heat and calibrated radial impulses with geometric blocking. It is not a resolved detonation, shock, or gas-product chemistry model, regardless of old naming. Painted metal has no failure threshold. The planned compressible mode must not reuse a visual blast ring as physical wave propagation.
 
@@ -69,6 +73,8 @@ The 118-name reference table does not itself implement material physics. Eight s
 
 The input documentation reports R1-R8 and later targeted regressions as delivered in the legacy hybrid model. The retained audit reports 24 passing and 11 failing checks out of 35 for its recorded source snapshot. Neither that result nor any historical tool version is a new check of a present repository. See [history](history/README.md) and [remaining work](remaining-work.md).
 
+The separate September 23 fire review characterizes 12 cases against the uploaded 43-file source snapshot. Its assertions include undesirable behavior and cannot serve as corrected acceptance. The evidence is preserved unchanged and new FIRE-A results must come from implementation work.
+
 Preserve seeded replay, source accounting, input/control behavior, phase/boiling fixtures, pool/barrier geometry, material metadata transport, and existing circuit/chemistry tests while changing the model. Translate assertions tied to superseded physics openly; do not delete inconvenient references or treat regression success as laboratory validation.
 
 ## Planned model: P1 GPU redesign
@@ -77,7 +83,7 @@ Follow [GPU M0-M7](plans/fluid-gpu-redesign/plan.md). Introduce a versioned cons
 
 M1 includes only the minimum [matter identity/storage contract](architecture/matter-model.md). M2 is the Rust f64 CPU reference under [ADR-001](architecture/adr-001-rust-wasm-wgpu.md). M3 ports its same stage graph to WGSL/f32 and renders directly from GPU resources. This demonstrator has one liquid, carrier gas, fixed walls, and passive markers. No full-world per-frame readback, legacy transport over the same fields, chemistry, moving solids, phase change, or shocks.
 
-M4 adds bounded water/air thermodynamics, actual-volume closure, phase amounts, pressure work, and finite venting. Its provisional water domain does not cover ice, all legacy fire/metal temperatures, or fusion plasma. M5 adds conservative sand/solid coupling and additional liquids. M6 integrates supported existing reactions/circuits and controls. M7 requires numerical, scene, performance, and device-recovery evidence for the promoted feature set.
+M4 adds bounded water/air thermodynamics, actual-volume closure, phase amounts, pressure work, and finite venting. Its provisional water domain does not cover ice, all legacy fire/metal temperatures, or fusion plasma. M5 adds conservative sand/solid coupling and additional liquids. M6 integrates corrected supported reactions/circuits and controls. Its [FIRE-M6 gate](validation/fire-combustion.md#corrected-gates) requires shared finite O2, amount-based products, admissible ignition, bounded condensed-fuel release, thermal suppression, persistent smoke composition and derived visuals. M4 establishes ventilation/property preconditions; M7 adds FIRE-M7 promotion evidence. M3 remains nonreactive. M7 requires numerical, scene, performance, and device-recovery evidence for the promoted feature set.
 
 A scene has one backend and one transport owner. Unsupported legacy scenes may remain separate. CPU reference worlds are tests, not per-tick mirrors of authoritative GPU state.
 

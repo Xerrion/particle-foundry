@@ -14,7 +14,7 @@ Keep new artifacts under a run-specific directory. Use [the evidence template](.
 
 | Gate | Required evidence | Cannot substitute |
 | --- | --- | --- |
-| GPU-M7 / P1 | M0-M7 evidence; conservative CPU/GPU operators/fluxes; volume/phase closure; integrated supported scenes; ownership, controls, recovery and measured performance | A direct shader port of old parcel swapping or M3 alone |
+| GPU-M7 / P1 | M0-M7 evidence plus FIRE-M7 for promoted fire scenes; conservative CPU/GPU operators/fluxes; volume/phase closure; integrated supported scenes; ownership, controls, recovery and measured performance | A direct shader port of old parcel swapping or M3 alone |
 | WAVE-W4 / P2 | W0-W4 shock/acoustic/reflection references, finite venting, structural load/fracture, toggle and fragment conservation | A radius-based explosion effect or global chamber-pressure jump |
 | MAT-C2 / P3 | Unique identities, source/unit/domain schema, amount and isotope-preserving composition, balanced reaction definitions, product closure and migrations | 118 names or a bag of unqualified constants |
 | MAT-C6 / P4 | 40 core base-form identities, essential compound scenarios, selected reactions, bounds and new-backend tests | 40 enabled picker buttons |
@@ -80,6 +80,9 @@ Repeat at smaller dt and/or dx as relevant. Agreement between CPU and GPU is ins
 | Oil/water and freezing material | Multiple phases, amount authority and dynamic-solid transition |
 | Circuit conductor melts or moves | Thermal/material changes invalidate circuit topology at the correct barrier |
 | Gas pressure wave loads an enclosure | Compressible transport, boundary traction, structural failure and fragments |
+| Closed zero-O2 chamber and finite-air burner | No boundary oxygen creation; common oxidizer, product formation, admissible ignition and finite fuel |
+| Vented fire with a water-dose series | Finite species/energy fluxes, supported hot-domain properties and amount/thermal suppression |
+| Ignition-only tool and cooled smoke | Ledgered external heat, no invented fuel/soot, persistent composition when visuals fade |
 | Partially neutralised solution | Explicit ions/products, excess reactants, concentration and heat |
 | Supported isotope-tagged material cycle | Transport, reactions/form changes and save/load preserve signatures |
 | Decaying population with escaping/depositing radiation | Parent/daughters, radiation buffers, source time, energy partition |
@@ -125,3 +128,13 @@ Update the actual repository README, [model](../model.md), [elements](../element
 [Backend-migration acceptance](backend-migration.md) defines MIG-01 through MIG-14. Apply them to P1 promotion and again when P2-P9 extend state, data layouts, browser APIs or source stages. They add native/WASM builds, ABI/data generation, browser capability, command epochs, GPU-resident rendering, accepted-time metrics and failure recovery to the numerical gates; none replaces those gates.
 
 [The static source review](source-review-2026-09-21.md) is evidence of source inspection only. All P1-P9 and E00-E14 work starts planned. No result in this package is a new application benchmark, Rust compilation or GPU validation run.
+
+## Fire-specific acceptance in P1 and later phases
+
+[Fire acceptance](fire-combustion.md) adds FIRE-A01-FIRE-A14 and aggregate FIRE-PRECONDITIONS, FIRE-M6 and FIRE-M7 gates. They cover the full-pipeline oxygen/ignition bugs plus species products, shared-reactant contention, bounded fuel release, water-dose suppression, persistent smoke, physical-time convergence, property-domain limits and lifecycle/visual independence.
+
+The imported [F01-F12 report](../evidence/fire-review-2026-09-23/FIRE_REVIEW.md) records prior characterization, including undesirable behavior. It is not a new application test result in this documentation revision and cannot mark FIRE-A gates passed. Ten cases are subsystem-only; F02 and F08 are complete physics ticks. Keep the F06 reaction-only qualification.
+
+P1/M4 establishes passive ventilation and thermal preconditions. P1/M6 repeats them with reactions and adds corrected combustion/visual integration. P1/M7 requires the appropriate FIRE-M7 evidence for every promoted fire scene, alongside existing backend/product gates. P4 extends fuel/char/soot/radiation coverage and reruns applicable tests. Nuclear/compressible source coupling keeps its own additional domain gates.
+
+For reacting states reconcile per-species production/consumption against the channel, and conserved constituent inventories against boundary/source fluxes. Checking only scalar mass/energy is explicitly insufficient. Unsupported combustion capabilities must remain visible; they cannot be hidden by lowering temperature, erasing products or importing an arcade quench rule into physical mode.

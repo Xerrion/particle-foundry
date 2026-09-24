@@ -1,6 +1,6 @@
 # Project structure
 
-**Revision:** 21 September 2026. The 43 files under `src/` were inspected statically in `src(3).zip`; no application code was changed or executed. Root build configuration, tests, benchmarks and CI were not included in that upload. Proposed additions below are implementation work, not existing files. Start at [START_HERE](START_HERE.md).
+**Revision:** 23 September 2026, fire integration. The 43 files under `src/` were inspected statically in `src(3).zip`; no application code was changed or executed for this documentation edit. The separately preserved fire audit records its own prior execution. Root build configuration, tests, benchmarks and CI were not included in that upload. Proposed additions below are implementation work, not existing files. Start at [START_HERE](START_HERE.md).
 
 [ADR-001](architecture/adr-001-rust-wasm-wgpu.md) selects the existing TypeScript frontend plus a Rust/WASM engine, Rust CPU references, and wgpu-managed WGSL compute/rendering. Keep the application in `src/`. Moving it to `apps/web/`, introducing a Rust UI or adopting another game engine is not a prerequisite.
 
@@ -133,3 +133,11 @@ The E01 build task must document clean-checkout setup and integrate actual Rust,
 Use a run-specific `artifacts/validation/` directory for transient output. Commit durable summaries and manifests, not noisy per-cell logs. Original audit files and prior documentation archives remain unchanged under `docs/`; old source paths and line numbers stay historical. They must not be rewritten to imply that a benchmark or test ran on this upload.
 
 Run documentation-only checks with `python docs/scripts/validate-docs.py`. The optional `--source-archive` flag validates the inspected source fingerprint without building or executing that source.
+
+## Fire work ownership added by the audit
+
+[The fire plan](plans/fire-combustion/plan.md) refines existing proposed modules, not a separate application. `crates/sim/` owns component/network/domain and source contracts. `crates/sim-cpu/` owns corrected combustion, reduced fuel-release and suppression references. `crates/sim-gpu/` and the existing chemistry/thermal shader families own validated proposal, reservation, gathered amount/energy and commit stages. Actual filenames are established in the checkout; this document does not claim those Rust/WGSL files already exist.
+
+The retained TypeScript tool/input layer submits funded ignition commands and displays asynchronous component/heat-release probes. The same-device renderer derives the particle/shader appearance from actual reacting/hot gas and physical soot, without owning fuel or oxygen. No new full-world mirror or separate fire transport pass is introduced.
+
+Historical source context is `src/physics/reactions.ts`, `src/physics/element-reactions.ts`, `src/simulation/physics.ts`, `src/tools/brush.ts` and the thermal/material modules cited in [the preserved audit](evidence/fire-review-2026-09-23/FIRE_REVIEW.md). Preserve controls, but replace the known boundary/ignition/composition contracts rather than translating them literally.

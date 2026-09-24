@@ -1,0 +1,511 @@
+{
+  "schemaVersion": 1,
+  "updatedAt": "2026-09-23",
+  "kind": "planning-fire-work-not-implementation-evidence",
+  "plan": "plans/fire-combustion/plan.md",
+  "acceptance": "validation/fire-combustion.md",
+  "architectureDecision": "architecture/adr-001-rust-wasm-wgpu.md",
+  "sourceEvidence": "data/fire-review-manifest.json",
+  "nextWorkItem": "FIRE-W00",
+  "workItems": [
+    {
+      "id": "FIRE-W00",
+      "phase": "P1",
+      "milestone": "M0",
+      "engineWorkItems": [
+        "E00"
+      ],
+      "dependsOn": [],
+      "sourceChecks": [
+        "F01",
+        "F02",
+        "F03",
+        "F04",
+        "F05",
+        "F06",
+        "F07",
+        "F08",
+        "F09",
+        "F10",
+        "F11",
+        "F12"
+      ],
+      "requiredFixtures": [],
+      "title": "Capture characterization and corrected fire specifications",
+      "work": "Preserve F01-F12 unchanged, verify their source fingerprint, and reproduce them only in a fresh evidence directory on the real checkout. Add distinct corrected FIRE-A specifications, including full-pipeline closed-boundary and cold-FIRE cases, without first rewriting the legacy TypeScript reactions.",
+      "acceptance": "The baseline states which observations still reproduce, distinguishes ten isolated checks from two full-tick checks, and freezes independent oracles, scales and tolerances. Characterization success is never counted as corrected acceptance.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "FIRE-W01",
+      "phase": "P1",
+      "milestone": "M1",
+      "engineWorkItems": [
+        "E02"
+      ],
+      "dependsOn": [
+        "FIRE-W00"
+      ],
+      "sourceChecks": [],
+      "requiredFixtures": [],
+      "title": "Define inventory, boundary, source and flame contracts",
+      "work": "Extend the small active-component contract with fuel, O2, carrier gas, declared products and supported soot/residue identities; define one energy reference, source transactions, boundary face fluxes, model eligibility and derived flame/smoke outputs. Keep chemistry disabled in M3.",
+      "acceptance": "Schema/layout and round-trip tests preserve component amounts, network identity and feature settings. No separate spendable oxygen counter, dense all-118 cell allocation, or FIRE material authority is introduced.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "FIRE-W02",
+      "phase": "P1",
+      "milestone": "M4",
+      "engineWorkItems": [
+        "E09"
+      ],
+      "dependsOn": [
+        "FIRE-W01"
+      ],
+      "sourceChecks": [
+        "F01",
+        "F02",
+        "F03"
+      ],
+      "requiredFixtures": [
+        "FIRE-A03",
+        "FIRE-A12"
+      ],
+      "title": "Validate finite species transport and the hot-scene domain",
+      "work": "Use the existing Rust/reference then WGSL transport and EOS work to verify finite ventilation, O2/product tracer budgets and the property coverage required by intended fire/water scenes. Extend high-temperature mixture properties explicitly or reject unsupported scenes.",
+      "acceptance": "FIRE-A03 and FIRE-A12 pass for passive/preflight fixtures before fire-scene promotion. Actual gas composition, boundary flux and energy budgets agree; connected interior cells are never reset to ambient composition.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "FIRE-W03",
+      "phase": "P1",
+      "milestone": "M6",
+      "engineWorkItems": [
+        "E11"
+      ],
+      "dependsOn": [
+        "FIRE-W02"
+      ],
+      "sourceChecks": [
+        "F04",
+        "F07",
+        "F08",
+        "F09",
+        "F12"
+      ],
+      "requiredFixtures": [
+        "FIRE-A01",
+        "FIRE-A02",
+        "FIRE-A04",
+        "FIRE-A05",
+        "FIRE-A06",
+        "FIRE-A10"
+      ],
+      "title": "Build the corrected Rust gas-combustion reference",
+      "work": "Implement one declared fuel-vapor/O2 network with complete products, amount-limited reaction extents, compatible ignition/extinction, shared-reactant reservations and exactly-once energy release. Use rates per accepted physical time and retain excess reagent composition.",
+      "acceptance": "The referenced FIRE-A fixtures pass in the Rust reference against independent balances and refinement oracles. Cold labels cannot ignite, closed boundaries cannot supply oxidizer, and stoichiometric products reconcile with reactant loss.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "FIRE-W04",
+      "phase": "P1",
+      "milestone": "M6",
+      "engineWorkItems": [
+        "E11"
+      ],
+      "dependsOn": [
+        "FIRE-W03"
+      ],
+      "sourceChecks": [
+        "F04",
+        "F05",
+        "F06",
+        "F10",
+        "F11"
+      ],
+      "requiredFixtures": [
+        "FIRE-A07",
+        "FIRE-A08",
+        "FIRE-A09",
+        "FIRE-A13"
+      ],
+      "title": "Add bounded fuel release and thermal suppression",
+      "work": "Implement the minimum calibrated condensed-fuel release needed by each promoted wood/oil/plant scene, with explicit vapor and residue yields and thermal costs. Add amount-based water/steam suppression and persistent supported smoke/soot composition; preserve the funded ignition-brush contract.",
+      "acceptance": "FIRE-A07, FIRE-A08, FIRE-A09 and FIRE-A13 pass in Rust; unsupported presets are excluded visibly. No contact-water kill switch, whole-fuel smoke swap or timed physical smoke erasure survives in the physical model.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "FIRE-W05",
+      "phase": "P1",
+      "milestone": "M6",
+      "engineWorkItems": [
+        "E11"
+      ],
+      "dependsOn": [
+        "FIRE-W04"
+      ],
+      "sourceChecks": [
+        "F04",
+        "F12"
+      ],
+      "requiredFixtures": [
+        "FIRE-A01",
+        "FIRE-A02",
+        "FIRE-A03",
+        "FIRE-A04",
+        "FIRE-A05",
+        "FIRE-A06",
+        "FIRE-A07",
+        "FIRE-A08",
+        "FIRE-A09",
+        "FIRE-A10",
+        "FIRE-A11",
+        "FIRE-A12",
+        "FIRE-A13"
+      ],
+      "title": "Implement WGSL parity and transactional reactant ownership",
+      "work": "Implement the validated reference stages in the existing wgpu-owned stage graph using read-only proposals, shared-inventory reservation, per-cell gathered updates and a single validated commit. Recompute coupled thermal/phase/volume state and retry complete rejected substeps.",
+      "acceptance": "FIRE-A01 through FIRE-A13 pass on supported CPU/GPU paths, including alternative execution orders, equal-time refinement and hot-domain rejection. No duplicate oxygen spending, unledgered heat or full-world CPU reaction mirror.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "FIRE-W06",
+      "phase": "P1",
+      "milestone": "M6",
+      "engineWorkItems": [
+        "E12"
+      ],
+      "dependsOn": [
+        "FIRE-W05"
+      ],
+      "sourceChecks": [
+        "F05",
+        "F10",
+        "F11"
+      ],
+      "requiredFixtures": [
+        "FIRE-A07",
+        "FIRE-A09",
+        "FIRE-A11"
+      ],
+      "title": "Connect derived flames, tools and composition probes",
+      "work": "Render the actual reacting/hot-gas fields and tracked smoke using the existing GPU state. Keep the Fire brush as a bounded command, preserve supported particle-based presentation, and expose tick/epoch-stamped fuel/O2/product/heat-release probes without making visual labels reaction inputs.",
+      "acceptance": "FIRE-M6 includes integrated burner, ignition-only, ventilation, water-dose and smoke scenes. Visual quality changes do not change physical inventories, and physically luminous hot objects are not mistaken for active combustion.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "FIRE-W07",
+      "phase": "P1",
+      "milestone": "M7",
+      "engineWorkItems": [
+        "E13",
+        "E14"
+      ],
+      "dependsOn": [
+        "FIRE-W06"
+      ],
+      "sourceChecks": [],
+      "requiredFixtures": [
+        "FIRE-A01",
+        "FIRE-A02",
+        "FIRE-A03",
+        "FIRE-A04",
+        "FIRE-A05",
+        "FIRE-A06",
+        "FIRE-A07",
+        "FIRE-A08",
+        "FIRE-A09",
+        "FIRE-A10",
+        "FIRE-A11",
+        "FIRE-A12",
+        "FIRE-A13",
+        "FIRE-A14"
+      ],
+      "title": "Gate fire-scene promotion on recovery and measured evidence",
+      "work": "Run all FIRE-M7 fixtures plus save/load, failure injection, component capacity, supported-scene checks, browser interaction and transfer/performance measurements on the agreed devices. Retain unsupported legacy fire scenes separately.",
+      "acceptance": "FIRE-M7 is evidenced for every promoted fire scene. No characterization result is substituted for a corrected test, and no unsupported thermal range, pseudo-material claim or arcade quench is hidden behind a physical-mode label.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "FIRE-W08",
+      "phase": "P4",
+      "milestone": "C5",
+      "engineWorkItems": [],
+      "dependsOn": [
+        "FIRE-W07"
+      ],
+      "sourceChecks": [],
+      "requiredFixtures": [
+        "FIRE-A01",
+        "FIRE-A02",
+        "FIRE-A05",
+        "FIRE-A08",
+        "FIRE-A09",
+        "FIRE-A10",
+        "FIRE-A11",
+        "FIRE-A13"
+      ],
+      "title": "Extend fuel chemistry without reopening foundational defects",
+      "work": "Extend the same engine in C3-C6 with additional bounded fuel-release profiles, char/surface channels, soot formation/oxidation/deposition and selected radiative heat transfer where supported. Reuse the P3 data compiler and preflight the complete reaction-product closure.",
+      "acceptance": "Every newly enabled channel has declared composition, yields, properties and calibration/source status, plus the applicable FIRE-A regression evidence. Core oxygen, product and ignition correctness was already delivered in P1, not deferred to P4.",
+      "status": "planned",
+      "evidence": []
+    }
+  ],
+  "fixtures": [
+    {
+      "id": "FIRE-A01",
+      "title": "Sealed boundaries cannot create oxidizer",
+      "phase": "P1",
+      "firstMilestone": "M6",
+      "sourceChecks": [
+        "F01",
+        "F02",
+        "F03"
+      ],
+      "specification": "Run a closed-edge zero-O2 chamber and an explicitly wall-enclosed zero-O2 chamber with hot fuel. No oxidation or new O2 is allowed without an explicit source; nonoxidative heating or declared pyrolysis is distinguished from combustion.",
+      "measurement": "Before/after component masses, oxidation extent, chemical and thermal energy, and zero boundary/source fluxes; run both reaction-only and complete-substep variants.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "FIRE-A02",
+      "title": "One finite oxidizer inventory for every supported fuel",
+      "phase": "P1",
+      "firstMilestone": "M6",
+      "sourceChecks": [
+        "F04",
+        "F09"
+      ],
+      "specification": "In sealed ordinary air and equivalent explicit gas mixtures, every enabled compatible fuel channel sees the same available O2. Consumption is finite, products accumulate, and extinction follows the declared model, not a requirement to consume every last molecule.",
+      "measurement": "Compare equivalent compositions across legacy brush presets; log O2, residual fuel, products, reaction rate and extinction reason at equal physical times.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "FIRE-A03",
+      "title": "Ventilation is local finite boundary transport",
+      "phase": "P1",
+      "firstMilestone": "M4",
+      "sourceChecks": [
+        "F01",
+        "F02"
+      ],
+      "specification": "Open and close a vent with chemistry disabled first, then with the supported burner. Only accepted face fluxes change the inventory. No instantaneous reachability-based interior reset of O2, pressure or energy is permitted.",
+      "measurement": "Integrate signed inlet/outlet component, mass, momentum and energy fluxes; check a sealed baseline and transient transport/refinement, not just connectivity.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "FIRE-A04",
+      "title": "Cold labels and stale burning flags cannot ignite",
+      "phase": "P1",
+      "firstMilestone": "M6",
+      "sourceChecks": [
+        "F07",
+        "F08"
+      ],
+      "specification": "Cold H2/O2 beside a cold or quenched former FIRE representation must not react merely because of that label or flag. A separate admissible hot-state or funded ignition control must react under the supported model.",
+      "measurement": "Use the prior 22 C edge-case setup and a cooled-after-burning case through the complete stage graph; compare unchanged reactants to the positive ignition control.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "FIRE-A05",
+      "title": "Reactant loss, products and energy reconcile",
+      "phase": "P1",
+      "firstMilestone": "M6",
+      "sourceChecks": [
+        "F04",
+        "F12"
+      ],
+      "specification": "A limited-reagent reaction converts consumed fuel and O2 into declared products, preserves excess reactants, and reconciles scalar mass plus constituent-element inventories. Debit the selected chemical-energy reference once; include momentum and energy partition.",
+      "measurement": "Independent stoichiometric oracle; per-species deltas, atom/charge balance, residual reagent identity, and chemical/thermal/kinetic totals. A small scalar energy error alone is insufficient.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "FIRE-A06",
+      "title": "Competing reactions cannot spend the same oxygen",
+      "phase": "P1",
+      "firstMilestone": "M6",
+      "sourceChecks": [
+        "F04",
+        "F09"
+      ],
+      "specification": "Two or more reaction sites share a limited oxidizer parcel. Resolve proposals before a single commit so all accepted reactant debits fit the available inventory. Failed proposals do not create products or heat.",
+      "measurement": "Check nonnegative amounts, shared-resource reservations and product/source totals under alternative CPU traversal and GPU workgroup orders; document any fixed priority.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "FIRE-A07",
+      "title": "The Fire brush is a funded ignition command",
+      "phase": "P1",
+      "firstMilestone": "M6",
+      "sourceChecks": [
+        "F11"
+      ],
+      "specification": "Apply the Fire brush to clean air and to supported fuel. It adds only the declared external heat/impulse, without replacing fuel, creating chemical inventory or making unbudgeted soot. Paused and retried commands apply exactly once.",
+      "measurement": "Mass and constituent inventories, external energy ledger, command IDs and commit counts; repeat with visual effects disabled. Cosmetic expiration cannot mutate composition.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "FIRE-A08",
+      "title": "Water suppression follows amount and thermal state",
+      "phase": "P1",
+      "firstMilestone": "M6",
+      "sourceChecks": [
+        "F06"
+      ],
+      "specification": "Compare no water, a small finite dose and a larger dose within the validated domain. Heat uptake, evaporation and supported mixing effects determine suppression; WATER adjacency alone is not an extinction switch.",
+      "measurement": "Isolate the legacy reaction-only edge case from integrated tests. Record absorbed heat, phase amounts, vapor composition, temperature and extinction criterion; require convergence to the zero-dose case as dose tends to zero, not a universal monotonic flame response.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "FIRE-A09",
+      "title": "Invisible smoke retains its physical inventory",
+      "phase": "P1",
+      "firstMilestone": "M6",
+      "sourceChecks": [
+        "F05",
+        "F10"
+      ],
+      "specification": "Cool or visually fade smoke/soot in a sealed chamber. Composition persists until a declared transport, deposition, reaction or external removal changes it. Rendering cannot turn it into ambient air or add oxygen.",
+      "measurement": "Compare opaque and invisible render settings with identical physics seeds; track suspended and deposited inventories plus boundary losses through save/load where enabled.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "FIRE-A10",
+      "title": "Burn rates converge in physical time",
+      "phase": "P1",
+      "firstMilestone": "M6",
+      "sourceChecks": [],
+      "specification": "Run equal accepted physical time with dt, dt/2 and a finer reference, including adaptive rejected/retried substeps. Integrated reaction extent and released energy converge under the declared tolerances; no legacy per-tick amount repeats on each substep.",
+      "measurement": "Report accepted dt sequence, rejected attempts, cumulative fuel/O2/product changes, released energy and independent integration error at identical end times.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "FIRE-A11",
+      "title": "Rust and WGSL agree beyond scalar totals",
+      "phase": "P1",
+      "firstMilestone": "M6",
+      "sourceChecks": [
+        "F04",
+        "F12"
+      ],
+      "specification": "Compare the corrected Rust f64 reference with WGSL/f32 for all enabled FIRE-M6 fixtures. Use independent balance/reference checks and order-variation tests; no bit-identical trajectory requirement.",
+      "measurement": "Per-component norms, element totals, energy channels, reaction extents, nonnegativity, spatial aggregate outcomes, boundary fluxes and residuals at equal accepted times; hardware evidence identifies actual backend.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "FIRE-A12",
+      "title": "High-temperature domain failures are explicit",
+      "phase": "P1",
+      "firstMilestone": "M4",
+      "sourceChecks": [],
+      "specification": "Preflight the full reactant/product/water domain and validate runtime boundary crossings. The initial water table ending at 623.15 K does not authorize legacy 450 C flame/water scenes. Extend validated property coverage or reject the combination without temperature clamps or partial commits.",
+      "measurement": "Property-table/source hashes, temperature/pressure/composition ranges, boundary and out-of-domain fixtures, accepted/rejected state IDs and complete energy/amount rollback. Re-run with combustion at M6.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "FIRE-A13",
+      "title": "Condensed fuel release is bounded and accounted",
+      "phase": "P1",
+      "firstMilestone": "M6",
+      "sourceChecks": [
+        "F04",
+        "F05"
+      ],
+      "specification": "For each promoted wood/oil/plant preset, a declared reduced pyrolysis or evaporation model moves bounded condensed mass into fuel vapor and declared residues. Gas combustion consumes that vapor; supported char/surface oxidation is a separate channel.",
+      "measurement": "Track condensed fuel, volatile fuel, residue, O2, all products and heat of release/phase change. Include insufficient heat, exhausted fuel, O2-free heating and a sustained air-fed control; no automatic whole-parcel conversion to smoke.",
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "FIRE-A14",
+      "title": "Transactions, persistence and visuals cannot alter combustion",
+      "phase": "P1",
+      "firstMilestone": "M7",
+      "sourceChecks": [],
+      "specification": "Test rejected substeps, command replay, component-capacity failure, save/load and device-loss rollback. Reactions commit once with their energy and products. Preserve the network version, soot/residue and approximation settings; no frame-loop full-world readback.",
+      "measurement": "Before/after committed-state hashes and inventories, tick/epoch and event IDs, capability rejection, checkpoint notices, transfer-byte measurements, and render-on/off equivalence.",
+      "status": "planned",
+      "evidence": []
+    }
+  ],
+  "gateBundles": [
+    {
+      "id": "FIRE-PRECONDITIONS",
+      "phase": "P1",
+      "milestone": "M4",
+      "fixtures": [
+        "FIRE-A03",
+        "FIRE-A12"
+      ],
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "FIRE-M6",
+      "phase": "P1",
+      "milestone": "M6",
+      "fixtures": [
+        "FIRE-A01",
+        "FIRE-A02",
+        "FIRE-A03",
+        "FIRE-A04",
+        "FIRE-A05",
+        "FIRE-A06",
+        "FIRE-A07",
+        "FIRE-A08",
+        "FIRE-A09",
+        "FIRE-A10",
+        "FIRE-A11",
+        "FIRE-A12",
+        "FIRE-A13"
+      ],
+      "status": "planned",
+      "evidence": []
+    },
+    {
+      "id": "FIRE-M7",
+      "phase": "P1",
+      "milestone": "M7",
+      "fixtures": [
+        "FIRE-A01",
+        "FIRE-A02",
+        "FIRE-A03",
+        "FIRE-A04",
+        "FIRE-A05",
+        "FIRE-A06",
+        "FIRE-A07",
+        "FIRE-A08",
+        "FIRE-A09",
+        "FIRE-A10",
+        "FIRE-A11",
+        "FIRE-A12",
+        "FIRE-A13",
+        "FIRE-A14"
+      ],
+      "status": "planned",
+      "evidence": []
+    }
+  ],
+  "scope": "Fire is a bounded P1 integration slice, not part of M3 and not a full FDS implementation. P4 extends it. All entries remain planned in this documentation revision."
+}

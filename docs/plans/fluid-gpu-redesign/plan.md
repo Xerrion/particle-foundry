@@ -1,14 +1,14 @@
 # Fluid and GPU redesign
 
-Implementation proposal · Particle Foundry · 21 September 2026
+Implementation proposal · Particle Foundry · 23 September 2026
 
 **Phase:** P1, the first implementation phase. Start at [the developer entrypoint](../../START_HERE.md). Follow M0-M7 before the normal work queue proceeds to P2. The original numerical plan is retained and extended for future composition/nuclear support.
 
 **Selected implementation:** retain the TypeScript frontend, implement the conservative CPU reference in Rust f64, compile the browser engine/bridge to WASM, and execute equivalent WGSL/f32 stages plus direct rendering through Rust wgpu. Keep legacy scenes available while the new backend gains thermodynamics, granular coupling and material coverage. Promote only after numerical, interaction and measured performance gates pass. [ADR-001](../../architecture/adr-001-rust-wasm-wgpu.md) supersedes the previous TypeScript-reference default.
 
-The [E00-E14 migration work packages](../rust-wasm-migration/plan.md) execute M0-M7 and add workspace, bindings, catalogue projection, async lifecycle, renderer and recovery work. The [engine boundary](../../architecture/engine-boundary.md) is binding for integration. Do not create a separate line-by-line Rust port before the numerical redesign.
+The [E00-E14 migration work packages](../rust-wasm-migration/plan.md) execute M0-M7 and add workspace, bindings, catalogue projection, async lifecycle, renderer and recovery work. The [engine boundary](../../architecture/engine-boundary.md) is binding for integration. Do not create a separate line-by-line Rust port before the numerical redesign. The [fire integration plan](../fire-combustion/plan.md) and [FIRE-A acceptance](../../validation/fire-combustion.md) now make combustion requirements explicit inside M0/M1/M4/M6/M7; M3 remains nonreactive.
 
-This is a planning document with preserved historical evidence and a new [static review of src(3).zip](../../validation/source-review-2026-09-21.md). This revision does not implement the redesign, rerun the audit, or measure Rust/GPU performance. Proposed paths and numerical thresholds are design decisions, not existing capabilities.
+This is a planning document with preserved historical evidence and a new [static review of src(3).zip](../../validation/source-review-2026-09-21.md). This revision imports the separately executed 12-check [fire audit](../../evidence/fire-review-2026-09-23/FIRE_REVIEW.md) without rerunning it. It does not implement the redesign, rerun either audit, or measure Rust/GPU performance. Proposed paths and numerical thresholds are design decisions, not existing capabilities.
 
 **Planned follow-up:** [Pressure waves and material breakage](../pressure-waves-breakage/plan.md) adds a separate compressible model after P1/M7 in the default execution queue, with breakage enabled by default and a user toggle. A fixed-wall prototype is technically possible after M3, but is not part of the M3 deliverable. The demonstrator and low-Mach scope below remain unchanged; resolved shocks belong to that follow-up.
 
@@ -34,6 +34,10 @@ The audited entry points illustrate the architectural problem. `src/simulation/w
 Evidence beside this plan includes the unchanged `audit.cjs`, `current-audit-output.txt`, and JSON results. Here, filenames containing "current" mean current at the earlier audit, not at this revision. The harness's source-line labels and JSON source provenance belong to that historical snapshot. The earlier documentation reports validation with Bun 1.3.12 for CommonJS bundling and Node v26.7.0 for execution, and a passing `bun run typecheck`. It also reports a TypeScript 7 node10-resolution incompatibility. This revision did not repeat or independently verify those environment-specific claims; inspect the real checkout at E00.
 
 The supplied Linux timings and 58.89% inclusive outlet-search profile remain historical evidence. Neither the original planning evidence nor this documentation revision provides a new browser/GPU benchmark. This revision did not rerun the application checks.
+
+### Additional preserved fire evidence
+
+The [fire review](../../validation/fire-combustion.md) reproduced boundary-O2 replenishment and cold-FIRE ignition through full physics ticks. It also found species/product inconsistency, heated-air flame proxies, timed smoke identity loss, contact-only water quenching and incompatible fuel-specific oxygen rules. F01-F12 are characterization records, not acceptance of those behaviors. Preserve the useful funded brush and conservation controls; replace the faulty contracts through FIRE-W00-W07.
 
 ## 2. Model and ownership decisions
 
@@ -87,6 +91,8 @@ M4 first solves isolated pure-water vessels from mass, U, and actual available v
 
 Generate a bounded property table from [IAPWS IF97](https://iapws.org/technical-guidance/release/IF97-Rev). Proposed initial water domain: 273.15-623.15 K and 0.01-20 MPa, covering liquid/vapor equilibrium below the critical point. Validate interpolation against source properties, including near saturation. This subset deliberately excludes ice, extreme fire temperatures, supercritical water, and the report's 318 MPa state. Extending coverage or keeping a scene on the legacy backend is an explicit gate, not arbitrary clamping.
 
+The fire audit identifies a 450 C legacy emitted-flame setting, above this table's approximately 350 C ceiling. FIRE-W02 / FIRE-A12 requires explicit hot-scene property support before promoting that fire/water combination. Extending a lookup range requires source/interpolation/domain validation; retaining a number from the legacy catalogue is not validation. Runtime source-driven domain exits must roll back or report unsupported conditions without clamping energy/temperature.
+
 Then add noncondensable carrier air: define an ideal-mixture approximation, vapor partial pressure, and mixture energy. A pure-water saturation lookup using total air-plus-steam pressure is not a mixture closure. Chambers share p0 but may retain local temperature and composition. Rediscover components after geometry/interface changes and reduce extensive quantities; chamber summaries never own duplicate mass or energy.
 
 Use a bounded nonlinear iteration coupling p0, local energy inversion, phase amounts, and total volume. Include phase/thermal volume production in S_volume and chamber compressibility in the sealed compatibility equation. Advance U with pressure work, conduction, and phase-consistent energy fluxes. Closed rigid-vessel tests conserve U; open flow energy tests include enthalpy flux. Track projection/advection numerical energy error separately rather than debiting arbitrary heat to conceal it.
@@ -105,7 +111,7 @@ When a wall opens, keep the same EOS and actual volume. Exchange finite mass and
 
 The implementation must settle predictor/corrector ordering in M2/M4 and use the same ordering in both backends. Failed stages do not partly commit. A maximum substep/solver budget slows or pauses physical progress and reports the reason; it never increases dt beyond the stability bound.
 
-Start geometric VOF with CFL ≤ 0.5 and verify the actual multidimensional scheme. At 3 m/s, the current outer interval spans five cell widths and needs at least ten equal substeps in the one-dimensional example. Also constrain diffusion and phase-volume change; CFL alone is insufficient. The [Basilisk VOF reference](https://basilisk.fr/src/vof.h) documents this scheme-specific bound.
+Start geometric VOF with CFL ≤ 0.5 and verify the actual multidimensional scheme. At 3 m/s, the current outer interval spans five cell widths and needs at least ten equal substeps in the one-dimensional example. Also constrain diffusion and phase-volume change; CFL alone is insufficient. M6 adds reaction depletion, heat-release and fuel-release/volume-source constraints. Sources use rates per accepted physical time; a 1/60-second legacy per-tick release must not repeat unscaled on every new substep. Source rejection rolls back reactants, products, energy and commands together. The [Basilisk VOF reference](https://basilisk.fr/src/vof.h) documents this scheme-specific bound.
 
 ## 3. Milestones and exit gates
 
@@ -116,6 +122,8 @@ Start geometric VOF with CFL ≤ 0.5 and verify the actual multidimensional sche
 Capture the dirty working tree with tracked and untracked content, source hashes, tool versions and command log. Preserve the original Bun/TypeScript regression coverage and translate backend-neutral invariant assertions into Rust reference fixtures with stable IDs. Classify changed-model tests separately from regressions. Inspect actual scripts before running checks: the source-only upload lacks package/lockfiles and test infrastructure. E00 establishes fresh evidence; this documentation revision ran no application checks.
 
 Create backend-neutral fixtures for uniform pressure, gravity-balanced pools, periodic markers, dam break, disconnected pools, narrow channels, and wall edits. Track actual simulated time, cell visits, connected-component rebuilds, pressure solves, and transfers. Benchmark the current 480×270 scenes on this machine before using the historical Linux timings for prioritization.
+
+Execute FIRE-W00: preserve the original F01-F12 report/runners/results and record fresh reproduction separately. Translate the two full-pipeline bugs into distinct corrected assertions; keep F03/F11/F12 and the useful F04 scalar-energy check as controls without accepting F04's wrong composition. Freeze FIRE-A fixtures and tolerances, keeping the F06 water observation explicitly reaction-only. Do not require a complete TypeScript fire rewrite first.
 
 **Exit:** reproducible fresh baseline with a pass/fail ledger compared to the historical 24/11 result; protect the controls and record any differences against the actual checkout. Never force a changed source tree to reproduce old totals.
 
@@ -128,6 +136,8 @@ Bootstrap the native Rust and browser WASM toolchain, pin compatible dependencie
 Define array layouts, units, phase/species references, face indexing, boundary configuration, snapshot schema, and command sequencing. Backend selection is per scene. Retain `legacy`, `fluid-cpu` and `fluid-gpu` as UI/compatibility labels; map new sessions to execution `cpu-reference` or `wgpu` plus a separate physical model and actual device backend. A supported scene declares its material/feature set. Convert scenes once at load; never reconcile a full legacy World with GPU state every tick.
 
 Before freezing this layout, implement the minimal [matter identity contract](../../architecture/matter-model.md): distinct element, nuclide, species, material-form and runtime-component IDs; stable snapshot references; active-component indexing; source/domain metadata; and an optional versioned nuclear extension that is not allocated when disabled. Preserve legacy material IDs. Test the seam with the demonstrator's small component set; do not build full chemistry or nuclide populations in M1. Unknown properties must not compile as zero. The later P3 pipeline expands this contract rather than redesigning the world again.
+
+FIRE-W01 defines minimal fuel/O2/product and supported physical soot/residue component identities, one energy-reference convention, shared open/closed face-flux semantics and derived flame/smoke outputs. No independent spendable oxygen counter or authoritative FIRE identity is allowed. Test schema/serialization and component closure now, while active reactions stay disabled in M3.
 
 Make a Rust/WASM command and observation seam before changing rendering assumptions. Use a main-thread browser deployment for the first demonstrator; preserve a scheduler-independent contract for the worker deployment assessed in M6. Commands include a sequence number and intended tick. Probes and statistics return their completed simulation tick; the UI shows the latest completed result without forcing synchronous field access. Keep deterministic command ordering and a seeded counter-based random scheme for future granular/reaction events. Record replay provenance, but do not promise bit-identical numerical trajectories across CPU/GPU devices or backends.
 
@@ -179,7 +189,9 @@ Track chamber merge/split and vent events without duplicating inventories. GPU t
 
 Port each validated closure stage to GPU and repeat energy/volume/property tests. Define supported behavior for fully liquid cavities and table boundaries before enabling heated scenes. Extend below-freezing/high-temperature coverage separately; the demonstrator's narrow table does not cover the current entire catalogue.
 
-**Exit:** fixed-mass/fixed-U/fixed-volume cases converge without a water/steam cycle; a vent has finite, ledgered exchange; gas/liquid volumes fit available geometry; moving-wall work and phase source terms close their documented budgets.
+Execute FIRE-W02 alongside E09. Validate passive O2/product transport with a finite vent and closed-boundary controls, and declare the full reactant/product/water property domains for planned fire scenes. Pass FIRE-PRECONDITIONS (FIRE-A03 and FIRE-A12) before their reactive counterparts are enabled. Do not reset interior species by connectivity or claim the narrow water table supports hot flames.
+
+**Exit:** FIRE-PRECONDITIONS passes; fixed-mass/fixed-U/fixed-volume cases converge without a water/steam cycle; a vent has finite, ledgered exchange; gas/liquid volumes fit available geometry; moving-wall work and phase source terms close their documented budgets.
 
 ### M5  -  Sand, moving solids, and additional liquids
 
@@ -199,7 +211,13 @@ Add an oil/water two-liquid fixture with explicit phase fractions, density order
 
 **Dependency:** M4 and M5 for full-scene coverage, plus the E04 circuit-reference branch. **Primary surfaces:** Rust reaction/circuit contracts and bounded CPU algorithms, wgpu source pipelines and WGSL chemistry, `crates/wasm/`, and the retained TypeScript tool/control/sandbox/main adapters. Legacy reaction modules are source/regression context, not the GPU scene owner. Execute E11-E12.
 
-Transport reactant amounts; use limiting reaction extent and preserve excess reagent identity. Migrate oxygen, fuel, chemical energy, steam production, extinguishing, freezing, and ignition to the new state contract. Maintain source ledgers for painting/removal and energy-limited gameplay blasts. Shock propagation remains unsupported; document the impulse model and its stability limits.
+Transport reactant amounts; use limiting reaction extent and preserve excess reagent identity. Replace inconsistent legacy combustion rather than migrating its rules unchanged. Follow FIRE-W03-FIRE-W05 in E11: a corrected Rust fuel-vapor/O2 reference with declared products, shared-reactant reservations, admissible ignition/extinction and physical-time rates; bounded condensed-fuel release for every promoted wood/oil/plant scene; thermal/amount-based water suppression; and persistent supported smoke/soot inventories. Implement equivalent WGSL only after the corresponding reference gates pass.
+
+Repeat the M4 ventilation and hot-domain fixtures with reactions enabled. Fuel/O2 debits, products, source energy and phase/volume closure form one accepted transaction; negative inventories, double oxygen spending or partial failed-step commits are not permitted. A cold FIRE label cannot ignite, a connected interior cannot receive free O2, and cosmetic smoke expiry cannot erase composition. Preserve ledgered Fire-brush inputs and correctly funded transfers.
+
+FIRE-W06 in E12 derives visible flames from reacting/hot gas and physical smoke/soot, preserving supported particle-based presentation without a disconnected overlay or second fire simulation. Probes expose actual composition and heat-release state. Quality settings do not affect physical inventories.
+
+Maintain source ledgers for painting/removal and energy-limited gameplay blasts. Freezing/phase behavior follows M4's supported domains. Shock propagation remains unsupported; document the impulse model and its stability limits. P4 later extends fuel-specific chemistry, char, soot and selected radiative transfer, not these foundational correctness requirements.
 
 Keep small circuit graphs in Rust CPU code initially, reusing the corrected E04 reference. Synchronize only changed conductor topology and required thermal/material samples at a defined tick barrier; upload sparse heat events. Melting or conductor motion invalidates the graph before the next electrical solve. If circuits become dense enough that this transfer is no longer sparse, measure and choose a GPU circuit solve or restrict that experimental mode; do not hide full-world synchronization.
 
@@ -207,7 +225,7 @@ Assess a worker-owned Rust/WASM scheduler and OffscreenCanvas deployment in E12,
 
 Update probes for partial phases, pressure type, and delayed tick-stamped results. Define particle count as occupied matter cells with a stated threshold, separate from total mass; fractional fluids invalidate the old exact material-count interpretation. Port starter scenes via commands. Preserve pause, single-step behavior, speed controls, paint-while-paused, clear/seed, maps, zoom/pan, and cosmetic waves without modifying occupancy.
 
-**Exit:** all intended starter scenes and tools work with explicit feature coverage, no legacy pass mutates fluid-owned state, and chemistry/circuit/source-ledger controls remain valid.
+**Exit:** FIRE-M6 (FIRE-A01-FIRE-A13) passes for the declared combustion coverage in addition to the existing reaction/circuit/source gates; all intended starter scenes and tools work with explicit feature coverage, no legacy pass mutates fluid-owned state, and chemistry/circuit/source-ledger controls remain valid.
 
 ### M7  -  Promotion, recovery, and retirement
 
@@ -218,6 +236,8 @@ Run numerical and browser suites, sustained benchmarks, and device-loss tests on
 Proposed product gate: 480×270 at 1×, p95 displayed frame interval ≤33.3 ms and at least 1.0 simulated second per wall-second on the agreed baseline device. These are targets to validate, not predicted results. Include painting, worst-case sand pools, boiling/venting, disconnected cavities, and dense circuits; a fast ambient frame is insufficient.
 
 On GPU loss, stop accepting new tick commits, cancel pending readbacks and preserve the last valid committed checkpoint plus command log. The newest device state may be unavailable. Recover only through a compatible validated Rust CPU or restored wgpu backend, with an explicit checkpoint rollback notice, or restart with a clear notice. Replay restores commands, not a promise of bit-identical cross-device trajectories. Never hot-swap partially evolved GPU fields into the legacy parcel engine. Keep backend selection and versioned snapshots reversible through the experimental period.
+
+FIRE-W07 requires FIRE-M7 (FIRE-A01-FIRE-A14), including network/component persistence, failure injection, replay, derived-visual independence and measured transfers for every promoted fire scene. Include closed-O2, vented burning, ignition-only, water-suppression and persistent-smoke coverage where claimed. Historical characterization is not a substitute for corrected hardware/reference evidence.
 
 Promote supported scenes gradually. Remove the legacy fluid branches only after the full feature matrix is covered. Update `docs/model.md`, `README.md`, `docs/elements.md`, and benchmark documentation to the implemented contracts and measured limits.
 
@@ -325,3 +345,9 @@ Save data must include stable component definitions, catalogue/data versions, ac
 The [engine migration acceptance](../../validation/backend-migration.md) adds MIG-01 through MIG-14 to the numerical matrix. Validate native reference tests, WASM/bindings builds, byte layout, browser execution, command epochs/commit semantics, canvas ownership, same-device rendering, bounded transfers, source transactions and checkpoint recovery. Native wgpu performance is not browser performance.
 
 The authoritative P1 work tracker is [E00-E14](../../data/engine-migration-work.json). Later phases reuse the Rust contracts, CPU references, wgpu resources and WGSL patterns rather than introduce another simulation owner. No performance gain is proven by this stack decision alone.
+
+## 9. Fire acceptance is part of this redesign
+
+[The combustion plan](../fire-combustion/plan.md) and [fire acceptance specification](../../validation/fire-combustion.md) add FIRE-W00-W07 to P1 and FIRE-W08 to P4 without altering M0-M7 or the phase sequence. FIRE-PRECONDITIONS belongs to M4; FIRE-M6 and FIRE-M7 refine chemistry integration and scene promotion. The E-work and fire manifests cross-reference those obligations.
+
+No generic FIRE material port, visually convincing flame or scalar mass/energy check can replace the component, boundary, product, ignition and extinction gates. M3 remains the one-liquid/carrier-gas passive demonstrator. The reduced fire model is not a universal combustion solver or a reason to bypass pressure-wave/high-temperature domain limits.

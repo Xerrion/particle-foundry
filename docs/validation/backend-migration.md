@@ -74,4 +74,12 @@ Test stale responses after clear/load, disposal with pending operations, WASM as
 
 ## Documentation-update boundary
 
-This revision provides source inspection and documentation checks only. No application commands, Rust compiler, numerical fixtures, browser tests, benchmarks or GPU tests were executed. The source archive remains byte-for-byte unchanged. Record real implementation evidence using [the template](../templates/phase-evidence.md), not this statement.
+This revision adds fire-plan integration and documentation checks only. The preserved fire audit was executed separately before this update and is not corrected implementation evidence. No application commands, Rust compiler, numerical fixtures, browser tests, benchmarks or GPU tests were executed. The source archive remains byte-for-byte unchanged. Record real implementation evidence using [the template](../templates/phase-evidence.md), not this statement.
+
+## Combustion migration and hardware checks
+
+E02, E09 and E11-E14 now carry [FIRE-W tasks](../plans/fire-combustion/plan.md#8-work-packages). The [fire validation specification](fire-combustion.md) requires Rust f64 reference results and independent balances before corresponding WGSL/f32 promotion. Native checks do not waive browser device, workgroup, transfer and recovery cases.
+
+Normal frames render from reacting/hot gas and physical soot fields on the same GPU device. No full-world fire/oxygen copy is allowed for CPU chemistry or shader presentation. Probes identify their tick/epoch and report actual composition/heat release, not stale FIRE labels. Render-on/off and quality-level changes cannot change fuel consumption or smoke inventories.
+
+Include FIRE-A14 in the failure matrix: partial reaction rollback, duplicate command/replay prevention, active-product capacity, network/property version validation, soot/residue persistence and checkpoint rollback notices. FIRE-M7 is required for promoted fire scenes; a historical F-check result or screenshot cannot substitute.

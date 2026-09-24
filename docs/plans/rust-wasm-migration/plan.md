@@ -36,9 +36,9 @@ The machine-readable tracker is [engine-migration-work.json](../../data/engine-m
 
 **P1 / M0. Dependencies:** none. **Source:** SRC-01, SRC-04, SRC-05, SRC-09.
 
-Inspect the full repository, preserve tracked/untracked changes, identify real scripts/toolchains, reproduce controls/audit in a fresh directory, and establish named browser/device fixtures. Instrument actual pressure calls and outlet visits.
+Inspect the full repository, preserve tracked/untracked changes, identify real scripts/toolchains, reproduce controls/audit in a fresh directory, and establish named browser/device fixtures. Instrument actual pressure calls and outlet visits. Include FIRE-W00: preserve the 12 imported F-check observations, verify their source hash and add distinct corrected FIRE-A specifications without rewriting legacy fire first.
 
-**Exit:** Recorded source/config hashes, original checks, fresh failures, equal-time scene definitions and explicit unrun checks. Quoted timings stay historical.
+**Exit:** Recorded source/config hashes, original checks, fresh failures, equal-time scene definitions and explicit unrun checks. Quoted timings stay historical. Fire characterization and corrected acceptance are separately named; full-tick bugs and positive controls are retained, and the water edge case remains reaction-only.
 
 ### E01: Bootstrap Rust workspace and browser WASM
 
@@ -52,9 +52,9 @@ Create the minimal proposed crates without relocating src/. Pin Rust/wgpu/wasm-b
 
 **P1 / M1. Dependencies:** E01. **Source:** SRC-07, SRC-08.
 
-Define backend/model axes, Rust state schemas, stable identities, SI units, active-component mapping, command/status types, snapshot versions and shader packing.
+Define backend/model axes, Rust state schemas, stable identities, SI units, active-component mapping, command/status types, snapshot versions and shader packing. Include FIRE-W01: one fuel/O2/product/physical-soot inventory, shared boundary fluxes, source transactions, chemical reference and derived visual contracts, without activating chemistry in M3.
 
-**Exit:** Legacy-ID round trips, malformed-input rejection, optional-extension no-allocation, layout/offset tests and documented H-to-U conversion/rejection rules.
+**Exit:** Legacy-ID round trips, malformed-input rejection, optional-extension no-allocation, layout/offset tests and documented H-to-U conversion/rejection rules. Fire inventory/schema round trips, product-capacity checks and legacy FIRE-as-tool/visual mapping pass without an independent spendable oxygen counter.
 
 ### E03: Introduce facade, command lifecycle and one catalogue projection
 
@@ -108,9 +108,9 @@ Render from the same wgpu device/state. Add tick/epoch-stamped probes/reductions
 
 **P1 / M4. Dependencies:** E08. **Source:** SRC-08.
 
-Implement Rust reference then GPU parity for bounded properties, partial phases, available-volume closure, chamber pressure and finite venting.
+Implement Rust reference then GPU parity for bounded properties, partial phases, available-volume closure, chamber pressure and finite venting. Execute FIRE-W02: conservative passive O2/product transport, finite ventilation and explicit high-temperature reactant/product/water domain coverage or supported-scene rejection.
 
-**Exit:** M4 closed/open energy/mass/volume fixtures pass, invalid EOS domains are explicit, and table provenance/conversion limits are recorded.
+**Exit:** M4 closed/open energy/mass/volume fixtures pass, invalid EOS domains are explicit, and table provenance/conversion limits are recorded. FIRE-PRECONDITIONS (FIRE-A03 and FIRE-A12) pass before coupled fire scenes; no connected-interior O2 refill or silent hot-state clamp.
 
 ### E10: Add granular and solid-fluid coupling
 
@@ -124,33 +124,33 @@ Replace repeated per-grain search with the M5 batched proposal/reservation/commi
 
 **P1 / M6. Dependencies:** E04, E10. **Source:** SRC-10, SRC-11.
 
-Port supported existing sources and amount-based chemistry into the owning state. Couple Rust CPU circuit graphs through bounded topology/sample events and funded heat transactions.
+Port supported existing sources and amount-based chemistry into the owning state. Couple Rust CPU circuit graphs through bounded topology/sample events and funded heat transactions. Execute FIRE-W03-FIRE-W05: corrected Rust gas combustion, bounded condensed-fuel release, thermal suppression and persistent products/soot, then WGSL parity with shared-reactant reservations and exactly-once energy/amount commits.
 
-**Exit:** M6 finite-source, excess-reagent, conductor-change and graph overflow/dense-cost fixtures pass; no whole-world circuit mirror.
+**Exit:** M6 finite-source, excess-reagent, conductor-change and graph overflow/dense-cost fixtures pass; no whole-world circuit mirror. FIRE-A01-FIRE-A13 pass for the supported combustion slice; no cold-label ignition, unledgered O2, missing products, contact-only water kill switch or per-substep duplication of per-tick burn rates.
 
 ### E12: Complete browser host and optional worker deployment
 
 **P1 / M6. Dependencies:** E11. **Source:** SRC-01, SRC-03, SRC-09.
 
-Preserve controls, held tools, maps, zoom/pan, paused edits and browser lifecycle. Evaluate worker/OffscreenCanvas against main-thread wgpu using the same contracts.
+Preserve controls, held tools, maps, zoom/pan, paused edits and browser lifecycle. Evaluate worker/OffscreenCanvas against main-thread wgpu using the same contracts. Execute FIRE-W06: funded Fire commands, tick-stamped composition/heat-release probes and derived particle/shader flames with no physical changes from visual lifetime or quality settings.
 
-**Exit:** Interaction and lifecycle tests pass on supported contexts; unsupported worker paths use explicit main-thread GPU or compatible CPU/legacy routes.
+**Exit:** Interaction and lifecycle tests pass on supported contexts; unsupported worker paths use explicit main-thread GPU or compatible CPU/legacy routes. FIRE-M6 integrated fire scenes and render-on/off inventory equivalence pass; cosmetic effects do not become combustion authority.
 
 ### E13: Validate snapshots, device loss and reversible rollout
 
 **P1 / M7. Dependencies:** E12. **Source:** SRC-03, SRC-07.
 
-Complete consistent saves/loads, component/version preflight, rollback/recovery notices, teardown, reset races and checkpoint replay policy.
+Complete consistent saves/loads, component/version preflight, rollback/recovery notices, teardown, reset races and checkpoint replay policy. Include fire network/property versions, active products, physical smoke/residue and source/approximation settings in the FIRE-W07 save/recovery scope.
 
-**Exit:** Failure injection never publishes partial state; late callbacks cannot affect a new epoch; rollback limits are visible and no incompatible legacy hot swap occurs.
+**Exit:** Failure injection never publishes partial state; late callbacks cannot affect a new epoch; rollback limits are visible and no incompatible legacy hot swap occurs. FIRE-A14 snapshot/transaction cases reject unsupported data or roll back explicitly without duplicate burning or lost products.
 
 ### E14: Measure and promote only supported scenes
 
 **P1 / M7. Dependencies:** E13. **Source:** SRC-09, SRC-12.
 
-Run native reference, browser GPU, regression, memory/readback, sustained and input-latency tests on agreed devices. Retain unsupported legacy coverage until a complete replacement passes.
+Run native reference, browser GPU, regression, memory/readback, sustained and input-latency tests on agreed devices. Retain unsupported legacy coverage until a complete replacement passes. Complete FIRE-W07 using FIRE-M7 for each promoted combustion scene, including hot-domain eligibility, water/smoke capability coverage and measured transfer/performance limits.
 
-**Exit:** GPU-M7 evidence supports the coverage actually promoted. No promised speed multiplier, no submitted-time benchmark, no premature legacy deletion.
+**Exit:** GPU-M7 evidence supports the coverage actually promoted. No promised speed multiplier, no submitted-time benchmark, no premature legacy deletion. FIRE-M7 evidence is new corrected acceptance, not the retained F01-F12 characterization; unsupported fire scenes remain explicitly separate.
 
 ## Proposed repository additions
 
@@ -225,3 +225,11 @@ Fresh synchronous cell reads, Canvas-only renderer signatures and submitted-time
 The default order still completes P1 before P2, then P3-P9. New physics sources always apply through the owning backend's stage/transaction rules. P2 remains a distinct compressible model. P3-P5 retain the exact 40/83-element milestones. P6-P8 retain nuclide/radiation/reaction validation and 103/118-identity coverage; Rust/WASM does not change those scientific limits. P9 validates combined features, including browser execution and loss recovery.
 
 Use [the roadmap](../../roadmap.md) for dependencies and [backend-migration acceptance](../../validation/backend-migration.md) alongside each phase's existing numerical gates. Do not restart architecture planning at every phase or build separate worlds for chemistry and nuclear populations.
+
+## Fire integration inside the selected migration
+
+[FIRE-W00-W08](../fire-combustion/plan.md#8-work-packages) specialize the existing E-work; they do not add a prerequisite whole-engine rewrite or a second simulation. E00 captures the two full-pipeline bug regressions and useful controls. E02 reserves small inventory/source/visual contracts. E09 validates finite ventilation and hot property domains. E11 builds corrected Rust combustion then equivalent WGSL, E12 connects state-derived visuals, and E13-E14 require persistence and FIRE-M7 before promotion.
+
+Do not copy oxygen flood fills, cold-FIRE ignition, missing product transformations, contact-water extinction or timed smoke erasure into Rust. Preserve ledgered ignition and conservation controls. M3 remains nonreactive. P4 extends the same engine with FIRE-W08, rerunning relevant fire gates for new fuels, char, soot and selected radiation mechanisms.
+
+The [fire work manifest](../../data/fire-combustion-work.json) and [acceptance specification](../../validation/fire-combustion.md) separate historical F-characterization records from planned corrected FIRE-A evidence. The E00-E14 dependency graph remains unchanged.

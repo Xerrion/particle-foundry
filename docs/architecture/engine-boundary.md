@@ -138,3 +138,13 @@ On device loss, stop new work, reject/cancel affected readbacks and report the l
 Keep `src/materials/definitions.ts` as the single legacy catalogue while bootstrapping. M1 adds a reproducible validated export/projection for the small supported scene, not a second handwritten Rust or WGSL catalogue. P3 deliberately migrates scientific source records to the full data pipeline and regenerates each consumer. Version/hash the outputs and test IDs, units and precision conversion. UI presentation may remain authored in TypeScript when joined by stable IDs.
 
 All phases use the same boundary. Chemistry, phase changes and nuclear stages produce validated amount/energy transactions in the owning backend; none gets its own world transport loop. See [backend acceptance](../validation/backend-migration.md) and the [work-package mapping](../plans/rust-wasm-migration/plan.md).
+
+## 12. Fire source and renderer boundary
+
+The [fire work plan](../plans/fire-combustion/plan.md) is part of E02, E09 and E11-E14. Fire commands provide bounded, ledgered ignition energy, not a replacement material that silently creates fuel or soot. The reference/GPU source stage reserves reactants and commits amounts, products, energy and coupled phase/volume changes together. Rejected substeps or replayed command acknowledgments cannot repeat the release.
+
+Use one boundary configuration for mechanical and species/heat fluxes. Opening a face permits finite transport from a declared reservoir; it does not reset the composition of every reachable cell. Network/property/capacity preflight includes every combustion product before accepting a brush or scene.
+
+The same-device renderer derives flame/smoke appearance from reacting/hot gas and tracked particulate state. Preserve supported particle-based presentation with state-driven shader treatment; visual particles are not a second combustion solver. Visibility, lifetime and a stale `burning` flag never control physical inventory or ignition. Hot-object glow and active combustion are distinct probe meanings.
+
+Async observations expose actual fuel, O2 and product amounts, heat-release rate, supported extinction reason and data limits with the existing tick/epoch contract. Snapshot/recovery includes network versions, physical smoke/residue and approximation settings. FIRE-A07, FIRE-A09 and FIRE-A14 add exact-once source, visual-independence and lifecycle checks to the existing backend gates.

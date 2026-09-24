@@ -68,3 +68,26 @@ Explain which exit criteria passed, which are blocked/unrun, the exact next depe
 - Async probe age, reset/cancellation, snapshot consistency and device-loss outcomes:
 - GPU/worker/browser runs that were unavailable or explicitly not run:
 - Supported-scene scope of any promotion; remaining legacy coverage:
+
+## Fire and combustion evidence when applicable
+
+```text
+FIRE-W work IDs and parent E-work IDs:
+FIRE-A fixture IDs and FIRE-PRECONDITIONS / FIRE-M6 / FIRE-M7 gate:
+historical F-check context (characterization only, not pass evidence):
+reference type: isolated source | complete substep | browser/GPU integration
+reaction network/property hashes, fuel profile and declared calibration:
+active reactants/products, physical soot/residue and constituent mapping:
+full temperature/pressure/composition domain and unsupported cases:
+initial/final inventories, reaction extent and residual reagents:
+signed boundary component/mass/energy fluxes:
+chemical/thermal/kinetic/source/radiation energy accounting convention:
+accepted dt sequence, rejected attempts and equal-time refinement:
+shared-reactant contention and execution-order variation:
+water-dose/evaporation and extinction observations:
+render-on/off and smoke-persistence results:
+command IDs, commit counts, save/recovery and capacity failure:
+per-scene promotion scope and applicable gates not run:
+```
+
+The old fire harness asserts observations of the legacy source, including bugs. Do not copy its `observed-and-asserted` status into a corrected FIRE-A pass. Record independent balance oracles and both absolute and relative tolerances for small/zero inventories.

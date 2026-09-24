@@ -1,6 +1,6 @@
 # Sources, provenance, and interpretation
 
-**Reference review date:** 21 September 2026. Links below were used to verify the new scientific/API framing. They do not establish that Particle Foundry implements or validates any corresponding behavior. New implementation constants must be imported or transcribed with their own exact dataset/version, uncertainty, units, and validity range.
+**Original reference review date:** 21 September 2026. **Fire-reference integration:** 23 September 2026. The original revision reports using the links below for scientific/API framing; the fire references are inherited from the separately supplied audit. This documentation edit does not claim a fresh online verification. They do not establish that Particle Foundry implements or validates any corresponding behavior. New implementation constants must be imported or transcribed with their own exact dataset/version, uncertainty, units, and validity range.
 
 The proposed cohorts, architecture, milestones, UI, and acceptance process are design decisions. They are not statements from the cited institutions. The complete previous documentation and its historical references are preserved under [history](history/README.md).
 
@@ -145,3 +145,17 @@ Documents Rust async exports returning JavaScript Promises. Supports the propose
 **WHATWG HTML standard: canvas.** [Official canvas interface](https://html.spec.whatwg.org/dev/canvas.html).
 
 Specifies that acquiring a different context type after canvas initialization returns null. The existing Canvas-2D-first startup therefore needs renderer selection before context acquisition or a new canvas for the GPU path. The standard does not supply application event rebinding or world migration.
+
+## fire-audit-source
+
+**Particle Foundry fire characterization, 23 September 2026.** [Preserved report](evidence/fire-review-2026-09-23/FIRE_REVIEW.md), [results](evidence/fire-review-2026-09-23/fire-audit-results.json), and [hash/provenance manifest](data/fire-review-manifest.json).
+
+Use for the specific observations F01-F12 against the recorded `src(3).zip`, not claims about an uninspected future checkout or a corrected Rust/GPU implementation. The report separates ten isolated subsystem checks from two complete physics-tick checks. Its runner was not rerun for this documentation update.
+
+## nist-fds-fire-context
+
+**NIST Fire Dynamics Simulator project and technical documentation.** [Project](https://pages.nist.gov/fds/), [combustion chapter](https://github.com/firemodels/fds/blob/master/Manuals/FDS_Technical_Reference_Guide/Combustion_Chapter.tex), and [solid/pyrolysis chapter](https://github.com/firemodels/fds/blob/master/Manuals/FDS_Technical_Reference_Guide/Solid_Chapter.tex).
+
+These references are carried forward from the September 23 fire review, not newly fetched or version-pinned in this documentation edit. They provide context for species production/heat release, thermal/composition-dependent extinction, and the distinction between condensed-phase fuel release and gas-phase combustion. They do not demonstrate that the game implements, matches or validates FDS. The reduced model, task sequencing and acceptance thresholds are project design decisions.
+
+Before importing constants or implementing a particular published model, identify and record an exact release/commit, data license, units, calibration, applicability and independent tests. Moving `master` links are contextual reading, not sufficient scientific-data provenance for a shipped implementation.

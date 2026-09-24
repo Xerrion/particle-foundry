@@ -42,6 +42,12 @@ Port a validated CPU implementation to the GPU stage graph. Sparse circuit heat 
 
 **Exit / MAT-C2:** balanced definitions, positive amounts, limiting-reactant tests, geometry isolation, timestep refinement, source energy, product closure, contention, CPU/GPU parity, and snapshot tests pass.
 
+## Fire foundation inherited from P1
+
+[The fire integration plan](../fire-combustion/plan.md) is implemented in P1/M6 and promoted through FIRE-M7. P3 generalizes its catalogue, product-closure and source contracts; it must preserve its finite shared O2, balanced products, thermal ignition/extinction, physical-time rates and persistent supported smoke/residue. Do not recreate a material-specific oxygen rule in the general chemistry engine.
+
+FIRE-W08 is the P4/C5 extension task across C3-C6: additional bounded fuel release, char/surface channels, soot oxidation/deposition and selected radiative heat transfer where supported. A declared simplified profile is acceptable; a hidden unsupported composition or temperature range is not. Core water suppression and condensed-fuel release for already promoted P1 scenes cannot be postponed to this phase.
+
 ## P4 / C3: migrate the existing eight elements
 
 Port H, He, C, N, O, S, Fe, and Cu from their [documented legacy scope](../../elements.md#legacy-eight-element-models). Preserve tests for H2/O2 water production, carbon/sulfur oxidation, element conduction, and thermal mass scaling. Add the new amount/volume/energy tests instead of treating old cell-swap assertions as continuum references.
@@ -80,7 +86,7 @@ Build essential compounds alongside the elements:
 
 ## P4 / C5: selected reactive and solution behavior
 
-Add a deliberately small network covering combustion, oxidation, metal-water behavior, neutralisation, dissolution, and precipitation only where the products and domains are defined. There is no requirement to invent all reactions involving all 40 elements.
+Extend the P1 combustion slice through FIRE-W08 and add a deliberately small network covering oxidation, metal-water behavior, neutralisation, dissolution, and precipitation only where the products and domains are defined. Reuse the shared transported O2 inventory for every compatible fuel, preflight all products/residues, and rerun the applicable FIRE-A gates for each new channel. Richer pyrolysis, char and soot models require source/calibration status and balanced yields; physical radiative loss must be accounted rather than inferred from a shader. There is no requirement to invent all reactions involving all 40 elements.
 
 Replace whole-cell acid/base cancellation with amount-based partial conversion. Preserve remaining acid/base concentration and identify the selected salt/ion products. Separate mixing, chemical equilibration, and heat release. Do not report accurate pH without an activity/equilibrium model appropriate to the selected solution.
 
@@ -94,7 +100,7 @@ Use one chemical-energy convention and consistent product formation references. 
 
 Build a material support matrix for all 40 core elements, their implemented forms, the compound foundation, and selected reactions. Count element identities separately from forms, compounds, and individual reaction channels. Record unsupported phases and all deliberately simplified behavior.
 
-Add seeded scenes for melting/freezing, conduction, mixed gases, water/steam, oxidation, solutions, and a limited combustion loop. Verify each scene's actual model eligibility, save/load, paint/remove, pause/single-step, and CPU/GPU comparison. Preserve the original eight regression families.
+Add seeded scenes for melting/freezing, conduction, mixed gases, water/steam, oxidation, solutions, and a limited combustion loop. Verify each scene's actual model eligibility, save/load, paint/remove, pause/single-step, and CPU/GPU comparison. Preserve the original eight regression families and the corrected FIRE-A cases, not the historical bugs asserted by F01-F12. The supported core release includes newly enabled fuel/soot channels in the combustion capability matrix.
 
 **Exit / MAT-C6:** 40 core identities with tested base forms; essential compound scenarios; no lost composition; no implied full chemistry; source/uncertainty status visible; measured active-component memory and transfers.
 
