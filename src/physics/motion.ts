@@ -1,6 +1,7 @@
 import { EMPTY, materialsById, STEAM } from "../materials";
 import { canDisplaceFluid, isGas, isLiquid, liquidMotion } from "../materials/queries";
 import {
+	AMBIENT_TEMPERATURE_C,
 	CELL_WIDTH_METERS,
 	FIXED_TIME_STEP_SECONDS,
 	GRAVITY_M_PER_S2,
@@ -8,6 +9,7 @@ import {
 import type { World } from "../simulation/world";
 
 const floatingSolids = new Uint8Array(256);
+const AMBIENT_BUOYANCY_DEADBAND_C = 0.1;
 for (const material of Object.values(materialsById)) {
 	floatingSolids[material.id] = Number(material.state === "solid" && material.falls);
 }
@@ -33,9 +35,9 @@ export function createMotion(world: World) {
 			);
 			world.energy[target] -= netFallingWork;
 		}
-		// A parcel moves only once, but the air it leaves behind must accept the
-		// next parcel in a column or plume. Otherwise every other row becomes a hole.
-		if (grid[index] === EMPTY) moved[index] = 0;
+		// Air left by non-air gas must accept the next plume parcel. An air-for-air
+		// swap stays marked so displaced cold air cannot cross a whole column at once.
+		if (material !== EMPTY && grid[index] === EMPTY) moved[index] = 0;
 	}
 
 	function effectiveGasDensity(index: number): number {
@@ -49,7 +51,10 @@ export function createMotion(world: World) {
 		// as oil can be pushed up by falling water. Its own active movement
 		// remains marked complete. Do not permit processed lateral swaps.
 		if (moved[target] && (!upward || grid[target] === EMPTY)) return false;
-		if (grid[index] === grid[target]) return false;
+		if (grid[index] === grid[target]) {
+			if (grid[index] !== EMPTY) return false;
+			return world.temperatureAt(index) > world.temperatureAt(target) + AMBIENT_BUOYANCY_DEADBAND_C;
+		}
 		return effectiveGasDensity(index) + 1e-9 < effectiveGasDensity(target);
 	}
 
@@ -190,7 +195,10 @@ export function createMotion(world: World) {
 			return;
 		}
 		const windX = world.velocityX[index];
-		if (Math.abs(windX) > 0.15 && world.random.next() < Math.min(0.9, Math.abs(windX) * 0.35)) {
+		if (
+			Math.abs(windX) > 0.15 &&
+			(material === EMPTY || world.random.next() < Math.min(0.9, Math.abs(windX) * 0.35))
+		) {
 			const windDirection = Math.sign(windX);
 			if (x + windDirection >= 0 && x + windDirection < width) {
 				const side = index + windDirection;
@@ -203,6 +211,7 @@ export function createMotion(world: World) {
 		const temperature = world.temperatureAt(index);
 		const profile = materialsById[material].gasMotion;
 		const riseLimit = profile && temperature > profile.hotTemperature ? profile.hotRise : 1;
+		const risingDriftChance = profile?.risingDriftChance ?? 0;
 		function diagonalFrom(from: number): number {
 			const column = from % width;
 			if (from < width) return from;
@@ -221,7 +230,7 @@ export function createMotion(world: World) {
 			if (current < width) break;
 			// Small seeded drift breaks straight, phase-locked chimney stripes.
 			// It still gains one row and must pass through an open side cell.
-			if (distance === 0 && world.random.next() < (profile?.risingDriftChance ?? 0)) {
+			if (distance === 0 && risingDriftChance > 0 && world.random.next() < risingDriftChance) {
 				const next = diagonalFrom(current);
 				if (next !== current) {
 					current = next;
@@ -260,7 +269,8 @@ export function createMotion(world: World) {
 		// Always taking a lateral step locks smoke into an alternating lattice.
 		// Seeded, intermittent diffusion breaks that grid rhythm without making
 		// replay depend on frame rate or on the renderer's random stream.
-		if (world.random.next() >= (profile?.lateralChance ?? 0)) return;
+		const lateralChance = profile?.lateralChance ?? 0;
+		if (lateralChance === 0 || world.random.next() >= lateralChance) return;
 		for (const dx of [direction, -direction]) {
 			if (x + dx < 0 || x + dx >= width) continue;
 			const side = index + dx;
@@ -271,8 +281,15 @@ export function createMotion(world: World) {
 	}
 
 	function update(index: number, tick: number): void {
-		if (moved[index] || grid[index] === EMPTY) return;
+		if (moved[index]) return;
 		const material = grid[index];
+		if (
+			material === EMPTY &&
+			world.velocityX[index] === 0 &&
+			world.velocityY[index] === 0 &&
+			world.temperatureAt(index) === AMBIENT_TEMPERATURE_C
+		)
+			return;
 		if (!world.boundariesEnabled) {
 			const x = index % width;
 			const exitsTop = index < width && isGas(material);
@@ -294,15 +311,17 @@ export function createMotion(world: World) {
 			isLiquid(material) && Math.abs(world.velocityX[index]) > 1e-6
 				? Math.sign(world.velocityX[index])
 				: 0;
+		const deterministicDirection =
+			(tick + (index % width) + Math.floor(index / width)) % 2 === 0 ? -1 : 1;
 		const direction =
 			pressureDirection ||
-			(isGas(material)
-				? world.random.next() < 0.5
-					? -1
-					: 1
-				: (tick + (index % width) + Math.floor(index / width)) % 2 === 0
-					? -1
-					: 1);
+			(material === EMPTY
+				? deterministicDirection
+				: isGas(material)
+					? world.random.next() < 0.5
+						? -1
+						: 1
+					: deterministicDirection);
 		if (isLiquid(material)) {
 			const profile = liquidMotion[material];
 			if (!profile || tick % profile.interval !== 0) return;
@@ -316,7 +335,7 @@ export function createMotion(world: World) {
 		if (material === STEAM) {
 			if (tick % 4 === 0) world.variation[index] = (world.variation[index] + 1) % 4;
 			rise(index, direction, material);
-		} else if (materialsById[material].state === "gas") rise(index, direction, material);
+		} else if (isGas(material)) rise(index, direction, material);
 	}
 
 	return { update };

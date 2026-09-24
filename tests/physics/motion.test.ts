@@ -13,6 +13,7 @@ import {
 	WATER,
 } from "../../src/materials";
 import { createMotion } from "../../src/physics/motion";
+import { energyAtTemperature } from "../../src/physics/thermal";
 import { measureWorld } from "../../src/simulation/diagnostics";
 import { createPhysics } from "../../src/simulation/physics";
 import { createWorld } from "../../src/simulation/world";
@@ -52,6 +53,27 @@ describe("conservative local transport", () => {
 		expect(open.pressurePa[open.indexAt(2, 0)]).toBeCloseTo(101_325, 3);
 		expect(closed.pressurePa[closed.indexAt(2, 0)]).toBeGreaterThan(101_325);
 		expect(open.grid[open.indexAt(2, 4)]).toBe(STONE);
+	});
+
+	test("hot ambient air rises and carries its heat out of an open top", () => {
+		const world = createWorld(1, 10, { boundariesEnabled: false });
+		world.energy[9] = energyAtTemperature(EMPTY, 600, undefined, world.massKg[9]);
+		const physics = createPhysics(world);
+		for (let tick = 0; tick < 10; tick += 1) physics.step();
+		for (let index = 0; index < world.size; index += 1) expect(world.temperatureAt(index)).toBe(22);
+	});
+
+	test("rising ambient air displaces cold air by at most one cell per tick", () => {
+		const world = createWorld(1, 10);
+		for (let index = 0; index < world.size; index += 1)
+			world.energy[index] = energyAtTemperature(EMPTY, 600, undefined, world.massKg[index]);
+		world.energy[0] = energyAtTemperature(EMPTY, -100, undefined, world.massKg[0]);
+		const motion = createMotion(world);
+		for (let index = 0; index < world.size; index += 1) motion.update(index, 0);
+		expect(world.temperatureAt(0)).toBeCloseTo(600, 3);
+		expect(world.temperatureAt(1)).toBe(-100);
+		for (let index = 2; index < world.size; index += 1)
+			expect(world.temperatureAt(index)).toBeCloseTo(600, 3);
 	});
 
 	test("pressure from inside the world dissipates through open edges", () => {

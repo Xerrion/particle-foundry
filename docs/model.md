@@ -43,7 +43,7 @@ The water family uses a bounded Clausius-Clapeyron approximation around its norm
 
 Gas pressure is derived from an ideal-gas relation. Sealed connected gas shares a chamber pressure. Open/sealed volume conventions differ, and finite conservative expansion/venting is missing. Pressure gives paired momentum impulses with a legacy acceleration cap of 3 m/s squared per neighboring pair. Hydrostatic pressure is locally approximated from vertical liquid columns, not a compatible global MAC solve. These impulses and cellular gas swaps do not resolve acoustic or shock waves.
 
-Gas rise and diffusion include seeded side drift and intermittent motion to avoid grid artefacts. Newly created gas may move immediately without reacting twice. The documented 2 percent per-step gas drag converts lost kinetic energy to heat; it is a calibrated model, not resolved turbulence.
+Gas rise and diffusion include seeded side drift and intermittent motion to avoid grid artefacts. Hot ambient-air parcels now carry their enthalpy upward through colder air and can leave an open top; stationary room-temperature air still skips transport. Newly created gas may move immediately without reacting twice. The documented 2 percent per-step gas drag converts lost kinetic energy to heat; it is a calibrated model, not resolved turbulence.
 
 ## Legacy solids and rendering
 

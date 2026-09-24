@@ -80,13 +80,22 @@ export function createPhysics(world: World) {
 				if (!isGas(world.grid[index])) motion.update(index, tick);
 			}
 		}
-		// Buoyant plumes follow vacated air from the top down, just as falling
-		// liquid follows it from the bottom up.
+		// Move material gases before ambient air so newly mobile hot air cannot
+		// change the established smoke and steam traversal order.
 		for (let y = 0; y < world.height; y += 1) {
 			for (let column = 0; column < world.width; column += 1) {
 				const x = tick % 2 === 0 ? column : world.width - 1 - column;
 				const index = x + y * world.width;
-				if (isGas(world.grid[index])) motion.update(index, tick);
+				if (world.grid[index] !== EMPTY && isGas(world.grid[index])) motion.update(index, tick);
+			}
+		}
+		// Hot ambient air follows the vacated plume from the top down. Its pass
+		// is deterministic and therefore does not perturb seeded material motion.
+		for (let y = 0; y < world.height; y += 1) {
+			for (let column = 0; column < world.width; column += 1) {
+				const x = tick % 2 === 0 ? column : world.width - 1 - column;
+				const index = x + y * world.width;
+				if (world.grid[index] === EMPTY) motion.update(index, tick);
 			}
 		}
 		// Pressure relaxation is a separate pass over supported pools. A free-falling
