@@ -1,6 +1,6 @@
 # ADR-001: change the engine, keep the application
 
-**Date:** 21 September 2026. **Decision:** selected for the implementation plan. **Implementation status:** planned, not delivered. **Applies to:** P1-P9. Start with [START_HERE](../START_HERE.md).
+**Date:** 21 September 2026. **Decision:** selected for the implementation plan. **Implementation status:** bootstrap and contracts exist; the [engine tracker](../data/engine-migration-work.json) owns work-item status. **Applies to:** P1-P9. Start with [START_HERE](../START_HERE.md).
 
 ## Decision
 

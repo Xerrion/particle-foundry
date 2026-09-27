@@ -1,0 +1,14 @@
+$ bun scripts/build-wasm.ts --check
+    Finished `release` profile [optimized] target(s) in 0.11s
+50 | 		if (JSON.stringify(files) !== JSON.stringify((await readdir(generated)).sort())) {
+51 | 			throw new Error("Generated WASM file set is stale; run bun run build:wasm");
+52 | 		}
+53 | 		for (const file of files) {
+54 | 			if (!(await readFile(join(output, file))).equals(await readFile(join(generated, file)))) {
+55 | 				throw new Error(`Generated ${file} is stale; run bun run build:wasm`);
+                   ^
+error: Generated particle_wasm.d.ts is stale; run bun run build:wasm
+      at /Users/lasn/.codex/worktrees/16ee1bfb-b941-405f-8290-e37decc87d34/particle-foundry/scripts/build-wasm.ts:55:15
+
+Bun v1.3.12 (macOS arm64)
+error: script "check:wasm" exited with code 1

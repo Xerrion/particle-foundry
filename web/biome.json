@@ -5,9 +5,11 @@
 			"src/**/*.ts",
 			"tests/**/*.ts",
 			"benchmarks/**/*.ts",
+			"scripts/**/*.ts",
 			"*.json",
 			"vite.config.ts",
 			"!!artifacts",
+			"!!generated",
 			"!!.playwright-mcp"
 		]
 	},

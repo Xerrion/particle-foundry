@@ -1,0 +1,61 @@
+{
+  "kind": "corrected-contract-baseline-on-legacy-not-promotion",
+  "backend": "legacy",
+  "outerDtSeconds": 0.016666666666666666,
+  "results": [
+    {
+      "id": "FIRE-A01/outer-boundary",
+      "scope": "legacy complete physics tick",
+      "passed": false,
+      "measurements": {
+        "releasedJ": 99.99999999999964,
+        "oxygenKg": 0.000013407744000000016
+      }
+    },
+    {
+      "id": "FIRE-A01/stone-enclosure",
+      "scope": "legacy complete physics tick",
+      "passed": true,
+      "measurements": {
+        "releasedJ": 0,
+        "oxygenKg": 0
+      }
+    },
+    {
+      "id": "FIRE-A04/cold-label",
+      "scope": "legacy complete physics tick",
+      "passed": false,
+      "measurements": {
+        "releasedJ": 9.984918769841272
+      }
+    },
+    {
+      "id": "FIRE-A07/funded-brush-control",
+      "scope": "legacy isolated brush; no queue/retry claim",
+      "passed": true,
+      "measurements": {
+        "massErrorKg": 0,
+        "energyJ": 0.515312000000101,
+        "sourceJ": 0.5153119999999944
+      }
+    },
+    {
+      "id": "FIRE-A05/explicit-hot-reaction-control",
+      "scope": "legacy isolated scalar control; constituent gate still unrun",
+      "passed": true,
+      "measurements": {
+        "reacted": 1,
+        "massErrorKg": 0,
+        "energyErrorJ": 0
+      }
+    },
+    {
+      "id": "FIRE-A05/generic-scalar-control",
+      "scope": "legacy isolated scalar control; known product defect is not accepted",
+      "passed": true,
+      "measurements": {
+        "energyErrorJ": 0
+      }
+    }
+  ]
+}

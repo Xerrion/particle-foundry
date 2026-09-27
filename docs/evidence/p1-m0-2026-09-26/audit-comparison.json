@@ -1,0 +1,177 @@
+[
+  {
+    "id": "N01",
+    "historicalPassed": false,
+    "freshPassed": false
+  },
+  {
+    "id": "N02",
+    "historicalPassed": false,
+    "freshPassed": false
+  },
+  {
+    "id": "N03",
+    "historicalPassed": true,
+    "freshPassed": true
+  },
+  {
+    "id": "N04",
+    "historicalPassed": true,
+    "freshPassed": true
+  },
+  {
+    "id": "N05",
+    "historicalPassed": false,
+    "freshPassed": false
+  },
+  {
+    "id": "N06",
+    "historicalPassed": false,
+    "freshPassed": true
+  },
+  {
+    "id": "N07",
+    "historicalPassed": true,
+    "freshPassed": true
+  },
+  {
+    "id": "N08",
+    "historicalPassed": false,
+    "freshPassed": false
+  },
+  {
+    "id": "N09",
+    "historicalPassed": false,
+    "freshPassed": false
+  },
+  {
+    "id": "N10",
+    "historicalPassed": true,
+    "freshPassed": true
+  },
+  {
+    "id": "N11",
+    "historicalPassed": false,
+    "freshPassed": false
+  },
+  {
+    "id": "N12",
+    "historicalPassed": false,
+    "freshPassed": false
+  },
+  {
+    "id": "N13",
+    "historicalPassed": false,
+    "freshPassed": false
+  },
+  {
+    "id": "N14",
+    "historicalPassed": false,
+    "freshPassed": false
+  },
+  {
+    "id": "N15",
+    "historicalPassed": false,
+    "freshPassed": false
+  },
+  {
+    "id": "C01",
+    "historicalPassed": true,
+    "freshPassed": true
+  },
+  {
+    "id": "C02",
+    "historicalPassed": true,
+    "freshPassed": true
+  },
+  {
+    "id": "C03",
+    "historicalPassed": true,
+    "freshPassed": true
+  },
+  {
+    "id": "C04",
+    "historicalPassed": true,
+    "freshPassed": true
+  },
+  {
+    "id": "C05",
+    "historicalPassed": true,
+    "freshPassed": true
+  },
+  {
+    "id": "C06",
+    "historicalPassed": true,
+    "freshPassed": true
+  },
+  {
+    "id": "C07",
+    "historicalPassed": true,
+    "freshPassed": true
+  },
+  {
+    "id": "C08",
+    "historicalPassed": true,
+    "freshPassed": true
+  },
+  {
+    "id": "C09",
+    "historicalPassed": true,
+    "freshPassed": true
+  },
+  {
+    "id": "C10",
+    "historicalPassed": true,
+    "freshPassed": true
+  },
+  {
+    "id": "C11",
+    "historicalPassed": true,
+    "freshPassed": true
+  },
+  {
+    "id": "C12",
+    "historicalPassed": true,
+    "freshPassed": true
+  },
+  {
+    "id": "C13",
+    "historicalPassed": true,
+    "freshPassed": true
+  },
+  {
+    "id": "C14",
+    "historicalPassed": true,
+    "freshPassed": true
+  },
+  {
+    "id": "C15",
+    "historicalPassed": true,
+    "freshPassed": true
+  },
+  {
+    "id": "C16",
+    "historicalPassed": true,
+    "freshPassed": true
+  },
+  {
+    "id": "C17",
+    "historicalPassed": true,
+    "freshPassed": true
+  },
+  {
+    "id": "C18",
+    "historicalPassed": true,
+    "freshPassed": true
+  },
+  {
+    "id": "C19",
+    "historicalPassed": true,
+    "freshPassed": true
+  },
+  {
+    "id": "C20",
+    "historicalPassed": true,
+    "freshPassed": true
+  }
+]

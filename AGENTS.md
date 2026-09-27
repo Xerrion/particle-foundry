@@ -2,9 +2,9 @@
 
 ## Project map
 
-Particle Foundry is a TypeScript browser sandbox. Rust/WASM and wgpu/WGSL are the
-selected engine migration, but are not implemented yet. Keep current capabilities
-distinct from planned work.
+Particle Foundry is a TypeScript browser sandbox. The Rust/WASM bootstrap and
+portable state contracts are implemented through E02; the live sandbox still uses
+the legacy backend. GPU simulation and rendering remain planned.
 
 | Location | Responsibility |
 | --- | --- |
@@ -14,7 +14,7 @@ distinct from planned work.
 | `web/src/materials/` | Single authored legacy catalogue, validation, presentation and element reference |
 | `web/tests/`, `web/benchmarks/` | TypeScript verification; backend-specific tests and fixtures live under `tests/legacy/` |
 | `web/` configuration | Bun package/lockfile, Vite, TypeScript, Biome and browser HTML |
-| `engine/` | Reserved Rust/WGSL ownership; see `engine/AGENTS.override.md` for scoped engine guidance |
+| `engine/` | Rust workspace, portable contracts and lifecycle bootstrap; see `engine/AGENTS.override.md` |
 | `docs/README.md` | Knowledge map by question and topic; `docs/START_HERE.md` is the engine migration brief |
 | `mise.toml`, `.github/workflows/` | Root toolchain/task orchestration and CI |
 
@@ -38,7 +38,7 @@ distinct from planned work.
 
 ## Rust migration placement
 
-At E01, create the Cargo workspace, lockfile and pinned toolchain inside `engine/`.
+The Cargo workspace, lockfile and pinned toolchain live inside `engine/`.
 Use `engine/crates/sim/` for portable IDs, units and contracts; `sim-cpu/` for
 Rust f64 references and bounded CPU algorithms; `sim-gpu/` for wgpu state,
 scheduling and rendering; and `wasm/` for browser bindings and construction.
@@ -66,7 +66,7 @@ or another workspace/task framework.
 | --- | --- |
 | `mise install` then `mise run setup` | Install pinned tools and dependencies; Bun uses `web/bun.lock` with `--frozen-lockfile` |
 | `mise run dev` | Start Vite; production output is `web/dist/` |
-| `mise run ci` | Lint, both TypeScript checks, all tests, build and documentation validation |
+| `mise run ci` | Lint, TypeScript/Rust checks, tests, WASM freshness, builds, browser smoke and docs |
 | `mise run bench` | Run existing physics benchmarks when performance work requires them |
 | `mise run docs:render` | Regenerate the GPU HTML after changing its canonical Markdown |
 
@@ -75,7 +75,7 @@ fixed-step timing, source accounting and conservation assertions. Derived floati
 point values need tolerance-based assertions. Keep the ambient-air movement
 regression in `web/tests/legacy/physics/motion.test.ts`.
 
-When Rust lands, add native, WASM and real browser checks to mise and CI. Native
+Native, WASM and real browser checks are wired into mise and CI. Native
 GPU success does not validate browser behavior. Report hardware-dependent or
 unrun checks explicitly; do not report planned migration gates as passed.
 

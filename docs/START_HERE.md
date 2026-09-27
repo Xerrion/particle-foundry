@@ -3,7 +3,10 @@
 For general development, start at [the knowledge map](README.md). Use this migration
 brief only for assigned migration work. Reading it does not authorize the full roadmap.
 
-**Project:** Particle Foundry. **Revision:** 23 September 2026, fire-audit integration update. **First task:** P1 / M0 / E00. **Status:** development plan, not delivered implementation.
+**Project:** Particle Foundry. **Revision:** 27 September 2026, recovery onto the new layout.
+E00 baseline, E01 bootstrap and E02 contracts have recorded validation; M1 and P1
+remain incomplete. The manifests own current work status; [RESUME.md](RESUME.md)
+records the recovered commits and verification. E03 is the next development item.
 
 **Change the simulation engine, not the application.** Keep the current TypeScript UI, DOM, CSS, input and viewport. Build corrected references in Rust, use WASM for browser delivery, and run heavy parallel physics plus direct rendering through Rust wgpu and WGSL. This decision is [ADR-001](architecture/adr-001-rust-wasm-wgpu.md).
 
@@ -18,13 +21,15 @@ WGSL/f32 GPU solver.
 ```text
 Start with docs/README.md, then use docs/START_HERE.md for the P1-P9 migration.
 Execute only the assigned work item or explicitly authorized sequence.
-First work item: P1 / M0 / E00 in docs/plans/rust-wasm-migration/plan.md.
+Consult docs/RESUME.md and the work manifests for the next assigned item.
+E00-E02 are recovered; E03 is next in docs/plans/rust-wasm-migration/plan.md.
 Follow ADR-001: retain the TypeScript frontend; migrate the simulation engine
 selectively to Rust/WASM with wgpu-managed WGSL compute and direct rendering.
 Keep the UI in web/ and add Rust/WGSL under engine/. Do not rewrite the UI or adopt Bevy.
 Inspect the real repository, its instructions, scripts, tests and working changes.
 Preserve a recoverable tracked/untracked snapshot before any implementation edits.
-Read the source review and docs/validation/fire-combustion.md, then establish a fresh baseline.
+Use the recorded E00 baseline and read the relevant source/fire evidence.
+Rerun checks affected by the assigned work; historical results are not fresh tests.
 Preserve the imported F01-F12 characterization evidence; it is not corrected acceptance.
 Follow FIRE-W00-FIRE-W07 within P1 and FIRE-W08 in P4, alongside E00-E14.
 Historical results are not fresh tests.

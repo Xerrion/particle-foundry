@@ -3,7 +3,7 @@
   "kind": "planning-work-packages-not-implementation-status",
   "decision": "architecture/adr-001-rust-wasm-wgpu.md",
   "plan": "plans/rust-wasm-migration/plan.md",
-  "nextWorkItem": "E00",
+  "nextWorkItem": "E03",
   "workItems": [
     {
       "id": "E00",
@@ -19,8 +19,10 @@
       "title": "Capture baseline and legacy regression contracts",
       "work": "Inspect the full repository, preserve tracked/untracked changes, identify real scripts/toolchains, reproduce controls/audit in a fresh directory, and establish named browser/device fixtures. Instrument actual pressure calls and outlet visits. Include FIRE-W00: preserve the 12 imported F-check observations, verify their source hash and add distinct corrected FIRE-A specifications without rewriting legacy fire first.",
       "acceptance": "Recorded source/config hashes, original checks, fresh failures, equal-time scene definitions and explicit unrun checks. Quoted timings stay historical. Fire characterization and corrected acceptance are separately named; full-tick bugs and positive controls are retained, and the water edge case remains reaction-only.",
-      "status": "planned",
-      "evidence": [],
+      "status": "validated",
+      "evidence": [
+        "validation/p1-m0.md"
+      ],
       "fireWorkItems": [
         "FIRE-W00"
       ]
@@ -39,8 +41,10 @@
       "title": "Bootstrap Rust workspace and browser WASM",
       "work": "Create the minimal proposed crates in engine/. Pin Rust/wgpu/wasm-bindgen after native and browser smoke tests. Generate bindings into web/generated/wasm/ and integrate them with the web/ frontend build.",
       "acceptance": "Native core tests and a real browser WASM initialize/dispose cycle pass; generated declarations compile in the existing TypeScript application. No UI rewrite.",
-      "status": "planned",
-      "evidence": [],
+      "status": "validated",
+      "evidence": [
+        "validation/p1-m1.md"
+      ],
       "fireWorkItems": []
     },
     {
@@ -57,8 +61,10 @@
       "title": "Define state, identity, ABI and snapshot contracts",
       "work": "Define backend/model axes, Rust state schemas, stable identities, SI units, active-component mapping, command/status types, snapshot versions and shader packing. Include FIRE-W01: one fuel/O2/product/physical-soot inventory, shared boundary fluxes, source transactions, chemical reference and derived visual contracts, without activating chemistry in M3.",
       "acceptance": "Legacy-ID round trips, malformed-input rejection, optional-extension no-allocation, layout/offset tests and documented H-to-U conversion/rejection rules. Fire inventory/schema round trips, product-capacity checks and legacy FIRE-as-tool/visual mapping pass without an independent spendable oxygen counter.",
-      "status": "planned",
-      "evidence": [],
+      "status": "validated",
+      "evidence": [
+        "validation/p1-m1-e02.md"
+      ],
       "fireWorkItems": [
         "FIRE-W01"
       ]
@@ -344,6 +350,6 @@
       "milestones": "Q0-Q2"
     }
   ],
-  "updatedAt": "2026-09-23",
+  "updatedAt": "2026-09-27",
   "fireWorkManifest": "data/fire-combustion-work.json"
 }

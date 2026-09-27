@@ -1,5 +1,15 @@
 # Documentation change log
 
+## 27 September 2026: recover E00-E02 onto the reorganized main branch
+
+Recovered the baseline, Rust/WASM bootstrap and portable contracts from
+`codex/p1-rust-wasm` into `engine/` and `web/`. Restored current mise/CI commands,
+browser smoke integration and manifest status without changing the legacy physics
+or the recovered Rust implementation. Added [RESUME](RESUME.md) with original
+commits, current commands, fresh verification and the E03 continuation point.
+Historical evidence remains unchanged; P1 and the numerical/GPU migration are
+incomplete.
+
 ## 27 September 2026: validate documentation against the working tree
 
 Removed the optional historical source-ZIP verification argument and its missing

@@ -1,0 +1,136 @@
+[
+  {
+    "name": "install",
+    "command": [
+      "bun",
+      "install",
+      "--frozen-lockfile"
+    ],
+    "started": "2026-09-26T12:01:42.656Z",
+    "finished": "2026-09-26T12:01:42.684Z",
+    "exitCode": 0,
+    "log": "install.log"
+  },
+  {
+    "name": "rust-fmt",
+    "command": [
+      "cargo",
+      "fmt",
+      "--all",
+      "--",
+      "--check"
+    ],
+    "started": "2026-09-26T12:01:42.685Z",
+    "finished": "2026-09-26T12:01:42.745Z",
+    "exitCode": 0,
+    "log": "rust-fmt.log"
+  },
+  {
+    "name": "native",
+    "command": [
+      "cargo",
+      "test",
+      "--locked",
+      "--workspace"
+    ],
+    "started": "2026-09-26T12:01:42.750Z",
+    "finished": "2026-09-26T12:01:44.565Z",
+    "exitCode": 0,
+    "log": "native.log"
+  },
+  {
+    "name": "clippy",
+    "command": [
+      "cargo",
+      "clippy",
+      "--locked",
+      "--workspace",
+      "--all-targets",
+      "--",
+      "-D",
+      "warnings"
+    ],
+    "started": "2026-09-26T12:01:44.575Z",
+    "finished": "2026-09-26T12:01:45.042Z",
+    "exitCode": 0,
+    "log": "clippy.log"
+  },
+  {
+    "name": "native-device",
+    "command": [
+      "cargo",
+      "run",
+      "--locked",
+      "-p",
+      "particle-sim-gpu",
+      "--example",
+      "device-smoke"
+    ],
+    "started": "2026-09-26T12:01:45.043Z",
+    "finished": "2026-09-26T12:01:46.421Z",
+    "exitCode": 0,
+    "log": "native-device.log"
+  },
+  {
+    "name": "build",
+    "command": [
+      "bun",
+      "run",
+      "build"
+    ],
+    "started": "2026-09-26T12:01:46.422Z",
+    "finished": "2026-09-26T12:01:47.148Z",
+    "exitCode": 0,
+    "log": "build.log"
+  },
+  {
+    "name": "bindings-freshness",
+    "command": [
+      "bun",
+      "run",
+      "check:wasm"
+    ],
+    "started": "2026-09-26T12:01:47.148Z",
+    "finished": "2026-09-26T12:01:47.375Z",
+    "exitCode": 0,
+    "log": "bindings-freshness.log"
+  },
+  {
+    "name": "lint",
+    "command": [
+      "bun",
+      "run",
+      "lint"
+    ],
+    "started": "2026-09-26T12:01:47.375Z",
+    "finished": "2026-09-26T12:01:47.483Z",
+    "exitCode": 0,
+    "log": "lint.log"
+  },
+  {
+    "name": "frontend",
+    "command": [
+      "bun",
+      "run",
+      "check"
+    ],
+    "started": "2026-09-26T12:01:47.483Z",
+    "finished": "2026-09-26T12:02:04.503Z",
+    "exitCode": 0,
+    "log": "frontend.log"
+  },
+  {
+    "name": "browser",
+    "command": [
+      "bun",
+      "run",
+      "test:browser",
+      "artifacts/validation/p1-m1/20260926-e01-final/browser",
+      "--require-gpu"
+    ],
+    "started": "2026-09-26T12:02:04.503Z",
+    "finished": "2026-09-26T12:02:05.135Z",
+    "exitCode": 0,
+    "log": "browser.log"
+  }
+]

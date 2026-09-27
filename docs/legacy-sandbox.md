@@ -2,7 +2,7 @@
 
 Betjening og implementering af den nuværende TypeScript-motor.
 Se [dokumentationsindekset](README.md) og [projektstrukturen](project-structure.md)
-for navigation; Rust/WASM-migrationen er fortsat planlagt.
+for navigation; [Rust-handoff](RESUME.md) beskriver migrationens aktuelle stade.
 
 ## Betjening
 

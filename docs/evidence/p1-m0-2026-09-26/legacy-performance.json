@@ -1,0 +1,133 @@
+{
+  "kind": "legacy-headless-completed-tick-baseline",
+  "rendering": "excluded",
+  "instrumentation": "separate untimed pass, array and ledger hash parity",
+  "results": [
+    {
+      "scene": "ambient",
+      "width": 480,
+      "height": 270,
+      "seed": 20260926,
+      "warmupTicks": 5,
+      "sampledTicks": 20,
+      "outerDtSeconds": 0.016666666666666666,
+      "repeats": [
+        {
+          "p50Ms": 24.70254200000005,
+          "p95Ms": 25.665084000000007,
+          "wallMs": 498.97408700000005,
+          "acceptedSeconds": 0.3333333333333333,
+          "simulatedSecondsPerWallSecond": 0.6680373630972409,
+          "stateHash": "c1b93662853ec189d251680478c23c482287969789aa35f5b67ae9c52702572f"
+        },
+        {
+          "p50Ms": 40.002250000000004,
+          "p95Ms": 43.16454199999998,
+          "wallMs": 795.5759189999999,
+          "acceptedSeconds": 0.3333333333333333,
+          "simulatedSecondsPerWallSecond": 0.4189836888883176,
+          "stateHash": "c1b93662853ec189d251680478c23c482287969789aa35f5b67ae9c52702572f"
+        },
+        {
+          "p50Ms": 34.10866699999997,
+          "p95Ms": 37.394457999999986,
+          "wallMs": 694.8625390000004,
+          "acceptedSeconds": 0.3333333333333333,
+          "simulatedSecondsPerWallSecond": 0.4797111869248907,
+          "stateHash": "c1b93662853ec189d251680478c23c482287969789aa35f5b67ae9c52702572f"
+        }
+      ],
+      "countersOver25Ticks": {
+        "pressureDerivations": 100,
+        "outletSearches": 0,
+        "outletDequeues": 0,
+        "outletNeighborVisits": 0
+      },
+      "instrumentedStateMatches": true
+    },
+    {
+      "scene": "pool",
+      "width": 480,
+      "height": 270,
+      "seed": 20260926,
+      "warmupTicks": 5,
+      "sampledTicks": 20,
+      "outerDtSeconds": 0.016666666666666666,
+      "repeats": [
+        {
+          "p50Ms": 54.53770799999984,
+          "p95Ms": 60.52429200000006,
+          "wallMs": 1111.3941689999992,
+          "acceptedSeconds": 0.3333333333333333,
+          "simulatedSecondsPerWallSecond": 0.29992359383463124,
+          "stateHash": "5d6dc426acd723239ff21ea8e940c2b11a96110dafc44d61d9716bc433001885"
+        },
+        {
+          "p50Ms": 51.88158399999975,
+          "p95Ms": 52.575958000000355,
+          "wallMs": 1022.050374999998,
+          "acceptedSeconds": 0.3333333333333333,
+          "simulatedSecondsPerWallSecond": 0.32614178467801447,
+          "stateHash": "5d6dc426acd723239ff21ea8e940c2b11a96110dafc44d61d9716bc433001885"
+        },
+        {
+          "p50Ms": 47.861291999999594,
+          "p95Ms": 49.01991699999962,
+          "wallMs": 957.6595439999992,
+          "acceptedSeconds": 0.3333333333333333,
+          "simulatedSecondsPerWallSecond": 0.34807081015561164,
+          "stateHash": "5d6dc426acd723239ff21ea8e940c2b11a96110dafc44d61d9716bc433001885"
+        }
+      ],
+      "countersOver25Ticks": {
+        "pressureDerivations": 100,
+        "outletSearches": 0,
+        "outletDequeues": 0,
+        "outletNeighborVisits": 0
+      },
+      "instrumentedStateMatches": true
+    },
+    {
+      "scene": "sand-over-water",
+      "width": 480,
+      "height": 270,
+      "seed": 20260926,
+      "warmupTicks": 5,
+      "sampledTicks": 20,
+      "outerDtSeconds": 0.016666666666666666,
+      "repeats": [
+        {
+          "p50Ms": 38.858000000000175,
+          "p95Ms": 40.30554200000006,
+          "wallMs": 780.6080830000028,
+          "acceptedSeconds": 0.3333333333333333,
+          "simulatedSecondsPerWallSecond": 0.4270175272234942,
+          "stateHash": "6e58abe4708a7d0aff7425439dd25318d2775ffde1a45a0318a15185266275af"
+        },
+        {
+          "p50Ms": 47.719084000000294,
+          "p95Ms": 56.302834000000075,
+          "wallMs": 992.0430869999964,
+          "acceptedSeconds": 0.3333333333333333,
+          "simulatedSecondsPerWallSecond": 0.3360069110922947,
+          "stateHash": "6e58abe4708a7d0aff7425439dd25318d2775ffde1a45a0318a15185266275af"
+        },
+        {
+          "p50Ms": 48.22666600000048,
+          "p95Ms": 50.94974999999977,
+          "wallMs": 967.6188350000066,
+          "acceptedSeconds": 0.3333333333333333,
+          "simulatedSecondsPerWallSecond": 0.34448826467224675,
+          "stateHash": "6e58abe4708a7d0aff7425439dd25318d2775ffde1a45a0318a15185266275af"
+        }
+      ],
+      "countersOver25Ticks": {
+        "pressureDerivations": 100,
+        "outletSearches": 2975,
+        "outletDequeues": 83059,
+        "outletNeighborVisits": 324416
+      },
+      "instrumentedStateMatches": true
+    }
+  ]
+}

@@ -1,11 +1,11 @@
 # Rust simulation engine
 
-This directory owns the planned Rust/WASM engine and its WGSL shaders. The
-running application currently uses the TypeScript backend in
-[`web/src/legacy/`](../web/src/legacy/). No Cargo workspace or Rust/WASM backend
-is implemented yet.
+This directory owns the Rust/WASM workspace and future WGSL shaders. E01's
+lifecycle bootstrap and E02's portable contracts are implemented. The running
+application still uses [`web/src/legacy/`](../web/src/legacy/); numerical solvers,
+GPU rendering and scene promotion remain planned.
 
-Create the workspace during E01 of the [migration plan](../docs/plans/rust-wasm-migration/plan.md):
+The workspace follows the [migration plan](../docs/plans/rust-wasm-migration/plan.md):
 
 ```text
 engine/
@@ -17,7 +17,7 @@ engine/
     sim-cpu/                 Rust references and bounded CPU algorithms
     sim-gpu/                 wgpu state, scheduling and rendering
       src/
-      shaders/               WGSL owned by these pipelines
+      shaders/               Future WGSL; create when a pipeline needs it
     wasm/                    Browser bindings and backend construction
 ```
 
@@ -33,5 +33,8 @@ single-source and generate validated projections instead of copying definitions.
 
 Use the root [AGENTS.md](../AGENTS.md), [project structure](../docs/project-structure.md)
 and [engine contract](../docs/architecture/engine-boundary.md) for ownership and
-validation requirements. Add real Rust/WASM tasks to root `mise.toml` when the
-implementation exists; there are no Rust commands to run at this stage.
+validation requirements. Run `mise run rust:test`, `mise run rust:clippy`,
+`mise run build:wasm` and `mise run test:browser` from the repository root.
+`mise run ci` includes these checks. GPU absence is reported separately;
+`mise run test:browser artifacts/validation/browser/<new-run> --require-gpu`
+requires a real browser adapter. Rustup must be installed before setup.

@@ -1,9 +1,10 @@
 # Project structure
 
-**Current layout: 27 September 2026.** TypeScript lives in `web/`. `engine/` owns
-future Rust/WGSL implementation and currently contains only [scoped engine guidance](../engine/AGENTS.override.md). The
-running application still uses the existing TypeScript backend; this reorganization
-does not implement E01-E14. Start with [the knowledge map](README.md).
+**Current layout: 27 September 2026.** TypeScript lives in `web/`. `engine/` contains
+the E01 Rust/WASM bootstrap and E02 portable contracts, with
+[scoped engine guidance](../engine/AGENTS.override.md). The running application
+still uses the existing TypeScript backend; E03-E14 remain planned.
+Start with [the knowledge map](README.md).
 
 ## Current checkout
 
@@ -22,6 +23,7 @@ particle-foundry/
       main.ts                       Browser startup and frame loop
       app/                          DOM, controls, viewport, pointer mapping, clock
       engine-client/index.ts        Public browser access to the legacy backend
+      engine-client/wasm.ts         Experimental WASM lifecycle adapter
       materials/                    Authored catalogue, validation and reference content
       styles/                       CSS
       legacy/
@@ -33,8 +35,11 @@ particle-foundry/
     tests/
       app/, materials/, types/      Browser behavior and catalogue checks
       legacy/                       Backend tests, integration cases and fixtures
+      browser/                      Production-bundled WASM/WebGPU lifecycle smoke
+    scripts/                        WASM build, browser runner and legacy evidence tools
+    generated/wasm/                 Ignored generated glue, declarations and WASM
     benchmarks/                     Existing simulation workloads
-  engine/AGENTS.override.md         Scoped guidance for the planned Rust backend
+  engine/                          Cargo workspace, Rust contracts and bootstrap
   docs/                             Current model, plans, validation and history
   artifacts/                        Ignored local evidence and snapshots
 ```
@@ -50,6 +55,10 @@ The browser imports simulation operations, observations and view metadata throug
 `web/src/engine-client/index.ts`. This is currently a small re-export of the existing
 synchronous Sandbox API. It creates no extra world or wrapper layer. Biome rejects
 UI imports of private legacy modules and generated bindings.
+
+The separate `engine-client/wasm.ts` module is consumed by the E01 browser fixture.
+It keeps the experimental bootstrap out of the normal application bundle until
+E03 integrates the new lifecycle contract.
 
 `web/src/legacy/simulation/world.ts` owns current mutable state;
 `physics.ts` orders its passes, and `sandbox.ts` composes state, tools and rendering.
@@ -67,9 +76,9 @@ observations. The current synchronous readings and Canvas 2D render parameter mu
 not constrain the new GPU contract. Select canvas ownership before acquiring a
 context. Keep UI behavior while following [the engine boundary](architecture/engine-boundary.md).
 
-## Planned Rust workspace
+## Rust workspace
 
-Create this workspace at E01, under `engine/`:
+The recovered E01/E02 implementation lives under `engine/`:
 
 ```text
 engine/
@@ -81,7 +90,7 @@ engine/
     sim-cpu/                        Rust f64 references and bounded CPU algorithms
     sim-gpu/                        wgpu state, scheduling, reductions and rendering
       src/
-      shaders/                      Version-controlled WGSL owned by these pipelines
+      shaders/                      Future WGSL, added when a pipeline needs it
     wasm/                           Browser bindings and backend construction
 ```
 
@@ -102,10 +111,34 @@ constructs the selected backend. One live scene has one state/transport owner;
 CPU references run independent fixture worlds. A Rust handle to GPU buffers does
 not require a ticking CPU mirror or normal-frame whole-world readback.
 
-Generate JS glue, TypeScript declarations and WASM into ignored
+`mise run build:wasm` generates JS glue, TypeScript declarations and WASM into ignored
 `web/generated/wasm/`. Only the engine client imports bindings. Ignore
-`engine/target/`; track Cargo and Bun lockfiles. Pin and verify compatible
-wasm-bindgen library/CLI versions when adding the real build.
+`engine/target/`; track Cargo and Bun lockfiles. The build verifies that the
+wasm-bindgen CLI matches the pinned library version.
+
+### Implemented bootstrap and contracts
+
+[`particle-sim`](../engine/crates/sim/src/lib.rs) owns grid geometry and the
+identity, inventory and source types in [`contracts.rs`](../engine/crates/sim/src/contracts.rs).
+[`snapshot.rs`](../engine/crates/sim/src/snapshot.rs) encodes detached `PFSN` v1
+checkpoints; [`gpu_layout.rs`](../engine/crates/sim/src/gpu_layout.rs) packs scalar
+GPU records. [E02 regression tests](../engine/crates/sim/tests/e02_contracts.rs)
+cover IDs, malformed checkpoints, capacity and byte layouts. This is not a live
+save/load service or a shader ABI test on hardware.
+
+[`particle-sim-cpu`](../engine/crates/sim-cpu/src/lib.rs) and
+[`particle-sim-gpu`](../engine/crates/sim-gpu/src/lib.rs) own separate bootstrap
+sessions. The latter initializes a wgpu device; neither advances a physical world.
+[`particle-wasm`](../engine/crates/wasm/src/lib.rs) exposes initialization and disposal
+through [`engine-client/wasm.ts`](../web/src/engine-client/wasm.ts).
+The [browser smoke](../web/tests/browser/engine-smoke.ts) exercises lifecycle,
+malformed inputs, independent sessions, missing GPU rejection and actual adapter
+initialization from a production bundle under `/engine-smoke/`.
+
+[`engine/fixtures/engine-reference-v1.json`](../engine/fixtures/engine-reference-v1.json)
+freezes reference conventions for future numerical work. It does not establish
+solver correctness. E03's command/probe lifecycle and catalogue projection remain
+planned; see [the recovery handoff](RESUME.md).
 
 ## Current-to-target migration map
 
@@ -130,12 +163,12 @@ regressions until conversion and promotion gates permit retirement.
 ## Verification and documentation
 
 Run `mise run ci` from the repository root for lint, both TypeScript checks,
-existing tests, production build and documentation validation. `mise run bench`
-is available for performance work. At E01 add native Rust tests, WASM generation,
-ABI checks and real browser initialization; hardware skips are not passes.
+existing tests, production build and documentation validation, plus Rust formatting,
+native tests/Clippy, WASM generation/freshness and real browser initialization.
+`mise run bench` is available for performance work. Hardware skips are not passes.
 
 Current fixtures are TypeScript helpers under `web/tests/legacy/fixtures/`.
-Introduce shared versioned fixture data only when both backends consume it.
+New numerical algorithms use Rust references and the frozen engine fixture conventions.
 Keep transient results under ignored `artifacts/` and durable summaries under
 `docs/validation/`.
 

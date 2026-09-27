@@ -8,8 +8,8 @@ _.path = ["{{config_root}}/web/node_modules/.bin"]
 _.python.venv = { path = ".venv", create = true }
 
 [tasks.setup]
-description = "Install application and documentation dependencies"
-depends = ["install", "docs:install"]
+description = "Install application, documentation and Rust/WASM dependencies"
+depends = ["install", "docs:install", "rust:bindings-tool"]
 
 [tasks.install]
 description = "Install application dependencies from the frozen lockfile"
@@ -19,13 +19,13 @@ run = "bun install --frozen-lockfile"
 [tasks.dev]
 description = "Start the development server"
 dir = "{{config_root}}/web"
-depends = ["install"]
+depends = ["install", "build:wasm"]
 run = "vite"
 
 [tasks.build]
 description = "Build the production application"
 dir = "{{config_root}}/web"
-depends = ["install"]
+depends = ["install", "build:wasm"]
 run = "vite build"
 
 [tasks.preview]
@@ -55,7 +55,7 @@ run = "biome format --write ."
 [tasks.typecheck]
 description = "Check TypeScript types"
 dir = "{{config_root}}/web"
-depends = ["install"]
+depends = ["install", "build:wasm"]
 run = "tsc --noEmit"
 
 [tasks."typecheck:catalogue"]
@@ -89,4 +89,62 @@ run = "python docs/scripts/render-plan.py"
 
 [tasks.ci]
 description = "Run all continuous integration checks"
-depends = ["lint", "check", "build", "docs:check"]
+depends = ["lint", "check", "build", "docs:check", "rust:fmt", "rust:test", "rust:clippy", "test:browser"]
+run = "mise run check:wasm"
+
+[tasks."rust:toolchain"]
+description = "Install or verify the toolchain pinned in engine/rust-toolchain.toml"
+dir = "{{config_root}}/engine"
+run = "rustup show"
+
+[tasks."rust:bindings-tool"]
+description = "Install the wasm-bindgen CLI paired with the locked Rust library"
+dir = "{{config_root}}/engine"
+depends = ["rust:toolchain"]
+run = "cargo install wasm-bindgen-cli --version 0.2.108 --locked"
+
+[tasks."rust:fmt"]
+description = "Check Rust formatting"
+dir = "{{config_root}}/engine"
+depends = ["rust:toolchain"]
+run = "cargo fmt --all -- --check"
+
+[tasks."rust:test"]
+description = "Run native Rust workspace and contract tests"
+dir = "{{config_root}}/engine"
+depends = ["rust:toolchain"]
+run = "cargo test --locked --workspace"
+
+[tasks."rust:clippy"]
+description = "Check all native Rust targets with Clippy"
+dir = "{{config_root}}/engine"
+depends = ["rust:toolchain"]
+run = "cargo clippy --locked --workspace --all-targets -- -D warnings"
+
+[tasks."rust:device-smoke"]
+description = "Initialize a native wgpu adapter and device (requires GPU support)"
+dir = "{{config_root}}/engine"
+depends = ["rust:toolchain"]
+run = "cargo run --locked -p particle-sim-gpu --example device-smoke"
+
+[tasks."build:wasm"]
+description = "Build locked Rust/WASM and generate browser bindings"
+dir = "{{config_root}}/web"
+depends = ["install", "rust:bindings-tool"]
+run = "bun scripts/build-wasm.ts"
+
+[tasks."check:wasm"]
+description = "Check generated WASM assets byte-for-byte against a fresh generation"
+dir = "{{config_root}}/web"
+depends = ["install", "rust:bindings-tool"]
+run = "bun scripts/build-wasm.ts --check"
+
+[tasks."test:browser"]
+description = "Run production-bundled WASM lifecycle and optional WebGPU smoke"
+dir = "{{config_root}}/web"
+depends = ["install", "build:wasm"]
+run = "bun scripts/test-browser.ts"
+
+[tasks."validate:baseline"]
+description = "Capture fresh legacy characterization, controls and timing evidence"
+run = "bun web/scripts/validate-baseline.ts"

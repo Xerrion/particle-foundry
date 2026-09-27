@@ -1,6 +1,6 @@
 # Fire and combustion integration plan
 
-**Revision:** 23 September 2026. **Status:** planned, not implemented. **First task:** P1 / M0 / E00 / FIRE-W00. Start with [START_HERE.md](../../START_HERE.md).
+**Revision:** 27 September 2026. FIRE-W00 baseline and FIRE-W01 contracts have recorded validation; corrected combustion remains planned. The [fire manifest](../../data/fire-combustion-work.json) owns the next item. Start with [START_HERE.md](../../START_HERE.md).
 
 This plan incorporates the [preserved fire audit](../../evidence/fire-review-2026-09-23/FIRE_REVIEW.md) into the existing Rust/WASM + wgpu redesign. It is a bounded game-combustion model, not an implementation of a complete fire-engineering solver. [ADR-001](../../architecture/adr-001-rust-wasm-wgpu.md), the [GPU plan](../fluid-gpu-redesign/plan.md) and the [engine boundary](../../architecture/engine-boundary.md) remain in force.
 
@@ -10,7 +10,7 @@ This plan incorporates the [preserved fire audit](../../evidence/fire-review-202
 
 The imported audit records 12 characterization checks against the supplied `src(3).zip`: ten isolated subsystem checks and two complete physics-tick checks, F02 and F08. It confirmed the closed-boundary oxygen and cold-FIRE ignition defects through the full pipeline. Other findings are composition defects, documented scope limitations or simplified gameplay rules. The audit runner asserts those historical observations, including the bugs. Its success is not a pass of the corrected specification.
 
-Read [validation/fire-combustion.md](../../validation/fire-combustion.md) for the finding-to-gate mapping, evidence limits and reproduction policy. The report, runners, results and provenance are retained unchanged; none was rerun for this documentation update. Application source is not modified or bundled. All work and fixture statuses remain planned.
+Read [validation/fire-combustion.md](../../validation/fire-combustion.md) for the finding-to-gate mapping, evidence limits and reproduction policy. The report, runners, results and provenance are retained unchanged; none was rerun for this documentation update. Application source is not modified or bundled. FIRE-W00 and FIRE-W01 have recorded baseline and contract validation. FIRE-W02-W08 and corrected FIRE-A gates remain planned; no chemistry is enabled.
 
 ## 2. Scope and milestones
 

@@ -74,7 +74,7 @@ Test stale responses after clear/load, disposal with pending operations, WASM as
 
 ## Documentation-update boundary
 
-This revision adds fire-plan integration and documentation checks only. The preserved fire audit was executed separately before this update and is not corrected implementation evidence. No application commands, Rust compiler, numerical fixtures, browser tests, benchmarks or GPU tests were executed. The source archive remains byte-for-byte unchanged. Record real implementation evidence using [the template](../templates/phase-evidence.md), not this statement.
+The original 23 September documentation revision added fire-plan integration and documentation checks only; it did not execute implementation gates. The preserved fire audit is historical characterization, not corrected acceptance. Subsequent E00-E02 and layout-recovery results are linked from [RESUME](../RESUME.md). Record new implementation evidence using [the template](../templates/phase-evidence.md); this specification alone establishes no pass.
 
 ## Combustion migration and hardware checks
 

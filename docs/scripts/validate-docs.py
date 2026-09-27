@@ -229,7 +229,7 @@ def main() -> int:
         fire_fixture_ids = [i["id"] for i in fire_fixtures]
         require(fire_work_ids == [f"FIRE-W{i:02d}" for i in range(9)], "Fire work IDs must be FIRE-W00-W08")
         require(fire_fixture_ids == [f"FIRE-A{i:02d}" for i in range(1,15)], "Corrected fire fixture IDs must be FIRE-A01-A14")
-        require(fire["nextWorkItem"] == "FIRE-W00", "First fire task is not baseline capture")
+        require(fire["nextWorkItem"] in fire_work_ids, "Unknown next fire work item")
         fire_plan_text = (ROOT / fire["plan"]).read_text(encoding="utf-8")
         fire_acceptance_text = (ROOT / fire["acceptance"]).read_text(encoding="utf-8")
         previous_fire: set[str] = set()

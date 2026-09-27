@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "kind": "frozen-reference-specification-not-results",
+  "units": {"length": "m", "mass": "kg", "time": "s", "temperature": "K", "pressure": "Pa", "energy": "J"},
+  "scale": {"dx": 0.01, "depth": 0.01, "outerDt": 0.016666666666666666, "gravity": 9.80665},
+  "model": "lowMach",
+  "chemistry": "off",
+  "phaseChange": false,
+  "densitiesKgPerM3": {"liquid": 1000, "carrier": 1.2},
+  "referenceConvention": "M2 energy is a passive marker; no H-to-U conversion or thermodynamic claim",
+  "comparison": "same accepted physical time; rejected candidates contribute zero time and zero source debit",
+  "tolerances": {
+    "f64": {"massRelative": 1e-10, "massAbsoluteKg": 1e-14, "fractionAbsolute": 1e-12, "projectionDtDivergence": 1e-8, "restVelocityMPerS": 1e-8, "centroidCells": 0.1},
+    "f32": {"massRelative": 1e-5, "massAbsoluteKg": 1e-10, "fractionAbsolute": 1e-6, "projectionDtDivergence": 1e-5, "restVelocityMPerS": 1e-4, "centroidCells": 0.15},
+    "oneTickParity": {"alphaMeanAbsolute": 1e-5, "scaledVelocityRms": 1e-4}
+  },
+  "fixtures": [
+    {"id": "FLUID-REST", "grid": [16,16], "boundary": "free-slip-closed", "initial": "carrier; zero velocity; uniform pressure", "ticks": 1000, "oracle": "G constant = 0; stationary sealed gas"},
+    {"id": "FLUID-HYDROSTATIC", "grid": [16,16], "boundary": "free-slip-closed", "initial": "liquid fraction 1 for y >= 8; carrier elsewhere; zero velocity", "ticks": 1000, "oracle": "compatible face gravity and pressure gradient cancel"},
+    {"id": "FLUID-MARKER", "grid": [32,16], "boundary": "periodic", "gravity": 0, "velocity": [0.2,0], "initial": "liquid fraction 0.5; phase-associated marker 1 in [4,8)x[4,8), zero elsewhere", "seconds": 1.6, "oracle": "one crossing restores wrapped centroid and conserved totals"},
+    {"id": "FLUID-DAM", "grid": [32,16], "boundary": "free-slip-closed", "initial": "liquid fraction 1 in x < 8 and y >= 4, zero elsewhere; zero velocity", "seconds": 0.2, "refinements": [1,2,4], "oracle": "bounded conservative alpha; front and center-of-mass converge under dx/dt refinement; mirrored solution"},
+    {"id": "FLUID-DISCONNECTED", "grid": [16,16], "boundary": "free-slip-closed", "initial": "solid divider at x = 8; carrier; zero velocity", "ticks": 1, "oracle": "separate pressure nullspaces; incompatible volume source rejected without commit"},
+    {"id": "FLUID-CHANNEL", "grid": [16,16], "boundary": "free-slip-closed", "initial": "divider at x = 8 except opening y = 8; liquid fraction 0.5 elsewhere", "ticks": 60, "oracle": "no wall flux; conservation through one-cell opening"},
+    {"id": "FLUID-WALL-EDIT", "grid": [16,16], "boundary": "free-slip-closed", "initial": "FLUID-DISCONNECTED; open divider cell (8,8) at tick 1", "ticks": 2, "oracle": "cached operator/topology equals forced rebuild; no hidden displaced mass"},
+    {"id": "FLUID-SHEAR", "grid": [32,32], "boundary": "periodic", "gravity": 0, "nuM2PerS": 0.0001, "initial": "carrier; u = 0.1 sin(2 pi y/Ly); v = 0", "seconds": 0.1, "oracle": "u(t) = u(0) exp(-nu (2 pi/Ly)^2 t); temporal/spatial refinement"}
+  ],
+  "fire": {
+    "candidateNetwork": "2 H2 + O2 -> 2 H2O; activation and property domains must be validated in M4/M6",
+    "gateDefinitions": "docs/validation/fire-combustion.md",
+    "f64": {"inventoryRelative": 1e-9, "inventoryAbsoluteKg": 1e-15, "energyAbsoluteJ": 1e-8, "energyRelative": 1e-9},
+    "f32": {"inventoryRelative": 1e-5, "inventoryAbsoluteKg": 1e-11, "energyAbsoluteJ": 1e-5, "energyRelative": 1e-5},
+    "coldLabelTemperatureK": 295.15,
+    "baselineGrid": [7,7],
+    "seed": 2026,
+    "historicalWaterScope": "F06 is reaction-only; not an integrated suppression result"
+  }
+}

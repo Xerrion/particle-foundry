@@ -1,0 +1,71 @@
+{
+  "date": "2026-09-27",
+  "baseCommit": "c0295a3c047bc064c11ced251b71db7fdfc86099",
+  "originalRustTip": "778e348a923ef12a210235f5c5e5f03c6551c1d2",
+  "sourceScope": "Working-tree recovery changes on the named base, not the base alone. Documentation may be updated after these source checks.",
+  "commands": [
+    {
+      "command": "mise run ci",
+      "exitCode": 0,
+      "scope": "Initial recovery state; later browser-import adjustment rechecked below."
+    },
+    {
+      "command": "mise run validate:baseline /Users/lasn/Projects/particle-foundry/artifacts/recovery/20260927-rust-rebase/baseline",
+      "exitCode": 0,
+      "scope": "Final import paths; collection success, not corrected physical acceptance."
+    },
+    {
+      "command": "mise run rust:device-smoke",
+      "exitCode": 0,
+      "scope": "Native Metal lifecycle only."
+    },
+    {
+      "command": "mise run test:browser /Users/lasn/Projects/particle-foundry/artifacts/recovery/20260927-rust-rebase/browser-gpu --require-gpu",
+      "exitCode": 0,
+      "scope": "Final browser-import state; BrowserWebGpu lifecycle only."
+    }
+  ],
+  "preservation": {
+    "crates/": 13,
+    "docs/evidence/": 38,
+    "main:docs/history/": 6,
+    "main:docs/evidence/": 5,
+    "cargo-and-fixture-files": 4
+  },
+  "sha256": {
+    ".github/workflows/ci.yml": "18a8c53ccb5d949683e62d7fff665d4e515f6d523fada4a69435e3ff65244fd3",
+    "docs/scripts/validate-docs.py": "594b013d6f81bfddf9bab8ecf26a8512718e00f0e3841cd9b7e6ed1dc1dadf0d",
+    "engine/Cargo.lock": "cfc5f439c9b798b2cd2bf252a61305a6ea6f4a0d58921e40c0efc14f6a97be8e",
+    "engine/Cargo.toml": "23ece5518f5f9aa0250db18c2c3a3c0edd59bf986176ec2437023adcac9f1528",
+    "engine/crates/sim-cpu/Cargo.toml": "68a0acace687609de45f89bead272f2b3e8f46fe8f5a760f4d47f0866ebcd3f8",
+    "engine/crates/sim-cpu/src/lib.rs": "7a21cff77b70e33b265ba9a86cb5a022ab6bba9945afe43330ac998e19d4b2e3",
+    "engine/crates/sim-gpu/Cargo.toml": "c83d4f30a65d1d4fa9781057ba0b757027c5b818fa86f7d805e2093c05368d5e",
+    "engine/crates/sim-gpu/examples/device-smoke.rs": "0a8dd4c10239238899bc95c56ea6b1a3e8f41cdb7868445caf682236a2c19d02",
+    "engine/crates/sim-gpu/src/lib.rs": "4cf9a1f29190d32e030871a43e4a7305abd3d9bd255024a90ee16724c0c3a5fc",
+    "engine/crates/sim/Cargo.toml": "8eb2feb6ef79ddfdc80ccf7447af4285302c1691776d31b042140b017bfa6713",
+    "engine/crates/sim/src/contracts.rs": "d414664ebd1311bb0770b5f5268b5be106003c3459b9642f39124e0ab07eec80",
+    "engine/crates/sim/src/gpu_layout.rs": "7383b66dfe0cd1ffab487a9c405fa15de6adf3237fa9b867fbf01ecb33cd7836",
+    "engine/crates/sim/src/lib.rs": "ab108f557834f905731d103cc718bc41863519c1c6421a8f019e18c39e7426e9",
+    "engine/crates/sim/src/snapshot.rs": "839cfd08c9fc1357c75fcf6d74bb0b677911b12d21a1f497f1d3f7c6eb3a68ab",
+    "engine/crates/sim/tests/e02_contracts.rs": "7dfae646585ec08c67a4e4ab3c66fa85c5fe7d7857d76153a8d079f7788215ef",
+    "engine/crates/wasm/Cargo.toml": "f17e618db4e025457830c1c42969e7083f5bfd38961a6db30e1203ac56f92b88",
+    "engine/crates/wasm/src/lib.rs": "25d37080c48bae8e4c8da8b4149551498f7cab3a498d6327dc6af8052e5e4488",
+    "engine/fixtures/engine-reference-v1.json": "3c241b707ad7e513cce3fd68377c7b1b7af66e0e1c3076f81e0d904ed6dcc80d",
+    "engine/rust-toolchain.toml": "9500030ccefd0bab631fb7f1763f79f4103eca3a344c36cf15be869e330683bb",
+    "mise.toml": "e6ae7ec7a0ee9d0c3141bc7d47122cb762b87333f82b26d49d61bcd58080fa50",
+    "web/biome.json": "e6a5628cc3220a4380c84b7a51e901c13b95134b5c39fd1dc7722e6c6e9d36b1",
+    "web/bun.lock": "85f262b402c550bdb69f624f283136d8dff5c19a38cc59ba3967af6842e54c7f",
+    "web/package.json": "2f749e6fb751e7a2798ac99ad1f66d18e43db3cd9024960bbe4cd487f5b95f7d",
+    "web/scripts/build-wasm.ts": "9dcc6b3fd0ae38dd6c4b03c8c9e902211f7bc1350b87dd671bbf229425d8f3f5",
+    "web/scripts/fire-corrected-baseline.ts": "1aed283c36500213caeaff87795fda5fc5192373a00c3dec916c99dd6a074343",
+    "web/scripts/measure-legacy.ts": "72a259c3c214f0aa09dde9f9ebd2db2879f3b397ae3b15cfac03eabb2497428a",
+    "web/scripts/test-browser.ts": "77d911af62ad34d1b831490c9d3d9449b140b944211418f4e165b37ccba29da1",
+    "web/scripts/validate-baseline.ts": "19a86c464af18f3d48d8d81947b60df133105e0669b4520cc5f0debdd8ec0eb3",
+    "web/src/engine-client/index.ts": "900bfd10db8391b298554427918b7cfbe30a894adfaa3e081bb33e809d21dcac",
+    "web/src/engine-client/wasm.ts": "0244eba3c25b824a433592634ccba0e3d4ad9cb06b36c7001bb190cf6ad3c9d4",
+    "web/tests/browser/engine-smoke.html": "c00e1dc6c135d14c1406df6f8c9f9f5d53266fe70ed5bc8400bbd921921e9267",
+    "web/tests/browser/engine-smoke.ts": "3ca3388fe6a0abbf15911042bbbf3fe89f0293735572764220b86a488fc54e03",
+    "web/tsconfig.json": "7fc7cc0b95cb3079725dd1f72f6e24dcaa2703e32ece675ef1d1eac8b681a2c5",
+    "web/vite.config.ts": "bede4a19c6eebd41f9b599757a3020f8160cbc9a0d50c466efe99013fa74e113"
+  }
+}

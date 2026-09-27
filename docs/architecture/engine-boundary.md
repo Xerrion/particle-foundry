@@ -1,6 +1,6 @@
 # Engine boundary, execution and state contracts
 
-**Status:** proposed implementation contract under [ADR-001](adr-001-rust-wasm-wgpu.md). No interface below is claimed to exist in the supplied source. This extends the [matter model](matter-model.md), not the numerical equations in the [GPU plan](../plans/fluid-gpu-redesign/plan.md).
+**Status:** accepted implementation contract under [ADR-001](adr-001-rust-wasm-wgpu.md). E01 lifecycle initialization and E02 portable schemas/checkpoint packing exist; the async scene API, commands, probes and GPU scheduling below remain planned. [Project structure](../project-structure.md#implemented-bootstrap-and-contracts) links the implemented subset and its tests. This extends the [matter model](matter-model.md), not the numerical equations in the [GPU plan](../plans/fluid-gpu-redesign/plan.md).
 
 ## 1. Concrete separation
 
@@ -100,6 +100,10 @@ Rust f64 is the reference default. WGSL uses portable f32 and integer indexing/o
 Define and version the Rust/WGSL ABI explicitly: byte offsets, alignment, strides, padding, bindings, integer encodings and resource usages. `repr(C)` alone does not prove WGSL layout compatibility. Do not transfer a Rust `Vec`, enum or bool by raw struct copy. Use explicit scalar layouts, safe packing and shader sentinel round-trips. Test structure padding and vec3-related alignment deliberately. [WGSL rules](../sources.md#wgsl).
 
 Use distinct stable IDs wider than the legacy byte material field and a compact active-set mapping. Do not allocate one dense field for all 118 elements or every nuclide. Check actual device limits, aggregate allocations and binding counts before committing a scene. Allocation below a stated device maximum can still fail. [Limits](../sources.md#wgpu-limits).
+
+E02's `PFSN` version 1 checkpoint is a detached, little-endian low-Mach contract, not a legacy save importer or a live CPU mirror. It stores compact component-major kg masses, a passive J marker, MAC m/s faces, fixed walls, source/boundary ledgers, catalogue fingerprint, optional declared network identity, and epoch/tick/time. Its chemical reference is explicitly disabled; a declared network does not enable reactions. The optional nuclear payload is bounded and absent without allocation. Unknown versions, malformed values and unsupported energy references are rejected before scene replacement. The scalar GPU records are packed field-by-field as f32/u32; Rust offsets and byte order are tested, while a device shader sentinel remains an E07 gate.
+
+No E02 import converts legacy `world.energy` into thermodynamic internal energy. That field is parcel enthalpy H in J, while legacy chemical/diagnostic totals use kJ; converting the latter to J does not make it available U. A future converter must identify a supported property/reference-state version for every active phase, obtain its consistent pressure and physical volume, then calculate U = H - pV in J and establish a new ledger baseline. It must reject missing domains, unsupported phases or unknown reference zeros with a conversion report. It cannot silently relabel H, infer U from temperature alone, or charge the same chemical release both to formation energies and a stored reaction account. Until that converter and its physical gates pass, snapshots accept only the passive marker and disabled chemistry.
 
 ## 7. GPU scheduling and failure
 
