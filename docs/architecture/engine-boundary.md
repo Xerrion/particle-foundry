@@ -5,12 +5,12 @@
 ## 1. Concrete separation
 
 ```text
-Existing src/app/, src/styles/, src/main.ts
+Existing web/src/app/, web/src/styles/, web/src/main.ts
   TypeScript UI, input, presentation and browser lifecycle
                    |
          commands / versioned observations
                    |
-       crates/wasm: wasm-bindgen facade
+       engine/crates/wasm: wasm-bindgen facade
                    |
        sim contracts and session orchestration
                    |
@@ -22,7 +22,7 @@ Existing src/app/, src/styles/, src/main.ts
                          GPU buffers stay resident
 ```
 
-Keep `src/` in place during P1. The proposed `apps/web/` layout is optional later housekeeping, not a prerequisite. Exact proposed paths and source replacements are in [project structure](../project-structure.md).
+Keep the browser application in `web/` and the Rust workspace in `engine/`. The existing TypeScript backend is isolated in `web/src/legacy/`, reached through `web/src/engine-client/`. The current client re-exports the synchronous legacy API; E03 still defines the async Rust/WASM contract. Exact paths and source replacements are in [project structure](../project-structure.md).
 
 ## 2. Identity and configuration
 
@@ -135,7 +135,7 @@ On device loss, stop new work, reject/cancel affected readbacks and report the l
 
 ## 11. Data and tests
 
-Keep `src/materials/definitions.ts` as the single legacy catalogue while bootstrapping. M1 adds a reproducible validated export/projection for the small supported scene, not a second handwritten Rust or WGSL catalogue. P3 deliberately migrates scientific source records to the full data pipeline and regenerates each consumer. Version/hash the outputs and test IDs, units and precision conversion. UI presentation may remain authored in TypeScript when joined by stable IDs.
+Keep `web/src/materials/definitions.ts` as the single legacy catalogue while bootstrapping. M1 adds a reproducible validated export/projection for the small supported scene, not a second handwritten Rust or WGSL catalogue. P3 deliberately migrates scientific source records to the full data pipeline and regenerates each consumer. Version/hash the outputs and test IDs, units and precision conversion. UI presentation may remain authored in TypeScript when joined by stable IDs.
 
 All phases use the same boundary. Chemistry, phase changes and nuclear stages produce validated amount/energy transactions in the owning backend; none gets its own world transport loop. See [backend acceptance](../validation/backend-migration.md) and the [work-package mapping](../plans/rust-wasm-migration/plan.md).
 

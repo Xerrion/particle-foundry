@@ -1,19 +1,27 @@
-# Start here: developer implementation entrypoint
+# Engine migration: developer implementation entrypoint
+
+For general development, start at [the knowledge map](README.md). Use this migration
+brief only for assigned migration work. Reading it does not authorize the full roadmap.
 
 **Project:** Particle Foundry. **Revision:** 23 September 2026, fire-audit integration update. **First task:** P1 / M0 / E00. **Status:** development plan, not delivered implementation.
 
 **Change the simulation engine, not the application.** Keep the current TypeScript UI, DOM, CSS, input and viewport. Build corrected references in Rust, use WASM for browser delivery, and run heavy parallel physics plus direct rendering through Rust wgpu and WGSL. This decision is [ADR-001](architecture/adr-001-rust-wasm-wgpu.md).
 
-Implement all P1-P9 phases in dependency order, beginning with the GPU redesign. The Rust bootstrap and engine boundary are part of P1 M0/M1, not a separate whole-codebase rewrite before the numerical work. M2 is a Rust f64 reference; M3 is the equivalent WGSL/f32 GPU solver.
+For assigned migration work, follow P1-P9 dependencies beginning with the GPU redesign.
+Implement only the requested work item or explicitly authorized sequence. The Rust
+bootstrap and engine boundary are part of P1 M0/M1, not a separate whole-codebase
+rewrite before the numerical work. M2 is a Rust f64 reference; M3 is the equivalent
+WGSL/f32 GPU solver.
 
 ## Copy-paste developer brief
 
 ```text
-Start with docs/START_HERE.md and implement the P1-P9 roadmap.
+Start with docs/README.md, then use docs/START_HERE.md for the P1-P9 migration.
+Execute only the assigned work item or explicitly authorized sequence.
 First work item: P1 / M0 / E00 in docs/plans/rust-wasm-migration/plan.md.
 Follow ADR-001: retain the TypeScript frontend; migrate the simulation engine
 selectively to Rust/WASM with wgpu-managed WGSL compute and direct rendering.
-Do not rewrite the UI, adopt Bevy, or move src/ to apps/web/ as a prerequisite.
+Keep the UI in web/ and add Rust/WGSL under engine/. Do not rewrite the UI or adopt Bevy.
 Inspect the real repository, its instructions, scripts, tests and working changes.
 Preserve a recoverable tracked/untracked snapshot before any implementation edits.
 Read the source review and docs/validation/fire-combustion.md, then establish a fresh baseline.
@@ -35,10 +43,15 @@ Replace oxygen refill, cold-FIRE ignition, missing products and contact-only wat
 Preserve funded ignition, finite inventories and derived visuals; no per-substep replay of old per-tick rates.
 Continue P2-P9 using the same engine contracts and the 40/83/103/118 element cohorts.
 Run the applicable native, WASM, browser, numerical and GPU tests; record unrun gates honestly.
-Update evidence and work status only when supported. Continue with the next ready work item.
+Update evidence and work status only when supported.
+Continue with another work item only when it is within the authorized task scope.
 ```
 
-## Read in this order
+## Reading order for migration work
+
+For a bounded work item, read its controlling plan, dependencies and contracts.
+Use this broader sequence when establishing the migration baseline; it is not
+required reading for unrelated development.
 
 1. [Stack decision](architecture/adr-001-rust-wasm-wgpu.md), [roadmap](roadmap.md), and [active work](remaining-work.md).
 2. [Static source review](validation/source-review-2026-09-21.md), [fire evidence and corrected gates](validation/fire-combustion.md), and [project structure](project-structure.md). Confirm the real checkout, which may differ from the upload.
@@ -49,7 +62,7 @@ The Markdown documents are canonical. The GPU [HTML view](plans/fluid-gpu-redesi
 
 ## What was inspected and what remains unknown
 
-The supplied `src(3).zip` was statically inspected, including the startup, sandbox facade, state, movement, pressure call graph, renderer, diagnostics and material records. Its 43 file hashes and line references are recorded in [the source manifest](data/source-review-manifest.json). No application source was changed or included in this docs-only update.
+The following describes the historical 23 September review, not the current repository layout or current verification. The supplied `src(3).zip` was statically inspected, including the startup, sandbox facade, state, movement, pressure call graph, renderer, diagnostics and material records. Its 43 file hashes and line references are recorded in [the source manifest](data/source-review-manifest.json). No application source was changed or included in this docs-only update.
 
 The upload does not contain package/lockfiles, repository metadata, tests, benchmark harnesses or CI configuration. Their real status must be checked at M0. No application, Rust/WASM, browser or GPU test was run for this revision. The retained 24-pass/11-fail audit and quoted historical timings remain separate evidence, not fresh measurements. The separately imported fire review records 12 prior characterization checks, including two complete physics-tick cases; none was rerun in this update and none counts as a corrected FIRE-A pass.
 
@@ -59,7 +72,7 @@ The upload does not contain package/lockfiles, repository metadata, tests, bench
 
 Inspect repository instructions and Git state. Preserve tracked and untracked work in a recoverable snapshot; a patch alone is insufficient. Do not reset to the historical audit commit. Identify the real commands for lint, type checking, tests and build, then run them with the checked-in lockfile.
 
-Earlier docs name `bun run lint`, `bun run check`, `bun run test` and `bun run build`; another historical audit block uses `typecheck`. The supplied source cannot resolve that script-name difference. Record the actual equivalents rather than inventing a passing command. Keep legacy audit results and fixtures, but write new results under `artifacts/validation/p1-m0/<run-id>/`.
+The repository now defines commands and tool versions in `mise.toml`: run `mise run ci` for lint, both type checks, tests, build and documentation validation. Individual tasks include `mise run lint`, `mise run check`, `mise run test` and `mise run build`; setup is documented in the root README. Earlier audit commands and results remain historical evidence. Keep legacy audit results and fixtures, but write new results under `artifacts/validation/p1-m0/<run-id>/`.
 
 Include FIRE-W00 in this baseline. Preserve F01-F12 and their source hashes; create separate corrected assertions for the closed-boundary and cold-FIRE bugs, plus the brush and explicit-reaction controls. Keep the tiny-water observation labelled reaction-only. Do not demand a full legacy TypeScript repair before the Rust work.
 
@@ -67,7 +80,7 @@ Freeze numerical fixtures, accepted physical-time accounting, data/version conve
 
 ### M1 / E01-E04: make the Rust/browser seam concrete
 
-Add the minimal Rust workspace and reproducible WASM/bindings build while retaining the existing TypeScript app structure. Establish a real browser initialization/disposal smoke test. Define units, IDs, active-component mappings, snapshot schema, async observation/command contracts and shader layouts.
+Add the minimal Rust workspace and reproducible WASM/bindings build under `engine/` while retaining the TypeScript app in `web/`. Establish a real browser initialization/disposal smoke test. Define units, IDs, active-component mappings, snapshot schema, async observation/command contracts and shader layouts.
 
 Use the existing sandbox composition as the adapter point. Preserve legacy scenes separately. Keep a single authored catalogue with generated projections, not handwritten Rust/TS/WGSL copies. Plan canvas selection before acquiring a context and use epoch-stamped callbacks.
 

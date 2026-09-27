@@ -36,7 +36,7 @@ A low-Mach fluid model does not become a high-temperature plasma solver when hea
 
 ## P6 / N0: nuclide data and network compiler
 
-**Suggested owners:** proposed `crates/sim/src/nuclear/` for network/schema contracts, Rust offline data preparation, `crates/sim-cpu/src/nuclear/` for references and `crates/sim-gpu/` plus `shaders/nuclear/` for GPU state/execution. These are work targets, not supplied files.
+**Suggested owners:** proposed `engine/crates/sim/src/nuclear/` for network/schema contracts, Rust offline data preparation, `engine/crates/sim-cpu/src/nuclear/` for references and `engine/crates/sim-gpu/` plus `engine/crates/sim-gpu/shaders/nuclear/` for GPU state/execution. These are work targets, not supplied files.
 
 Import a small, version-pinned evaluated subset. Begin with H-1, H-2, H-3, He-3, He-4, representative carbon isotopes, and selected heavy-element nuclides needed by the first decay fixtures. Extend the subset only with explicit source and daughter closure. Stable test fixtures and synthetic numerical fixtures must be marked separately from evaluated real nuclides.
 

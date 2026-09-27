@@ -6,7 +6,7 @@ The [fluid/GPU plan](../fluid-gpu-redesign/plan.md) controls equations, scope an
 
 ## Non-negotiable implementation boundaries
 
-Keep the TypeScript application and use its existing module structure. Do not move it to `apps/web/`, adopt Bevy, or introduce a Rust UI as part of P1. Add only the Rust workspace, bridge and modules needed by the current milestone.
+Keep the TypeScript application in `web/`, its existing backend in `web/src/legacy/`, and new Rust/WGSL implementation in `engine/`. The browser imports simulation operations through `web/src/engine-client/`. Do not adopt Bevy or introduce a Rust UI as part of P1. Add only the workspace, bridge and modules needed by the current milestone.
 
 New numerical reference code is Rust f64. Production GPU numerical work is WGSL/f32, managed by Rust wgpu. The existing TypeScript simulation remains the legacy backend and regression baseline, not an intermediate implementation to port line by line. Keep one state and one transport owner per scene.
 
@@ -44,7 +44,7 @@ Inspect the full repository, preserve tracked/untracked changes, identify real s
 
 **P1 / M1. Dependencies:** E00. **Source:** SRC-01, SRC-03.
 
-Create the minimal proposed crates without relocating src/. Pin Rust/wgpu/wasm-bindgen after native and browser smoke tests. Integrate reproducible WASM generation with the existing frontend build.
+Create the minimal proposed crates in engine/. Pin Rust/wgpu/wasm-bindgen after native and browser smoke tests. Generate bindings into web/generated/wasm/ and integrate them with the web/ frontend build.
 
 **Exit:** Native core tests and a real browser WASM initialize/dispose cycle pass; generated declarations compile in the existing TypeScript application. No UI rewrite.
 
@@ -154,30 +154,28 @@ Run native reference, browser GPU, regression, memory/readback, sustained and in
 
 ## Proposed repository additions
 
-Keep the existing frontend files in place. Proposed package names are `particle-sim`, `particle-sim-cpu`, `particle-sim-gpu` and `particle-wasm`; create them at E01. `sim` owns portable contracts and generic orchestration, not a duplicate GPU-world mirror. Concrete backend construction belongs to the host/bridge.
+The existing frontend now lives in `web/`. Proposed package names remain `particle-sim`, `particle-sim-cpu`, `particle-sim-gpu` and `particle-wasm`; create them under `engine/` at E01. `sim` owns portable contracts and generic orchestration, not a duplicate GPU-world mirror. Concrete backend construction belongs to the host/bridge. The current engine client is only a synchronous legacy entrypoint; it does not complete E03.
 
 ```text
-Cargo.toml                     Workspace, added at E01
-Cargo.lock                     Pinned application dependencies
-rust-toolchain.toml            Pinned validated Rust toolchain
-crates/
-  sim/                         Units, IDs, schemas, commands, stages, snapshots
-  sim-cpu/                     Rust references and bounded CPU algorithms
-  sim-gpu/                     wgpu state, execution, reductions, rendering
-  wasm/                        Browser bindings and backend selection
-shaders/
-  fluid/                       Pressure, projection and conservative fluxes
-  thermal/                     Added with M4
-  granular/                    Added with M5
-  render/                      State visualization, maps and overlays
-  waves/                       Added in P2
-  chemistry/                   Expanded in P3-P5
-  nuclear/                     Added in P6-P8
-src/                           Existing TypeScript app, initially unchanged layout
-  simulation/engine-client.ts  Proposed facade and legacy adapter seam
-  generated/                   Generated WASM/data projections, not handwritten
-tests/fixtures/                Shared versioned fixture format; inspect real suite
+engine/
+  Cargo.toml                   Workspace, added at E01
+  Cargo.lock                   Pinned application dependencies
+  rust-toolchain.toml          Pinned validated Rust toolchain
+  crates/
+    sim/                       Units, IDs, schemas, commands, stages, snapshots
+    sim-cpu/                   Rust references and bounded CPU algorithms
+    sim-gpu/                   wgpu state, execution, reductions, rendering
+      shaders/                 Fluid/render first; other families at their milestones
+    wasm/                      Browser bindings and backend selection
+web/
+  src/app/                     Existing browser controls and lifecycle
+  src/engine-client/           Existing legacy entrypoint; async facade at E03
+  src/legacy/                  Existing TypeScript backend
+  generated/wasm/              Generated WASM/bindings at E01, ignored
+  tests/legacy/fixtures/       Existing TypeScript fixtures
 ```
+
+Keep backend-neutral fixtures in one versioned location when both implementations consume them. Current TypeScript fixtures are executable helpers, not a language-neutral data format.
 
 Do not create empty future shader trees or placeholder nuclear engines solely to match this diagram. Add a module when its milestone has a concrete caller. Ensure shader assets are embedded/packaged reproducibly by `sim-gpu`; a native run must not depend on an accidental working directory.
 
@@ -187,7 +185,7 @@ At E00 inspect the real JavaScript scripts and lockfile; `src(3).zip` is not a c
 
 Add separate checks for Rust formatting/lint, native core/reference tests, a WASM target build, generated-output freshness, WGSL parsing/layout and actual browser initialization. Keep the original frontend lint/typecheck/test/build checks. A native-only test job cannot validate the browser backend. Optional hardware tests must explicitly report skipped/unavailable runs rather than pass them.
 
-These reference commands become applicable after E01 creates the proposed packages; verify actual package/features first:
+Run these reference commands from `engine/` after E01 creates the proposed packages; verify actual package/features first:
 
 ```sh
 rustup target add wasm32-unknown-unknown

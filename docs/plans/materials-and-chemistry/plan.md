@@ -12,7 +12,7 @@ The exact cohorts are in [elements.md](../../elements.md) and [element-roadmap.j
 
 ## P3 / C0: registry and property ingestion
 
-**Dependency:** P1 state contract and completed P2 in the default work queue. **Suggested owners:** existing `src/materials/` for legacy/presentation data, `crates/sim/src/matter/` for portable contracts, Rust offline data tooling when required, and generated shared data projections. Numerical references use `crates/sim-cpu/`; GPU execution uses `crates/sim-gpu/` and `shaders/chemistry/`.
+**Dependency:** P1 state contract and completed P2 in the default work queue. **Suggested owners:** existing `web/src/materials/` for legacy/presentation data, `engine/crates/sim/src/matter/` for portable contracts, Rust offline data tooling when required, and generated shared data projections. Numerical references use `engine/crates/sim-cpu/`; GPU execution uses `engine/crates/sim-gpu/` and `engine/crates/sim-gpu/shaders/chemistry/`.
 
 Implement the full [matter model](../../architecture/matter-model.md): elements, nuclides, species, material forms, recipes, runtime components, property domains, source status, and capability declarations. Preserve the old numeric IDs. Imported data must have source/version/checksum and redistribution review. Compile immutable CPU/GPU property tables from one source.
 

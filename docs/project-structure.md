@@ -1,143 +1,150 @@
 # Project structure
 
-**Revision:** 23 September 2026, fire integration. The 43 files under `src/` were inspected statically in `src(3).zip`; no application code was changed or executed for this documentation edit. The separately preserved fire audit records its own prior execution. Root build configuration, tests, benchmarks and CI were not included in that upload. Proposed additions below are implementation work, not existing files. Start at [START_HERE](START_HERE.md).
+**Current layout: 27 September 2026.** TypeScript lives in `web/`. `engine/` owns
+future Rust/WGSL implementation and currently contains only [scoped engine guidance](../engine/AGENTS.override.md). The
+running application still uses the existing TypeScript backend; this reorganization
+does not implement E01-E14. Start with [the knowledge map](README.md).
 
-[ADR-001](architecture/adr-001-rust-wasm-wgpu.md) selects the existing TypeScript frontend plus a Rust/WASM engine, Rust CPU references, and wgpu-managed WGSL compute/rendering. Keep the application in `src/`. Moving it to `apps/web/`, introducing a Rust UI or adopting another game engine is not a prerequisite.
-
-## Inspected source layout and present ownership
+## Current checkout
 
 ```text
-src/
-  main.ts                   Browser startup, Canvas 2D acquisition, RAF loop
-  app/                      DOM controls, material picker, views, viewport, pointer mapping
-  materials/                Authored material catalogue, IDs, queries and 118-name reference
-  physics/                  Current physical solvers and reaction rules
-  rendering/                Canvas image construction, maps and visual waves
-  scenes/                   Starter scene construction
-  simulation/               World, physics orchestration, sandbox API, clock and diagnostics
-  styles/                   Application CSS
-  tools/                    Brush tools and their source accounting
+particle-foundry/
+  AGENTS.md                         Project development rules
+  README.md                         Quick start and navigation
+  mise.toml                         Root tool versions and task orchestration
+  .github/workflows/                CI uses the same mise tasks
+  web/
+    index.html                      Vite browser entry
+    package.json, bun.lock          Frontend dependencies
+    vite.config.ts                  Build configuration; output is web/dist/
+    tsconfig*.json, biome.json       Type checks, formatting and import boundaries
+    src/
+      main.ts                       Browser startup and frame loop
+      app/                          DOM, controls, viewport, pointer mapping, clock
+      engine-client/index.ts        Public browser access to the legacy backend
+      materials/                    Authored catalogue, validation and reference content
+      styles/                       CSS
+      legacy/
+        simulation/                 World, orchestration, sandbox, scale, diagnostics, RNG
+        physics/                    Existing solvers and reactions
+        rendering/                  Canvas 2D renderer, maps and visual waves
+        tools/                      Physical brush edits and source accounting
+        scenes/                     Existing world initialization
+    tests/
+      app/, materials/, types/      Browser behavior and catalogue checks
+      legacy/                       Backend tests, integration cases and fixtures
+    benchmarks/                     Existing simulation workloads
+  engine/AGENTS.override.md         Scoped guidance for the planned Rust backend
+  docs/                             Current model, plans, validation and history
+  artifacts/                        Ignored local evidence and snapshots
 ```
 
-`simulation/world.ts` owns the current mutable arrays. `simulation/physics.ts` orders the current passes; `simulation/sandbox.ts` composes the synchronous application API. This remains true for the legacy backend only. Do not describe it as the permanent owner of a new GPU scene.
+Keep frontend configuration and tests with the application. Root `mise.toml`
+selects `web/` as the working directory for frontend tasks, preserving commands
+such as `mise run dev` and `mise run ci`. Documentation tools and their `.venv/`
+remain at repository level. There is no second package manager or task framework.
 
-`app/controls.ts` already consumes a focused subset of the Sandbox API. Keep that interaction boundary rather than rebuilding the UI. The material picker, view controls, DOM lookup and pointer conversion retain their presentation responsibilities. Browser and DOM access do not move into the portable Rust core.
+## TypeScript ownership
 
-`materials/definitions.ts` is the existing authored material catalogue, accessed through `materials/index.ts` and the focused re-export/query interfaces. Eight elemental identities have dedicated legacy definitions; `element-reference.ts` already lists all 118 names. Do not confuse the reference list with 118 implemented materials, or duplicate the catalogue by hand in Rust and WGSL.
+The browser imports simulation operations, observations and view metadata through
+`web/src/engine-client/index.ts`. This is currently a small re-export of the existing
+synchronous Sandbox API. It creates no extra world or wrapper layer. Biome rejects
+UI imports of private legacy modules and generated bindings.
 
-`rendering/renderer.ts` reads CPU state to construct an image. `simulation/diagnostics.ts` scans the CPU world for totals. GPU scenes require different implementations behind the same user-facing capabilities: direct rendering from owned GPU fields, small diagnostic reductions and asynchronous probes. The source acquires a Canvas 2D context before sandbox selection, which must change at the host integration seam.
+`web/src/legacy/simulation/world.ts` owns current mutable state;
+`physics.ts` orders its passes, and `sandbox.ts` composes state, tools and rendering.
+The brush and starter scene remain in the legacy backend because they mutate its
+world. `simulation-clock.ts` belongs to `app/` because it converts elapsed browser
+time into requested ticks without owning physical state.
 
-The [source review](validation/source-review-2026-09-21.md) provides exact locations and limitations. The [source manifest](data/source-review-manifest.json) records every inspected file's hash, size and line count.
+`web/src/materials/definitions.ts` remains the only authored legacy catalogue.
+Its public imports, validators and compatibility exports stay together. The 118-name
+element reference does not imply 118 implemented materials. Generate future
+Rust/WGSL projections from the authored catalogue; do not duplicate definitions.
 
-## Proposed Rust workspace and browser seam
+At E03 the engine client will adapt backend selection, queued commands and async
+observations. The current synchronous readings and Canvas 2D render parameter must
+not constrain the new GPU contract. Select canvas ownership before acquiring a
+context. Keep UI behavior while following [the engine boundary](architecture/engine-boundary.md).
 
-Create the minimal workspace during P1/M1/E01. Names below are proposed, not claims about files in the source upload. Keep the existing frontend build; establish its actual scripts during E00 before editing it.
+## Planned Rust workspace
+
+Create this workspace at E01, under `engine/`:
 
 ```text
-Cargo.toml                      Workspace definition
-Cargo.lock                      Reproducible dependency resolution
-rust-toolchain.toml             Tested, pinned Rust toolchain
-crates/
-  sim/                          Package particle-sim
-    src/                        Portable IDs, units, schemas, stage/API contracts
-  sim-cpu/                      Package particle-sim-cpu
-    src/                        Rust f64 reference solvers and bounded CPU algorithms
-    tests/                      Analytical, conservation and failure fixtures
-  sim-gpu/                      Package particle-sim-gpu
-    src/                        wgpu state, pipelines, scheduling and rendering
-    tests/                      ABI and native GPU tests when hardware is available
-  wasm/                         Package particle-wasm
-    src/                        Browser bindings, async initialization and backend construction
-shaders/
-  fluid/                        WGSL fluid operators and conservative transport
-  render/                       WGSL rendering from the same device/state
-  ...                           Add thermal, granular and later domains when required
-src/
-  main.ts                       Existing browser shell with backend/canvas selection
-  simulation/
-    sandbox.ts                  Retained legacy integration behind a facade
-    engine-client.ts            Proposed thin TypeScript command/observation adapter
-  app/, materials/, styles/     Retained frontend responsibilities
+engine/
+  Cargo.toml                        Workspace definition
+  Cargo.lock                        Reproducible engine dependencies
+  rust-toolchain.toml               Validated Rust toolchain
+  crates/
+    sim/                            Portable IDs, units, schemas and contracts
+    sim-cpu/                        Rust f64 references and bounded CPU algorithms
+    sim-gpu/                        wgpu state, scheduling, reductions and rendering
+      src/
+      shaders/                      Version-controlled WGSL owned by these pipelines
+    wasm/                           Browser bindings and backend construction
 ```
 
-Keep shader sources version controlled. Put generated WASM, JavaScript bindings and TypeScript declarations in a clearly named build-output location compatible with the existing bundler. Decide that path at E01 after inspecting the full repository. Generate them reproducibly; do not hand-edit generated bindings. Keep a tested wasm-bindgen library/CLI pairing and record the resolved dependency versions in evidence.
-
-### Dependency direction
+Package names remain `particle-sim`, `particle-sim-cpu`, `particle-sim-gpu` and
+`particle-wasm`. Keep unit/integration tests in their owning crates. Add shader
+families when their milestone needs them; no empty future trees or placeholder
+engines are required.
 
 ```text
-TypeScript browser shell
-  -> generated particle-wasm bindings
-       -> particle-sim          portable contracts
-       -> particle-sim-cpu      selected CPU/reference algorithms
-       -> particle-sim-gpu      wgpu resources and GPU execution
-
+Browser app -> engine-client -> generated WASM bindings -> particle-wasm
+particle-wasm -> particle-sim, particle-sim-cpu, particle-sim-gpu
 particle-sim-cpu -> particle-sim
 particle-sim-gpu -> particle-sim
 ```
 
-The portable `particle-sim` crate must not depend on its concrete backends. Backend construction belongs to the host/bridge. Shared algorithms/contracts may be factored where genuinely shared, but a circular crate graph or a generic framework without a caller is not a milestone deliverable.
+The portable crate does not depend on concrete backends or browser APIs. The host
+constructs the selected backend. One live scene has one state/transport owner;
+CPU references run independent fixture worlds. A Rust handle to GPU buffers does
+not require a ticking CPU mirror or normal-frame whole-world readback.
 
-A Rust handle owning wgpu buffers is not a CPU copy of those buffers. The live GPU backend owns committed physical fields; the CPU reference has an independent fixture world. Comparing them does not authorize keeping the full reference current in every browser frame.
+Generate JS glue, TypeScript declarations and WASM into ignored
+`web/generated/wasm/`. Only the engine client imports bindings. Ignore
+`engine/target/`; track Cargo and Bun lockfiles. Pin and verify compatible
+wasm-bindgen library/CLI versions when adding the real build.
 
 ## Current-to-target migration map
 
-| Existing surface | Required work | Destination and gate |
-| --- | --- | --- |
-| `main.ts`, `simulation-clock.ts` | Separate requested ticks from accepted physical progress; select rendering context before acquisition; report completion separately from encoding | Existing TypeScript host plus engine status contract, E03/E08/E12 |
-| `sandbox.ts`, `app/controls.ts` | Preserve commands and control behavior; adapt synchronous readings into cached status and async probes; explicit capability errors | Thin TypeScript facade and `particle-wasm`, E03/E08 |
-| `world.ts`, `physical-scale.ts` | Define independent Rust state, stable IDs, SI units, phase amounts and snapshot conversion/rejection | `particle-sim` contracts and selected backend state, E02 |
-| `physics.ts`, `gas-dynamics.ts`, `fluid-solver.ts`, `hydrostatics.ts` | Replace competing transport/pressure passes with the shared conservative stage graph | `particle-sim-cpu` references, `particle-sim-gpu` and `shaders/fluid/`, E05-E07 |
-| `thermal.ts`, `boiling.ts` | Implement supported closure, enthalpy/internal-energy conversion and consistent phase/volume coupling | Rust thermal references then WGSL thermal stages, E09 |
-| `motion.ts`, `solid-mechanics.ts` | Replace repeated outlet search with batched proposals, owned writes, reservation/commit and conservative coupling | Rust granular/solid references then WGSL, E10 |
-| `electricity.ts` | Correct analytical graph/work/heat behavior; communicate bounded topology/sample events rather than full arrays | Rust CPU circuit reference E04, runtime coupling E11 |
-| Reaction modules | Preserve supported source contracts; implement amount-based transactions in the new owner | Shared definitions, Rust references and WGSL chemistry where justified, E11 and P3-P5 |
-| `renderer.ts`, field maps, visual waves | Retain presentation behavior without image readback; use one wgpu device for compute and rendering | GPU render pipelines E08; field/overlay completion E12 |
-| `diagnostics.ts` | Replace normal-frame O(N) CPU reads for GPU scenes with bounded reductions and dated observations | GPU reductions and async Rust/WASM reports, E08 |
-| `brush.ts`, `starter-scene.ts` | Convert edits/initialization to ordered command batches; preserve finite source accounting, especially retries/paused edits | Existing UI intent plus backend transactions, E03/E11/E12 |
-| `materials/` | Maintain one authored source and validated generated projections during migration | Minimal projection E03; deliberate data pipeline expansion P3 |
+Paths in the first column are relative to `web/src/`.
 
-Retire each legacy transport path from a new-backend scene when its replacement owns that subsystem. Do not delete legacy behavior needed for still-unsupported scenes before E14 coverage gates. No source-wide mechanical translation is authorized by this table.
+| Current owner | Migration destination and gate |
+| --- | --- |
+| `main.ts`, `app/` | Browser lifecycle, controls and requested versus accepted ticks; E03/E08/E12 |
+| `engine-client/`, `legacy/simulation/sandbox.ts` | Async facade and separate legacy adapter; E03/E08 |
+| `legacy/simulation/world.ts`, `physical-scale.ts` | `particle-sim` contracts and selected-backend state; E02 |
+| `legacy/physics/` | Corrected Rust references then matching WGSL stages; E04-E11 |
+| `legacy/rendering/` | Same-device GPU rendering and overlays; E08/E12 |
+| `legacy/simulation/diagnostics.ts` | Bounded GPU reductions and async observations; E08 |
+| `legacy/tools/`, `legacy/scenes/` | Ordered, funded engine commands and initialization; E03/E11/E12 |
+| `materials/` | Single-source validated projections at E03, expanded data pipeline in P3 |
 
-## All-phase ownership
+The [migration work plan](plans/rust-wasm-migration/plan.md) remains the E00-E14
+execution map. P2-P9 and [fire integration](plans/fire-combustion/plan.md) use the
+same contracts, crate owners and state boundaries. Retain legacy scenes and their
+regressions until conversion and promotion gates permit retirement.
 
-| Phase | Proposed implementation ownership | Validation ownership |
-| --- | --- | --- |
-| P1 / M0-M1 | Existing host, minimal Rust workspace/bindings, portable contracts and generated projections | Existing regressions after discovery, native contract tests, browser WASM smoke |
-| P1 / M2-M3 | Rust fluid reference; wgpu resources; WGSL operators, transport and direct rendering | Native reference fixtures, f32 layout/parity, real browser device/transfer tests |
-| P1 / M4-M7 | Rust thermal/phase/solid references, matching WGSL, bounded circuits, host controls and persistence | Closure, contention, sources, recovery and target-device promotion |
-| P2 | Rust compressible/solid references, `shaders/waves/` and `shaders/solids/`, TypeScript controls | Equal-time wave/refinement, traction, failure, breakage toggle and fragment fixtures |
-| P3-P5 | `particle-sim` matter/reaction contracts, offline data preparation, Rust references, WGSL chemistry/material mechanisms, TypeScript palette/probes | Data provenance/schema, element/charge accounting, concentration, ABI/capacity and mechanism fixtures |
-| P6-P8 | Portable nuclide/network contracts, Rust nuclear/radiation references, supported WGSL transport/deposition/reaction stages, TypeScript labels | Decay/population, daughter/energy closure, uncertainty, mode and recovery tests |
-| P9 | Existing frontend plus the same engine/backends | Combined native/browser scenarios, long sessions, packaging and named-device release gates |
+## Verification and documentation
 
-The [migration plan](plans/rust-wasm-migration/plan.md) is the canonical E00-E14 execution map. The [matter contract](architecture/matter-model.md) governs component storage throughout. Chemistry and nuclear updates attach to the same stage boundaries and state owner, not separate whole-world loops. Create future directories only when their milestone needs them.
+Run `mise run ci` from the repository root for lint, both TypeScript checks,
+existing tests, production build and documentation validation. `mise run bench`
+is available for performance work. At E01 add native Rust tests, WASM generation,
+ABI checks and real browser initialization; hardware skips are not passes.
 
-## Engineering conventions
+Current fixtures are TypeScript helpers under `web/tests/legacy/fixtures/`.
+Introduce shared versioned fixture data only when both backends consume it.
+Keep transient results under ignored `artifacts/` and durable summaries under
+`docs/validation/`.
 
-Keep descriptive kebab-case TypeScript module names and the existing frontend conventions. Use normal Rust snake_case modules and focused crate APIs; no cross-language naming rule requires renaming the existing application. Keep WGSL names/stage bindings consistent with the tested ABI manifest.
+[docs/README.md](README.md) is the developer index. [START_HERE.md](START_HERE.md)
+is the detailed engine migration brief. [The legacy sandbox guide](legacy-sandbox.md)
+documents current controls and implementation. Root README stays a short quick start.
 
-Public operations validate coordinates, sizes, IDs, finite values and capabilities before mutation. Preserve the existing distinction between invalid cell readings and valid outside brush strokes; record intentional API changes. Keep source accounting explicit and never repair physical state invisibly after a failed step.
-
-Mutable hot-path arrays stay private to their backend. Rendering and probes are read-only. Tables, property derivatives and cached operators have versions and invalidation dependencies, not independent authority. A CPU reference and a GPU implementation share equations, units, stage contracts and fixtures, not mutable buffers.
-
-Keep refactors scoped, preserve unrelated working changes and add tests for demonstrated defects. Mark proposed/implemented/validated capabilities separately. See the [engine-boundary contract](architecture/engine-boundary.md) for async lifetimes, commands, epochs, canvas ownership and save/load behavior.
-
-## Checks, fixtures and evidence locations
-
-Previous documentation reports `tests/`, `benchmarks/`, root Vite/TypeScript/Biome configuration and Bun checks. They were not supplied in `src(3).zip`; verify their existence and exact commands in the real checkout before claiming them. Do not delete or move them to fit the proposed tree.
-
-Rust tests belong in the appropriate crate with stable fixture IDs. Keep backend-neutral scene/expected-invariant data in one versioned fixture location chosen after repository inspection. Browser integration tests must exercise the generated WASM and actual wgpu/WebGPU path, not only mock bindings. Native GPU success does not waive browser testing.
-
-The E01 build task must document clean-checkout setup and integrate actual Rust, WASM, TypeScript, shader and browser commands with CI. Separate hardware-dependent checks from hardware-free reference/schema checks; a skipped GPU job is not a pass. No unverified game build command is advertised as executable by this docs-only revision.
-
-Use a run-specific `artifacts/validation/` directory for transient output. Commit durable summaries and manifests, not noisy per-cell logs. Original audit files and prior documentation archives remain unchanged under `docs/`; old source paths and line numbers stay historical. They must not be rewritten to imply that a benchmark or test ran on this upload.
-
-Run documentation-only checks with `python docs/scripts/validate-docs.py`. The optional `--source-archive` flag validates the inspected source fingerprint without building or executing that source.
-
-## Fire work ownership added by the audit
-
-[The fire plan](plans/fire-combustion/plan.md) refines existing proposed modules, not a separate application. `crates/sim/` owns component/network/domain and source contracts. `crates/sim-cpu/` owns corrected combustion, reduced fuel-release and suppression references. `crates/sim-gpu/` and the existing chemistry/thermal shader families own validated proposal, reservation, gathered amount/energy and commit stages. Actual filenames are established in the checkout; this document does not claim those Rust/WGSL files already exist.
-
-The retained TypeScript tool/input layer submits funded ignition commands and displays asynchronous component/heat-release probes. The same-device renderer derives the particle/shader appearance from actual reacting/hot gas and physical soot, without owning fuel or oxygen. No new full-world mirror or separate fire transport pass is introduced.
-
-Historical source context is `src/physics/reactions.ts`, `src/physics/element-reactions.ts`, `src/simulation/physics.ts`, `src/tools/brush.ts` and the thermal/material modules cited in [the preserved audit](evidence/fire-review-2026-09-23/FIRE_REVIEW.md). Preserve controls, but replace the known boundary/ignition/composition contracts rather than translating them literally.
+The 2026-09-27 layout supersedes earlier instructions to keep root `src/` in place.
+Historical archives, source manifests, audit files, source paths and line numbers
+remain unchanged. The [source review](validation/source-review-2026-09-21.md) and
+[fire audit](evidence/fire-review-2026-09-23/FIRE_REVIEW.md) describe earlier source
+snapshots, not the reorganized checkout or fresh migration acceptance.

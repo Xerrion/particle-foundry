@@ -19,6 +19,7 @@ from urllib.parse import unquote, urlsplit
 from zipfile import BadZipFile, ZipFile
 
 ROOT = Path(__file__).resolve().parents[1]
+PROJECT_ROOT = ROOT.parent
 ORIGINAL_SHA256 = "f0c353534cca10736d98c449fa96b5e2ed07c241a3ba7cd4463f897ab9860eb5"
 FIRE_REVIEW_SHA256 = "977396260ed156adc2cd4eb439cfe7e645de449e6f5126130c667097e92cadb0"
 EXPECTED_SYMBOLS = "H He Li Be B C N O F Ne Na Mg Al Si P S Cl Ar K Ca Sc Ti V Cr Mn Fe Co Ni Cu Zn Ga Ge As Se Br Kr Rb Sr Y Zr Nb Mo Tc Ru Rh Pd Ag Cd In Sn Sb Te I Xe Cs Ba La Ce Pr Nd Pm Sm Eu Gd Tb Dy Ho Er Tm Yb Lu Hf Ta W Re Os Ir Pt Au Hg Tl Pb Bi Po At Rn Fr Ra Ac Th Pa U Np Pu Am Cm Bk Cf Es Fm Md No Lr Rf Db Sg Bh Hs Mt Ds Rg Cn Nh Fl Mc Lv Ts Og".split()
@@ -297,14 +298,18 @@ def main() -> int:
         else:
             print("NOTE: source archive not supplied; static manifest structure checked, source bytes not reverified.")
 
-        docs = sorted([*ROOT.rglob("*.md"), *ROOT.rglob("*.html")])
+        docs = sorted([
+            *ROOT.rglob("*.md"), *ROOT.rglob("*.html"),
+            PROJECT_ROOT / "README.md", PROJECT_ROOT / "AGENTS.md",
+            PROJECT_ROOT / "engine/AGENTS.override.md",
+        ])
         anchor_cache: dict[Path,set[str]] = {}
         link_count = 0
         for p in docs:
             text = p.read_text(encoding="utf-8")
-            require("\ufffd" not in text, f"Replacement character in {p.relative_to(ROOT)}")
-            require("\u2013" not in text and "\u2014" not in text, f"Long dash in authored document {p.relative_to(ROOT)}")
-            require(not re.search(r"turn\d+(?:search|view|file)\d+", text), f"Unresolved tool citation in {p.relative_to(ROOT)}")
+            require("\ufffd" not in text, f"Replacement character in {p.relative_to(PROJECT_ROOT)}")
+            require("\u2013" not in text and "\u2014" not in text, f"Long dash in authored document {p.relative_to(PROJECT_ROOT)}")
+            require(not re.search(r"turn\d+(?:search|view|file)\d+", text), f"Unresolved tool citation in {p.relative_to(PROJECT_ROOT)}")
             if p.suffix == ".html":
                 parsed = HTMLLinks(); parsed.feed(text)
                 links = parsed.links
@@ -318,8 +323,8 @@ def main() -> int:
                     continue
                 resolved = (p.parent / unquote(url.path)).resolve() if url.path else p.resolve()
                 link_count += 1
-                require(resolved.is_relative_to(ROOT.resolve()), f"Local link escapes docs: {p.relative_to(ROOT)} -> {target}")
-                require(resolved.exists(), f"Missing local target: {p.relative_to(ROOT)} -> {target}")
+                require(resolved.is_relative_to(PROJECT_ROOT.resolve()), f"Local link escapes repository: {p.relative_to(PROJECT_ROOT)} -> {target}")
+                require(resolved.exists(), f"Missing local target: {p.relative_to(PROJECT_ROOT)} -> {target}")
                 if not resolved.exists() or not url.fragment or resolved.suffix not in {".md", ".html"}:
                     continue
                 if resolved not in anchor_cache:
@@ -328,12 +333,12 @@ def main() -> int:
                         q=HTMLLinks(); q.feed(t); anchor_cache[resolved]=q.anchors
                     else:
                         anchor_cache[resolved]=markdown_anchors(t)
-                require(unquote(url.fragment) in anchor_cache[resolved], f"Missing local anchor: {p.relative_to(ROOT)} -> {target}")
+                require(unquote(url.fragment) in anchor_cache[resolved], f"Missing local anchor: {p.relative_to(PROJECT_ROOT)} -> {target}")
         checked.append(f"{len(docs)} authored Markdown/HTML documents and {link_count} local links/anchors")
 
         source=(ROOT/"plans/fluid-gpu-redesign/plan.md").read_bytes()
         rendered=HTMLLinks(); rendered.feed((ROOT/"plans/fluid-gpu-redesign/plan.html").read_text(encoding="utf-8"))
-        require(rendered.source_hash == hashlib.sha256(source).hexdigest(), "GPU HTML is stale; run render-plan.py")
+        require(rendered.source_hash == hashlib.sha256(source).hexdigest(), "GPU HTML is stale; run mise run docs:render")
         checked.append("Generated GPU HTML matches the current Markdown source hash")
 
         original=ROOT/"history/original-docs-2026-09-21.zip"

@@ -129,7 +129,7 @@ Execute FIRE-W00: preserve the original F01-F12 report/runners/results and recor
 
 ### M1  -  State contract, backend seam, and isolated prerequisites
 
-**Dependency:** M0. **Primary surfaces:** proposed `crates/sim/`, `crates/sim-cpu/`, `crates/wasm/`, the existing `src/simulation/sandbox.ts` adapter, generated catalogue/binding outputs, and root Rust/build configuration. Execute E01-E04.
+**Dependency:** M0. **Primary surfaces:** proposed `engine/crates/sim/`, `engine/crates/sim-cpu/`, `engine/crates/wasm/`, the existing `web/src/engine-client/` entrypoint and `web/src/legacy/simulation/sandbox.ts`, generated catalogue/binding outputs, and Rust/build configuration under `engine/`. Execute E01-E04.
 
 Bootstrap the native Rust and browser WASM toolchain, pin compatible dependencies and generate bindings consumed by the existing frontend build. Establish a real browser init/dispose smoke test before the solver port. Keep the TypeScript UI and source layout; a workspace reorganization or Rust GUI is not a prerequisite.
 
@@ -149,7 +149,7 @@ Introduce explicit versions for topology, composition/mass, and thermal state. R
 
 ### M2  -  Conservative CPU fluid reference
 
-**Dependency:** M1 state/facade contract, E03. **Primary surfaces:** proposed `crates/sim/src/fluid/`, `crates/sim-cpu/src/fluid/`, Rust integration tests and shared fixtures. Execute E05-E06.
+**Dependency:** M1 state/facade contract, E03. **Primary surfaces:** proposed `engine/crates/sim/src/fluid/`, `engine/crates/sim-cpu/src/fluid/`, Rust integration tests and shared fixtures. Execute E05-E06.
 
 Implement Rust f64 cell fields and staggered velocities for one liquid and carrier gas. Do not first implement another TypeScript reference. Build matching D/G operators and a matrix-free diagonally preconditioned conjugate-gradient solve. Use a simple relaxation method only as a tiny-grid oracle. Residuals and post-projection divergence determine success; an iteration cap reports failure. Evaluate geometric multigrid as a preconditioner if iterations grow excessively with grid size; [Basilisk's Poisson solver](https://basilisk.fr/src/poisson.h) is a reference, not a drop-in implementation.
 
@@ -161,7 +161,7 @@ Keep full energy/phase physics disabled here; markers validate transport, not th
 
 ### M3  -  WebGPU demonstrator and direct rendering
 
-**Dependency:** M2. **Primary surfaces:** proposed `crates/sim-gpu/`, `shaders/fluid/`, `shaders/render/`, `crates/wasm/` and the existing TypeScript host adapter. Execute E07-E08.
+**Dependency:** M2. **Primary surfaces:** proposed `engine/crates/sim-gpu/`, `engine/crates/sim-gpu/shaders/fluid/`, `engine/crates/sim-gpu/shaders/render/`, `engine/crates/wasm/` and the existing TypeScript host adapter. Execute E07-E08.
 
 Use one Rust/wgpu device for compute and direct presentation. Choose the renderer before the app acquires a canvas context, or replace the canvas and rebind controls. The current Canvas-2D-first startup cannot be retained unchanged. [Canvas ownership](../../architecture/engine-boundary.md#8-canvas-and-renderer-migration).
 
@@ -181,7 +181,7 @@ One 480×270 f32 cell field is 518,400 bytes; a u/v face pair is 1,039,800 bytes
 
 ### M4  -  Closed/open thermodynamics and partial phase state
 
-**Dependency:** M2 state/transport; GPU parity follows M3. **Primary surfaces:** proposed Rust thermal/chamber contracts and references in `crates/sim/` and `crates/sim-cpu/`, wgpu pipelines in `crates/sim-gpu/`, and `shaders/thermal/`. Legacy `src/physics/thermal.ts` and `src/physics/boiling.ts` supply regression context, not the new state owner. Execute E09.
+**Dependency:** M2 state/transport; GPU parity follows M3. **Primary surfaces:** proposed Rust thermal/chamber contracts and references in `engine/crates/sim/` and `engine/crates/sim-cpu/`, wgpu pipelines in `engine/crates/sim-gpu/`, and `engine/crates/sim-gpu/shaders/thermal/`. Legacy `src/physics/thermal.ts` and `src/physics/boiling.ts` supply regression context, not the new state owner. Execute E09.
 
 Build the property-table generator with versioned source data and interpolation tests. Implement isolated pure-water volume/energy closure first, then air/steam mixtures, then flow coupling. Remove material-ID toggling as the phase authority; rendering derives appearance from actual phase fractions. Any later nucleation rule changes resolved phase amounts within the same conservation contract.
 
@@ -195,7 +195,7 @@ Execute FIRE-W02 alongside E09. Validate passive O2/product transport with a fin
 
 ### M5  -  Sand, moving solids, and additional liquids
 
-**Dependency:** M2; M4 for heated/phase-changing coupling. **Primary surfaces:** proposed Rust granular/solid references in `crates/sim-cpu/`, wgpu pipelines and `shaders/granular/`; retirement seams in legacy `src/physics/motion.ts`, `src/physics/hydrostatics.ts`, and `src/physics/solid-mechanics.ts`. Execute E10.
+**Dependency:** M2; M4 for heated/phase-changing coupling. **Primary surfaces:** proposed Rust granular/solid references in `engine/crates/sim-cpu/`, wgpu pipelines and `engine/crates/sim-gpu/shaders/granular/`; retirement seams in legacy `src/physics/motion.ts`, `src/physics/hydrostatics.ts`, and `src/physics/solid-mechanics.ts`. Execute E10.
 
 Replace per-grain outlet searches with a topology snapshot, shared component/outlet-capacity calculation, movement proposals, conflict resolution, and commit. Outlet capacity must be reserved across all accepted grains, not just each destination. Resolve source, destination, and any routing/path conflicts deterministically. If volume cannot be accommodated, defer the move instead of deleting fluid or teleporting it through walls.
 
@@ -209,7 +209,7 @@ Add an oil/water two-liquid fixture with explicit phase fractions, density order
 
 ### M6  -  Reactions, circuits, and product integration
 
-**Dependency:** M4 and M5 for full-scene coverage, plus the E04 circuit-reference branch. **Primary surfaces:** Rust reaction/circuit contracts and bounded CPU algorithms, wgpu source pipelines and WGSL chemistry, `crates/wasm/`, and the retained TypeScript tool/control/sandbox/main adapters. Legacy reaction modules are source/regression context, not the GPU scene owner. Execute E11-E12.
+**Dependency:** M4 and M5 for full-scene coverage, plus the E04 circuit-reference branch. **Primary surfaces:** Rust reaction/circuit contracts and bounded CPU algorithms, wgpu source pipelines and WGSL chemistry, `engine/crates/wasm/`, and the retained TypeScript tool/control/sandbox/main adapters. Legacy reaction modules are source/regression context, not the GPU scene owner. Execute E11-E12.
 
 Transport reactant amounts; use limiting reaction extent and preserve excess reagent identity. Replace inconsistent legacy combustion rather than migrating its rules unchanged. Follow FIRE-W03-FIRE-W05 in E11: a corrected Rust fuel-vapor/O2 reference with declared products, shared-reactant reservations, admissible ignition/extinction and physical-time rates; bounded condensed-fuel release for every promoted wood/oil/plant scene; thermal/amount-based water suppression; and persistent supported smoke/soot inventories. Implement equivalent WGSL only after the corresponding reference gates pass.
 
@@ -308,18 +308,18 @@ $auditModules = [ordered]@{
   'materials' = 'src/materials/index.ts'
   'physical-scale' = 'src/simulation/physical-scale.ts'
 }
-bun run typecheck
+mise run typecheck
 foreach ($auditModule in $auditModules.GetEnumerator()) {
-  bun build $auditModule.Value --target=node --format=cjs --outfile (Join-Path $auditBuild ($auditModule.Key + '.js'))
+  mise exec -- bun build $auditModule.Value --target=node --format=cjs --outfile (Join-Path $auditBuild ($auditModule.Key + '.js'))
   if ($LASTEXITCODE -ne 0) { throw "Audit bundle failed: $($auditModule.Key)" }
 }
 Set-Content -LiteralPath (Join-Path $auditBuild 'package.json') -Value '{"type":"commonjs"}'
-node docs/plans/fluid-gpu-redesign/audit.cjs $auditBuild (Join-Path $auditBuild 'results.json')
+mise exec -- node docs/plans/fluid-gpu-redesign/audit.cjs $auditBuild (Join-Path $auditBuild 'results.json')
 ```
 
 The source tree was reorganized after this baseline was captured. Paths in the narrative and commands above follow the new layout; recorded source hashes, audit locations, and outputs retain their historical provenance.
 
-The raw harness emits historical archive labels even when run against another tree. Use the source hashes and corrected provenance in `current-audit-results.json` for this run; capture fresh hashes for subsequent runs. Full implementation validation additionally requires `bun run check`, relevant lint/build checks, numerical fixtures, and browser/GPU tests on actual hardware.
+The raw harness emits historical archive labels even when run against another tree. Use the source hashes and corrected provenance in `current-audit-results.json` for this run; capture fresh hashes for subsequent runs. Full implementation validation additionally requires `mise run ci`, numerical fixtures, and browser/GPU tests on actual hardware.
 
 
 ## 7. Forward-compatible composition without widening M3

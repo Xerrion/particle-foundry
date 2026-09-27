@@ -1,5 +1,28 @@
 # Documentation change log
 
+## 27 September 2026: AI knowledge base and combustion reference
+
+Organized the documentation index by question, topic and authority. Added article
+maintenance rules and distinguished implemented behavior, accepted design,
+planned work and historical evidence. Project instructions now route agents to
+relevant topics, and the migration brief explicitly respects assigned task scope.
+
+Added `combustion.md` from a current source review, linking ownership, reaction
+ordering, funded ignition, known limitations and existing regression suites.
+Replaced duplicated fire detail in the model overview with a link to that topic.
+Preserved historical fire evidence and all migration acceptance statuses; this
+documentation change does not implement combustion corrections or a new backend.
+
+Updated stale engine-README references to the current scoped engine guidance or
+the canonical workspace description. Documentation validation now includes
+`engine/AGENTS.override.md`, matching the existing checkout.
+
+## 27 September 2026: separate browser and engine ownership
+
+Moved the TypeScript app, tests, benchmarks and frontend configuration into `web/`; isolated its existing backend under `web/src/legacy/` and routed browser imports through `web/src/engine-client/`. Root mise tasks keep their command names and now run frontend tools in `web/`. Added project `AGENTS.md`, import-boundary lint rules and `engine/README.md` for future Rust/WGSL ownership. Rust/WASM implementation and E00-E14 acceptance remain planned.
+
+Shortened root README, moved its detailed current-sandbox guide to `legacy-sandbox.md`, and made `docs/README.md` the general developer index. Updated active structure and migration paths while preserving historical archives, audit files and source provenance.
+
 ## 23 September 2026: fire-audit integration into the GPU-first plan
 
 Added a dedicated bounded combustion plan, nine FIRE-W tasks and fourteen corrected FIRE-A fixture specifications. Linked them to the existing E00-E14 work and P1/M0/M1/M4/M6/M7, with one extension task in P4/C5. M3 remains nonreactive; the selected TypeScript/Rust/WASM/wgpu split, P1-P9 sequence and 40/83/103/118 element cohorts are unchanged.

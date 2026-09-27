@@ -1,14 +1,14 @@
 # Physical model specification
 
-**Revision:** 23 September 2026, fire-audit integration. **Status boundary:** legacy descriptions combine retained documentation, the [static review of src(3).zip](validation/source-review-2026-09-21.md), and the [separately executed fire characterization](validation/fire-combustion.md). No application or physical tests were rerun for this docs update. All redesign, expanded chemistry and nuclear capabilities remain planned.
+**Evidence boundary:** this overview combines retained documentation, the [static review of src(3).zip](validation/source-review-2026-09-21.md), and the [historical fire characterization](validation/fire-combustion.md). The [combustion article](combustion.md) separately identifies its 27 September 2026 working-tree source review. Historical results are not current verification; all redesign, expanded chemistry and nuclear capabilities remain planned.
 
-This is a reproducible coarse-grained sandbox, not a validated engineering simulator. [START_HERE.md](START_HERE.md) is the developer entrypoint; [roadmap.md](roadmap.md) controls phase order. The full original model description is preserved in [the input archive](history/README.md).
+This is a reproducible coarse-grained sandbox, not a validated engineering simulator. [The knowledge map](README.md) routes current topics; [START_HERE.md](START_HERE.md) is the migration brief and [roadmap.md](roadmap.md) explains phase order. The full original model description is preserved in [the input archive](history/README.md).
 
 ## Legacy scale and units
 
 | Quantity | Documented convention | Owner |
 | --- | --- | --- |
-| Cell width | 0.01 m | `src/simulation/physical-scale.ts` |
+| Cell width | 0.01 m | `web/src/legacy/simulation/physical-scale.ts` |
 | Represented depth | 0.01 m | Same module |
 | Cell volume | 0.000001 cubic metres | Derived from geometry |
 | Outer physics interval | 1/60 s | Physical scale and simulation clock |
@@ -23,7 +23,7 @@ The **eight**, not five, documented legacy elemental models are specified in [el
 
 ## Legacy state and ownership
 
-`src/simulation/world.ts` owns the authoritative arrays. A cell contains one material parcel. Mass, volume, enthalpy, chemical inventory, oxygen, velocity, and metadata move together. `swap()` moves state; `transport()` additionally accounts for changed gravitational potential energy. Fluid-column summaries are derived and must not own another copy of the fluid inventory.
+`web/src/legacy/simulation/world.ts` owns the authoritative arrays. A cell contains one material parcel. Mass, volume, enthalpy, chemical inventory, oxygen, velocity, and metadata move together. `swap()` moves state; `transport()` additionally accounts for changed gravitational potential energy. Fluid-column summaries are derived and must not own another copy of the fluid inventory.
 
 A new parcel begins at one geometric cell volume. Phase changes preserve mass and enthalpy while recomputing a reference parcel volume from density. Sealed gas uses occupied geometric volume, while some open non-air gas uses its reference volume. This inconsistency is unresolved. One parcel per cell cannot geometrically represent arbitrary expansion or smooth subcell free surfaces.
 
@@ -53,13 +53,13 @@ These are rigid cell parcels, not connected deformable or breakable bodies. Ther
 
 ## Legacy chemistry, fire, and circuits
 
-Generic wood, plant and oil have finite chemical-energy stores. In the reviewed source, oxygen handling is not physically coherent: gas connected to geometric world edges is replenished even when `boundariesEnabled` is true, and the generic fresh-air path grants oxygen without a debit or source flux. An explicitly stone-enclosed zero-O2 cavity did not burn. The boundary flag and a drawn enclosure therefore have different semantics. [F01-F03](validation/fire-combustion.md#finding-to-work-traceability).
-
-Generic burning decreases the separate oxygen and chemical-energy counters without progressively converting fuel/O2 material masses into declared products. Scalar mass or energy checks alone can pass while composition remains inconsistent. Emitted generic flames are heated-air proxies with no chemical fuel; the transferred heat is funded by the burning parcel. A cold FIRE label can nevertheless ignite cold H2/O2 before generic fire quenching, including in a complete physics tick. [F04/F05/F07/F08](validation/fire-combustion.md#finding-to-work-traceability).
-
-The Fire brush is a ledgered external ignition source. Its short-lived air effects do not contain chemical fuel and expire without manufacturing soot in the recorded control. Preserve that contract. Generic smoke expiration in a sealed cavity retains mass/heat and did not add oxygen in the audit, but loses the smoke identity. Water contact disables generic burning regardless of dose within the reaction module; the tiny-water observation is reaction-only and does not test the separate thermal solver. Hydrogen's inability to use O2 in enclosed ordinary air is a disclosed legacy limitation, unlike generic-fuel behavior. [F06/F09-F11](validation/fire-combustion.md#finding-to-work-traceability).
-
-These observations describe a bounded legacy game model with two full-pipeline bugs, not a validated combustion system. The new backend must replace them under [the fire integration plan](plans/fire-combustion/plan.md), keeping finite-energy controls and explicit-reaction conservation while unifying species, boundaries, ignition, products and suppression.
+[Combustion](combustion.md) owns the current fire behavior, source/test map and
+known limitations. Generic fuels spend finite chemical energy; the Fire brush
+supplies ledgered external ignition heat. Oxygen shortcuts, incomplete generic
+products, cold-FIRE ignition, contact-only quenching and smoke identity loss
+prevent interpreting this as validated combustion physics. Scalar conservation
+alone is insufficient. Historical measurements remain in [the fire evidence](validation/fire-combustion.md),
+and future corrections are specified by [the fire integration plan](plans/fire-combustion/plan.md).
 
 The legacy Gunpowder/Blast behavior releases finite heat and calibrated radial impulses with geometric blocking. It is not a resolved detonation, shock, or gas-product chemistry model, regardless of old naming. Painted metal has no failure threshold. The planned compressible mode must not reuse a visual blast ring as physical wave propagation.
 
