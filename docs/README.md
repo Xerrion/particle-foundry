@@ -23,9 +23,12 @@ A plan or reference entry is not evidence of implementation.
 | What should an assigned migration item deliver? | [Active work](remaining-work.md) | Its controlling plan, dependencies and acceptance gates below |
 | What supports a claim? | The topic's source/test links | [Evidence and history](#evidence-and-history), including the recorded snapshot and execution scope |
 
-The user's task determines scope. Reading a plan does not authorize implementing
-its backlog. Use [the migration brief](START_HERE.md) for an assigned migration
-task; read later phases only when their contracts constrain that task.
+The user's task determines scope. The active delivery scope is the
+[current sandbox migration](plans/rust-wasm-migration/current-sandbox-scope.md).
+P2-P9 are deferred and require separate authorization; P1 completion does not
+activate them. Reading a plan does not authorize implementing its backlog. Use
+[the migration brief](START_HERE.md) for an assigned migration task; read later
+phases only when their contracts constrain that task.
 
 ## Authority and status
 
@@ -33,7 +36,7 @@ task; read later phases only when their contracts constrain that task.
 | --- | --- | --- |
 | Current behavior | Current source and focused regression tests, explained by topic articles | Implemented behavior can include known defects; a passing test covers only its assertions. |
 | Accepted design | Architecture decisions and the contract named by the relevant plan | Selected intent can remain unimplemented. ADR-001 owns the stack; the engine boundary owns integration. |
-| Planned work | [Phase manifest](data/development-phases.json), [engine work](data/engine-migration-work.json), [fire work](data/fire-combustion-work.json) and their controlling plans | Manifests own status/dependencies; plans own the specified work and exit gates. |
+| Planned work | [Current sandbox scope](plans/rust-wasm-migration/current-sandbox-scope.md), [phase manifest](data/development-phases.json), [engine work](data/engine-migration-work.json), [fire work](data/fire-combustion-work.json) and their controlling plans | Current sandbox scope owns the active release boundary. Manifests own status/dependencies; plans own work and exit gates within that boundary. Deferred phases require separate authorization. |
 | Evidence | Source, tests or a dated run with provenance and limitations | Static inspection, executed regression tests, characterization and corrected acceptance are different claims. |
 | History | Preserved archives, audit results and superseded descriptions | Valid only for the recorded snapshot; historical text does not override current instructions. |
 
@@ -58,8 +61,9 @@ evidence. Generated HTML is a view of its canonical Markdown, not a second sourc
 
 ## Planned work
 
-[Human-readable phases and milestones](PHASES.md) explains the full P1-P9 route
-without the implementation detail below.
+[Human-readable phases and milestones](PHASES.md) explains the three active P1
+checkpoints and retains P2-P9 as deferred plans. All other planning documents keep
+their technical contracts and acceptance detail.
 
 [Roadmap](roadmap.md) explains phase order; [active work](remaining-work.md) maps
 backlog items to deliverables. [START_HERE.md](START_HERE.md) describes the migration
@@ -68,11 +72,11 @@ manifest owns the next engine work item; consult them rather than copying status
 
 | Scope | Controlling knowledge |
 | --- | --- |
-| P1 engine and numerical redesign | [Rust/WASM work packages](plans/rust-wasm-migration/plan.md), [fluid/GPU equations and gates](plans/fluid-gpu-redesign/plan.md) |
+| Active P1 current-feature migration | [Current sandbox scope](plans/rust-wasm-migration/current-sandbox-scope.md), [Rust/WASM work packages](plans/rust-wasm-migration/plan.md), [fluid/GPU equations and gates](plans/fluid-gpu-redesign/plan.md) |
 | Combustion within P1 and P4 | [Fire integration](plans/fire-combustion/plan.md), [corrected FIRE-A acceptance](validation/fire-combustion.md#corrected-gates) |
-| P2 pressure and breakage | [Pressure waves and material breakage](plans/pressure-waves-breakage/plan.md) |
-| P3-P5 materials and chemistry | [Materials/chemistry](plans/materials-and-chemistry/plan.md) |
-| P6-P9 nuclear work and final validation | [Nuclear simulation](plans/nuclear-simulation/plan.md), [acceptance](validation/acceptance.md), [backend migration](validation/backend-migration.md) |
+| Deferred P2 pressure and breakage | [Pressure waves and material breakage](plans/pressure-waves-breakage/plan.md) |
+| Deferred P3-P5 materials and chemistry | [Materials/chemistry](plans/materials-and-chemistry/plan.md) |
+| Deferred P6-P9 nuclear work and expanded-product validation | [Nuclear simulation](plans/nuclear-simulation/plan.md), [acceptance](validation/acceptance.md), [backend migration](validation/backend-migration.md) |
 
 ## Evidence and history
 

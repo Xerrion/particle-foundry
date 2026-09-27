@@ -54,8 +54,12 @@ has a caller; do not add empty crates or future shader trees for appearance.
 
 Retain legacy scenes and their regressions until supported-scene conversion and
 promotion gates pass. New numerical references are Rust, not another TypeScript
-implementation to port later. Follow E00-E14 within P1 and preserve the later
-P2-P9 gates in `docs/plans/rust-wasm-migration/plan.md`.
+implementation to port later. Follow E00-E14 within P1 against the required
+`docs/plans/rust-wasm-migration/current-sandbox-scope.md` checklist. Every current
+feature, including the eight existing elemental models, must pass before the full
+GPU default switch. P2-P9, FIRE-W08 and optional worker/product expansion are
+deferred; completing P1 does not activate them. Keep their specifications without
+implementing them unless the user separately selects that work.
 
 ## Commands and verification
 

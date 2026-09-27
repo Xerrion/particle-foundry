@@ -2,6 +2,15 @@
 
 **Status:** planned tests, not results. Applies alongside [existing acceptance gates](acceptance.md). [ADR-001](../architecture/adr-001-rust-wasm-wgpu.md) selects the stack; [work packages](../plans/rust-wasm-migration/plan.md) assign implementation ownership.
 
+## Current release boundary
+
+P1 completion and the default switch require every row in the
+[current-sandbox scope](../plans/rust-wasm-migration/current-sandbox-scope.md),
+including existing elemental forms, sources and controls. Subset GPU scenes are
+experimental delivery checkpoints. Deferring P2-P9 does not defer these numerical,
+browser, performance or recovery checks. Removing a required current feature
+requires an explicit user scope decision; a failed gate cannot redefine coverage.
+
 ## Validation layers
 
 | Layer | What it proves | Required evidence |
@@ -24,7 +33,7 @@ Native compilation, headless JS tests and online API documentation do not replac
 | MIG-03 | ABI offsets, padding, strides, usages and integer encodings match in Rust and WGSL; sentinel round trip on device |
 | MIG-04 | Exactly one backend state owner; no legacy movement or thermal pass mutates a new session |
 | MIG-05 | Queue admission differs from commit; bounded backpressure, exactly-once commands/sources, accepted physical time and retries |
-| MIG-06 | Paused painting, held tools, single-step, hidden-tab, speed, reset/load and obsolete-probe epoch races |
+| MIG-06 | Paused painting, held tools, controlled API stepping, hidden-tab, speed, reset/load and obsolete-probe epoch races |
 | MIG-07 | A renderer is selected before context acquisition; canvas replacement preserves controls, zoom, overlays and display scaling |
 | MIG-08 | No full-world GPU-to-host readback for normal render/probe/stats; traffic counters include JS/WASM and GPU staging |
 | MIG-09 | GPU completion/residual flags prevent invalid state publication or repeated source consumption |
@@ -62,15 +71,15 @@ Report p50/p95, sample counts, repeat runs, warm-up and cold startup separately.
 
 **M3:** demonstrate a correct supported GPU scene, same-device direct rendering, asynchronous small observations and measured transfer/allocation data. No fixed speed multiplier or 60 FPS promise.
 
-**M7:** retain the fluid plan's provisional 480 x 270, p95 frame interval at most 33.3 ms and at least 1.0 accepted simulated second per wall-second target on the agreed baseline device at 1x. This is a target, not a result. Include active painting, supported hot/phase scenes, sand/solid contention and dense circuits where these are part of the promoted feature set.
+**M7:** retain the fluid plan's provisional 480 x 270, p95 frame interval at most 33.3 ms and at least 1.0 accepted simulated second per wall-second target on the agreed baseline device at 1x. This is a target, not a result. Include active painting, supported hot/phase scenes, sand/solid contention and dense circuits as required by the fixed current-sandbox rows. Record per-row browser/device evidence; the first GPU demo is not the full replacement gate.
 
-If a performance or hardware gate fails, record it and keep the backend experimental or narrow the declared coverage. Optimize measured algorithms, dispatches and transfers without weakening physical tolerances. A no-adapter case can use legacy mode for legacy scenes or the validated Rust CPU backend for compatible scenes; it cannot silently change the physical model of an already evolved world.
+If a required performance or hardware gate fails, record it and keep the backend experimental. A tested subset may be exposed experimentally, but the full current-sandbox scope remains required and P1 remains incomplete. Optimize measured algorithms, dispatches and transfers without weakening physical tolerances. A no-adapter case can use legacy mode for legacy scenes or the validated Rust CPU backend for compatible scenes; it cannot silently change the physical model of an already evolved world.
 
 ## Recovery tests
 
 Inject device loss before submission, during a batch, during probe readback and during checkpoint capture. Test rejected/failed allocations and pipeline creation. Verify cancellation and no partial commit. A device can fail before its latest state reaches a checkpoint, so recovery must disclose rollback or restart rather than claim lossless restoration.
 
-Test stale responses after clear/load, disposal with pending operations, WASM asset/version mismatch, unsupported worker context, incompatible saved data, and capacity overflow. Test checkpoint plus command replay under the same configuration and tolerance; do not demand cross-device bit-exact chaotic trajectories.
+Test stale responses after clear/load, disposal with pending operations, WASM asset/version mismatch, unsupported execution context, incompatible saved data, and capacity overflow. Test checkpoint plus command replay under the same configuration and tolerance; do not demand cross-device bit-exact chaotic trajectories.
 
 ## Documentation-update boundary
 

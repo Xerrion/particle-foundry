@@ -1,6 +1,6 @@
 # Fire and combustion integration plan
 
-**Revision:** 27 September 2026. FIRE-W00 baseline and FIRE-W01 contracts have recorded validation; corrected combustion remains planned. The [fire manifest](../../data/fire-combustion-work.json) owns the next item. Start with [START_HERE.md](../../START_HERE.md).
+**Revision:** 27 September 2026. FIRE-W00 baseline and FIRE-W01 contracts have recorded validation; corrected P1 combustion remains planned; FIRE-W08 is deferred. The [fire manifest](../../data/fire-combustion-work.json) owns the next item. Start with [START_HERE.md](../../START_HERE.md).
 
 This plan incorporates the [preserved fire audit](../../evidence/fire-review-2026-09-23/FIRE_REVIEW.md) into the existing Rust/WASM + wgpu redesign. It is a bounded game-combustion model, not an implementation of a complete fire-engineering solver. [ADR-001](../../architecture/adr-001-rust-wasm-wgpu.md), the [GPU plan](../fluid-gpu-redesign/plan.md) and the [engine boundary](../../architecture/engine-boundary.md) remain in force.
 
@@ -10,7 +10,7 @@ This plan incorporates the [preserved fire audit](../../evidence/fire-review-202
 
 The imported audit records 12 characterization checks against the supplied `src(3).zip`: ten isolated subsystem checks and two complete physics-tick checks, F02 and F08. It confirmed the closed-boundary oxygen and cold-FIRE ignition defects through the full pipeline. Other findings are composition defects, documented scope limitations or simplified gameplay rules. The audit runner asserts those historical observations, including the bugs. Its success is not a pass of the corrected specification.
 
-Read [validation/fire-combustion.md](../../validation/fire-combustion.md) for the finding-to-gate mapping, evidence limits and reproduction policy. The report, runners, results and provenance are retained unchanged; none was rerun for this documentation update. Application source is not modified or bundled. FIRE-W00 and FIRE-W01 have recorded baseline and contract validation. FIRE-W02-W08 and corrected FIRE-A gates remain planned; no chemistry is enabled.
+Read [validation/fire-combustion.md](../../validation/fire-combustion.md) for the finding-to-gate mapping, evidence limits and reproduction policy. The report, runners, results and provenance are retained unchanged; none was rerun for this documentation update. Application source is not modified or bundled. FIRE-W00 and FIRE-W01 have recorded baseline and contract validation. FIRE-W02-W07 and corrected FIRE-A gates remain planned; FIRE-W08 is deferred; no chemistry is enabled.
 
 ## 2. Scope and milestones
 
@@ -23,9 +23,9 @@ Read [validation/fire-combustion.md](../../validation/fire-combustion.md) for th
 | P1/M6, E11 | FIRE-W03-FIRE-W05: Rust reference, reduced fuel/suppression model, then WGSL parity | Core combustion and products before visual promotion |
 | P1/M6, E12 | FIRE-W06: tools, derived flames and probes | FIRE-M6 for the declared integration scenes |
 | P1/M7, E13-E14 | FIRE-W07: persistence, recovery and measured promotion | FIRE-M7 in addition to GPU-M7 |
-| P4/C3-C6 | FIRE-W08: additional fuel models and selected mechanisms | Extend an already coherent P1 foundation |
+| Deferred P4/C3-C6 | FIRE-W08: additional fuel models and selected mechanisms | Requires separate user activation after current-sandbox replacement |
 
-Choose and version a minimal fuel-vapor/O2 channel with explicit products at M0/M1, subject to complete property coverage. One validated channel is enough to establish the architecture; it is not permission to advertise all fuel chemistry. For each wood/oil/plant scene promoted at M7, also implement its declared reduced condensed-fuel release model. Unsupported scenes remain separate legacy or experimental scenes with clear capability records.
+Choose and version a minimal fuel-vapor/O2 channel with explicit products at M0/M1, subject to complete property coverage. One validated channel is enough to establish the architecture; it is not permission to advertise all fuel chemistry. For each wood/oil/plant scene promoted at M7, also implement its declared reduced condensed-fuel release model. Unsupported scenes remain separate legacy or experimental scenes during development. Every required fire row in the [current-sandbox scope](../rust-wasm-migration/current-sandbox-scope.md) must pass before P1 can complete; keeping a current scene legacy-only does not satisfy the replacement gate.
 
 Soot is optional for a reaction channel. If it is emitted as physical smoke, its yield and composition must be defined and its inventory transported. Residue/char needed to close a chosen fuel model is mandatory for that model. Rich soot oxidation, deposition, detailed pyrolysis and radiative heat transfer may be later extensions.
 
@@ -174,6 +174,8 @@ Run all FIRE-M7 fixtures plus save/load, failure injection, component capacity, 
 **Exit:** FIRE-M7 is evidenced for every promoted fire scene. No characterization result is substituted for a corrected test, and no unsupported thermal range, pseudo-material claim or arcade quench is hidden behind a physical-mode label.
 
 ### FIRE-W08: Extend fuel chemistry without reopening foundational defects
+
+**Status:** deferred. Requires a separate user activation decision; it is not a P1 dependency.
 
 **P4 / C5. Engine work:** P4/C3-C6; no new E-work item. **Dependencies:** FIRE-W07.
 

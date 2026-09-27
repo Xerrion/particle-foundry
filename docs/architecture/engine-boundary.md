@@ -26,7 +26,7 @@ Keep the browser application in `web/` and the Rust workspace in `engine/`. The 
 
 ## 2. Identity and configuration
 
-Use independent axes for execution and physics. New sessions select execution `cpu-reference` or `wgpu` and a supported model such as `lowMach` or, from P2, `compressible`. The retained legacy adapter has model `legacy-cellular`. Record the actual wgpu runtime backend separately, such as browser WebGPU or a native backend. Preserve older `fluid-cpu`/`fluid-gpu` labels through an explicit alias map, not a new schema for every label.
+Use independent axes for execution and physics. New sessions select execution `cpu-reference` or `wgpu` and a supported model such as `lowMach` or, if deferred P2 is separately activated, `compressible`. The retained legacy adapter has model `legacy-cellular`. Record the actual wgpu runtime backend separately, such as browser WebGPU or a native backend. Preserve older `fluid-cpu`/`fluid-gpu` labels through an explicit alias map, not a new schema for every label.
 
 A session owns an epoch, command sequence, accepted tick/substep and physical time. Load, reset and replacement advance the epoch so late callbacks cannot affect a new world. Keep safe integer validation at the JS boundary; wider serialized counters need an explicit string/BigInt encoding rather than precision-losing numeric conversion.
 
@@ -139,7 +139,7 @@ On device loss, stop new work, reject/cancel affected readbacks and report the l
 
 ## 11. Data and tests
 
-Keep `web/src/materials/definitions.ts` as the single legacy catalogue while bootstrapping. M1 adds a reproducible validated export/projection for the small supported scene, not a second handwritten Rust or WGSL catalogue. P3 deliberately migrates scientific source records to the full data pipeline and regenerates each consumer. Version/hash the outputs and test IDs, units and precision conversion. UI presentation may remain authored in TypeScript when joined by stable IDs.
+Keep `web/src/materials/definitions.ts` as the single legacy catalogue while bootstrapping. M1 adds a reproducible validated export/projection for the small supported scene, not a second handwritten Rust or WGSL catalogue. P1 extends generated properties only for the [required current-sandbox coverage](../plans/rust-wasm-migration/current-sandbox-scope.md). Deferred P3 would migrate scientific source records to a generalized data pipeline if separately activated. Version/hash the outputs and test IDs, units and precision conversion. UI presentation may remain authored in TypeScript when joined by stable IDs.
 
 All phases use the same boundary. Chemistry, phase changes and nuclear stages produce validated amount/energy transactions in the owning backend; none gets its own world transport loop. See [backend acceptance](../validation/backend-migration.md) and the [work-package mapping](../plans/rust-wasm-migration/plan.md).
 

@@ -1,12 +1,14 @@
 # Development roadmap
 
-**Status:** 26 September 2026. **P1 is in progress; P2-P9 remain planned.** M0 baseline evidence is recorded; no redesigned scene is promoted. Start at [START_HERE.md](START_HERE.md).
+**Status:** 27 September 2026. **P1 is the sole active release goal; P2-P9 are deferred.** M0 baseline evidence is recorded; no redesigned scene is promoted. Start at [START_HERE.md](START_HERE.md).
 
-Build a large falling-sand sandbox with all 118 element identities, a conservative GPU-capable physics core, useful compounds and material forms, and later isotope-specific nuclear behavior. Do not create 118 independent solver functions or claim 118 fully realistic elemental substances.
+The active goal is to replace the current sandbox engine with Rust/WASM and GPU simulation/rendering while preserving the [frozen current-sandbox scope](plans/rust-wasm-migration/current-sandbox-scope.md). P1 must prove that the existing materials, interactions, tools and controls work, then pass browser correctness, performance and recovery gates before the GPU backend becomes the default.
 
-## Canonical sequence
+The retained P2-P9 designs describe possible expansion to pressure waves, breakage, more materials, chemistry and nuclear behavior. They are deferred backlog, not an execution queue. Do not start any deferred phase without a separate user decision, even after P1 passes. The long-term 118-identity target does not authorize 118 independent solver functions or claims of 118 fully realistic elemental substances.
 
-The phase manifest is [development-phases.json](data/development-phases.json). Old references to delivery phases 1-5 described partial legacy work and are historical, not the order below. GPU milestones M0-M7 and active backlog IDs R9-R14 are retained for continuity.
+## Active scope and deferred phase register
+
+The phase manifest is [development-phases.json](data/development-phases.json). Old references to delivery phases 1-5 described partial legacy work and are historical, not the order below. GPU milestones M0-M7 and backlog IDs R9-R14 are retained for continuity.
 
 <!-- BEGIN PHASE TABLE -->
 | Phase | Deliverable | Local milestones | Exit gate |
@@ -22,17 +24,21 @@ The phase manifest is [development-phases.json](data/development-phases.json). O
 | P9 | Whole-product validation and release hardening | Q0, Q1, Q2 | REL-Q2 |
 <!-- END PHASE TABLE -->
 
-The default execution sequence is P1 -> P2 -> P3 -> P4 -> P5 -> P6 -> P7 -> P8 -> P9. The full P3 data pipeline follows the redesign, but its **minimal identity/storage contract is an M1 prerequisite**. Basic chemistry needed to preserve existing interactions is part of GPU M6, not delayed until P4.
+P1 is the only active phase in this table. P2 -> P3 -> P4 -> P5 -> P6 -> P7 -> P8 -> P9 preserves conditional future dependency order if the user activates later work. A satisfied dependency is not activation. Finishing P1 does not advance the work queue to P2.
 
-P2's fixed-wall numerical prototype is technically possible after M3, as the original follow-up plan states. The default work queue nevertheless finishes P1 first. P2 fragment coupling also requires M5. Parallel experiments may not enlarge or bypass M3's acceptance scope.
+The full P3 data/reaction pipeline remains deferred. Its **minimal identity/storage contract is an M1 prerequisite**; only property, composition and product support required by today's sandbox belongs in P1. Existing chemistry, all eight existing elemental models and their bounded properties must be migrated through M4-M6 and accepted by M7. A dependency on those behaviors cannot be discharged by assigning them to P3 or P4.
+
+P2's fixed-wall numerical prototype is technically possible after M3, as the original follow-up plan states, but is deferred with P2. P2 fragment coupling also requires M5. These technical dependencies do not authorize parallel expansion or enlarge M3's acceptance scope.
 
 ## P1: GPU and conservative-fluid redesign
 
-Follow [the GPU plan](plans/fluid-gpu-redesign/plan.md). Capture the actual source baseline; introduce state ownership, commands, snapshots, identity hooks, and cache invalidation; build a conservative Rust f64 CPU reference; then port the same equations to WGSL under Rust wgpu with direct rendering. WASM delivers that engine to the retained TypeScript frontend. M4-M7 add bounded thermodynamics, phase amounts, finite venting, solids, existing reactions/circuits, controls, recovery, and measured promotion.
+Follow [the migration plan](plans/rust-wasm-migration/plan.md), [current-sandbox scope](plans/rust-wasm-migration/current-sandbox-scope.md) and [GPU numerical plan](plans/fluid-gpu-redesign/plan.md). Capture the actual source baseline; introduce state ownership, commands, snapshots, identity hooks, and cache invalidation; build a conservative Rust f64 CPU reference; then port the same equations to WGSL under Rust wgpu with direct rendering. WASM delivers that engine to the retained TypeScript frontend. M4-M6 deliver the bounded thermodynamics, phase amounts, finite venting, solids, existing materials and reactions/circuits needed for the frozen scope. M7 accepts its complete coverage, browser controls, recovery and measured default-backend promotion.
 
-The first demonstrator ends at M3 and has one liquid, carrier gas, fixed walls, and passive markers. It does not add all elements or solve shocks. M7 is a gate for the explicitly supported redesign scenes, not for future catalogue expansion. Unsupported legacy scenes remain available as separate scenes in the old backend.
+The first demonstrator ends at M3 and has one liquid, carrier gas, fixed walls, and passive markers. It proves the GPU path; it does not complete the migration. M7 requires the whole frozen current-sandbox scope, including H, He, C, N, O, S, Fe and Cu. Each declared domain needs evidence; an unsupported existing feature is an open migration blocker, not permission to omit it. Correct documented defects against accepted requirements rather than reproducing historical bugs. Retain the legacy backend and original scenes while migration and promotion gates remain open.
 
 ## P2: pressure waves and material breakage
+
+**Deferred.** Requires a separate user activation after P1 acceptance.
 
 Follow [the pressure-wave plan](plans/pressure-waves-breakage/plan.md), stages W0-W4. Add a separate compressible Rust CPU reference, WGSL/wgpu parity, finite energy-release scenarios, structural stress and failure, and moving fragments. Keep breakage enabled by default in supported scenes, with a persisted toggle that stops new fractures without repairing old damage.
 
@@ -40,21 +46,29 @@ The first supported compressible scenes contain gas, reactive grains, and solids
 
 ## P3: scientific data and composition
 
+**Deferred.** Requires a separate user activation and its recorded phase dependencies. P1 supplies the bounded data and reaction support needed by the existing sandbox before this generalized pipeline starts.
+
 Follow materials C0-C2 and [the matter contract](architecture/matter-model.md). Expand the M1 subset into versioned element, nuclide, species, material-form, mixture, and property registries. Import only permitted, version-pinned datasets. Preserve numeric legacy IDs through adapters. Validate units, sources, uncertainties, data domains, conservation, reaction product closure, isotope defaults, and save/load migration.
 
 Deliver a shared CPU/GPU table compiler and explicit per-backend/per-model capability records. There are already 118 element identities; this phase makes them usable without pretending every property is known.
 
 ## P4: core 40 plus compounds
 
-Follow materials C3-C6. Port the eight documented legacy elements, then implement the remaining 32 core identities using shared physical systems. Add water/air chemistry, specific reaction products, silica-based sand, glass, selected oxides, salt solutions, and simple fuel behavior alongside the elements.
+**Deferred.** Requires a separate user activation and its recorded phase dependencies.
+
+Follow materials C3-C6. Revalidate the eight elements already migrated in P1 against the expanded data system, then implement the remaining 32 core identities using shared physical systems. Extend water/air chemistry, specific reaction products, silica-based sand, glass, selected oxides, salt solutions, and simple fuel behavior beyond the accepted P1 scope.
 
 Each core element needs at least one tested material form in a stated domain, source-qualified properties, a transport/thermal contract, a supported-interaction list, and a visible status. A melting or conductivity model may be the complete initial scope for an element. Advanced magnetic, semiconductor, catalytic, and nuclear claims remain disabled until their own gates pass.
 
 ## P5: expansion to 83
 
+**Deferred.** Requires a separate user activation and its recorded phase dependencies.
+
 Follow materials C7-C9. Add the exact 43-element extended cohort in [the roster](elements.md), not an arbitrary definition of the first 83 atomic numbers. Expand selected alloy, passivation, solution, magnetism, excitation, and semiconductor systems with bounded models and distinct capability badges. Do not invent a gimmick or unsupported property to differentiate every element.
 
 ## P6: nuclides, decay, and radiation, covering 103 identities
+
+**Deferred.** Requires a separate user activation and its recorded phase dependencies.
 
 Follow nuclear N0-N3. Activate versioned nuclide populations, decay branches and daughters, separate radiation transport, deposited/escaped energy accounting, isotope UI, and reproducible population evolution. Add the 20 nuclear-first element identities. Existing elements also gain selected radioactive isotopes.
 
@@ -62,17 +76,23 @@ The 103 target means 83 elemental-material identities plus 20 nuclide-first iden
 
 ## P7: fusion and fission
 
+**Deferred.** Requires a separate user activation and its recorded phase dependencies.
+
 Follow nuclear N4-N6. Add explicit, versioned reaction channels rather than a rule that hot elements automatically combine or radioactive material automatically explodes. Begin with selected hydrogen/helium fusion nuclides and a small isotope-specific fission/scattering/capture network. Define energy partition, product bookkeeping, time integration, and supported host-model conditions.
 
 A nuclear reaction network is not a plasma-confinement, reactor-engineering, or universal high-energy fluid solver. A standalone bounded nuclear sandbox is a valid first delivery. Promotion of nuclear heating coupled to flow requires a compatible equation of state and a separately passed coupling gate.
 
 ## P8: exotic coverage to 118
 
+**Deferred.** Requires a separate user activation and its recorded phase dependencies.
+
 Follow nuclear N7-N8. Add the final 15 superheavy identities through evaluated nuclide behavior where available and explicitly labelled predicted or creative-only material representations. Unknown density, phase transition, or bulk chemistry remains unknown. A creative stabilisation toggle is allowed only as saved, visible nonphysical behavior, with no hidden decay energy release.
 
 ## P9: whole-product release
 
-Follow Q0-Q2 in [acceptance](validation/acceptance.md). Complete the supported-feature matrix, scene import/export, tutorial scenes, catalogue/probe explanations, long-session stability, CPU/GPU parity, recovery, hardware measurements, and documentation reconciliation. Validate combinations, not just isolated features. Unsupported combinations stay unavailable or clearly experimental.
+**Deferred.** Requires a separate user activation and its recorded phase dependencies.
+
+Follow Q0-Q2 in [acceptance](validation/acceptance.md) for the expanded P2-P8 product. Extend the supported-feature matrix, scene import/export, tutorial scenes, catalogue/probe explanations, long-session stability, CPU/GPU parity, recovery, hardware measurements, and documentation reconciliation to those later capabilities. P1 must already pass correctness, actual browser execution, performance, controls and loss/reset recovery for the complete current sandbox; those checks are not deferred to P9. Validate combinations, not just isolated features. Unsupported future combinations stay unavailable or clearly experimental.
 
 ## What roster counts mean
 
@@ -95,7 +115,7 @@ Each phase requires implementation, independent reference tests, conservation ch
 
 P1 E00-E14 in [the migration work plan](plans/rust-wasm-migration/plan.md) implements M0-M7. Rust/bootstrap, generated data and the async command boundary are M1 work; M2 is the Rust f64 reference; M3 is WGSL parity and browser integration. E04's circuit reference is an independent branch required by M6, not a blocker for M2's fluid contract.
 
-P2-P9 extend the same engine contracts. Each later plan now specifies Rust/reference, GPU and TypeScript presentation ownership. A new chemistry or nuclear feature never receives its own whole-world transport loop. See the [cross-phase ownership table](plans/rust-wasm-migration/plan.md#how-every-later-phase-uses-the-chosen-stack) and [backend acceptance](validation/backend-migration.md).
+If separately activated, P2-P9 extend the same engine contracts. Each later plan specifies Rust/reference, GPU and TypeScript presentation ownership. A new chemistry or nuclear feature never receives its own whole-world transport loop. See the [cross-phase ownership table](plans/rust-wasm-migration/plan.md#deferred-phase-ownership) and [backend acceptance](validation/backend-migration.md).
 
 ## Fire-specific integration and phase gates
 
@@ -103,4 +123,4 @@ P2-P9 extend the same engine contracts. Each later plan now specifies Rust/refer
 
 The [FIRE-A gates](validation/fire-combustion.md#corrected-gates) explicitly cover closed-boundary oxygen, cold-FIRE ignition, shared finite O2, product formation, condensed-fuel release, water-dose suppression, smoke persistence, substep rates, contention, CPU/GPU parity and recovery. Passing scalar energy checks is not a substitute for composition correctness. The provisional 350 C water ceiling does not authorize legacy 450 C flame/water scenes.
 
-P4/C3-C6 extends fuel chemistry, char, soot and selected radiative transfer with FIRE-W08. It does not defer P1 oxygen/product/ignition correctness. P2 uses the same finite-reactant/source accounting with independently validated compressible physics. M3 and the 40/83/103/118 delivery cohorts are unchanged. No implementation status is advanced by this documentation update.
+Deferred P4/C3-C6 extends fuel chemistry, char, soot and selected radiative transfer with FIRE-W08 only if separately activated. P1 oxygen/product/ignition correctness and current-feature coverage remain required. Deferred P2 would use the same finite-reactant/source accounting with independently validated compressible physics. M3 and the conditional 40/83/103/118 delivery cohorts are unchanged. No implementation status is advanced by this documentation update.

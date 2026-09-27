@@ -115,6 +115,17 @@ planned. The
 contract validation; corrected FIRE-A gates remain planned. No chemistry is
 enabled, and the known legacy fire failures are not reclassified as passes.
 
+## Current release scope
+
+The 27 September scope revision makes P1 the current-sandbox replacement release.
+Use the [fixed feature checklist](plans/rust-wasm-migration/current-sandbox-scope.md)
+for all current materials, interactions and controls, including the eight existing
+element models. M3 is an experimental GPU proof; M4-M6 restores current coverage;
+M7 requires every row plus browser/device, performance and recovery evidence.
+P2-P9, FIRE-W08, optional worker deployment and new product features are deferred.
+Completing P1 does not activate them. This planning change adds no implementation
+evidence and does not change the recorded E00-E03 status.
+
 ## Next assigned work
 
 E05 starts the corrected Rust f64 fluid reference. Read its acceptance criteria
@@ -123,7 +134,7 @@ in the [migration plan](plans/rust-wasm-migration/plan.md) and preserve the
 as an independent item.
 
 Later numerical work uses Rust f64 references before WGSL. Preserve the restricted
-M3 scene scope and the P2-P9 gates. Reading this handoff does not authorize starting
+M3 scene scope and the full current-sandbox M7 requirement. P2-P9 gates are retained as deferred specifications. Reading this handoff does not authorize starting
 the remaining roadmap.
 
 ## E03 verification

@@ -48,7 +48,7 @@
       "document": "plans/pressure-waves-breakage/plan.md",
       "gate": "WAVE-W4",
       "rosterTarget": null,
-      "status": "planned",
+      "status": "deferred",
       "evidence": []
     },
     {
@@ -65,7 +65,7 @@
       "document": "plans/materials-and-chemistry/plan.md",
       "gate": "MAT-C2",
       "rosterTarget": null,
-      "status": "planned",
+      "status": "deferred",
       "evidence": []
     },
     {
@@ -83,7 +83,7 @@
       "document": "plans/materials-and-chemistry/plan.md",
       "gate": "MAT-C6",
       "rosterTarget": 40,
-      "status": "planned",
+      "status": "deferred",
       "evidence": [],
       "fireWorkItems": [
         "FIRE-W08"
@@ -103,7 +103,7 @@
       "document": "plans/materials-and-chemistry/plan.md",
       "gate": "MAT-C9",
       "rosterTarget": 83,
-      "status": "planned",
+      "status": "deferred",
       "evidence": []
     },
     {
@@ -121,7 +121,7 @@
       "document": "plans/nuclear-simulation/plan.md",
       "gate": "NUC-N3",
       "rosterTarget": 103,
-      "status": "planned",
+      "status": "deferred",
       "evidence": []
     },
     {
@@ -138,7 +138,7 @@
       "document": "plans/nuclear-simulation/plan.md",
       "gate": "NUC-N6",
       "rosterTarget": 103,
-      "status": "planned",
+      "status": "deferred",
       "evidence": []
     },
     {
@@ -154,7 +154,7 @@
       "document": "plans/nuclear-simulation/plan.md",
       "gate": "NUC-N8",
       "rosterTarget": 118,
-      "status": "planned",
+      "status": "deferred",
       "evidence": []
     },
     {
@@ -171,11 +171,12 @@
       "document": "validation/acceptance.md",
       "gate": "REL-Q2",
       "rosterTarget": 118,
-      "status": "planned",
+      "status": "deferred",
       "evidence": []
     }
   ],
   "architectureDecision": "architecture/adr-001-rust-wasm-wgpu.md",
   "engineMigrationWork": "data/engine-migration-work.json",
-  "fireWork": "data/fire-combustion-work.json"
+  "fireWork": "data/fire-combustion-work.json",
+  "currentFeatureScope": "plans/rust-wasm-migration/current-sandbox-scope.md"
 }

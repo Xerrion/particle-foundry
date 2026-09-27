@@ -113,13 +113,19 @@ def main() -> int:
         for p in phases:
             require(set(p["dependsOn"]).issubset(seen), f"Phase dependency cycle/order problem in {p['id']}")
             require((ROOT / p["document"]).is_file(), f"Missing controlling plan for {p['id']}")
-            require(p["status"] in {"planned","in-progress","implemented","validated","blocked"}, f"Invalid phase status {p['id']}")
+            require(p["status"] in {"planned","in-progress","implemented","validated","blocked","deferred"}, f"Invalid phase status {p['id']}")
             if p["status"] == "validated":
                 require(bool(p["evidence"]), f"Validated phase lacks evidence: {p['id']}")
             seen.add(p["id"])
-        require(phase_manifest["nextPhase"] in seen, "Next phase does not exist")
-        next_phase = next(p for p in phases if p["id"]==phase_manifest["nextPhase"])
-        require(phase_manifest["nextMilestone"] in next_phase["milestones"], "Next milestone does not belong to next phase")
+        if phase_manifest["nextPhase"] is None:
+            require(phase_manifest["nextMilestone"] is None, "Empty phase queue must have no next milestone")
+            require(all(p["status"] in {"validated", "deferred"} for p in phases), "Empty phase queue has unfinished active phases")
+        else:
+            require(phase_manifest["nextPhase"] in seen, "Next phase does not exist")
+            next_phase = next(p for p in phases if p["id"]==phase_manifest["nextPhase"])
+            require(next_phase["status"] != "deferred", "Next phase is deferred; explicit activation is required")
+            require(next_phase["status"] != "validated", "Next phase is already validated")
+            require(phase_manifest["nextMilestone"] in next_phase["milestones"], "Next milestone does not belong to next phase")
         roadmap=(ROOT/"roadmap.md").read_text(encoding="utf-8")
         block=roadmap.split("<!-- BEGIN PHASE TABLE -->",1)[1].split("<!-- END PHASE TABLE -->",1)[0]
         for p in phases:
@@ -153,6 +159,8 @@ def main() -> int:
         require((ROOT / work["decision"]).is_file() and (ROOT / work["plan"]).is_file(), "Missing selected ADR or migration work plan")
         require(phase_manifest["architectureDecision"] == work["decision"], "Phase/work architecture decisions disagree")
         require(phase_manifest["engineMigrationWork"] == "data/engine-migration-work.json", "Phase manifest lacks the canonical migration-work link")
+        require(work["currentFeatureScope"] == phase_manifest["currentFeatureScope"], "Phase/work current-feature scope differs")
+        require((ROOT / work["currentFeatureScope"]).is_file(), "Missing current-sandbox scope")
         items = work["workItems"]
         require([i["id"] for i in items] == [f"E{i:02d}" for i in range(15)], "Work packages must be unique E00..E14")
         previous_items: set[str] = set()
@@ -171,9 +179,14 @@ def main() -> int:
             require(f"### {identity}: {item['title']}" in migration_text, f"Work title out of sync with Markdown: {identity}")
             require(item["work"] in migration_text and item["acceptance"] in migration_text, f"Work/acceptance out of sync with Markdown: {identity}")
             previous_items.add(identity)
-        require(work["nextWorkItem"] in previous_items, "Unknown next work package")
-        next_work = next(i for i in items if i["id"] == work["nextWorkItem"])
-        require(next_work["phase"] == phase_manifest["nextPhase"] and next_work["milestone"] == phase_manifest["nextMilestone"], "Entrypoint next-work/phase/milestone disagree")
+        if work["nextWorkItem"] is None:
+            require(all(i["status"] == "validated" for i in items), "Empty engine queue has unfinished work")
+            require(phase_manifest["nextPhase"] != "P1", "P1 is next but its engine queue is empty")
+        else:
+            require(work["nextWorkItem"] in previous_items, "Unknown next work package")
+            next_work = next(i for i in items if i["id"] == work["nextWorkItem"])
+            require(next_work["status"] != "validated", "Next engine work item is already validated")
+            require(next_work["phase"] == phase_manifest["nextPhase"] and next_work["milestone"] == phase_manifest["nextMilestone"], "Entrypoint next-work/phase/milestone disagree")
         work_by_id = {i["id"]: i for i in items}
         require("E04" not in work_by_id["E05"]["dependsOn"] and "E04" in work_by_id["E11"]["dependsOn"], "Independent circuit branch dependency was lost")
         execution = work["phaseExecution"]
@@ -229,12 +242,12 @@ def main() -> int:
         fire_fixture_ids = [i["id"] for i in fire_fixtures]
         require(fire_work_ids == [f"FIRE-W{i:02d}" for i in range(9)], "Fire work IDs must be FIRE-W00-W08")
         require(fire_fixture_ids == [f"FIRE-A{i:02d}" for i in range(1,15)], "Corrected fire fixture IDs must be FIRE-A01-A14")
-        require(fire["nextWorkItem"] in fire_work_ids, "Unknown next fire work item")
+        require(fire["nextWorkItem"] is None or fire["nextWorkItem"] in fire_work_ids, "Unknown next fire work item")
         fire_plan_text = (ROOT / fire["plan"]).read_text(encoding="utf-8")
         fire_acceptance_text = (ROOT / fire["acceptance"]).read_text(encoding="utf-8")
         previous_fire: set[str] = set()
         phase_by_id = {p["id"]:p for p in phases}
-        valid_statuses = {"planned", "in-progress", "implemented", "validated", "blocked"}
+        valid_statuses = {"planned", "in-progress", "implemented", "validated", "blocked", "deferred"}
         for item in fire_work:
             fid = item["id"]
             require(set(item["dependsOn"]).issubset(previous_fire), f"Fire dependency cycle/order error: {fid}")
@@ -242,6 +255,8 @@ def main() -> int:
             require(set(item["sourceChecks"]).issubset(historical_ids), f"Unknown historical fire check: {fid}")
             require(set(item["requiredFixtures"]).issubset(fire_fixture_ids), f"Unknown corrected fire fixture: {fid}")
             require(item["status"] in valid_statuses, f"Bad fire work status: {fid}")
+            if phase_by_id[item["phase"]]["status"] == "deferred":
+                require(item["status"] == "deferred", f"Fire work in deferred phase is not deferred: {fid}")
             if item["status"] == "validated":
                 require(bool(item["evidence"]), f"Validated fire work lacks new evidence: {fid}")
             for eid in item["engineWorkItems"]:
@@ -251,6 +266,12 @@ def main() -> int:
             require(f"### {fid}: {item['title']}" in fire_plan_text, f"Fire title out of sync: {fid}")
             require(item["work"] in fire_plan_text and item["acceptance"] in fire_plan_text, f"Fire work/acceptance out of sync: {fid}")
             previous_fire.add(fid)
+        if fire["nextWorkItem"] is None:
+            require(all(i["status"] in {"validated", "deferred"} for i in fire_work), "Empty fire queue has unfinished active work")
+        else:
+            next_fire = next(i for i in fire_work if i["id"] == fire["nextWorkItem"])
+            require(next_fire["status"] != "deferred", "Next fire work item is deferred; explicit activation is required")
+            require(next_fire["status"] != "validated", "Next fire work item is already validated")
         require(all(i["phase"] == "P1" and i["milestone"] != "M3" for i in fire_work[:8]), "First eight fire tasks must refine P1 without active M3 combustion")
         require(fire_work[-1]["phase"] == "P4" and fire_work[-1]["milestone"] == "C5", "Fire extension task must remain in P4/C5")
         require(phase_by_id["P4"]["fireWorkItems"] == ["FIRE-W08"], "P4 fire work mapping missing")

@@ -261,7 +261,7 @@
       "title": "Extend fuel chemistry without reopening foundational defects",
       "work": "Extend the same engine in C3-C6 with additional bounded fuel-release profiles, char/surface channels, soot formation/oxidation/deposition and selected radiative heat transfer where supported. Reuse the P3 data compiler and preflight the complete reaction-product closure.",
       "acceptance": "Every newly enabled channel has declared composition, yields, properties and calibration/source status, plus the applicable FIRE-A regression evidence. Core oxygen, product and ignition correctness was already delivered in P1, not deferred to P4.",
-      "status": "planned",
+      "status": "deferred",
       "evidence": []
     }
   ],

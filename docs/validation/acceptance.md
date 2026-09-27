@@ -2,6 +2,13 @@
 
 **Status:** planned acceptance requirements, not measured results. Start at [START_HERE.md](../START_HERE.md). The numerical GPU thresholds already specified in [the fluid plan](../plans/fluid-gpu-redesign/plan.md) remain the detailed P1 contract.
 
+P1 is the sole active release. Its complete
+[current-sandbox scope](../plans/rust-wasm-migration/current-sandbox-scope.md),
+including the current eight elemental models, is mandatory for GPU-M7. P2-P9 and
+their expansion gates below are deferred specifications requiring separate user
+activation. P9 deferral does not postpone P1 integration, usability, device,
+performance or recovery validation.
+
 ## Evidence rules
 
 A milestone is validated only when its implementation, independent references, regression tests, applicable CPU/GPU comparisons, and evidence are present. A docs-only update, a rendered scene, or a passing old test suite does not prove new physics.
@@ -14,7 +21,7 @@ Keep new artifacts under a run-specific directory. Use [the evidence template](.
 
 | Gate | Required evidence | Cannot substitute |
 | --- | --- | --- |
-| GPU-M7 / P1 | M0-M7 evidence plus FIRE-M7 for promoted fire scenes; conservative CPU/GPU operators/fluxes; volume/phase closure; integrated supported scenes; ownership, controls, recovery and measured performance | A direct shader port of old parcel swapping or M3 alone |
+| GPU-M7 / P1 | M0-M7 evidence plus FIRE-M7 for promoted fire scenes; conservative CPU/GPU operators/fluxes; volume/phase closure; every required current-sandbox row; ownership, controls, recovery and measured performance | A direct shader port of old parcel swapping or M3 alone |
 | WAVE-W4 / P2 | W0-W4 shock/acoustic/reflection references, finite venting, structural load/fracture, toggle and fragment conservation | A radius-based explosion effect or global chamber-pressure jump |
 | MAT-C2 / P3 | Unique identities, source/unit/domain schema, amount and isotope-preserving composition, balanced reaction definitions, product closure and migrations | 118 names or a bag of unqualified constants |
 | MAT-C6 / P4 | 40 core base-form identities, essential compound scenarios, selected reactions, bounds and new-backend tests | 40 enabled picker buttons |
@@ -103,6 +110,10 @@ Do not promise the same speed for every phase or device. Freeze device-specific 
 
 ## P9 / Q0: combined-feature coverage
 
+**Deferred:** Q0-Q2 cover the future expanded product. P1 runs its own complete
+current-feature matrix and applicable product/recovery checks before its default
+switch; these P9 milestones are not prerequisites for that existing scope.
+
 Freeze a matrix of backend, fluid model, component/form, chemistry network, nuclear network, damage model, domain and creative settings. Run the supported combinations and reject the unsupported ones before simulation. Reconcile exact roster membership and support badges with the runtime catalogue and [the planning manifests](../data/element-roadmap.json).
 
 **Exit:** every promoted scene has an explicit capability row and integration evidence; no feature is enabled solely because another backend or physical model supports it.
@@ -127,7 +138,7 @@ Update the actual repository README, [model](../model.md), [elements](../element
 
 [Backend-migration acceptance](backend-migration.md) defines MIG-01 through MIG-14. Apply them to P1 promotion and again when P2-P9 extend state, data layouts, browser APIs or source stages. They add native/WASM builds, ABI/data generation, browser capability, command epochs, GPU-resident rendering, accepted-time metrics and failure recovery to the numerical gates; none replaces those gates.
 
-[The static source review](source-review-2026-09-21.md) is evidence of source inspection only. All P1-P9 and E00-E14 work starts planned. No result in this package is a new application benchmark, Rust compilation or GPU validation run.
+[The static source review](source-review-2026-09-21.md) is evidence of source inspection only. E00-E03 have subsequent baseline/bootstrap/contract evidence linked from [RESUME](../RESUME.md); remaining P1 implementation is planned and P2-P9 are deferred. This scope revision adds no numerical, application or GPU results.
 
 ## Fire-specific acceptance in P1 and later phases
 

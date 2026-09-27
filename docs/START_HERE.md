@@ -1,132 +1,108 @@
-# Engine migration: developer implementation entrypoint
+# Current-sandbox GPU migration: developer entrypoint
 
-For general development, start at [the knowledge map](README.md). Use this migration
-brief only for assigned migration work. Reading it does not authorize the full roadmap.
+**Revision:** 27 September 2026. **Active release:** P1 only. E00-E03 have
+recorded baseline/bootstrap/contract validation; E04 and E05-E14 remain planned.
+E05 is the next implementation task. The live sandbox still runs TypeScript;
+no physical Rust/GPU scene is promoted. [RESUME](RESUME.md) records recovery and
+verification, and the [engine tracker](data/engine-migration-work.json) owns status.
 
-**Project:** Particle Foundry. **Revision:** 27 September 2026, recovery onto the new layout.
-E00-E03 have recorded contract validation; M1 and P1 remain incomplete. The
-manifests own current work status; [RESUME.md](RESUME.md) records the recovery and
-E03 verification. E05 is next within the scoped GPU port; E04 circuits remain
-planned as an independent work item.
+## Goal and scope
 
-**Change the simulation engine, not the application.** Keep the current TypeScript UI, DOM, CSS, input and viewport. Build corrected references in Rust, use WASM for browser delivery, and run heavy parallel physics plus direct rendering through Rust wgpu and WGSL. This decision is [ADR-001](architecture/adr-001-rust-wasm-wgpu.md).
+Deliver the current sandbox on Rust/WASM + wgpu with correct physics, usable
+browser controls, bounded resources, failure recovery and measured performance.
+The [current-sandbox scope](plans/rust-wasm-migration/current-sandbox-scope.md)
+fixes required coverage. Every row must pass before the full default switch.
+This includes the eight existing elemental models and all current interactions;
+first migration of that coverage is P1 work, not a deferred P4 dependency.
 
-For assigned migration work, follow P1-P9 dependencies beginning with the GPU redesign.
-Implement only the requested work item or explicitly authorized sequence. The Rust
-bootstrap and engine boundary are part of P1 M0/M1, not a separate whole-codebase
-rewrite before the numerical work. M2 is a Rust f64 reference; M3 is the equivalent
-WGSL/f32 GPU solver.
+P2-P9 and FIRE-W08 are deferred. Do not start new pressure waves, fracture,
+materials, general chemistry, nuclear features, worker deployment or product
+expansion. Completing P1 does not activate them. A separate user decision is
+required. Dependencies in deferred plans describe a possible future order.
+
+Retain the TypeScript UI and current web/engine placement under
+[ADR-001](architecture/adr-001-rust-wasm-wgpu.md). Implement independent Rust f64
+references, then equivalent WGSL/f32 compute and direct rendering. Preserve
+current user capabilities while correcting documented physics defects; pixel
+parity with an invalid legacy calculation is not an acceptance criterion.
+
+## Three delivery checkpoints
+
+| Checkpoint | Work | Required result |
+| --- | --- | --- |
+| GPU proof | M2-M3 / E05-E08 | Verified Rust fluid reference and a small real-browser GPU scene with one liquid, carrier gas, fixed walls, basic controls and direct rendering. Experimental only. |
+| Existing functionality | M4-M6 / E09-E12, plus E04 circuits | All current-sandbox thermal, motion, elemental, reaction, source, circuit and browser rows implemented and tested within their specified domains. |
+| Default switch | M7 / E13-E14 | Complete scope matrix, browser/device evidence, sustained performance and recovery; GPU-M7 and FIRE-M7 pass. |
+
+Retain legacy access throughout development. Passing a subset does not permit
+removing a failed row, marking it optional or calling P1 complete. Record any
+required scope change for a user decision. Necessary property tables and
+reaction products belong to P1; broader registries and new palette/reaction
+coverage remain deferred. Bounded Rust CPU circuit work is compatible with the
+GPU engine; the scene retains one authoritative state owner.
 
 ## Copy-paste developer brief
 
 ```text
-Start with docs/README.md, then use docs/START_HERE.md for the P1-P9 migration.
+Read docs/README.md, this entrypoint and the assigned E-work package.
+The sole active release is P1: migrate the current sandbox to Rust/WASM + wgpu.
+Use docs/plans/rust-wasm-migration/current-sandbox-scope.md as required coverage.
+E00-E03 are validated foundation work. E05 is next; E04 circuits are required before E11.
 Execute only the assigned work item or explicitly authorized sequence.
-Consult docs/RESUME.md and the work manifests for the next assigned item.
-E00-E03 are recorded; E05 is next within the scoped GPU port in
-docs/plans/rust-wasm-migration/plan.md. E04 circuits remain a separate planned item.
-Follow ADR-001: retain the TypeScript frontend; migrate the simulation engine
-selectively to Rust/WASM with wgpu-managed WGSL compute and direct rendering.
-Keep the UI in web/ and add Rust/WGSL under engine/. Do not rewrite the UI or adopt Bevy.
-Inspect the real repository, its instructions, scripts, tests and working changes.
-Preserve a recoverable tracked/untracked snapshot before any implementation edits.
-Use the recorded E00 baseline and read the relevant source/fire evidence.
-Rerun checks affected by the assigned work; historical results are not fresh tests.
-Preserve the imported F01-F12 characterization evidence; it is not corrected acceptance.
-Follow FIRE-W00-FIRE-W07 within P1 and FIRE-W08 in P4, alongside E00-E14.
-Historical results are not fresh tests.
-For P1, follow both the numerical GPU plan and the E00-E14 migration work packages.
-Add the Rust/WASM build and command boundary early, then build the Rust f64 reference.
-Only port the numerical solver to WGSL after the corresponding reference gates pass.
-Do not first rewrite every old TypeScript solver into Rust or duplicate a new TS reference.
-Keep one authoritative state and one transport owner per scene.
-Use GPU-resident state, bounded commands, asynchronous tick/epoch-stamped probes,
-consistent snapshots, and explicit supported-scene fallback. No full-world frame-loop copies.
-Keep M3 limited to one liquid, carrier gas, fixed walls and passive markers.
-Implement the minimal matter identity/storage seam in M1, not all chemistry/nuclear features.
-Complete M4-M7 integration and promotion before the default queue advances to P2.
-Require FIRE-PRECONDITIONS in M4, FIRE-M6 integration and FIRE-M7 before fire-scene promotion.
-Replace oxygen refill, cold-FIRE ignition, missing products and contact-only water quenching.
-Preserve funded ignition, finite inventories and derived visuals; no per-substep replay of old per-tick rates.
-Continue P2-P9 using the same engine contracts and the 40/83/103/118 element cohorts.
-Run the applicable native, WASM, browser, numerical and GPU tests; record unrun gates honestly.
-Update evidence and work status only when supported.
-Continue with another work item only when it is within the authorized task scope.
+Preserve the TypeScript UI in web/, Rust/WGSL in engine/, and current legacy access.
+Use current source/tests and recorded E00 evidence; preserve unrelated changes.
+Build independent Rust references before porting corresponding physics to WGSL.
+Keep one live state owner, bounded commands and stamped asynchronous observations.
+Render from GPU state; no full-world normal-frame transfers or duplicate ticking world.
+Keep M3 to one liquid, carrier gas, fixed walls and passive markers with basic controls.
+M4-M6 must cover all current-sandbox rows, including the existing eight element models.
+Use only the property, component and product support required for existing functionality.
+Retain FIRE-W00-W07/FIRE-A requirements; fix known fire/circuit/numerical defects.
+Keep the existing bounded Blast/gunpowder behavior; resolved waves/fracture are deferred.
+Keep P2-P9, FIRE-W08, worker deployment and new product features deferred.
+P1 completion does not authorize later work.
+Run relevant reference/native/WASM/browser/GPU checks and report unavailable checks.
+Record per-row evidence and numerical differences; do not reduce scope to pass M7.
+Default switch requires the complete current-sandbox matrix plus GPU-M7/FIRE-M7.
 ```
 
-## Reading order for migration work
+## Controlling documents
 
-For a bounded work item, read its controlling plan, dependencies and contracts.
-Use this broader sequence when establishing the migration baseline; it is not
-required reading for unrelated development.
+Use the [knowledge map](README.md) for general development. For an assigned
+migration item, read only its dependencies and applicable contracts:
 
-1. [Stack decision](architecture/adr-001-rust-wasm-wgpu.md), [roadmap](roadmap.md), and [active work](remaining-work.md).
-2. [Project structure](project-structure.md), [historical source review](validation/source-review-2026-09-21.md), and [fire evidence and corrected gates](validation/fire-combustion.md). Recheck historical findings against the current working tree, including uncommitted changes.
-3. [Rust/WASM work packages](plans/rust-wasm-migration/plan.md), [engine boundary](architecture/engine-boundary.md), [fluid/GPU numerical plan](plans/fluid-gpu-redesign/plan.md), and [fire integration plan](plans/fire-combustion/plan.md).
-4. [Matter model](architecture/matter-model.md), [current physical model](model.md), and [acceptance](validation/acceptance.md). Read later phase plans to avoid dead-end contracts, not to enlarge M3.
+1. [Migration work packages](plans/rust-wasm-migration/plan.md) and
+   [current-sandbox scope](plans/rust-wasm-migration/current-sandbox-scope.md).
+2. [Fluid/GPU equations and gates](plans/fluid-gpu-redesign/plan.md),
+   [engine boundary](architecture/engine-boundary.md) and
+   [project placement](project-structure.md).
+3. [Backend acceptance](validation/backend-migration.md), applicable
+   [fire gates](validation/fire-combustion.md) and
+   [evidence template](templates/phase-evidence.md).
 
-The Markdown documents are canonical. The GPU [HTML view](plans/fluid-gpu-redesign/plan.html) is generated. ADR-001 controls the stack, the engine-boundary document controls integration, the GPU plan controls its equations/gates, and the phase manifest controls sequence. The fire plan and FIRE-A gates refine M0/M1/M4/M6/M7 and P4 without expanding M3. Older copies under history preserve superseded assumptions and do not override this entrypoint.
+The phase and work manifests own status. The scope checklist owns current
+product coverage; numerical and fire plans own their acceptance requirements.
+Historical evidence and deferred proposals cannot expand an assigned task.
+The GPU [HTML view](plans/fluid-gpu-redesign/plan.html) is generated from Markdown.
 
-## Current source and historical evidence
+## Verification and evidence
 
-Use the current checkout for source, configuration and tests. Inspect `web/src/`,
-`web/tests/`, `engine/` and root mise tasks as they exist when the work begins.
-No source ZIP is required. Record fresh findings against the Git commit and
-working-tree changes using [the evidence template](templates/phase-evidence.md).
+Run commands from the repository root through mise. Use focused tasks for the
+assigned work and `mise run ci` for repository checks; browser GPU evidence is
+required for the GPU path. A native device smoke or mock session test cannot
+prove a physical GPU scene. Capture unavailable devices and failed checks as
+unrun/failed, not passed.
 
-The [source manifest](data/source-review-manifest.json) preserves the 43-file
-snapshot inspected in September 2026. Its paths, hashes and missing-input list
-describe that historical upload, not the current repository. The retained
-24-pass/11-fail audit, quoted timings and 12 fire-characterization checks belong
-to their recorded snapshots. They are not current test results or corrected
-FIRE-A passes. Preserve them and establish fresh evidence from the live checkout.
+Freeze named fixtures, domains, expected observables and tolerances before
+implementing each scope row. Fix browser/device targets and the measurement
+protocol before M3 benchmarking. Measure accepted simulated time, completed work,
+latency and transfers at the current 480 x 270 grid; a rendered frame or submitted
+tick is not completed simulation. The 1/60 s outer clock and 0.01 m cell width
+remain the defaults unless explicitly versioned.
 
-## First development slice
-
-### M0 / E00: capture the actual baseline
-
-Inspect repository instructions and Git state. Preserve tracked and untracked work in a recoverable snapshot; a patch alone is insufficient. Do not reset to the historical audit commit. Identify the real commands for lint, type checking, tests and build, then run them with the checked-in lockfile.
-
-The repository now defines commands and tool versions in `mise.toml`: run `mise run ci` for lint, both type checks, tests, build and documentation validation. Individual tasks include `mise run lint`, `mise run check`, `mise run test` and `mise run build`; setup is documented in the root README. Earlier audit commands and results remain historical evidence. Keep legacy audit results and fixtures, but write new results under `artifacts/validation/p1-m0/<run-id>/`.
-
-Include FIRE-W00 in this baseline. Preserve F01-F12 and their source hashes; create separate corrected assertions for the closed-boundary and cold-FIRE bugs, plus the brush and explicit-reaction controls. Keep the tiny-water observation labelled reaction-only. Do not demand a full legacy TypeScript repair before the Rust work.
-
-Freeze numerical fixtures, accepted physical-time accounting, data/version conventions and reference tolerances. Record browser/OS/device and warm-up/sample conventions for new performance evidence. A missing GPU can leave hardware gates unrun without preventing native-reference work.
-
-### M1 / E01-E04: make the Rust/browser seam concrete
-
-Add the minimal Rust workspace and reproducible WASM/bindings build under `engine/` while retaining the TypeScript app in `web/`. Establish a real browser initialization/disposal smoke test. Define units, IDs, active-component mappings, snapshot schema, async observation/command contracts and shader layouts.
-
-Use the existing sandbox composition as the adapter point. Preserve legacy scenes separately. Keep a single authored catalogue with generated projections, not handwritten Rust/TS/WGSL copies. Plan canvas selection before acquiring a context and use epoch-stamped callbacks.
-
-FIRE-W01 adds the minimum shared fuel/O2/product, boundary-flux, source-energy, smoke/soot and derived-visual contracts. These are schema and ownership requirements, not active combustion in the first demonstrator. Do not create another independent oxygen inventory or allocate all 118 components per cell.
-
-E04 adds the corrected Rust CPU circuit reference as an independent branch; it must pass before M6 integration but does not delay M2's fluid work. Do not first fix and re-port every old TypeScript solver.
-
-### M2 / E05-E06: validate corrected Rust equations
-
-Implement the small Rust f64 CPU reference: compatible MAC operators, boundary conditions, conservative phase/tracer/compatible momentum transport, viscosity and stable substeps. No old cellular fluid movement or hydrostatic relocation operates in this new world. Keep full phase/chemistry physics disabled while validating transport.
-
-### M3 / E07-E08: deliver the GPU demonstrator
-
-Implement the same stage graph in WGSL/f32 through Rust wgpu. Use the same device for compute and rendering, bounded in-flight work, asynchronous small probes/reductions and explicit failure/commit state. Do not call the old Canvas/ImageData renderer through a full-world download.
-
-Test at equal accepted physical times, report actual allocations/transfers and distinguish submission cost from GPU completion. M3 is not the default full sandbox and does not promise a speed multiplier. Continue M4 thermodynamics, M5 solids, M6 integration and M7 promotion before moving to the normal P2 queue.
-
-## Fire integration after the demonstrator
-
-At M4/E09, pass finite species-ventilation and property-domain preconditions before fire/water coupling. The provisional 623.15 K water table does not cover the legacy 450 C emitted-flame setting. Extend validated coverage or reject the combination explicitly; do not clamp it into range.
-
-At M6/E11, implement the coherent combustion slice in Rust first, then WGSL with shared-reactant reservations. Consumed fuel and O2 become declared products, ignition/extinction follows the supported local state, and water suppression is amount/thermal based. Use physical-time rates and transactional rollback. For promoted wood/oil/plant scenes, bounded condensed-fuel release is required now, not postponed to P4.
-
-At M6/E12, retain the Fire brush and particle-based presentation while deriving visible flames/smoke from real state. Cosmetic expiration cannot erase matter. At M7, require the [FIRE-M7 evidence](validation/fire-combustion.md#corrected-gates), supported hot-domain coverage, save/recovery and measured GPU behavior before promotion. P4 extends fuel, char, soot and selected radiation mechanisms through FIRE-W08.
-
-## Defaults and rules for all phases
-
-Preserve the documented 480 x 270 grid, 0.01 m cell width and represented depth, and 1/60 s outer clock until an explicit versioned model change is justified. Internal substeps follow stability constraints; accepted simulation time, not display FPS, drives physics and sources.
-
-Keep physical model and execution backend separate. `lowMach` and `compressible` are models; CPU and wgpu are execution choices. Legacy scenes stay on their own backend until conversion and feature gates pass. No-adapter or device-loss behavior must not silently change a live scene's equations.
-
-Implement each capability as `planned -> in-progress -> implemented -> validated`, with a specific `blocked` status where needed. Use [the evidence template](templates/phase-evidence.md) and [backend validation](validation/backend-migration.md). Shared formulas and passing parity do not replace independent physical reference tests.
-
-The all-118 roster and 40/83/103/118 delivery cohorts remain unchanged. Registry presence is not validated material support. Preserve element/nuclide/species/material distinctions and isotope composition as later phases extend the engine. No whole-nuclide-table or 118-element dense array is required in every cell.
+Use the current checkout, including uncommitted changes, for fresh evidence.
+Record commits, commands, versions, numerical differences and limitations in
+new evidence summaries; keep raw logs in ignored artifacts/. Historical source
+ZIPs, old audit totals and F01-F12 fire observations retain their original scope.
+Preserve them byte-for-byte. Do not turn known historical defects into required
+new-engine behavior or claim this plan revision executed new simulation tests.
