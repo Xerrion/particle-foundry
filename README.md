@@ -4,6 +4,7 @@ En browserbaseret falling-sand-sandkasse med reproducerbar fysik, varmeledning,
 faseændringer, væsketransport, idealgastryk, bevægelige faste parceller og begrænset
 forbrænding. Verden er som standard et gitter på 480 × 270 celler med zoom og panorering.
 
+Se [faser og milepæle i almindeligt sprog](docs/PHASES.md) for projektets retning.
 Læs [modelspecifikationen](docs/model.md) for enheder, tilstandsejerskab,
 bevarelsesregler og modellens bevidste grænser. [Restarbejdet](docs/remaining-work.md)
 beskriver aktiv backlog og leveret historik; [roadmap](docs/roadmap.md) viser

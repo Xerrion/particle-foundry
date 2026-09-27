@@ -58,6 +58,9 @@ evidence. Generated HTML is a view of its canonical Markdown, not a second sourc
 
 ## Planned work
 
+[Human-readable phases and milestones](PHASES.md) explains the full P1-P9 route
+without the implementation detail below.
+
 [Roadmap](roadmap.md) explains phase order; [active work](remaining-work.md) maps
 backlog items to deliverables. [START_HERE.md](START_HERE.md) describes the migration
 workflow. The phase manifest owns the next phase/milestone, and the engine-work
