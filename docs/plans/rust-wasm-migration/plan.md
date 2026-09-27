@@ -1,6 +1,6 @@
 # Rust/WASM + wgpu migration work packages
 
-**Status:** all work planned. **Placement:** inside P1, not a new phase before the GPU redesign. **Selected decision:** [ADR-001](../../architecture/adr-001-rust-wasm-wgpu.md). **Entrypoint:** [START_HERE](../../START_HERE.md).
+**Status:** E00 baseline validated; E01 is next. [Fresh evidence](../../validation/p1-m0.md). **Placement:** inside P1, not a new phase before the GPU redesign. **Selected decision:** [ADR-001](../../architecture/adr-001-rust-wasm-wgpu.md). **Entrypoint:** [START_HERE](../../START_HERE.md).
 
 The [fluid/GPU plan](../fluid-gpu-redesign/plan.md) controls equations, scope and numerical exit gates. This document controls the language/runtime migration and integration work needed to execute that plan. It replaces the earlier TypeScript-reference/source-layout assumptions without weakening the numerical gates. The [engine boundary](../../architecture/engine-boundary.md) controls commands, state authority, async behavior and persistence.
 

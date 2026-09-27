@@ -1,0 +1,12 @@
+{
+  "kind": "legacy-headless-completed-tick-baseline",
+  "rendering": "excluded",
+  "instrumentation": "separate untimed pass, array and ledger hash parity",
+  "results": [],
+  "openHotEdgeOneTick": {
+    "pressureDerivations": 5,
+    "outletSearches": 0,
+    "outletDequeues": 0,
+    "outletNeighborVisits": 0
+  }
+}

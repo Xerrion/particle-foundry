@@ -3,7 +3,7 @@
   "kind": "planning-work-packages-not-implementation-status",
   "decision": "architecture/adr-001-rust-wasm-wgpu.md",
   "plan": "plans/rust-wasm-migration/plan.md",
-  "nextWorkItem": "E00",
+  "nextWorkItem": "E01",
   "workItems": [
     {
       "id": "E00",
@@ -19,8 +19,8 @@
       "title": "Capture baseline and legacy regression contracts",
       "work": "Inspect the full repository, preserve tracked/untracked changes, identify real scripts/toolchains, reproduce controls/audit in a fresh directory, and establish named browser/device fixtures. Instrument actual pressure calls and outlet visits. Include FIRE-W00: preserve the 12 imported F-check observations, verify their source hash and add distinct corrected FIRE-A specifications without rewriting legacy fire first.",
       "acceptance": "Recorded source/config hashes, original checks, fresh failures, equal-time scene definitions and explicit unrun checks. Quoted timings stay historical. Fire characterization and corrected acceptance are separately named; full-tick bugs and positive controls are retained, and the water edge case remains reaction-only.",
-      "status": "planned",
-      "evidence": [],
+      "status": "validated",
+      "evidence": ["validation/p1-m0.md"],
       "fireWorkItems": [
         "FIRE-W00"
       ]

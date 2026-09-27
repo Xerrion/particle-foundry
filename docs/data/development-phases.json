@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-09-23",
+  "updatedAt": "2026-09-26",
   "kind": "planning-manifest",
   "nextPhase": "P1",
-  "nextMilestone": "M0",
+  "nextMilestone": "M1",
   "phases": [
     {
       "id": "P1",
@@ -22,8 +22,8 @@
       "document": "plans/fluid-gpu-redesign/plan.md",
       "gate": "GPU-M7",
       "rosterTarget": null,
-      "status": "planned",
-      "evidence": [],
+      "status": "in-progress",
+      "evidence": ["validation/p1-m0.md"],
       "supplementalGates": [
         "FIRE-PRECONDITIONS",
         "FIRE-M6",

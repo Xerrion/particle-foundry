@@ -230,7 +230,7 @@ def main() -> int:
         fire_fixture_ids = [i["id"] for i in fire_fixtures]
         require(fire_work_ids == [f"FIRE-W{i:02d}" for i in range(9)], "Fire work IDs must be FIRE-W00-W08")
         require(fire_fixture_ids == [f"FIRE-A{i:02d}" for i in range(1,15)], "Corrected fire fixture IDs must be FIRE-A01-A14")
-        require(fire["nextWorkItem"] == "FIRE-W00", "First fire task is not baseline capture")
+        require(fire["nextWorkItem"] in fire_work_ids, "Unknown next fire work item")
         fire_plan_text = (ROOT / fire["plan"]).read_text(encoding="utf-8")
         fire_acceptance_text = (ROOT / fire["acceptance"]).read_text(encoding="utf-8")
         previous_fire: set[str] = set()
@@ -346,11 +346,16 @@ def main() -> int:
                 require((ROOT/rel).is_file(), f"Original file path removed from updated package: {rel}")
         for name in ["audit.cjs","current-audit-output.txt","current-audit-results.json"]:
             rel="plans/fluid-gpu-redesign/"+name
-            require(hashlib.sha256((ROOT/rel).read_bytes()).hexdigest()==hashes[rel], f"Historical audit evidence modified: {name}")
+            # Git's *.json text eol=lf normalizes the imported CRLF JSON.
+            # The ZIP and its original hashes above still require exact bytes.
+            with ZipFile(original) as archive:
+                original_content = archive.read("docs/" + rel)
+            content = (ROOT / rel).read_bytes()
+            require(content == original_content or (name.endswith(".json") and content == original_content.replace(b"\r\n", b"\n")), f"Historical audit evidence modified: {name}")
         audit=json.loads((ROOT/"plans/fluid-gpu-redesign/current-audit-results.json").read_text(encoding="utf-8"))
         passes=sum(1 for r in audit["results"] if r["passed"])
         require(len(audit["results"])==35 and passes==24, "Historical audit summary no longer matches retained records")
-        checked.append("Input archive CRC/SHA-256, all original paths, and three unchanged audit files")
+        checked.append("Input archive CRC/SHA-256, all original paths, and audit content (Git LF-normalized JSON allowed)")
         prior_meta = json.loads((ROOT / "history/previous-revision.json").read_text(encoding="utf-8"))
         prior = ROOT / "history" / prior_meta["filename"]
         require(hashlib.sha256(prior.read_bytes()).hexdigest() == prior_meta["sha256"], "Prior documentation archive changed")

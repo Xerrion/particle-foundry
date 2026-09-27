@@ -1,6 +1,6 @@
 # Development roadmap
 
-**Revision:** 21 September 2026. **All P1-P9 phases are planned.** Start at [START_HERE.md](START_HERE.md).
+**Status:** 26 September 2026. **P1 is in progress; P2-P9 remain planned.** M0 baseline evidence is recorded; no redesigned scene is promoted. Start at [START_HERE.md](START_HERE.md).
 
 Build a large falling-sand sandbox with all 118 element identities, a conservative GPU-capable physics core, useful compounds and material forms, and later isotope-specific nuclear behavior. Do not create 118 independent solver functions or claim 118 fully realistic elemental substances.
 

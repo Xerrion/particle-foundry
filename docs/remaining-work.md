@@ -1,12 +1,12 @@
 # Active work and delivered-history boundary
 
-**Status date:** 23 September 2026. **Next task:** R9, P1/M0. All active items below are planned, not implemented by this documentation update. Follow [START_HERE.md](START_HERE.md) and [the roadmap](roadmap.md).
+**Status date:** 26 September 2026. **Next task:** R9, P1/M1/E01. M0/E00/FIRE-W00 baseline capture is validated; see [fresh evidence](validation/p1-m0.md). P1 remains in progress. Follow [START_HERE.md](START_HERE.md) and [the roadmap](roadmap.md).
 
 ## Current active queue
 
 | Work item | Phase / milestones | Deliverable and acceptance | Status |
 | --- | --- | --- | --- |
-| R9 | P1 / M0-M1, E00-E04 | Fresh baseline; Rust/WASM workspace and browser smoke test; async facade, IDs/ABI/data projection, independent Rust circuit reference and invalidation | Planned |
+| R9 | P1 / M0-M1, E00-E04 | Fresh baseline; Rust/WASM workspace and browser smoke test; async facade, IDs/ABI/data projection, independent Rust circuit reference and invalidation | In progress; E00 validated |
 | R10 | P1 / M2-M3, E05-E08 | Rust f64 conservative reference and equivalent Rust/wgpu WGSL demonstrator; direct rendering, async probes, equal-time parity and measured transfers | Planned |
 | R11 | P1 / M4-M7, E09-E14 | Rust/GPU thermodynamics, solids and sources; bounded Rust CPU circuits, TypeScript host/worker integration, recovery and measured promotion | Planned |
 | R12 | P2 / W0-W2 | Compressible CPU reference and GPU parity; local waves/reflection, finite exchange, stable time integration | Planned |
@@ -26,11 +26,11 @@ No phase completion can be inferred from roster counts. [development-phases.json
 
 ## Immediate work checklist
 
-- [ ] Inspect actual repository instructions, source, scripts, lockfile, and Git changes.
-- [ ] Capture a recoverable tracked/untracked snapshot and fresh hashes.
-- [ ] Run existing checks and the historical audit in a new evidence directory; record differences without overwriting old files.
-- [ ] Preserve the imported F01-F12 fire characterization; add distinct corrected FIRE-A assertions for full-pipeline boundary/ignition bugs and useful controls. Record new runs separately.
-- [ ] Freeze initial reference fixtures, precision-specific tolerances, and hardware/performance measurement conventions.
+- [x] Inspect actual repository instructions, source, scripts, lockfile, and Git changes.
+- [x] Capture a recoverable tracked/untracked snapshot and fresh hashes.
+- [x] Run existing checks and the historical audit in a new evidence directory; record differences without overwriting old files.
+- [x] Preserve the imported F01-F12 fire characterization; add distinct corrected FIRE-A assertions for full-pipeline boundary/ignition bugs and useful controls. Record new runs separately.
+- [x] Freeze initial reference fixtures, precision-specific tolerances, and hardware/performance measurement conventions.
 - [ ] Follow [E00-E14](plans/rust-wasm-migration/plan.md): create the Rust/WASM bootstrap, async facade and identity/data contract, then Rust f64 reference before the WGSL solver port.
 - [ ] Preserve the TypeScript UI and legacy scenes; do not rewrite every old solver or relocate the app first.
 - [ ] Use [source observations](validation/source-review-2026-09-21.md) to cover canvas ownership, nested pressure calls, command timing and mixed energy conventions.
@@ -64,7 +64,7 @@ Record new results separately and update [model.md](model.md) only when implemen
 
 ## Selected engine migration and status
 
-All E00-E14 work packages in [the engine tracker](data/engine-migration-work.json) are planned. E00 is next. The source-only review and docs validation do not mark any application milestone complete. The stack decision is settled by [ADR-001](architecture/adr-001-rust-wasm-wgpu.md); numerical details remain governed by the phase plans.
+E00 in [the engine tracker](data/engine-migration-work.json) is validated by the fresh baseline. E01 is next; E01-E14 remain planned. The stack decision is settled by [ADR-001](architecture/adr-001-rust-wasm-wgpu.md); numerical details remain governed by the phase plans.
 
 P2 references and later chemistry/nuclear algorithms are implemented in Rust CPU code first where a reference is required, then equivalent WGSL where justified. UI remains TypeScript. See [the execution mapping](plans/rust-wasm-migration/plan.md#how-every-later-phase-uses-the-chosen-stack).
 
@@ -79,4 +79,4 @@ P2 references and later chemistry/nuclear algorithms are implemented in Rust CPU
 | R11 / M7 | FIRE-W07 | FIRE-M7: supported fire-scene tests, persistence/recovery and measured GPU evidence |
 | R16 / P4 | FIRE-W08 | Extend fuel/char/soot/radiation mechanisms and revalidate each newly enabled channel |
 
-All entries remain planned. The [12-case audit](evidence/fire-review-2026-09-23/FIRE_REVIEW.md) is immutable characterization, not delivered fixes. Do not port legacy fire rules unchanged, require a full duplicate TypeScript repair, or defer basic oxidizer/product/ignition correctness until the 40-element expansion.
+FIRE-W00 baseline capture is validated; FIRE-W01-W08 and corrected FIRE-A gates remain planned. The [12-case audit](evidence/fire-review-2026-09-23/FIRE_REVIEW.md) is immutable characterization, not delivered fixes. Do not port legacy fire rules unchanged, require a full duplicate TypeScript repair, or defer basic oxidizer/product/ignition correctness until the 40-element expansion.

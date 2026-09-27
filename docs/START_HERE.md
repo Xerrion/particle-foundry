@@ -1,6 +1,6 @@
 # Start here: developer implementation entrypoint
 
-**Project:** Particle Foundry. **Revision:** 23 September 2026, fire-audit integration update. **First task:** P1 / M0 / E00. **Status:** development plan, not delivered implementation.
+**Project:** Particle Foundry. **Status:** P1 in progress. M0 / E00 / FIRE-W00 baseline capture is validated in [fresh evidence](validation/p1-m0.md). **Next task:** P1 / M1 / E01. The brief below preserves the original full-roadmap instructions; subsequent milestones remain gated.
 
 **Change the simulation engine, not the application.** Keep the current TypeScript UI, DOM, CSS, input and viewport. Build corrected references in Rust, use WASM for browser delivery, and run heavy parallel physics plus direct rendering through Rust wgpu and WGSL. This decision is [ADR-001](architecture/adr-001-rust-wasm-wgpu.md).
 
