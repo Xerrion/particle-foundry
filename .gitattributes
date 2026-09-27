@@ -4,3 +4,6 @@
 *.css text eol=lf
 *.md text eol=lf
 .gitattributes text eol=lf
+
+# Preserve the original bytes checked by the historical evidence manifest.
+docs/plans/fluid-gpu-redesign/current-audit-results.json -text whitespace=cr-at-eol
