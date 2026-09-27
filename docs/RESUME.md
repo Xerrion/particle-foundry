@@ -5,10 +5,11 @@
 from reorganized `main` at `c0295a3c047bc064c11ced251b71db7fdfc86099` and carries the
 same E00-E02 work in the current `web/` and `engine/` layout.
 
-The recovery scope is to restore and integrate that work. E03 is the next
-development item; this recovery does not start it. M1 and P1 remain incomplete.
+The recovery restored E00-E02. E03 now has separate contract verification. E05 is
+next within the scoped GPU port; E04 circuits remain planned. M1 and P1 remain
+incomplete.
 The sandbox still runs the legacy TypeScript simulation. There is no Rust
-numerical solver, command queue, GPU renderer or promoted scene yet.
+numerical solver or command executor, GPU renderer or promoted scene yet.
 
 ## Recovered history
 
@@ -108,18 +109,35 @@ references, shader sentinel tests, runtime recovery and scene promotion remain
 unimplemented or unrun. Remote GitHub Actions was not used for these local results.
 
 The [engine tracker](data/engine-migration-work.json) retains E00-E02 validation
-with the original evidence. E03-E14 remain planned. The
+with the original evidence. E03 has separate contract evidence; E04-E14 remain
+planned. The
 [fire tracker](data/fire-combustion-work.json) retains FIRE-W00/W01 baseline and
 contract validation; corrected FIRE-A gates remain planned. No chemistry is
 enabled, and the known legacy fire failures are not reclassified as passes.
 
 ## Next assigned work
 
-E03 defines bounded commands, scene preflight, epoch-stamped asynchronous
-observations and the first generated catalogue projection. Read its acceptance
-criteria in the [migration plan](plans/rust-wasm-migration/plan.md) and preserve
-the [engine boundary](architecture/engine-boundary.md).
+E05 starts the corrected Rust f64 fluid reference. Read its acceptance criteria
+in the [migration plan](plans/rust-wasm-migration/plan.md) and preserve the
+[engine boundary](architecture/engine-boundary.md). E04 circuits remain planned
+as an independent item.
 
 Later numerical work uses Rust f64 references before WGSL. Preserve the restricted
 M3 scene scope and the P2-P9 gates. Reading this handoff does not authorize starting
 the remaining roadmap.
+
+## E03 verification
+
+[E03 evidence](validation/p1-m1-e03.md) records the experimental queued session,
+exclusive canvas selection and generated candidate catalogue projection.
+The legacy UI remains on its existing synchronous backend. The E03 owner used
+by contract tests is a mock; no Rust physical scene is enabled.
+
+`mise run ci` passed on the E03 source based on `a9c9834`: 451 TypeScript tests,
+11 Rust tests, both type checks,
+Rust tests/format/Clippy, WASM and catalogue freshness, production build, browser
+smoke and documentation validation. The generated catalogue file lives under
+ignored `web/generated/catalogue/`; the source SHA-256 and candidate SI fields
+are checked against the authored catalogue. Local logs are in ignored
+`artifacts/e03-ci-final.log`. E03 does not establish fluid parity, shader execution,
+save/load or GPU performance.

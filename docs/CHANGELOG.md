@@ -1,5 +1,12 @@
 # Documentation change log
 
+## 27 September 2026: E03 experimental browser session
+
+Added bounded queued commands, owner-per-epoch reset, asynchronous stamped
+probes, explicit scene preflight and a one-source candidate catalogue export.
+The legacy UI retains its synchronous simulation path. See
+[E03 evidence](validation/p1-m1-e03.md) for test scope and limits.
+
 ## 27 September 2026: recover E00-E02 onto the reorganized main branch
 
 Recovered the baseline, Rust/WASM bootstrap and portable contracts from

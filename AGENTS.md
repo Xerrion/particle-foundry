@@ -3,8 +3,9 @@
 ## Project map
 
 Particle Foundry is a TypeScript browser sandbox. The Rust/WASM bootstrap and
-portable state contracts are implemented through E02; the live sandbox still uses
-the legacy backend. GPU simulation and rendering remain planned.
+portable state contracts are implemented through E02. E03 adds an experimental
+browser session contract; the live sandbox still uses the legacy backend. GPU
+simulation and rendering remain planned.
 
 | Location | Responsibility |
 | --- | --- |

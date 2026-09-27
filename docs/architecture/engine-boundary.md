@@ -1,6 +1,6 @@
 # Engine boundary, execution and state contracts
 
-**Status:** accepted implementation contract under [ADR-001](adr-001-rust-wasm-wgpu.md). E01 lifecycle initialization and E02 portable schemas/checkpoint packing exist; the async scene API, commands, probes and GPU scheduling below remain planned. [Project structure](../project-structure.md#implemented-bootstrap-and-contracts) links the implemented subset and its tests. This extends the [matter model](matter-model.md), not the numerical equations in the [GPU plan](../plans/fluid-gpu-redesign/plan.md).
+**Status:** accepted implementation contract under [ADR-001](adr-001-rust-wasm-wgpu.md). E01 lifecycle initialization and E02 portable schemas/checkpoint packing exist. E03 adds a bounded experimental host session tested with mock owners; Rust command execution, physical observations and GPU scheduling remain planned. [Project structure](../project-structure.md#implemented-bootstrap-and-contracts) links the implemented subset and its tests. This extends the [matter model](matter-model.md), not the numerical equations in the [GPU plan](../plans/fluid-gpu-redesign/plan.md).
 
 ## 1. Concrete separation
 
@@ -22,7 +22,7 @@ Existing web/src/app/, web/src/styles/, web/src/main.ts
                          GPU buffers stay resident
 ```
 
-Keep the browser application in `web/` and the Rust workspace in `engine/`. The existing TypeScript backend is isolated in `web/src/legacy/`, reached through `web/src/engine-client/`. The current client re-exports the synchronous legacy API; E03 still defines the async Rust/WASM contract. Exact paths and source replacements are in [project structure](../project-structure.md).
+Keep the browser application in `web/` and the Rust workspace in `engine/`. The existing TypeScript backend is isolated in `web/src/legacy/`, reached through `web/src/engine-client/`. The active UI uses the synchronous legacy adapter; E03 defines a separate experimental queued contract. It is not yet connected to Rust scene execution. Exact paths and source replacements are in [project structure](../project-structure.md).
 
 ## 2. Identity and configuration
 

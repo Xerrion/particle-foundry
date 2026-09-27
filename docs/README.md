@@ -8,7 +8,8 @@ links when needed; there is no repository-wide required reading sequence.
 [AGENTS.md](../AGENTS.md) owns working rules. [The root README](../README.md)
 owns setup, and [mise.toml](../mise.toml) owns executable commands and tool versions.
 The running application is TypeScript in `web/`; `engine/` contains the Rust/WASM
-bootstrap and portable contracts through E02. GPU simulation remains planned.
+bootstrap and portable contracts through E02. E03 adds an experimental browser
+session contract and one generated catalogue projection. GPU simulation remains planned.
 See [the recovery handoff](RESUME.md) for the recovered commits and next work.
 A plan or reference entry is not evidence of implementation.
 

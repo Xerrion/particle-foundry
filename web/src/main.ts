@@ -2,12 +2,10 @@ import { bindControls } from "./app/controls";
 import { requiredElement } from "./app/dom";
 import { createSimulationClock } from "./app/simulation-clock";
 import { createViewport } from "./app/viewport";
-import { createSandbox } from "./engine-client";
+import { createSandbox, selectCanvasContext } from "./engine-client";
 
 const canvas = requiredElement<HTMLCanvasElement>("#sandbox");
-const context = canvas.getContext("2d", { alpha: false });
-if (!context) throw new Error("Canvas 2D context is unavailable");
-const ctx: CanvasRenderingContext2D = context;
+const ctx = selectCanvasContext(canvas, "2d");
 const fpsCounter = requiredElement<HTMLElement>("#fpsCounter");
 
 const WORLD_WIDTH = 480;
@@ -15,9 +13,7 @@ const WORLD_HEIGHT = 270;
 const worldCanvas = document.createElement("canvas");
 worldCanvas.width = WORLD_WIDTH;
 worldCanvas.height = WORLD_HEIGHT;
-const worldContext = worldCanvas.getContext("2d", { alpha: false });
-if (!worldContext) throw new Error("World canvas 2D context is unavailable");
-const worldCtx: CanvasRenderingContext2D = worldContext;
+const worldCtx = selectCanvasContext(worldCanvas, "2d");
 const sandbox = createSandbox(WORLD_WIDTH, WORLD_HEIGHT);
 const viewport = createViewport(WORLD_WIDTH, WORLD_HEIGHT);
 // Start close to the experiments; the fit button reveals the full workspace.

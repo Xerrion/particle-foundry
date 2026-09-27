@@ -3,7 +3,7 @@
   "kind": "planning-work-packages-not-implementation-status",
   "decision": "architecture/adr-001-rust-wasm-wgpu.md",
   "plan": "plans/rust-wasm-migration/plan.md",
-  "nextWorkItem": "E03",
+  "nextWorkItem": "E05",
   "workItems": [
     {
       "id": "E00",
@@ -85,8 +85,10 @@
       "title": "Introduce facade, command lifecycle and one catalogue projection",
       "work": "Adapt the existing sandbox seam with a separate legacy adapter; add queued commands, async observations, epoch cancellation, feature preflight and minimal generated catalogue projections. Prepare canvas ownership selection.",
       "acceptance": "Legacy UI remains usable; no duplicate handwritten catalogue or ticking world; mock/CPU contract tests cover backpressure, paused paint, reset and stale callbacks.",
-      "status": "planned",
-      "evidence": [],
+      "status": "validated",
+      "evidence": [
+        "validation/p1-m1-e03.md"
+      ],
       "fireWorkItems": []
     },
     {

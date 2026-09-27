@@ -1,6 +1,6 @@
 # Rust/WASM + wgpu migration work packages
 
-**Status:** E00 baseline, E01 bootstrap and E02 contracts validated; E03 is next. [Baseline evidence](../../validation/p1-m0.md), [bootstrap evidence](../../validation/p1-m1.md), [E02 evidence](../../validation/p1-m1-e02.md). **Current execution scope:** the WASM/GPU port and its necessary contracts/references, per [RESUME](../../RESUME.md); the later roadmap is retained, not started. **Placement:** inside P1, not a new phase before the GPU redesign. **Selected decision:** [ADR-001](../../architecture/adr-001-rust-wasm-wgpu.md). **Entrypoint:** [START_HERE](../../START_HERE.md).
+**Status:** E00-E03 contract work validated; E05 is next within the scoped GPU port, while E04 circuits remain planned. [Baseline evidence](../../validation/p1-m0.md), [bootstrap evidence](../../validation/p1-m1.md), [E02 evidence](../../validation/p1-m1-e02.md), [E03 evidence](../../validation/p1-m1-e03.md). **Current execution scope:** the WASM/GPU port and its necessary contracts/references, per [RESUME](../../RESUME.md); the later roadmap is retained, not started. **Placement:** inside P1, not a new phase before the GPU redesign. **Selected decision:** [ADR-001](../../architecture/adr-001-rust-wasm-wgpu.md). **Entrypoint:** [START_HERE](../../START_HERE.md).
 
 The [fluid/GPU plan](../fluid-gpu-redesign/plan.md) controls equations, scope and numerical exit gates. This document controls the language/runtime migration and integration work needed to execute that plan. It replaces the earlier TypeScript-reference/source-layout assumptions without weakening the numerical gates. The [engine boundary](../../architecture/engine-boundary.md) controls commands, state authority, async behavior and persistence.
 
@@ -154,7 +154,7 @@ Run native reference, browser GPU, regression, memory/readback, sustained and in
 
 ## Proposed repository additions
 
-The existing frontend now lives in `web/`. Proposed package names remain `particle-sim`, `particle-sim-cpu`, `particle-sim-gpu` and `particle-wasm`; create them under `engine/` at E01. `sim` owns portable contracts and generic orchestration, not a duplicate GPU-world mirror. Concrete backend construction belongs to the host/bridge. The current engine client is only a synchronous legacy entrypoint; it does not complete E03.
+The existing frontend now lives in `web/`. Proposed package names remain `particle-sim`, `particle-sim-cpu`, `particle-sim-gpu` and `particle-wasm`; create them under `engine/` at E01. `sim` owns portable contracts and generic orchestration, not a duplicate GPU-world mirror. Concrete backend construction belongs to the host/bridge. The current UI uses the synchronous legacy adapter; E03 adds a separate experimental queued session contract tested with mock owners. No physical Rust scene consumes it yet.
 
 ```text
 engine/

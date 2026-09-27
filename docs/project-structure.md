@@ -3,7 +3,8 @@
 **Current layout: 27 September 2026.** TypeScript lives in `web/`. `engine/` contains
 the E01 Rust/WASM bootstrap and E02 portable contracts, with
 [scoped engine guidance](../engine/AGENTS.override.md). The running application
-still uses the existing TypeScript backend; E03-E14 remain planned.
+still uses the existing TypeScript backend. E03 supplies an experimental host
+contract; E04-E14 remain planned.
 Start with [the knowledge map](README.md).
 
 ## Current checkout
@@ -23,6 +24,9 @@ particle-foundry/
       main.ts                       Browser startup and frame loop
       app/                          DOM, controls, viewport, pointer mapping, clock
       engine-client/index.ts        Public browser access to the legacy backend
+      engine-client/session.ts      Bounded experimental command/probe contract
+      engine-client/canvas.ts       Context ownership before acquisition
+      engine-client/legacy-adapter.ts  Retained synchronous scene adapter
       engine-client/wasm.ts         Experimental WASM lifecycle adapter
       materials/                    Authored catalogue, validation and reference content
       styles/                       CSS
@@ -36,8 +40,9 @@ particle-foundry/
       app/, materials/, types/      Browser behavior and catalogue checks
       legacy/                       Backend tests, integration cases and fixtures
       browser/                      Production-bundled WASM/WebGPU lifecycle smoke
-    scripts/                        WASM build, browser runner and legacy evidence tools
+    scripts/                        WASM/catalogue builds, browser and evidence tools
     generated/wasm/                 Ignored generated glue, declarations and WASM
+    generated/catalogue/            Ignored candidate material projection
     benchmarks/                     Existing simulation workloads
   engine/                          Cargo workspace, Rust contracts and bootstrap
   docs/                             Current model, plans, validation and history
@@ -52,13 +57,14 @@ remain at repository level. There is no second package manager or task framework
 ## TypeScript ownership
 
 The browser imports simulation operations, observations and view metadata through
-`web/src/engine-client/index.ts`. This is currently a small re-export of the existing
-synchronous Sandbox API. It creates no extra world or wrapper layer. Biome rejects
-UI imports of private legacy modules and generated bindings.
+`web/src/engine-client/index.ts`. The active UI reaches the existing synchronous
+Sandbox through a separate legacy adapter. The experimental E03 session contract
+is also exported but has no physical owner in the running app. Biome rejects UI
+imports of private legacy modules and generated bindings.
 
 The separate `engine-client/wasm.ts` module is consumed by the E01 browser fixture.
 It keeps the experimental bootstrap out of the normal application bundle until
-E03 integrates the new lifecycle contract.
+E03 defines the queued session contract; a Rust scene adapter remains future work.
 
 `web/src/legacy/simulation/world.ts` owns current mutable state;
 `physics.ts` orders its passes, and `sandbox.ts` composes state, tools and rendering.
@@ -71,10 +77,11 @@ Its public imports, validators and compatibility exports stay together. The 118-
 element reference does not imply 118 implemented materials. Generate future
 Rust/WGSL projections from the authored catalogue; do not duplicate definitions.
 
-At E03 the engine client will adapt backend selection, queued commands and async
-observations. The current synchronous readings and Canvas 2D render parameter must
-not constrain the new GPU contract. Select canvas ownership before acquiring a
-context. Keep UI behavior while following [the engine boundary](architecture/engine-boundary.md).
+The E03 session contract handles bounded commands, accepted-time receipts, epoch
+reset and asynchronous stamped probes with mock owners. The current UI still uses
+the synchronous legacy adapter. Canvas ownership is selected before context
+acquisition. A physical Rust scene and its GPU rendering remain future work under
+[the engine boundary](architecture/engine-boundary.md).
 
 ## Rust workspace
 
@@ -137,8 +144,8 @@ initialization from a production bundle under `/engine-smoke/`.
 
 [`engine/fixtures/engine-reference-v1.json`](../engine/fixtures/engine-reference-v1.json)
 freezes reference conventions for future numerical work. It does not establish
-solver correctness. E03's command/probe lifecycle and catalogue projection remain
-planned; see [the recovery handoff](RESUME.md).
+solver correctness. E03's session contract and candidate catalogue projection
+are implemented and tested; see [E03 evidence](validation/p1-m1-e03.md).
 
 ## Current-to-target migration map
 

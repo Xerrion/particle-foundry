@@ -25,7 +25,7 @@ run = "vite"
 [tasks.build]
 description = "Build the production application"
 dir = "{{config_root}}/web"
-depends = ["install", "build:wasm"]
+depends = ["install", "build:wasm", "build:catalogue"]
 run = "vite build"
 
 [tasks.preview]
@@ -90,7 +90,19 @@ run = "python docs/scripts/render-plan.py"
 [tasks.ci]
 description = "Run all continuous integration checks"
 depends = ["lint", "check", "build", "docs:check", "rust:fmt", "rust:test", "rust:clippy", "test:browser"]
-run = "mise run check:wasm"
+run = ["mise run check:wasm", "mise run check:catalogue"]
+
+[tasks."build:catalogue"]
+description = "Generate the candidate engine material projection from the authored catalogue"
+dir = "{{config_root}}/web"
+depends = ["install"]
+run = "bun scripts/project-engine-catalogue.ts"
+
+[tasks."check:catalogue"]
+description = "Check candidate engine material projection freshness"
+dir = "{{config_root}}/web"
+depends = ["install"]
+run = "bun scripts/project-engine-catalogue.ts --check"
 
 [tasks."rust:toolchain"]
 description = "Install or verify the toolchain pinned in engine/rust-toolchain.toml"
