@@ -1,0 +1,4 @@
+   Compiling particle-sim-gpu v0.1.0 (/Users/lasn/.codex/worktrees/16ee1bfb-b941-405f-8290-e37decc87d34/particle-foundry/crates/sim-gpu)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.69s
+     Running `target/debug/examples/device-smoke`
+Native device initialized: Metal

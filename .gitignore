@@ -6,3 +6,5 @@ dist/
 # Local logs, profiles, screenshots, archives and verification snapshots.
 artifacts/
 .playwright-mcp/
+target/
+src/generated/wasm/

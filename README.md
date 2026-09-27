@@ -11,22 +11,42 @@ rækkefølgen for GPU-redesign og den planlagte opfølgning med trykbølger og b
 
 ## Kør lokalt
 
-Projektet bruger Bun 1.3.12:
+Projektet bruger Bun 1.3.12. Rust/WASM-porten bevarer TypeScript-brugerfladen;
+standardscenen bruger fortsat den eksisterende motor. Build og typekontrol kræver
+de genererede WASM-bindings. Med Rustup installeret køres følgende én gang:
+
+```sh
+bun install --frozen-lockfile
+rustup show
+cargo install wasm-bindgen-cli --version 0.2.108 --locked
+bun run build:wasm
+```
+
+`rust-toolchain.toml` låser Rust 1.98.1 og WASM-target; `Cargo.lock` låser Rust-afhængighederne.
+Se [E01-verifikation](docs/validation/p1-m1.md) for macOS SDK-workaround og browservalg.
 
 | Kommando | Formål |
 | --- | --- |
-| `bun install` | Installer låste afhængigheder. |
+| `bun install --frozen-lockfile` | Installer låste afhængigheder. |
 | `bun run dev` | Start Vite med live reload. |
 | `bun run lint` | Kør Biome formatterings- og lintkontrol. |
 | `bun run typecheck` | Kør streng TypeScript-kontrol. |
 | `bun run typecheck:catalogue` | Kontrollér ID-typer og katalog med `noUncheckedIndexedAccess`. |
 | `bun run test` | Kør alle modul- og integrationstests. |
 | `bun run check` | Kør begge typekontroller og tests. |
-| `bun run build` | Byg produktionsudgaven i `dist/`. |
+| `bun run build:wasm` | Byg Rust/WASM og generér JS/TypeScript-bindings. |
+| `bun run check:wasm` | Kontrollér genererede filer byte for byte mod et nyt build. |
+| `bun run build` | Generér WASM-bindings og byg produktionsudgaven i `dist/`. |
+| `bun run test:browser` | Byg og test WASM-bootstrap i en isoleret headless-browser. |
 | `bun run bench` | Mål 240 × 135-belastninger og 480 × 270-startscenen mod 60 Hz-budgettet. |
 | `bun run preview` | Servér den byggede udgave lokalt. |
 
-GitHub Actions kører lint, checks og build ved push og pull requests.
+GitHub Actions er konfigureret til Rust-format/tests/Clippy, WASM-generering,
+frontend-checks og browser-smoke ved push og pull requests. GPU-smoke er valgfri
+i CI og rapporterer manglende adapter særskilt; den kan kræves med
+`bun run test:browser artifacts/validation/browser/nyt-run --require-gpu`.
+`CHROME_BIN` vælger browserens executable. Smoke-testen bruger et produktionsbundle
+under `/engine-smoke/`, mens det almindelige app-bundle fortsat kun bruger legacy-motoren.
 
 ## Betjening
 

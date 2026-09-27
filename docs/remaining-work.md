@@ -1,12 +1,14 @@
 # Active work and delivered-history boundary
 
-**Status date:** 26 September 2026. **Next task:** R9, P1/M1/E01. M0/E00/FIRE-W00 baseline capture is validated; see [fresh evidence](validation/p1-m0.md). P1 remains in progress. Follow [START_HERE.md](START_HERE.md) and [the roadmap](roadmap.md).
+**Status date:** 26 September 2026. **Next task:** R9, P1/M1/E02. M0/E00/FIRE-W00 baseline capture and E01 bootstrap are validated; see [baseline evidence](validation/p1-m0.md) and [browser/native bootstrap evidence](validation/p1-m1.md). M1 and P1 remain incomplete. Follow [START_HERE.md](START_HERE.md) and [the roadmap](roadmap.md).
+
+**User narrowed the active task to the WASM/GPU port.** Only necessary contracts and references are in scope; no automatic chemistry/circuit/element/nuclear expansion or P2-P9 work. [RESUME.md](RESUME.md) records the exact handoff. Browser acceptance passes; check the branch history for the separate signed M0 and E01 commits.
 
 ## Current active queue
 
 | Work item | Phase / milestones | Deliverable and acceptance | Status |
 | --- | --- | --- | --- |
-| R9 | P1 / M0-M1, E00-E04 | Fresh baseline; Rust/WASM workspace and browser smoke test; async facade, IDs/ABI/data projection, independent Rust circuit reference and invalidation | In progress; E00 validated |
+| R9 | P1 / M0-M1, E00-E04 | Fresh baseline; Rust/WASM workspace and browser smoke test; async facade, IDs/ABI/data projection, independent Rust circuit reference and invalidation | In progress; E00/E01 validated; circuit branch not started |
 | R10 | P1 / M2-M3, E05-E08 | Rust f64 conservative reference and equivalent Rust/wgpu WGSL demonstrator; direct rendering, async probes, equal-time parity and measured transfers | Planned |
 | R11 | P1 / M4-M7, E09-E14 | Rust/GPU thermodynamics, solids and sources; bounded Rust CPU circuits, TypeScript host/worker integration, recovery and measured promotion | Planned |
 | R12 | P2 / W0-W2 | Compressible CPU reference and GPU parity; local waves/reflection, finite exchange, stable time integration | Planned |
@@ -64,7 +66,7 @@ Record new results separately and update [model.md](model.md) only when implemen
 
 ## Selected engine migration and status
 
-E00 in [the engine tracker](data/engine-migration-work.json) is validated by the fresh baseline. E01 is next; E01-E14 remain planned. The stack decision is settled by [ADR-001](architecture/adr-001-rust-wasm-wgpu.md); numerical details remain governed by the phase plans.
+E00 and E01 in [the engine tracker](data/engine-migration-work.json) are validated by separate baseline and bootstrap evidence. E02-E14 remain planned. E02's minimal state/identity/ABI seam is next; the independent E04 circuit implementation does not block the fluid port. The stack decision is settled by [ADR-001](architecture/adr-001-rust-wasm-wgpu.md); numerical details remain governed by the phase plans. Narrow scope does not authorize promoting unsupported scenes or bypassing fire gates.
 
 P2 references and later chemistry/nuclear algorithms are implemented in Rust CPU code first where a reference is required, then equivalent WGSL where justified. UI remains TypeScript. See [the execution mapping](plans/rust-wasm-migration/plan.md#how-every-later-phase-uses-the-chosen-stack).
 

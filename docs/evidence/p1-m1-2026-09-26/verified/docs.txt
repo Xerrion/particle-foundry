@@ -1,0 +1,14 @@
+$ python3 docs/scripts/validate-docs.py
+NOTE: source archive not supplied; static manifest structure checked, source bytes not reverified.
+CHECKED: 118 element identities, tier counts, target phases and historical status
+CHECKED: Markdown element roster matches the JSON manifest
+CHECKED: P1-P9 dependency order and synchronized roadmap table
+CHECKED: 43-file static source manifest and 12 bounded source observations; not runtime verification
+CHECKED: E00-E14 DAG, source traceability, Markdown work/acceptance synchronization and P1-P9 runtime ownership
+CHECKED: Unchanged fire review ZIP and five evidence files; F01-F12 characterization scope and 43 source hashes
+CHECKED: Nine FIRE-W tasks, fourteen FIRE-A specifications, E-parent DAG, synchronized prose and M4/M6/M7 gate coverage
+CHECKED: 29 authored Markdown/HTML documents and 357 local links/anchors
+CHECKED: Generated GPU HTML matches the current Markdown source hash
+CHECKED: Input archive CRC/SHA-256, all original paths, and audit content (Git LF-normalized JSON allowed)
+CHECKED: Prior documentation ZIP CRC/SHA-256 and byte-preserved element roster, schema and element guide
+PASS: documentation package checks. No application, numerical, browser or GPU tests were run.

@@ -10,7 +10,10 @@
 	},
 	"scripts": {
 		"dev": "vite",
-		"build": "vite build",
+		"build:wasm": "bun scripts/build-wasm.ts",
+		"check:wasm": "bun scripts/build-wasm.ts --check",
+		"test:browser": "bun scripts/test-browser.ts",
+		"build": "bun run build:wasm && vite build",
 		"preview": "vite preview",
 		"bench": "bun benchmarks/physics.bench.ts",
 		"validate:baseline": "bun scripts/validate-baseline.ts",

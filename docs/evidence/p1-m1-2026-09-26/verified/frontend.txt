@@ -1,0 +1,511 @@
+$ bun run typecheck && bun run typecheck:catalogue && bun run test
+$ tsc --noEmit
+$ tsc --noEmit -p tsconfig.catalogue.json
+$ bun test ./tests
+bun test v1.3.12 (700fc117)
+
+tests/tools/brush.test.ts:
+(pass) brush geometry and input boundary > defaults to a radius-4 sand circle in the supplied world [0.82ms]
+(pass) brush geometry and input boundary > interpolates rounded line centers and both endpoints (steep=%s) [0.61ms]
+(pass) brush geometry and input boundary > interpolates rounded line centers and both endpoints (steep=%s)
+(pass) brush geometry and input boundary > paints a same-endpoint line exactly once [0.37ms]
+(pass) brush geometry and input boundary > clips circles at corner (%s, %s)
+(pass) brush geometry and input boundary > clips circles at corner (%s, %s) [0.13ms]
+(pass) brush geometry and input boundary > clips circles at corner (%s, %s) [0.05ms]
+(pass) brush geometry and input boundary > clips circles at corner (%s, %s) [0.02ms]
+(pass) brush geometry and input boundary > ignores outside centers and either outside endpoint without clipping the line [0.04ms]
+(pass) brush geometry and input boundary > rejects invalid coordinates in every argument before changing particle state
+(pass) brush geometry and input boundary > invalid sizes and materials preserve the selection, radius, and particle state
+(pass) brush energy and matter edits > accepts every matter ID; ignition preserves hotter air while painting initializes energy [0.46ms]
+(pass) brush energy and matter edits > thermal edits retain partial latent energy and resolve phases without reinitializing it [0.11ms]
+(pass) brush energy and matter edits > repeated thermal tools respect temperature limits and never store tool IDs (matter=%s) [0.60ms]
+(pass) brush energy and matter edits > repeated thermal tools respect temperature limits and never store tool IDs (matter=%s) [0.60ms]
+(pass) brush energy and matter edits > repeated thermal tools respect temperature limits and never store tool IDs (matter=%s) [0.38ms]
+(pass) brush energy and matter edits > repeated thermal tools respect temperature limits and never store tool IDs (matter=%s) [0.27ms]
+(pass) brush energy and matter edits > tool %s does not clamp pre-existing energy beyond its bound
+(pass) brush energy and matter edits > tool %s does not clamp pre-existing energy beyond its bound
+(pass) brush visual disturbance boundary > painting wave material %s emits one disturbance with the brush radius
+(pass) brush visual disturbance boundary > painting wave material %s emits one disturbance with the brush radius
+(pass) brush visual disturbance boundary > painting wave material %s emits one disturbance with the brush radius
+(pass) brush visual disturbance boundary > replacement %s disturbs each displaced wave material once, excluding molten metal
+(pass) brush visual disturbance boundary > replacement %s disturbs each displaced wave material once, excluding molten metal [0.32ms]
+(pass) brush visual disturbance boundary > replacement %s disturbs each displaced wave material once, excluding molten metal
+(pass) brush visual disturbance boundary > repainting a fluid is not displacement; a different fluid reports both disturbances
+(pass) brush visual disturbance boundary > molten metal does not emit a painting disturbance
+
+tests/tools/fire-brush.test.ts:
+(pass) controlled ignition brush > a click reliably lights the center with a sparse, short-lived fringe [0.09ms]
+(pass) controlled ignition brush > repainting an ignition flame does not restart its lifetime or add heat [0.19ms]
+(pass) controlled ignition brush > ignition identity follows the parcel and clears on every replacement path [0.36ms]
+(pass) controlled ignition brush > ordinary fire can still become combustion smoke
+(pass) controlled ignition brush > ignition returns to air without losing mass or heat (reason: expired) [0.11ms]
+(pass) controlled ignition brush > ignition returns to air without losing mass or heat (reason: cold) [0.02ms]
+(pass) controlled ignition brush > ignition returns to air without losing mass or heat (reason: water) [0.03ms]
+(pass) controlled ignition brush > ignition returns to air without losing mass or heat (reason: sealed)
+(pass) controlled ignition brush > a held radius-1 brush stays local, produces no soot without fuel and fades after release [499.97ms]
+(pass) controlled ignition brush > a held radius-4 brush stays local, produces no soot without fuel and fades after release [588.45ms]
+(pass) controlled ignition brush > a held radius-12 brush stays local, produces no soot without fuel and fades after release [586.90ms]
+(pass) controlled ignition brush > the gentle brush still ignites fuel 3 without replacing it [0.74ms]
+(pass) controlled ignition brush > the gentle brush still ignites fuel 4 without replacing it
+(pass) controlled ignition brush > the gentle brush still ignites fuel 7 without replacing it [0.03ms]
+(pass) controlled ignition brush > fuel 3 sustains ordinary fire and smoke after a single click [144.05ms]
+(pass) controlled ignition brush > fuel 4 sustains ordinary fire and smoke after a single click [142.68ms]
+(pass) controlled ignition brush > fuel 7 sustains ordinary fire and smoke after a single click [125.84ms]
+(pass) controlled ignition brush > the fire brush does not overwrite nonfuel material 10 [0.19ms]
+(pass) controlled ignition brush > the fire brush does not overwrite nonfuel material 11
+(pass) controlled ignition brush > the fire brush does not overwrite nonfuel material 2
+(pass) controlled ignition brush > the fire brush does not overwrite nonfuel material 5
+(pass) controlled ignition brush > ignition adds recorded heat but never cools already-hot air
+
+tests/materials/element-reference.test.ts:
+(pass) chemical element reference > covers atomic numbers 1 through 118 with unique names and symbols [0.16ms]
+(pass) chemical element reference > retains independently published names at the beginning and end of the table
+(pass) chemical element reference > finds symbols, names and exact atomic numbers without changing the reference [0.45ms]
+
+tests/materials/material-catalogue.test.ts:
+(pass) material catalogue contracts > the complete catalogue validates, including falling solid ice and ambient air [0.28ms]
+(pass) material catalogue contracts > rejects invalid registry key [0.43ms]
+(pass) material catalogue contracts > rejects invalid key
+(pass) material catalogue contracts > rejects invalid shortcut
+(pass) material catalogue contracts > rejects invalid cellHeatCapacity
+(pass) material catalogue contracts > rejects invalid displacementDensity
+(pass) material catalogue contracts > rejects invalid densityKgPerM3
+(pass) material catalogue contracts > rejects invalid heatTransferCoefficient
+(pass) material catalogue contracts > rejects invalid fluid needs positive viscosity
+(pass) material catalogue contracts > rejects invalid chemicalEnergyKjPerKg
+(pass) material catalogue contracts > rejects invalid oxygen fraction
+(pass) material catalogue contracts > rejects invalid ignition temperature
+(pass) material catalogue contracts > rejects invalid spawn temperature [1.53ms]
+(pass) material catalogue contracts > rejects invalid liquid needs flow [0.05ms]
+(pass) material catalogue contracts > rejects invalid flow interval [0.20ms]
+(pass) material catalogue contracts > rejects invalid lifetime range [0.11ms]
+(pass) material catalogue contracts > rejects invalid transform target [0.10ms]
+(pass) material catalogue contracts > rejects missing gas input: gas needs positive molar mass [0.14ms]
+(pass) material catalogue contracts > rejects missing gas input: gas needs gasMotion
+(pass) material catalogue contracts > rejects missing gas input: invalid gasMotion [0.25ms]
+(pass) material catalogue contracts > combustible matter needs fuel, but zero energy is a valid noncombustible sentinel [0.02ms]
+(pass) material catalogue contracts > electrical profiles reject invalid resistance and unfunded voltage sources [0.25ms]
+(pass) material catalogue contracts > acid presets require valid equivalents and chemical energy [0.27ms]
+(pass) material catalogue contracts > tool IDs cannot overlap matter IDs [0.02ms]
+(pass) material catalogue contracts > rejects broken phase relationship: phase/transition count [0.22ms]
+(pass) material catalogue contracts > rejects broken phase relationship: duplicate phase ID
+(pass) material catalogue contracts > rejects broken phase relationship: unknown phase ID [0.36ms]
+(pass) material catalogue contracts > rejects broken phase relationship: invalid latent interval
+(pass) material catalogue contracts > rejects broken phase relationship: unordered phase transitions
+(pass) material catalogue contracts > rejects broken phase relationship: discontinuous phase enthalpy [0.53ms]
+(pass) material catalogue contracts > all phase members must point back to the same family object [0.21ms]
+(pass) material catalogue contracts > water's sensible interval connects the two latent plateaus [0.04ms]
+(pass) material catalogue contracts > checked lookups narrow actual IDs and picker membership stays unchanged [0.08ms]
+(pass) material catalogue contracts > shared nested profiles and all exported lookup collections are runtime immutable [0.10ms]
+
+tests/app/pointer-mapping.test.ts:
+(pass) canvas image coordinates > subtracts fullscreen horizontal letterboxes before mapping rows
+(pass) canvas image coordinates > rejects vertical pillarboxes on wide screens
+(pass) canvas image coordinates > respects viewport offsets and normal fill sizing
+(pass) canvas image coordinates > invalid or hidden geometry cannot produce a usable pointer
+
+tests/app/browser-controls.test.ts:
+(pass) browser control flow > material, pause, speed, reset, clear, waves and touch drawing are repeatable [55.63ms]
+
+tests/app/viewport.test.ts:
+(pass) world viewport > fits the whole world and maps its edges
+(pass) world viewport > zoom keeps the selected point under the cursor and pan stays in bounds [0.27ms]
+(pass) world viewport > rejects invalid geometry and motion [0.03ms]
+
+tests/integration/sandbox.test.ts:
+(pass) thermal tools and integrated phases > works without a browser and starts with ambient air [0.47ms]
+(pass) thermal tools and integrated phases > heat and cool tools affect air without creating particles [0.12ms]
+(pass) thermal tools and integrated phases > brushes complete latent transitions even while simulation is paused [0.24ms]
+(pass) thermal tools and integrated phases > ice absorbs latent energy at zero before melting
+(pass) thermal tools and integrated phases > metal melts with latent heat and refreezes without losing energy
+(pass) thermal tools and integrated phases > lava solidifies and sand vitrifies irreversibly
+(pass) thermal tools and integrated phases > tools stop at their temperature bounds without corrupting the material ID [3.92ms]
+(pass) thermal tools and integrated phases > steam does not disappear on a lifetime timer or cool in an insulated cell [15.45ms]
+(pass) conservative world integration > diffusion actually warms neighbors and cools its source [0.12ms]
+(pass) conservative world integration > hot gas traverses adjacent air without losing its displaced energy [0.27ms]
+(pass) conservative world integration > steam cannot jump through a one-cell solid ceiling [2.27ms]
+(pass) conservative world integration > mixed passive movement and phases conserve mass, heat and occupied cells [92.28ms]
+(pass) conservative world integration > molten metal moves downward and stays in the metal phase family
+(pass) conservative world integration > a cold metal reservoir solidifies molten metal without energy loss [3.33ms]
+(pass) conservative world integration > visual wave toggles change neither matter nor energy [0.70ms]
+(pass) conservative world integration > vented smoke carries its heat away while combustion adds explicit source energy [0.16ms]
+(pass) world API and reset > cell APIs reject invalid coordinate pairs before they can alias another cell
+(pass) world API and reset > counts paint and erase immediately, independently of traversal [0.16ms]
+(pass) world API and reset > reset scene immediately supplies an accurate count and clears prior energy [31.65ms]
+(pass) world API and reset > opening the top and sides preserves the starter floor across resets [35.83ms]
+(pass) world API and reset > cell readings are detached and separate worlds cannot share state [0.12ms]
+(pass) world API and reset > rejects invalid dimensions, materials, sizes and coordinates before mutation [0.25ms]
+
+tests/integration/review-regressions.test.ts:
+(pass) attached physics audit regressions > symmetric pressure gives opposing edge motion and a stationary center [0.03ms]
+(pass) attached physics audit regressions > pressure exchange conserves unequal-mass momentum and total energy [0.06ms]
+(pass) attached physics audit regressions > an upward launched solid moves upward, traverses cells and cannot tunnel through a roof [0.03ms]
+(pass) attached physics audit regressions > resting contact adds no heat over 600 isolated steps [0.07ms]
+(pass) attached physics audit regressions > liquid drag records lost kinetic energy as heat
+(pass) attached physics audit regressions > temperature and diffusion respond to actual parcel mass across phases [0.03ms]
+(pass) attached physics audit regressions > steam temperature uses the pressure that initialized its enthalpy [0.06ms]
+(pass) attached physics audit regressions > liquid inherits subambient cavity pressure
+(pass) attached physics audit regressions > a free molten parcel stays movable after freezing [0.05ms]
+(pass) attached physics audit regressions > growth initializes biomass and fuel as an accounted external source [0.05ms]
+(pass) attached physics audit regressions > painting is source-aware and gas totals include steam and elemental gases [0.05ms]
+(pass) individually modeled elements > oxygen cools through both phases without changing mass or oxygen reserve [0.03ms]
+(pass) individually modeled elements > oxygen supports finite fuel combustion and helium does not [0.06ms]
+(pass) individually modeled elements > a wall or diagonal-only contact prevents hydrogen oxidation [0.03ms]
+(pass) individually modeled elements > metal 27 melts and refreezes with retained mass and enthalpy
+(pass) individually modeled elements > metal 30 melts and refreezes with retained mass and enthalpy
+(pass) individually modeled elements > hydrogen/oxygen reaction respects limiting mass ratio %s and conserves energy [0.22ms]
+(pass) individually modeled elements > hydrogen/oxygen reaction respects limiting mass ratio %s and conserves energy
+(pass) individually modeled elements > hydrogen/oxygen reaction respects limiting mass ratio %s and conserves energy [0.02ms]
+(pass) individually modeled elements > cold reactants and inert helium do not spontaneously react [0.08ms]
+
+tests/integration/interaction-regressions.test.ts:
+(pass) reported liquid artifacts > lava falls through oil, levels out, then stops shuffling without losing either liquid [45.52ms]
+(pass) reported liquid artifacts > a falling water stroke stays compact with no checkerboard gaps or pinned top [8.00ms]
+(pass) reported liquid artifacts > hydrostatic relaxation never stretches an unsupported falling blob
+(pass) reported liquid artifacts > water poured above oil displaces it and settles into compact separate layers [122.55ms]
+(pass) reported liquid artifacts > ripples never hide water beneath oil or paint fake droplets above either [0.84ms]
+(pass) reported liquid artifacts > a near-boiling parcel does not repeatedly flip phase as its derived pressure changes [5.45ms]
+(pass) reported liquid artifacts > small pressure fluctuations do not discard incomplete vaporization/condensation
+(pass) ignition and held painting > painting fire heats wood without replacing or replenishing its fuel
+(pass) ignition and held painting > direct flame contact ignites preheated fuel before the flame rises [0.47ms]
+(pass) ignition and held painting > a burning log stays anchored, emits flames, spreads ignition and spends finite fuel [38.81ms]
+(pass) ignition and held painting > water quenches fuel; sealed oxygen-depleted fuel does not burn [0.56ms]
+(pass) ignition and held painting > burning and flame emission conserve thermal plus chemical energy [0.09ms]
+(pass) ignition and held painting > repainting existing matter preserves its energy, age, mass and fuel [0.04ms]
+(pass) ignition and held painting > burn state moves with oil and is cleared by replacement and reset
+(pass) every phase link and material behaviour resolves through the central catalogue
+
+tests/integration/physical-model.test.ts:
+(pass) physical state ownership and diagnostics > seeded streams replay exactly and reset independently [0.03ms]
+(pass) physical state ownership and diagnostics > mass, volume, momentum and chemistry move atomically
+(pass) physical state ownership and diagnostics > a closed stationary scene reports zero conservation drift
+(pass) physical state ownership and diagnostics > diagnostics detect actual mass and energy changes [0.12ms]
+(pass) coupled solvers > derived fluid columns use authoritative parcel volume [0.02ms]
+(pass) coupled solvers > higher viscosity damps parcel momentum more strongly
+(pass) coupled solvers > ideal-gas state gives ambient air a defined pressure
+(pass) coupled solvers > heating a fixed amount of enclosed gas raises ideal-gas pressure [0.08ms]
+(pass) coupled solvers > water in a sealed hot vessel can keep heating above 100 C [0.12ms]
+(pass) coupled solvers > enclosed steam follows the ideal gas equation for mass, volume and temperature
+(pass) coupled solvers > pressure work exchanges stored energy for motion without creating energy
+(pass) coupled solvers > an extreme pressure gradient has a bounded impulse per tick
+(pass) coupled solvers > liquid pressure increases with depth and a horizontal gradient drives velocity
+(pass) coupled solvers > a solid wall blocks pressure impulse between gas cells
+(pass) coupled solvers > only explicitly dynamic solids fall and dissipate impact energy
+(pass) coupled solvers > a dynamic solid converts its impact kinetic energy to heat
+
+tests/integration/element-expansion.test.ts:
+(pass) individual carbon, nitrogen and sulfur models > 35 reacts with pure oxygen to form 42 without losing mass or energy
+(pass) individual carbon, nitrogen and sulfur models > 39 reacts with pure oxygen to form 43 without losing mass or energy
+(pass) individual carbon, nitrogen and sulfur models > 40 reacts with pure oxygen to form 43 without losing mass or energy
+(pass) individual carbon, nitrogen and sulfur models > 41 reacts with pure oxygen to form 43 without losing mass or energy
+(pass) individual carbon, nitrogen and sulfur models > nitrogen has reversible solid, liquid and gas phases and never oxidizes
+(pass) individual carbon, nitrogen and sulfur models > sulfur melts and vaporizes through its own latent intervals
+(pass) individual carbon, nitrogen and sulfur models > the Fire brush ignites 35 against oxygen in a full physics tick [0.50ms]
+(pass) individual carbon, nitrogen and sulfur models > the Fire brush ignites 39 against oxygen in a full physics tick [0.07ms]
+(pass) hydrogen ignition > Fire on oxygen heats its hydrogen contact and starts water production [0.05ms]
+(pass) hydrogen ignition > the full physics tick ignites a sealed H₂/O₂ pair from the oxygen side [0.06ms]
+(pass) hydrogen ignition > ignited hydrogen burns in connected air with its oxygen source accounted for [0.12ms]
+(pass) hydrogen ignition > painting Fire onto hydrogen in open air ignites it [0.10ms]
+(pass) hydrogen ignition > hydrogen still ignites when the Fire brush fills every adjacent air cell with flame [0.05ms]
+(pass) hydrogen ignition > the full physics tick burns a freshly ignited hydrogen parcel [0.12ms]
+(pass) hydrogen ignition > sealed hydrogen cannot pull oxygen through a wall, and oxygen alone never burns
+
+tests/integration/physics.test.ts:
+(pass) full physics pipeline in communicating vessels > one-cell arms reach equal head within one pixel without losing heat or crossing walls [7.85ms]
+(pass) full physics pipeline in communicating vessels > unequal-width arms reach equal head within one pixel without losing heat or crossing walls [11.05ms]
+(pass) full physics pipeline in communicating vessels > sealing the connecting channel preserves unequal heads [7.23ms]
+(pass) full physics pipeline in communicating vessels > separate U-tubes each settle without exchanging their different water volumes [15.23ms]
+(pass) full physics pipeline in communicating vessels > pools touching opposite grid edges do not connect across row boundaries [7.62ms]
+(pass) passive phase and transport ordering > freezing water uses the new phase for movement and preserves stored energy [0.68ms]
+(pass) passive phase and transport ordering > melting ice uses the new phase for movement and preserves stored energy [0.56ms]
+(pass) passive phase and transport ordering > boiling water uses the new phase for movement and preserves stored energy [9.49ms]
+(pass) passive phase and transport ordering > condensing steam uses the new phase for movement and preserves stored energy [1.06ms]
+(pass) passive phase and transport ordering > solidifying metal uses the new phase for movement and preserves stored energy [0.89ms]
+(pass) active visual waves and disabled waves produce identical physical trajectories headlessly [13.27ms]
+
+tests/simulation/world.test.ts:
+(pass) world initialization and ownership > initializes every field to ambient air and uses row-major coordinates
+(pass) world initialization and ownership > initializes material 0 with its spawn energy and fresh lifetime
+(pass) world initialization and ownership > initializes material 2 with its spawn energy and fresh lifetime
+(pass) world initialization and ownership > initializes material 12 with its spawn energy and fresh lifetime
+(pass) world initialization and ownership > initializes material 11 with its spawn energy and fresh lifetime
+(pass) world initialization and ownership > initializes material 14 with its spawn energy and fresh lifetime
+(pass) world initialization and ownership > rejects invalid dimensions before allocating a world [0.04ms]
+(pass) world initialization and ownership > invalid cell initialization leaves all arrays and counts unchanged [0.15ms]
+(pass) world initialization and ownership > readings are detached and out-of-bounds probes cannot wrap to another row
+(pass) world initialization and ownership > instances own disjoint fields and mutations never affect another world [0.12ms]
+(pass) atomic cell state operations > swaps all particle properties for 2 and 0 without changing counts [0.02ms]
+(pass) atomic cell state operations > swaps all particle properties for 1 and 2 without changing counts
+(pass) atomic cell state operations > material and phase changes retain enthalpy and update counts immediately
+(pass) atomic cell state operations > clear resets every field including air energy without replacing owned arrays [0.13ms]
+
+tests/simulation/world-counts.test.ts:
+(pass) material counts follow replacements, swaps, removal and clear [0.10ms]
+
+tests/simulation/simulation-clock.test.ts:
+(pass) elapsed-time simulation clock > 0.5x at 30 Hz produces the same steps over ten seconds [0.24ms]
+(pass) elapsed-time simulation clock > 0.5x at 60 Hz produces the same steps over ten seconds [0.03ms]
+(pass) elapsed-time simulation clock > 0.5x at 144 Hz produces the same steps over ten seconds [0.25ms]
+(pass) elapsed-time simulation clock > 0.5x at 240 Hz produces the same steps over ten seconds [0.05ms]
+(pass) elapsed-time simulation clock > 0.5x retains time through jitter and zero-length frames
+(pass) elapsed-time simulation clock > 0.5x bounds long gaps without queuing discarded time or losing the fraction
+(pass) elapsed-time simulation clock > 0.5x discards paused time and starts a fresh fraction on resume
+(pass) elapsed-time simulation clock > 1x at 30 Hz produces the same steps over ten seconds
+(pass) elapsed-time simulation clock > 1x at 60 Hz produces the same steps over ten seconds
+(pass) elapsed-time simulation clock > 1x at 144 Hz produces the same steps over ten seconds
+(pass) elapsed-time simulation clock > 1x at 240 Hz produces the same steps over ten seconds [0.19ms]
+(pass) elapsed-time simulation clock > 1x retains time through jitter and zero-length frames [0.04ms]
+(pass) elapsed-time simulation clock > 1x bounds long gaps without queuing discarded time or losing the fraction
+(pass) elapsed-time simulation clock > 1x discards paused time and starts a fresh fraction on resume
+(pass) elapsed-time simulation clock > 2x at 30 Hz produces the same steps over ten seconds
+(pass) elapsed-time simulation clock > 2x at 60 Hz produces the same steps over ten seconds [0.03ms]
+(pass) elapsed-time simulation clock > 2x at 144 Hz produces the same steps over ten seconds
+(pass) elapsed-time simulation clock > 2x at 240 Hz produces the same steps over ten seconds
+(pass) elapsed-time simulation clock > 2x retains time through jitter and zero-length frames
+(pass) elapsed-time simulation clock > 2x bounds long gaps without queuing discarded time or losing the fraction
+(pass) elapsed-time simulation clock > 2x discards paused time and starts a fresh fraction on resume
+(pass) elapsed-time simulation clock > 4x at 30 Hz produces the same steps over ten seconds
+(pass) elapsed-time simulation clock > 4x at 60 Hz produces the same steps over ten seconds
+(pass) elapsed-time simulation clock > 4x at 144 Hz produces the same steps over ten seconds
+(pass) elapsed-time simulation clock > 4x at 240 Hz produces the same steps over ten seconds
+(pass) elapsed-time simulation clock > 4x retains time through jitter and zero-length frames [0.06ms]
+(pass) elapsed-time simulation clock > 4x bounds long gaps without queuing discarded time or losing the fraction
+(pass) elapsed-time simulation clock > 4x discards paused time and starts a fresh fraction on resume
+(pass) elapsed-time simulation clock > half speed retains alternating steps beyond repeated FPS sampling intervals [0.12ms]
+(pass) elapsed-time simulation clock > speed changes retain already accumulated simulation time [0.06ms]
+(pass) elapsed-time simulation clock > zero elapsed preserves the fraction without creating steps [0.01ms]
+(pass) elapsed-time simulation clock > rounding debt never returns negative steps or creates time on tiny frames
+(pass) elapsed-time simulation clock > reset discards the fraction and is safe before use or repeatedly
+(pass) elapsed-time simulation clock > separate clocks cannot share fractions or resets
+(pass) elapsed-time simulation clock > invalid elapsed time is rejected before mutation (paused: false) [0.07ms]
+(pass) elapsed-time simulation clock > invalid speed is rejected before mutation (paused: false) [0.08ms]
+(pass) elapsed-time simulation clock > invalid elapsed time is rejected before mutation (paused: true)
+(pass) elapsed-time simulation clock > invalid speed is rejected before mutation (paused: true)
+
+tests/rendering/renderer.test.ts:
+(pass) headless world renderer > velocity mode draws directional wind markers over moving air [0.49ms]
+(pass) headless world renderer > pressure and speed maps use model fields without changing them [0.20ms]
+(pass) headless world renderer > a moving lava parcel keeps its shade instead of blinking between palette entries [0.08ms]
+(pass) headless world renderer > a settled lava pool renders identically across physics ticks, including its partial top row [8.43ms]
+(pass) headless world renderer > temperature mode includes air, matches the legend and never mutates simulation state [0.15ms]
+(pass) headless world renderer > imports and constructs without browser APIs, allocates lazily and reuses its image [0.06ms]
+(pass) headless world renderer > preserves all palettes, variation indexing and opaque background noise without NaNs [0.15ms]
+(pass) headless world renderer > preserves heat glow for material 6 at 499 C [0.01ms]
+(pass) headless world renderer > preserves heat glow for material 6 at 500 C [0.01ms]
+(pass) headless world renderer > preserves heat glow for material 6 at 1100 C
+(pass) headless world renderer > preserves heat glow for material 6 at 1300 C [0.02ms]
+(pass) headless world renderer > preserves heat glow for material 6 at 1400 C
+(pass) headless world renderer > preserves heat glow for material 6 at 1700 C
+(pass) headless world renderer > preserves heat glow for material 14 at 1700 C
+(pass) headless world renderer > preserves heat glow for material 14 at 3000 C
+(pass) headless world renderer > preserves heat glow for material 1 at 3000 C
+(pass) headless world renderer > lights real surfaces without inventing crests for material 2 [0.09ms]
+(pass) headless world renderer > lights real surfaces without inventing crests for material 4 [0.11ms]
+(pass) headless world renderer > lights real surfaces without inventing crests for material 9 [0.04ms]
+(pass) headless world renderer > never cuts visual wave troughs into actual water [0.05ms]
+(pass) headless world renderer > rendering changes neither world fields nor visual motion [0.07ms]
+(pass) headless world renderer > draws the unchanged cursor style at the supplied brush radius [0.08ms]
+(pass) headless world renderer > renderer instances own separate image buffers and see current world edits [0.04ms]
+(pass) headless world renderer > propagates invalid world energy instead of silently rendering corrupt colors
+
+tests/rendering/visual-waves.test.ts:
+(pass) rendering-only surface waves > detects supported surfaces for material 2 [0.14ms]
+(pass) rendering-only surface waves > detects supported surfaces for material 4 [0.05ms]
+(pass) rendering-only surface waves > detects supported surfaces for material 9 [0.05ms]
+(pass) rendering-only surface waves > ignores isolated drops and supports narrow worlds and horizontal pools [0.06ms]
+(pass) rendering-only surface waves > changes lighting but never occupancy for material 2 [0.08ms]
+(pass) rendering-only surface waves > changes lighting but never occupancy for material 4
+(pass) rendering-only surface waves > changes lighting but never occupancy for material 9
+(pass) rendering-only surface waves > preserves the default impulse falloff and clips impulses at world edges
+(pass) rendering-only surface waves > propagates a damped ripple to connected neighbors and eventually settles [0.70ms]
+(pass) rendering-only surface waves > does not couple across a gap or a surface step larger than three cells [0.16ms]
+(pass) rendering-only surface waves > turns detected surface shifts into the original visual impulse
+(pass) rendering-only surface waves > bounds the lighting amplitude for material 2
+(pass) rendering-only surface waves > bounds the lighting amplitude for material 4 [0.18ms]
+(pass) rendering-only surface waves > bounds the lighting amplitude for material 9 [0.10ms]
+(pass) rendering-only surface waves > never replaces newly painted solids, fire, or molten metal with stale waves [0.04ms]
+(pass) rendering-only surface waves > reset erases all surfaces and motion and keeps the enabled setting [0.54ms]
+(pass) rendering-only surface waves > disabled updates and impulses stay erased; enabling detects current surfaces
+(pass) rendering-only surface waves > instances do not share motion, settings or world dimensions
+(pass) rendering-only surface waves > all visual operations preserve every world field for material 2 [0.50ms]
+(pass) rendering-only surface waves > all visual operations preserve every world field for material 4 [0.53ms]
+(pass) rendering-only surface waves > all visual operations preserve every world field for material 9 [0.15ms]
+(pass) rendering-only surface waves > ignores unsupported materials and rejects invalid impulses without poisoning motion
+
+tests/physics/neutralization.test.ts:
+(pass) aqueous neutralization presets > one acid-equivalent cell of 20 and one 1 M base cell yield measured-scale heat and conserve mass and energy
+(pass) aqueous neutralization presets > one acid-equivalent cell of 21 and one 1 M base cell yield measured-scale heat and conserve mass and energy
+(pass) aqueous neutralization presets > water, stone barriers and diagonal contact do not neutralize
+(pass) aqueous neutralization presets > an acid cell pairs with only one neighbor per tick and a depleted store cannot react
+(pass) aqueous neutralization presets > the full physics step reacts a touching acid and base
+
+tests/physics/motion.test.ts:
+(pass) conservative local transport > open edges release rising gas and outward moving matter but retain the floor
+(pass) conservative local transport > closed edges retain particles
+(pass) conservative local transport > open top vents heated air pressure while the floor remains solid
+(pass) conservative local transport > hot ambient air rises and carries its heat out of an open top [0.51ms]
+(pass) conservative local transport > rising ambient air displaces cold air by at most one cell per tick
+(pass) conservative local transport > pressure from inside the world dissipates through open edges [2.45ms]
+(pass) conservative local transport > liquid momentum prefers the -1 horizontal outlet
+(pass) conservative local transport > liquid momentum prefers the 1 horizontal outlet
+(pass) conservative local transport > resting material 2 does not shuffle across level ground [0.46ms]
+(pass) conservative local transport > resting material 4 does not shuffle across level ground
+(pass) conservative local transport > resting material 9 does not shuffle across level ground
+(pass) conservative local transport > resting material 14 does not shuffle across level ground [0.09ms]
+(pass) conservative local transport > lava can still drain off a ledge at its material-defined cadence [0.06ms]
+(pass) conservative local transport > a level lava/oil interface does not swap back and forth every three ticks [0.22ms]
+(pass) conservative local transport > water can leave a ledge and fall into an unsupported region
+(pass) conservative local transport > sealed diagonal corners cannot leak sand, water or steam [0.10ms]
+(pass) conservative local transport > water sinks through oil and ice but not through denser lava [0.03ms]
+(pass) conservative local transport > an enclosed sand column cannot pump water upward
+(pass) conservative local transport > an exposed sand grain can still sink into water [0.06ms]
+(pass) conservative local transport > sand routes displaced pool water to the open surface without losing matter or heat [0.04ms]
+(pass) conservative local transport > a sealed vessel cannot vent water through an anchored wall
+(pass) conservative local transport > a broad sand column does not launch water far above a pool [994.13ms]
+(pass) conservative local transport > ice falls in air but remains above water
+(pass) conservative local transport > lateral paths rotate displaced air energy without dropping intermediate cells
+(pass) conservative local transport > gases cannot rise through roofs or move a processed target twice
+(pass) conservative local transport > hotter, lighter gases rise through denser gas without losing parcel state
+(pass) conservative local transport > fire has stronger buoyancy than steam and receives upward velocity
+(pass) conservative local transport > physical behavior is identical with and without rendering [4.41ms]
+
+tests/physics/boiling.test.ts:
+(pass) visible, energy-funded boiling > partial latent heat forms a complete bubble without creating mass or energy
+(pass) visible, energy-funded boiling > insufficient heat (%i) cannot create bubbles
+(pass) visible, energy-funded boiling > insufficient heat (752) cannot create bubbles
+(pass) visible, energy-funded boiling > insufficient heat (800) cannot create bubbles
+(pass) visible, energy-funded boiling > heat cannot be borrowed across material 5 or a diagonal corner
+(pass) visible, energy-funded boiling > heat cannot be borrowed across material 4 or a diagonal corner
+(pass) visible, energy-funded boiling > heat cannot be borrowed across material 0 or a diagonal corner
+(pass) visible, energy-funded boiling > elevated pressure raises the heat budget rather than producing free vapor
+(pass) visible, energy-funded boiling > leveling does not teleport a submerged 1-cell bubble to the surface [0.65ms]
+(pass) visible, energy-funded boiling > leveling does not teleport a submerged 2-cell bubble to the surface [1.10ms]
+(pass) visible, energy-funded boiling > heated pot produces rising bubbles and escaping steam, not sheets (seed 1) [1508.93ms]
+(pass) visible, energy-funded boiling > heated pot produces rising bubbles and escaping steam, not sheets (seed 42) [1482.96ms]
+(pass) visible, energy-funded boiling > heated pot produces rising bubbles and escaping steam, not sheets (seed 123) [1438.65ms]
+(pass) visible, energy-funded boiling > a below-boiling hot plate does not create steam [418.34ms]
+(pass) visible, energy-funded boiling > boiling replay is independent of render randomness [608.63ms]
+
+tests/physics/gas-motion.test.ts:
+(pass) gas plume transport regressions > freshly emitted flame can move in the same tick instead of pinning every second row [0.14ms]
+(pass) gas plume transport regressions > smoke produced by quenching joins the plume immediately [0.07ms]
+(pass) gas plume transport regressions > a smoke plume stays connected while spreading beneath a ceiling (seed 1) [8.44ms]
+(pass) gas plume transport regressions > a smoke plume stays connected while spreading beneath a ceiling (seed 7) [7.95ms]
+(pass) gas plume transport regressions > a smoke plume stays connected while spreading beneath a ceiling (seed 42) [7.48ms]
+(pass) gas plume transport regressions > a smoke plume stays connected while spreading beneath a ceiling (seed 123) [8.12ms]
+(pass) gas plume transport regressions > a smoke plume stays connected while spreading beneath a ceiling (seed 20260920) [7.47ms]
+(pass) gas plume transport regressions > gas 8 follows air vacated by a diagonal move without leaving striped gaps [0.52ms]
+(pass) gas plume transport regressions > gas 10 follows air vacated by a diagonal move without leaving striped gaps
+(pass) gas plume transport regressions > gas 11 follows air vacated by a diagonal move without leaving striped gaps [0.03ms]
+(pass) gas plume transport regressions > a rising fire column can displace smoke already pushed down by its leading parcel [0.02ms]
+(pass) gas plume transport regressions > gas 8 spreads irregularly under a roof instead of marching on every tick
+(pass) gas plume transport regressions > gas 10 spreads irregularly under a roof instead of marching on every tick [0.33ms]
+(pass) gas plume transport regressions > gas 11 spreads irregularly under a roof instead of marching on every tick
+(pass) gas plume transport regressions > smoke diffusion replays for the same seed and differs across seeds
+(pass) gas plume transport regressions > ascending gas 8 can drift without waiting for a roof or exceeding its rise budget [0.36ms]
+(pass) gas plume transport regressions > ascending gas 10 can drift without waiting for a roof or exceeding its rise budget [0.30ms]
+(pass) gas plume transport regressions > ascending gas 11 can drift without waiting for a roof or exceeding its rise budget
+(pass) gas plume transport regressions > gas 8 still respects sealed diagonal corners
+(pass) gas plume transport regressions > gas 10 still respects sealed diagonal corners
+(pass) gas plume transport regressions > gas 11 still respects sealed diagonal corners
+
+tests/physics/thermal.test.ts:
+(pass) material integration contract > preserves IDs and wave materials, and supplies new matter and tool names [0.09ms]
+(pass) material integration contract > uses the specified initial temperatures and round-trips spawn energy [0.06ms]
+(pass) shared enthalpy curves > water boiling point follows pressure without changing stored energy [0.03ms]
+(pass) shared enthalpy curves > pressurized liquid water heats above 100 C before its latent plateau [0.04ms]
+(pass) shared enthalpy curves > water phases share both latent plateaus and all sensible heat segments [0.03ms]
+(pass) shared enthalpy curves > initialization chooses phase-specific latent endpoints, not partial latent energy [0.05ms]
+(pass) shared enthalpy curves > water transitions complete only at the correct endpoints, in both directions [0.02ms]
+(pass) shared enthalpy curves > large energy jumps cross multiple water phases directly [0.02ms]
+(pass) shared enthalpy curves > Metal has reversible melting with shared latent heat [0.02ms]
+(pass) shared enthalpy curves > Stone has reversible melting with shared latent heat [0.06ms]
+(pass) shared enthalpy curves > sand vitrifies at 1700 C with no energy or temperature jump, irreversibly
+(pass) shared enthalpy curves > phase conversion preserves stored enthalpy and derived temperature [0.24ms]
+(pass) synchronous conservative diffusion > exchanges equal/opposite energy between unequal capacities and reaches equilibrium [0.31ms]
+(pass) synchronous conservative diffusion > snapshots temperatures: heat cannot cross two edges in one step [0.02ms]
+(pass) synchronous conservative diffusion > symmetric neighbors receive equal heat [0.03ms]
+(pass) synchronous conservative diffusion > mirroring and transposition do not change the result beyond rounding [0.09ms]
+(pass) synchronous conservative diffusion > corner edges are insulated and consecutive rows do not wrap [0.06ms]
+(pass) synchronous conservative diffusion > single rows and columns have identical edges, and a single cell is insulated [0.01ms]
+(pass) synchronous conservative diffusion > air participates throughout the field and fire is not an implicit source [0.04ms]
+(pass) synchronous conservative diffusion > uniform mixed-material temperatures and latent plateaus are exact equilibria [0.05ms]
+(pass) synchronous conservative diffusion > repeated multi-neighbor diffusion preserves local temperature bounds and total energy [3.26ms]
+(pass) synchronous conservative diffusion > solver instances and repeated calls have no hidden field state [0.28ms]
+(pass) synchronous conservative diffusion > opposite large finite temperatures do not overflow their difference
+(pass) boundary validation > explicit geometry and time step scale conductive transfer
+(pass) boundary validation > rejects invalid physical scale options
+(pass) boundary validation > rejects invalid phase pressure [0.10ms]
+(pass) boundary validation > rejects unknown, noninteger, nonfinite and brush-tool material IDs [0.02ms]
+(pass) boundary validation > rejects nonfinite scalar values and unrepresentable derived values
+(pass) boundary validation > rejects zero, negative, fractional, nonfinite and oversized dimensions
+(pass) boundary validation > rejects incorrect array types and lengths without partial writes
+(pass) boundary validation > rejects invalid cells atomically and recovers on the next valid call
+(pass) boundary validation > rejects overlapping fields but supports disjoint views and byte offsets
+
+tests/physics/hydrostatics.test.ts:
+(pass) quasi-static hydrostatic relaxation > equalizes a connected U-tube without crossing its solid partition [0.42ms]
+(pass) quasi-static hydrostatic relaxation > disconnected vessels do not exchange fluid through a wall
+(pass) quasi-static hydrostatic relaxation > equilibrium is stable without random surface agitation [0.22ms]
+(pass) quasi-static hydrostatic relaxation > routes displaced gas back through adjacent cells rather than teleporting heat
+(pass) quasi-static hydrostatic relaxation > material-dependent cadence limits head relaxation
+(pass) quasi-static hydrostatic relaxation > lighter liquid is displaced at the endpoint, never used as an interior flow path [0.13ms]
+(pass) quasi-static hydrostatic relaxation > single cells, full worlds and edges conserve all state
+
+tests/physics/electricity.test.ts:
+(pass) finite electrical circuits > a 12 V source across two 1 ohm edges follows Ohm's law and conserves stored energy
+(pass) finite electrical circuits > open, insulated and diagonal paths draw no battery energy
+(pass) finite electrical circuits > a depleted battery delivers at most its remaining chemical energy [0.34ms]
+(pass) finite electrical circuits > metal conducts while a separate grounded island does not draw current [0.01ms]
+(pass) finite electrical circuits > a lamp on a closed path heats while the full physics step consumes battery energy [0.09ms]
+
+tests/physics/combustion-emission.test.ts:
+(pass) asynchronous combustion emission > a deferred emission keeps its heat and still consumes only the released chemical energy
+(pass) asynchronous combustion emission > equally hot fuel 4 emits individual flames, not an entire sheet in one tick [0.40ms]
+(pass) asynchronous combustion emission > equally hot fuel 3 emits individual flames, not an entire sheet in one tick [0.09ms]
+(pass) asynchronous combustion emission > equally hot fuel 7 emits individual flames, not an entire sheet in one tick [0.08ms]
+(pass) asynchronous combustion emission > a wide oil fire at 400 C does not launch detached horizontal sheets (seed 1) [636.59ms]
+(pass) asynchronous combustion emission > a wide oil fire at 400 C does not launch detached horizontal sheets (seed 42) [644.70ms]
+(pass) asynchronous combustion emission > a wide oil fire at 400 C does not launch detached horizontal sheets (seed 123) [642.65ms]
+(pass) asynchronous combustion emission > a wide oil fire at 800 C does not launch detached horizontal sheets (seed 1) [640.68ms]
+(pass) asynchronous combustion emission > a wide oil fire at 800 C does not launch detached horizontal sheets (seed 42) [639.32ms]
+(pass) asynchronous combustion emission > a wide oil fire at 800 C does not launch detached horizontal sheets (seed 123) [631.09ms]
+(pass) asynchronous combustion emission > a wide oil fire at 1900 C does not launch detached horizontal sheets (seed 1) [634.66ms]
+(pass) asynchronous combustion emission > a wide oil fire at 1900 C does not launch detached horizontal sheets (seed 42) [628.59ms]
+(pass) asynchronous combustion emission > a wide oil fire at 1900 C does not launch detached horizontal sheets (seed 123) [629.78ms]
+(pass) asynchronous combustion emission > emission replay is independent of cosmetic random draws [604.13ms]
+
+tests/physics/explosions.test.ts:
+(pass) energy-funded local explosions > gunpowder releases finite chemical energy into heat and outward motion [0.60ms]
+(pass) energy-funded local explosions > an anchored wall blocks blast heat, flame and motion
+(pass) energy-funded local explosions > glass contains shared blast pressure through fire and smoke expiry [1.80ms]
+(pass) energy-funded local explosions > a sealed glass blast retains overpressure after gas lifetimes expire [26.96ms]
+(pass) energy-funded local explosions > blast motion decays while remaining hot air retains thermodynamic pressure [1051.21ms]
+(pass) energy-funded local explosions > opening a glass vessel vents its air without coupling through intact glass [0.14ms]
+(pass) energy-funded local explosions > a flame starts a one-tick chain reaction without creating fuel
+(pass) energy-funded local explosions > gunpowder ignites at its temperature threshold, not below it
+(pass) energy-funded local explosions > blast tool records its external source and refreshes the pressure view [0.29ms]
+
+tests/physics/reactions.test.ts:
+(pass) bounded combustion > new flame is not aged or reacted twice before the separate transport pass
+(pass) bounded combustion > converts stored chemical energy to heat with a replayable seed
+(pass) bounded combustion > pauses combustion at the product temperature ceiling without discarding fuel
+(pass) bounded combustion > a sealed fire with no fuel or oxygen becomes smoke
+(pass) bounded combustion > a painted flame persists as cooling hot gas without inventing chemical heat
+(pass) bounded combustion > flame contact preheats fuel with equal and opposite energy transfer
+(pass) bounded combustion > smoke expiry is recorded as an open-boundary mass loss
+(pass) bounded combustion > dense smoke in an open room vents instead of becoming heavy ambient air
+
+tests/physics/airflow.test.ts:
+(pass) airflow > a gust reaches adjacent air and retains its total energy
+(pass) airflow > wind travels across several air cells over successive ticks
+(pass) airflow > dense blast gas cannot multiply neighboring air speed
+(pass) airflow > a free gust dissipates after its source is gone
+(pass) airflow > wind transfers momentum to nearby liquid without adding energy
+(pass) airflow > anchored walls block wind from reaching air on the other side
+(pass) airflow > moving air carries smoke sideways before its normal rise
+
+ 443 pass
+ 0 fail
+ 125034 expect() calls
+Ran 443 tests across 29 files. [16.73s]

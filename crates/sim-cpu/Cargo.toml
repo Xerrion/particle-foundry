@@ -1,0 +1,12 @@
+[package]
+name = "particle-sim-cpu"
+version.workspace = true
+edition.workspace = true
+publish.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+particle-sim.workspace = true
+
+[lints]
+workspace = true

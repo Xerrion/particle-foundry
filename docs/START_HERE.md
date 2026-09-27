@@ -1,12 +1,16 @@
 # Start here: developer implementation entrypoint
 
-**Project:** Particle Foundry. **Status:** P1 in progress. M0 / E00 / FIRE-W00 baseline capture is validated in [fresh evidence](validation/p1-m0.md). **Next task:** P1 / M1 / E01. The brief below preserves the original full-roadmap instructions; subsequent milestones remain gated.
+**Project:** Particle Foundry. **Status:** P1 in progress. M0 / E00 / FIRE-W00 baseline capture and M1 / E01 bootstrap are validated in [M0 evidence](validation/p1-m0.md) and [E01 evidence](validation/p1-m1.md). **Next task:** P1 / M1 / E02. M1 and P1 are not complete.
+
+**Current user scope, 26 September 2026:** focus on the WASM/GPU port and only necessary supporting contracts/reference work. Do not automatically expand into new chemistry, circuits, element cohorts, nuclear features or P2-P9. Keep the full roadmap below as context, not authorization for that expansion. Unsupported scenes remain on legacy; narrowing this task does not waive any scene-promotion gate.
+
+Read [RESUME.md](RESUME.md) for the exact checkout, successful browser/native smoke tests and signed delivery state. M0 and E01 are separate commits.
 
 **Change the simulation engine, not the application.** Keep the current TypeScript UI, DOM, CSS, input and viewport. Build corrected references in Rust, use WASM for browser delivery, and run heavy parallel physics plus direct rendering through Rust wgpu and WGSL. This decision is [ADR-001](architecture/adr-001-rust-wasm-wgpu.md).
 
-Implement all P1-P9 phases in dependency order, beginning with the GPU redesign. The Rust bootstrap and engine boundary are part of P1 M0/M1, not a separate whole-codebase rewrite before the numerical work. M2 is a Rust f64 reference; M3 is the equivalent WGSL/f32 GPU solver.
+Within the currently authorized port scope, follow the dependency order. The Rust bootstrap and engine boundary are part of P1 M0/M1, not a separate whole-codebase rewrite before the numerical work. M2 is a Rust f64 reference; M3 is the equivalent WGSL/f32 GPU solver.
 
-## Copy-paste developer brief
+## Original full-roadmap brief (current scope above takes precedence)
 
 ```text
 Start with docs/START_HERE.md and implement the P1-P9 roadmap.

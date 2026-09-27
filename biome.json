@@ -9,6 +9,7 @@
 			"*.json",
 			"vite.config.ts",
 			"!!artifacts",
+			"!!src/generated/wasm",
 			"!!.playwright-mcp"
 		]
 	},

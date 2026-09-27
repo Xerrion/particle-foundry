@@ -3,7 +3,7 @@
   "kind": "planning-work-packages-not-implementation-status",
   "decision": "architecture/adr-001-rust-wasm-wgpu.md",
   "plan": "plans/rust-wasm-migration/plan.md",
-  "nextWorkItem": "E01",
+  "nextWorkItem": "E02",
   "workItems": [
     {
       "id": "E00",
@@ -39,8 +39,8 @@
       "title": "Bootstrap Rust workspace and browser WASM",
       "work": "Create the minimal proposed crates without relocating src/. Pin Rust/wgpu/wasm-bindgen after native and browser smoke tests. Integrate reproducible WASM generation with the existing frontend build.",
       "acceptance": "Native core tests and a real browser WASM initialize/dispose cycle pass; generated declarations compile in the existing TypeScript application. No UI rewrite.",
-      "status": "planned",
-      "evidence": [],
+      "status": "validated",
+      "evidence": ["validation/p1-m1.md"],
       "fireWorkItems": []
     },
     {

@@ -1,0 +1,13 @@
+$ bun scripts/test-browser.ts "artifacts/validation/p1-m1/20260926-e01/browser"
+54 | 	const exitCode = await browserProcess.exited;
+55 | 	clearTimeout(timeout);
+56 | 	await Bun.write(`${output}/browser-dom.html`, html);
+57 | 	const encoded = html.match(/<pre id="result">(.*?)<\/pre>/s)?.[1];
+58 | 	if (exitCode !== 0 || !encoded || encoded === "running") {
+59 | 		throw new Error(`Browser smoke did not complete (exit ${exitCode}); see ${output}`);
+                 ^
+error: Browser smoke did not complete (exit 0); see /Users/lasn/.codex/worktrees/16ee1bfb-b941-405f-8290-e37decc87d34/particle-foundry/artifacts/validation/p1-m1/20260926-e01/browser
+      at /Users/lasn/.codex/worktrees/16ee1bfb-b941-405f-8290-e37decc87d34/particle-foundry/scripts/test-browser.ts:59:13
+
+Bun v1.3.12 (macOS arm64)
+error: script "test:browser" exited with code 1

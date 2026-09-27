@@ -13,6 +13,20 @@ jobs:
         with:
           bun-version: 1.3.12
       - run: bun install --frozen-lockfile
+      - run: rustup show
+      - run: cargo fmt --all -- --check
+      - run: cargo test --locked -p particle-sim -p particle-sim-cpu
+      - run: cargo clippy --locked --workspace --all-targets -- -D warnings
+      - run: cargo install wasm-bindgen-cli --version 0.2.108 --locked
+      - run: bun run build:wasm
+      - run: bun run check:wasm
       - run: bun run lint
       - run: bun run check
       - run: bun run build
+      - run: bun run validate:docs
+      - run: bun run test:browser artifacts/validation/ci-browser
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: engine-browser-smoke
+          path: artifacts/validation/ci-browser

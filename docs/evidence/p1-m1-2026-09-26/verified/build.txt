@@ -1,0 +1,17 @@
+$ bun run build:wasm && vite build
+$ bun scripts/build-wasm.ts
+   Compiling particle-sim v0.1.0 (/Users/lasn/.codex/worktrees/16ee1bfb-b941-405f-8290-e37decc87d34/particle-foundry/crates/sim)
+   Compiling particle-sim-gpu v0.1.0 (/Users/lasn/.codex/worktrees/16ee1bfb-b941-405f-8290-e37decc87d34/particle-foundry/crates/sim-gpu)
+   Compiling particle-sim-cpu v0.1.0 (/Users/lasn/.codex/worktrees/16ee1bfb-b941-405f-8290-e37decc87d34/particle-foundry/crates/sim-cpu)
+   Compiling particle-wasm v0.1.0 (/Users/lasn/.codex/worktrees/16ee1bfb-b941-405f-8290-e37decc87d34/particle-foundry/crates/wasm)
+    Finished `release` profile [optimized] target(s) in 0.48s
+vite v8.3.0 building client environment for production...
+transforming...
+✓ 45 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                 13.05 kB │ gzip:  3.55 kB
+dist/assets/index-Qi_RJUZj.css  17.21 kB │ gzip:  4.59 kB
+dist/assets/index-BC1pmvIt.js   98.63 kB │ gzip: 32.26 kB
+
+✓ built in 30ms
