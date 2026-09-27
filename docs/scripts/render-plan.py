@@ -1,10 +1,8 @@
 #!/usr/bin/env python3
 """Regenerate the self-contained GPU plan HTML from its canonical Markdown.
 
-Requires markdown-it-py. Install it into your documentation tooling environment:
-    python -m pip install markdown-it-py
-Run from any working directory:
-    python docs/scripts/render-plan.py
+Run from the repository through mise, which installs markdown-it-py:
+    mise run docs:render
 The game and its runtime dependencies are not modified.
 """
 from __future__ import annotations
@@ -27,7 +25,7 @@ def main() -> int:
     try:
         from markdown_it import MarkdownIt
     except ImportError:
-        print("Missing documentation dependency: install markdown-it-py.", file=sys.stderr)
+        print("Missing documentation dependency: run mise run docs:install.", file=sys.stderr)
         return 2
     root = Path(__file__).resolve().parents[1]
     source = root / "plans/fluid-gpu-redesign/plan.md"

@@ -16,7 +16,7 @@ The GPU redesign is the migration vehicle. Do not create a separate prerequisite
 | CPU reference and bounded irregular systems | Rust `sim-cpu` | A literal translation of the old cellular rules is not the new reference |
 | GPU resources, solver scheduling, rendering | Rust `sim-gpu` using wgpu | No second independent TypeScript WebGPU device for the same world |
 | Parallel numerical work | WGSL shaders | Compiling ordinary Rust to WASM does not compile it into a shader |
-| Browser bindings | `wasm-bindgen` in `crates/wasm/` | No whole-world JS/WASM copy each tick |
+| Browser bindings | `wasm-bindgen` in `engine/crates/wasm/` | No whole-world JS/WASM copy each tick |
 | Future native execution | Reuse the Rust crates with native wgpu | Native application UI/distribution is not a P1 requirement |
 
 wgpu supports browser execution through WASM and native graphics backends. Its browser path uses the browser WebGPU implementation. These facts support portability, not a guaranteed speedup over submitting equivalent WGSL from TypeScript. See [wgpu platform](../sources.md#wgpu-platforms) and [buffer semantics](../sources.md#wgpu-buffers).

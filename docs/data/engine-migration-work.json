@@ -37,7 +37,7 @@
         "SRC-03"
       ],
       "title": "Bootstrap Rust workspace and browser WASM",
-      "work": "Create the minimal proposed crates without relocating src/. Pin Rust/wgpu/wasm-bindgen after native and browser smoke tests. Integrate reproducible WASM generation with the existing frontend build.",
+      "work": "Create the minimal proposed crates in engine/. Pin Rust/wgpu/wasm-bindgen after native and browser smoke tests. Generate bindings into web/generated/wasm/ and integrate them with the web/ frontend build.",
       "acceptance": "Native core tests and a real browser WASM initialize/dispose cycle pass; generated declarations compile in the existing TypeScript application. No UI rewrite.",
       "status": "planned",
       "evidence": [],

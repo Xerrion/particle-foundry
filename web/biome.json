@@ -1,0 +1,47 @@
+{
+	"$schema": "https://biomejs.dev/schemas/2.5.14/schema.json",
+	"files": {
+		"includes": [
+			"src/**/*.ts",
+			"tests/**/*.ts",
+			"benchmarks/**/*.ts",
+			"*.json",
+			"vite.config.ts",
+			"!!artifacts",
+			"!!.playwright-mcp"
+		]
+	},
+	"formatter": {
+		"enabled": true,
+		"indentStyle": "tab",
+		"lineWidth": 100
+	},
+	"linter": {
+		"enabled": true,
+		"rules": {
+			"preset": "recommended"
+		}
+	},
+	"overrides": [
+		{
+			"includes": ["src/main.ts", "src/app/**/*.ts", "src/materials/**/*.ts", "tests/app/**/*.ts"],
+			"linter": {
+				"rules": {
+					"style": {
+						"noRestrictedImports": {
+							"level": "error",
+							"options": {
+								"patterns": [
+									{
+										"group": ["**/legacy/**", "**/generated/**"],
+										"message": "Use the engine-client entrypoint; backend internals and generated bindings are private."
+									}
+								]
+							}
+						}
+					}
+				}
+			}
+		}
+	]
+}

@@ -123,7 +123,7 @@ M1 needs a small subset proving the seam. P3 and P6 progressively expand it. The
 
 ## 11. Rust, WASM and WGSL ownership
 
-[ADR-001](adr-001-rust-wasm-wgpu.md) and [the engine contract](engine-boundary.md) select the implementation. Place portable identities, units and schemas under `crates/sim/`; numerical references under `crates/sim-cpu/`; resource/layout/execution under `crates/sim-gpu/`; and generated browser bindings behind `crates/wasm/`. WGSL implements the GPU numerical stages, not ordinary Rust compiled to WASM.
+[ADR-001](adr-001-rust-wasm-wgpu.md) and [the engine contract](engine-boundary.md) select the implementation. Place portable identities, units and schemas under `engine/crates/sim/`; numerical references under `engine/crates/sim-cpu/`; resource/layout/execution under `engine/crates/sim-gpu/`; and generated browser bindings behind `engine/crates/wasm/`. WGSL implements the GPU numerical stages, not ordinary Rust compiled to WASM.
 
 Keep one authored data source with generated Rust/TypeScript/GPU projections. The existing TypeScript catalogue remains the legacy source until the explicit data-pipeline migration. Do not manually copy every material into a Rust match and a separate WGSL switch. Version the GPU layout and test byte offsets, strides, IDs, units and precision conversions. Active fields in a GPU session are not mirrored each frame into the Rust reference.
 

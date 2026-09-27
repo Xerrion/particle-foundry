@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
-"""Validate the documentation package without third-party dependencies.
+"""Validate documentation against the current checkout without third-party dependencies.
 
 Checks planning manifests, table synchronization, local links/anchors, generated
-HTML freshness, migration/source/fire manifest consistency, and original evidence integrity. Does not execute the supplied
-audit harness or run application, numerical, browser, or GPU tests.
+HTML freshness, and preserved historical evidence. Source links resolve to the
+working tree; historical source hashes describe only their recorded snapshot.
+No source archive is required or compared with current code. Does not run
+application, numerical, browser, or GPU tests.
 """
 from __future__ import annotations
 
@@ -19,6 +21,7 @@ from urllib.parse import unquote, urlsplit
 from zipfile import BadZipFile, ZipFile
 
 ROOT = Path(__file__).resolve().parents[1]
+PROJECT_ROOT = ROOT.parent
 ORIGINAL_SHA256 = "f0c353534cca10736d98c449fa96b5e2ed07c241a3ba7cd4463f897ab9860eb5"
 FIRE_REVIEW_SHA256 = "977396260ed156adc2cd4eb439cfe7e645de449e6f5126130c667097e92cadb0"
 EXPECTED_SYMBOLS = "H He Li Be B C N O F Ne Na Mg Al Si P S Cl Ar K Ca Sc Ti V Cr Mn Fe Co Ni Cu Zn Ga Ge As Se Br Kr Rb Sr Y Zr Nb Mo Tc Ru Rh Pd Ag Cd In Sn Sb Te I Xe Cs Ba La Ce Pr Nd Pm Sm Eu Gd Tb Dy Ho Er Tm Yb Lu Hf Ta W Re Os Ir Pt Au Hg Tl Pb Bi Po At Rn Fr Ra Ac Th Pa U Np Pu Am Cm Bk Cf Es Fm Md No Lr Rf Db Sg Bh Hs Mt Ds Rg Cn Nh Fl Mc Lv Ts Og".split()
@@ -66,12 +69,8 @@ class HTMLLinks(HTMLParser):
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument(
-        "--source-archive", type=Path,
-        help="Optionally verify the inspected source ZIP against the static-review manifest; never execute it.",
-    )
-    args = parser.parse_args()
+    """Check working-tree documentation and preserve historical evidence boundaries."""
+    argparse.ArgumentParser(description=__doc__).parse_args()
     errors: list[str] = []
     checked: list[str] = []
 
@@ -147,7 +146,7 @@ def main() -> int:
                 require(name in source_files, f"Unknown source location: {name}")
                 if name in source_files:
                     require(1 <= location["startLine"] <= location["endLine"] <= source_files[name]["lines"], f"Source range out of bounds: {observation['id']} {name}")
-        checked.append("43-file static source manifest and 12 bounded source observations; not runtime verification")
+        checked.append("Historical 43-file source manifest and 12 observations; not compared with current source")
 
         work = json.loads((ROOT / "data/engine-migration-work.json").read_text(encoding="utf-8"))
         require(work["kind"] == "planning-work-packages-not-implementation-status", "Work manifest is not labelled as a plan")
@@ -280,31 +279,18 @@ def main() -> int:
                 require(bool(b["evidence"]), f"Validated fire aggregate lacks evidence: {b['id']}")
         checked.append("Nine FIRE-W tasks, fourteen FIRE-A specifications, E-parent DAG, synchronized prose and M4/M6/M7 gate coverage")
 
-        if args.source_archive is not None:
-            archive_bytes = args.source_archive.read_bytes()
-            require(hashlib.sha256(archive_bytes).hexdigest() == source_review["sourceArchive"]["sha256"], "Provided source archive differs from the inspected snapshot")
-            with ZipFile(args.source_archive) as archive:
-                require(archive.testzip() is None, "CRC error in provided source archive")
-                names = [i.filename for i in archive.infolist() if not i.is_dir()]
-                require(len(names) == len(set(names)), "Duplicate files in provided source archive")
-                require(set(names) == set(source_files), "Provided source entries differ from the static manifest")
-                for name, metadata in source_files.items():
-                    content = archive.read(name)
-                    require(hashlib.sha256(content).hexdigest() == metadata["sha256"], f"Source file hash changed: {name}")
-                    require(len(content) == metadata["bytes"], f"Source size mismatch: {name}")
-                    require(len(content.decode("utf-8").splitlines()) == metadata["lines"], f"Source line count mismatch: {name}")
-            checked.append("Provided source ZIP CRC/SHA-256 and every source file hash/size/line count; source was not executed")
-        else:
-            print("NOTE: source archive not supplied; static manifest structure checked, source bytes not reverified.")
-
-        docs = sorted([*ROOT.rglob("*.md"), *ROOT.rglob("*.html")])
+        docs = sorted([
+            *ROOT.rglob("*.md"), *ROOT.rglob("*.html"),
+            PROJECT_ROOT / "README.md", PROJECT_ROOT / "AGENTS.md",
+            PROJECT_ROOT / "engine/AGENTS.override.md",
+        ])
         anchor_cache: dict[Path,set[str]] = {}
         link_count = 0
         for p in docs:
             text = p.read_text(encoding="utf-8")
-            require("\ufffd" not in text, f"Replacement character in {p.relative_to(ROOT)}")
-            require("\u2013" not in text and "\u2014" not in text, f"Long dash in authored document {p.relative_to(ROOT)}")
-            require(not re.search(r"turn\d+(?:search|view|file)\d+", text), f"Unresolved tool citation in {p.relative_to(ROOT)}")
+            require("\ufffd" not in text, f"Replacement character in {p.relative_to(PROJECT_ROOT)}")
+            require("\u2013" not in text and "\u2014" not in text, f"Long dash in authored document {p.relative_to(PROJECT_ROOT)}")
+            require(not re.search(r"turn\d+(?:search|view|file)\d+", text), f"Unresolved tool citation in {p.relative_to(PROJECT_ROOT)}")
             if p.suffix == ".html":
                 parsed = HTMLLinks(); parsed.feed(text)
                 links = parsed.links
@@ -318,8 +304,8 @@ def main() -> int:
                     continue
                 resolved = (p.parent / unquote(url.path)).resolve() if url.path else p.resolve()
                 link_count += 1
-                require(resolved.is_relative_to(ROOT.resolve()), f"Local link escapes docs: {p.relative_to(ROOT)} -> {target}")
-                require(resolved.exists(), f"Missing local target: {p.relative_to(ROOT)} -> {target}")
+                require(resolved.is_relative_to(PROJECT_ROOT.resolve()), f"Local link escapes repository: {p.relative_to(PROJECT_ROOT)} -> {target}")
+                require(resolved.exists(), f"Missing local target: {p.relative_to(PROJECT_ROOT)} -> {target}")
                 if not resolved.exists() or not url.fragment or resolved.suffix not in {".md", ".html"}:
                     continue
                 if resolved not in anchor_cache:
@@ -328,12 +314,12 @@ def main() -> int:
                         q=HTMLLinks(); q.feed(t); anchor_cache[resolved]=q.anchors
                     else:
                         anchor_cache[resolved]=markdown_anchors(t)
-                require(unquote(url.fragment) in anchor_cache[resolved], f"Missing local anchor: {p.relative_to(ROOT)} -> {target}")
-        checked.append(f"{len(docs)} authored Markdown/HTML documents and {link_count} local links/anchors")
+                require(unquote(url.fragment) in anchor_cache[resolved], f"Missing local anchor: {p.relative_to(PROJECT_ROOT)} -> {target}")
+        checked.append(f"{len(docs)} authored Markdown/HTML documents and {link_count} working-tree links/anchors")
 
         source=(ROOT/"plans/fluid-gpu-redesign/plan.md").read_bytes()
         rendered=HTMLLinks(); rendered.feed((ROOT/"plans/fluid-gpu-redesign/plan.html").read_text(encoding="utf-8"))
-        require(rendered.source_hash == hashlib.sha256(source).hexdigest(), "GPU HTML is stale; run render-plan.py")
+        require(rendered.source_hash == hashlib.sha256(source).hexdigest(), "GPU HTML is stale; run mise run docs:render")
         checked.append("Generated GPU HTML matches the current Markdown source hash")
 
         original=ROOT/"history/original-docs-2026-09-21.zip"

@@ -1,5 +1,8 @@
 node_modules/
+.venv/
 dist/
+engine/target/
+web/generated/
 *.log
 .env
 

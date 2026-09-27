@@ -90,6 +90,6 @@ The original references and baseline claims above are retained from the input. T
 
 ## Execution ownership under ADR-001
 
-W0-W4 reuse the [Rust/WASM + wgpu decision](../../architecture/adr-001-rust-wasm-wgpu.md): model contracts under `crates/sim/`, Rust references under `crates/sim-cpu/`, GPU resources under `crates/sim-gpu/`, and wave/solid WGSL stages under `shaders/`. Retain TypeScript settings, controls and visual presentation intent. Do not create a separate TypeScript compressible engine or a second world to couple to the low-Mach solver.
+W0-W4 reuse the [Rust/WASM + wgpu decision](../../architecture/adr-001-rust-wasm-wgpu.md): model contracts under `engine/crates/sim/`, Rust references under `engine/crates/sim-cpu/`, GPU resources under `engine/crates/sim-gpu/`, and wave/solid WGSL stages under `engine/crates/sim-gpu/shaders/`. Retain TypeScript settings, controls and visual presentation intent. Do not create a separate TypeScript compressible engine or a second world to couple to the low-Mach solver.
 
 The [engine boundary](../../architecture/engine-boundary.md) supplies accepted-time accounting, commands, async diagnostics, renderer ownership and snapshots. W4 includes native-reference and actual browser-WASM/GPU evidence, ABI and loss recovery, in addition to numerical wave/breakage tests. The historical closeout statements above are retained evidence, not new source changes made by this documentation revision.
