@@ -54,17 +54,25 @@ Use this broader sequence when establishing the migration baseline; it is not
 required reading for unrelated development.
 
 1. [Stack decision](architecture/adr-001-rust-wasm-wgpu.md), [roadmap](roadmap.md), and [active work](remaining-work.md).
-2. [Static source review](validation/source-review-2026-09-21.md), [fire evidence and corrected gates](validation/fire-combustion.md), and [project structure](project-structure.md). Confirm the real checkout, which may differ from the upload.
+2. [Project structure](project-structure.md), [historical source review](validation/source-review-2026-09-21.md), and [fire evidence and corrected gates](validation/fire-combustion.md). Recheck historical findings against the current working tree, including uncommitted changes.
 3. [Rust/WASM work packages](plans/rust-wasm-migration/plan.md), [engine boundary](architecture/engine-boundary.md), [fluid/GPU numerical plan](plans/fluid-gpu-redesign/plan.md), and [fire integration plan](plans/fire-combustion/plan.md).
 4. [Matter model](architecture/matter-model.md), [current physical model](model.md), and [acceptance](validation/acceptance.md). Read later phase plans to avoid dead-end contracts, not to enlarge M3.
 
 The Markdown documents are canonical. The GPU [HTML view](plans/fluid-gpu-redesign/plan.html) is generated. ADR-001 controls the stack, the engine-boundary document controls integration, the GPU plan controls its equations/gates, and the phase manifest controls sequence. The fire plan and FIRE-A gates refine M0/M1/M4/M6/M7 and P4 without expanding M3. Older copies under history preserve superseded assumptions and do not override this entrypoint.
 
-## What was inspected and what remains unknown
+## Current source and historical evidence
 
-The following describes the historical 23 September review, not the current repository layout or current verification. The supplied `src(3).zip` was statically inspected, including the startup, sandbox facade, state, movement, pressure call graph, renderer, diagnostics and material records. Its 43 file hashes and line references are recorded in [the source manifest](data/source-review-manifest.json). No application source was changed or included in this docs-only update.
+Use the current checkout for source, configuration and tests. Inspect `web/src/`,
+`web/tests/`, `engine/` and root mise tasks as they exist when the work begins.
+No source ZIP is required. Record fresh findings against the Git commit and
+working-tree changes using [the evidence template](templates/phase-evidence.md).
 
-The upload does not contain package/lockfiles, repository metadata, tests, benchmark harnesses or CI configuration. Their real status must be checked at M0. No application, Rust/WASM, browser or GPU test was run for this revision. The retained 24-pass/11-fail audit and quoted historical timings remain separate evidence, not fresh measurements. The separately imported fire review records 12 prior characterization checks, including two complete physics-tick cases; none was rerun in this update and none counts as a corrected FIRE-A pass.
+The [source manifest](data/source-review-manifest.json) preserves the 43-file
+snapshot inspected in September 2026. Its paths, hashes and missing-input list
+describe that historical upload, not the current repository. The retained
+24-pass/11-fail audit, quoted timings and 12 fire-characterization checks belong
+to their recorded snapshots. They are not current test results or corrected
+FIRE-A passes. Preserve them and establish fresh evidence from the live checkout.
 
 ## First development slice
 

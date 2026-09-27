@@ -8,13 +8,13 @@ Implementation proposal · Particle Foundry · 23 September 2026
 
 The [E00-E14 migration work packages](../rust-wasm-migration/plan.md) execute M0-M7 and add workspace, bindings, catalogue projection, async lifecycle, renderer and recovery work. The [engine boundary](../../architecture/engine-boundary.md) is binding for integration. Do not create a separate line-by-line Rust port before the numerical redesign. The [fire integration plan](../fire-combustion/plan.md) and [FIRE-A acceptance](../../validation/fire-combustion.md) now make combustion requirements explicit inside M0/M1/M4/M6/M7; M3 remains nonreactive.
 
-This is a planning document with preserved historical evidence and a new [static review of src(3).zip](../../validation/source-review-2026-09-21.md). This revision imports the separately executed 12-check [fire audit](../../evidence/fire-review-2026-09-23/FIRE_REVIEW.md) without rerunning it. It does not implement the redesign, rerun either audit, or measure Rust/GPU performance. Proposed paths and numerical thresholds are design decisions, not existing capabilities.
+This is a planning document with preserved historical evidence: the [September 2026 static source review](../../validation/source-review-2026-09-21.md) and the separately executed 12-check [fire audit](../../evidence/fire-review-2026-09-23/FIRE_REVIEW.md). Current implementation work uses the live checkout, including uncommitted changes; no source archive is required. This plan does not implement the redesign or establish current audit or Rust/GPU performance results. Proposed paths and numerical thresholds are design decisions, not existing capabilities.
 
 **Planned follow-up:** [Pressure waves and material breakage](../pressure-waves-breakage/plan.md) adds a separate compressible model after P1/M7 in the default execution queue, with breakage enabled by default and a user toggle. A fixed-wall prototype is technically possible after M3, but is not part of the M3 deliverable. The demonstrator and low-Mach scope below remain unchanged; resolved shocks belong to that follow-up.
 
 ## 1. Preserved baseline from the supplied documentation
 
-The audit results in this section describe the earlier audited snapshot. They are not a fresh test of the statically inspected src(3).zip. The [source review and hashes](../../validation/source-review-2026-09-21.md) separate current-upload observations from historical results. Confirm the full repository at M0 and record new evidence separately.
+The audit results in this section describe earlier snapshots, not the current checkout. The [source review and hashes](../../validation/source-review-2026-09-21.md) identify a separate historical inspection. Inspect the live repository at M0 and record new evidence against its Git commit and working-tree changes.
 
 The review describes an earlier source snapshot. Seventeen of its 39 hashed source files differ from the audited working tree. The audited checkout had substantial pre-existing changes; its base commit is `dd75dde7ebd7e5cc26eff895654992c9d5b91388`. A future implementation must preserve and capture this working state before starting; branching from that commit alone would omit it.
 
@@ -119,7 +119,7 @@ Start geometric VOF with CFL ≤ 0.5 and verify the actual multidimensional sche
 
 **Dependency:** none. **Primary surface:** tests and benchmark harnesses.
 
-Capture the dirty working tree with tracked and untracked content, source hashes, tool versions and command log. Preserve the original Bun/TypeScript regression coverage and translate backend-neutral invariant assertions into Rust reference fixtures with stable IDs. Classify changed-model tests separately from regressions. Inspect actual scripts before running checks: the source-only upload lacks package/lockfiles and test infrastructure. E00 establishes fresh evidence; this documentation revision ran no application checks.
+Capture the current working tree with tracked and untracked content, Git commit, source hashes, tool versions and command log. Preserve the original Bun/TypeScript regression coverage and translate backend-neutral invariant assertions into Rust reference fixtures with stable IDs. Classify changed-model tests separately from regressions. Inspect the current mise tasks, lockfile and test infrastructure before running checks. E00 establishes fresh evidence from the checkout; archived upload metadata does not determine which tools or tests exist today.
 
 Create backend-neutral fixtures for uniform pressure, gravity-balanced pools, periodic markers, dam break, disconnected pools, narrow channels, and wall edits. Track actual simulated time, cell visits, connected-component rebuilds, pressure solves, and transfers. Benchmark the current 480×270 scenes on this machine before using the historical Linux timings for prioritization.
 

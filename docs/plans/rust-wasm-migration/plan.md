@@ -181,7 +181,7 @@ Do not create empty future shader trees or placeholder nuclear engines solely to
 
 ## Build and continuous integration work
 
-At E00 inspect the real JavaScript scripts and lockfile; `src(3).zip` is not a complete buildable checkout. At E01 pin a compatible Rust/wgpu/bindings toolchain, install the WASM target and establish a reproducible command that produces the `.wasm`, JavaScript glue and declarations consumed by the existing build. Pin the `wasm-bindgen` CLI to the library's compatible version. Do not select an untested version simply because it appears in current online docs. [Build reference](../../sources.md#wgpu-web).
+At E00 inspect the current checkout's `mise.toml`, `web/package.json` and `web/bun.lock`, and run its existing checks. Include uncommitted changes in the baseline; no source archive is needed. At E01 pin a compatible Rust/wgpu/bindings toolchain, install the WASM target and establish a reproducible command that produces the `.wasm`, JavaScript glue and declarations consumed by the existing build. Pin the `wasm-bindgen` CLI to the library's compatible version. Do not select an untested version simply because it appears in current online docs. [Build reference](../../sources.md#wgpu-web).
 
 Add separate checks for Rust formatting/lint, native core/reference tests, a WASM target build, generated-output freshness, WGSL parsing/layout and actual browser initialization. Keep the original frontend lint/typecheck/test/build checks. A native-only test job cannot validate the browser backend. Optional hardware tests must explicitly report skipped/unavailable runs rather than pass them.
 

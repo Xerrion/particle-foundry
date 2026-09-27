@@ -92,6 +92,11 @@ link source symbols, regression tests, limitations and design rationale. Update
 the owning article with behavior changes; link to canonical facts instead of
 copying status or contracts. Investigate code/document conflicts before resolving them.
 
+Use the current working tree, including uncommitted changes, as the source for
+current behavior. Historical source ZIPs and their hashes are audit provenance,
+not a development dependency. Record new evidence against the Git commit and
+working-tree changes; do not require a replacement source archive.
+
 Update active documentation and commands when paths or behavior change. The
 2026-09-27 `web/` and `engine/` layout supersedes earlier instructions to retain
 root `src/`. Historical source paths and line numbers remain historical: preserve

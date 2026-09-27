@@ -1,5 +1,17 @@
 # Documentation change log
 
+## 27 September 2026: validate documentation against the working tree
+
+Removed the optional historical source-ZIP verification argument and its missing
+archive notice from `docs:check`. Current source/test links are checked against
+the live checkout, including uncommitted changes; historical source hashes are
+not compared with current code. Preserved audit manifests and evidence remain
+unchanged and retain their separate integrity checks.
+
+Updated knowledge-base and migration guidance to use current source, mise tasks,
+Git commits and working-tree changes for new evidence. Removed the obsolete ZIP
+command from development instructions and regenerated the GPU plan's HTML.
+
 ## 27 September 2026: AI knowledge base and combustion reference
 
 Organized the documentation index by question, topic and authority. Added article

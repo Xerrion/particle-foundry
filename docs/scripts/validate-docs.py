@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
-"""Validate the documentation package without third-party dependencies.
+"""Validate documentation against the current checkout without third-party dependencies.
 
 Checks planning manifests, table synchronization, local links/anchors, generated
-HTML freshness, migration/source/fire manifest consistency, and original evidence integrity. Does not execute the supplied
-audit harness or run application, numerical, browser, or GPU tests.
+HTML freshness, and preserved historical evidence. Source links resolve to the
+working tree; historical source hashes describe only their recorded snapshot.
+No source archive is required or compared with current code. Does not run
+application, numerical, browser, or GPU tests.
 """
 from __future__ import annotations
 
@@ -67,12 +69,8 @@ class HTMLLinks(HTMLParser):
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument(
-        "--source-archive", type=Path,
-        help="Optionally verify the inspected source ZIP against the static-review manifest; never execute it.",
-    )
-    args = parser.parse_args()
+    """Check working-tree documentation and preserve historical evidence boundaries."""
+    argparse.ArgumentParser(description=__doc__).parse_args()
     errors: list[str] = []
     checked: list[str] = []
 
@@ -148,7 +146,7 @@ def main() -> int:
                 require(name in source_files, f"Unknown source location: {name}")
                 if name in source_files:
                     require(1 <= location["startLine"] <= location["endLine"] <= source_files[name]["lines"], f"Source range out of bounds: {observation['id']} {name}")
-        checked.append("43-file static source manifest and 12 bounded source observations; not runtime verification")
+        checked.append("Historical 43-file source manifest and 12 observations; not compared with current source")
 
         work = json.loads((ROOT / "data/engine-migration-work.json").read_text(encoding="utf-8"))
         require(work["kind"] == "planning-work-packages-not-implementation-status", "Work manifest is not labelled as a plan")
@@ -281,23 +279,6 @@ def main() -> int:
                 require(bool(b["evidence"]), f"Validated fire aggregate lacks evidence: {b['id']}")
         checked.append("Nine FIRE-W tasks, fourteen FIRE-A specifications, E-parent DAG, synchronized prose and M4/M6/M7 gate coverage")
 
-        if args.source_archive is not None:
-            archive_bytes = args.source_archive.read_bytes()
-            require(hashlib.sha256(archive_bytes).hexdigest() == source_review["sourceArchive"]["sha256"], "Provided source archive differs from the inspected snapshot")
-            with ZipFile(args.source_archive) as archive:
-                require(archive.testzip() is None, "CRC error in provided source archive")
-                names = [i.filename for i in archive.infolist() if not i.is_dir()]
-                require(len(names) == len(set(names)), "Duplicate files in provided source archive")
-                require(set(names) == set(source_files), "Provided source entries differ from the static manifest")
-                for name, metadata in source_files.items():
-                    content = archive.read(name)
-                    require(hashlib.sha256(content).hexdigest() == metadata["sha256"], f"Source file hash changed: {name}")
-                    require(len(content) == metadata["bytes"], f"Source size mismatch: {name}")
-                    require(len(content.decode("utf-8").splitlines()) == metadata["lines"], f"Source line count mismatch: {name}")
-            checked.append("Provided source ZIP CRC/SHA-256 and every source file hash/size/line count; source was not executed")
-        else:
-            print("NOTE: source archive not supplied; static manifest structure checked, source bytes not reverified.")
-
         docs = sorted([
             *ROOT.rglob("*.md"), *ROOT.rglob("*.html"),
             PROJECT_ROOT / "README.md", PROJECT_ROOT / "AGENTS.md",
@@ -334,7 +315,7 @@ def main() -> int:
                     else:
                         anchor_cache[resolved]=markdown_anchors(t)
                 require(unquote(url.fragment) in anchor_cache[resolved], f"Missing local anchor: {p.relative_to(PROJECT_ROOT)} -> {target}")
-        checked.append(f"{len(docs)} authored Markdown/HTML documents and {link_count} local links/anchors")
+        checked.append(f"{len(docs)} authored Markdown/HTML documents and {link_count} working-tree links/anchors")
 
         source=(ROOT/"plans/fluid-gpu-redesign/plan.md").read_bytes()
         rendered=HTMLLinks(); rendered.feed((ROOT/"plans/fluid-gpu-redesign/plan.html").read_text(encoding="utf-8"))

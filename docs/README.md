@@ -94,6 +94,11 @@ generated HTML freshness and historical evidence integrity. It does not execute
 application tests or establish physical correctness. Use the topic's verification
 instructions for behavior and `mise run ci` for full repository checks.
 
-`mise run docs:render` regenerates the GPU plan's HTML. To additionally verify the
-historical source archive bytes, run
-`mise run docs:check --source-archive "path/to/src(3).zip"`.
+Current source means the checked-out files, including uncommitted changes. Source
+and test links resolve directly into the working tree; no source ZIP is needed.
+Historical source manifests describe their original audit snapshot and must not
+be used to freeze or validate the contents of today's source tree. For new
+measurements, record the Git commit and working-tree changes using the
+[evidence template](templates/phase-evidence.md).
+
+`mise run docs:render` regenerates the GPU plan's HTML.
