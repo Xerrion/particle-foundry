@@ -5,6 +5,7 @@ pub mod fluid;
 pub mod operator;
 pub mod solver;
 pub mod transport;
+pub mod viscosity;
 
 use assembly::{PressureAssembly, PressureAssemblyError};
 use fluid::{FaceValues, PressureFieldError, PressureFields};
