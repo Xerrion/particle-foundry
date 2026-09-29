@@ -143,7 +143,7 @@
       "title": "Implement conservative Rust transport and substeps",
       "work": "Add bounded VOF, shared mass/tracer/compatible momentum fluxes, viscosity and rollback. Keep phase chemistry off and thermal transport passive.",
       "acceptance": "M2 conservation, marker displacement, shear, symmetry, dam-break/refinement and failure tests pass before the equivalent solver is ported.",
-      "status": "planned",
+      "status": "in-progress",
       "evidence": [],
       "fireWorkItems": []
     },

@@ -1,9 +1,10 @@
 # Current-sandbox GPU migration: developer entrypoint
 
 **Revision:** 29 September 2026. **Active release:** P1 only. E00-E03 and E05
-have recorded validation; E04 and E06-E14 remain planned. E06 is the next
-implementation task. E05 supplies a sealed Rust f64 pressure reference, not a
-transporting or GPU fluid scene. The live sandbox still runs TypeScript.
+have recorded validation. E06 is in progress; E04 and E07-E14 remain planned.
+E05 supplies a sealed Rust f64 pressure reference. The E06 phase-transport and
+viscous-shear candidates do not yet form a validated coupled fluid scene. The live
+sandbox still runs TypeScript.
 [E05 evidence](validation/p1-m2-e05.md) records the verified slice;
 [RESUME](RESUME.md) preserves the dated recovery handoff, and the
 [engine tracker](data/engine-migration-work.json) owns status.
@@ -49,7 +50,7 @@ GPU engine; the scene retains one authoritative state owner.
 Read docs/README.md, this entrypoint and the assigned E-work package.
 The sole active release is P1: migrate the current sandbox to Rust/WASM + wgpu.
 Use docs/plans/rust-wasm-migration/current-sandbox-scope.md as required coverage.
-E00-E03 and the E05 CPU pressure reference are validated. E06 transport is next.
+E00-E03 and the E05 CPU pressure reference are validated. E06 is in progress.
 E04 circuits remain planned and are required before E11.
 Execute only the assigned work item or explicitly authorized sequence.
 Preserve the TypeScript UI in web/, Rust/WGSL in engine/, and current legacy access.

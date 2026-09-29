@@ -2,8 +2,9 @@
 
 This directory owns the Rust/WASM workspace and future WGSL shaders. E01's
 lifecycle bootstrap, E02's portable contracts and E05's sealed f64 CPU pressure
-reference are implemented. The running application still uses
-[`web/src/legacy/`](../web/src/legacy/); conservative transport, GPU rendering
+reference are implemented. E06 has isolated CPU phase-transport and viscous-shear
+candidates. The coupled fluid reference is still in progress. The running
+application still uses [`web/src/legacy/`](../web/src/legacy/); GPU rendering
 and scene promotion remain planned.
 
 The workspace follows the [migration plan](../docs/plans/rust-wasm-migration/plan.md):

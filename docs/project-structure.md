@@ -153,11 +153,22 @@ assembly to correct face velocities, checks both scaled pressure residual and
 post-correction divergence, and returns no candidate on failure. [Solver tests](../engine/crates/sim-cpu/tests/pressure_solver.rs)
 include manufactured pressure, disconnected gauges, and 1,000 ticks of
 stratified hydrostatic rest. Pressure assembly and projection currently support
-sealed components only; open-reservoir projection and transported fluid state
-remain planned. The CPU session keys its pressure assembly cache by boundary
+sealed components only; open-reservoir projection remains planned. The CPU
+session keys its pressure assembly cache by boundary
 geometry, aperture, and density revisions; [cache tests](../engine/crates/sim-cpu/tests/pressure_cache.rs)
 compare reused and forced-rebuild solves after input changes. The GPU session
 initializes a wgpu device but does not yet advance a physical world.
+
+The CPU session also owns an optional [phase inventory](../engine/crates/sim-cpu/src/transport.rs)
+for one liquid, carrier gas, fixed walls, and phase-associated passive markers.
+Its derived liquid fraction and signed mass/marker face ledger belong to a
+detached, bounded transport candidate. A separate
+[shear candidate](../engine/crates/sim-cpu/src/viscosity.rs) applies tangential
+viscous stress to MAC faces and reports mechanical energy diagnostics. Their
+tests cover sealed conservation, periodic marker displacement, wall rejection,
+and a periodic shear oracle. They have no live browser caller yet. Momentum
+advection, atomic coupling, dam-break/refinement qualification, and the full
+E06 gate remain in progress.
 [`particle-wasm`](../engine/crates/wasm/src/lib.rs) exposes initialization and disposal
 through [`engine-client/wasm.ts`](../web/src/engine-client/wasm.ts).
 The [browser smoke](../web/tests/browser/engine-smoke.ts) exercises lifecycle,
