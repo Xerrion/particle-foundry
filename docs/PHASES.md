@@ -17,7 +17,7 @@ A small GPU fluid fixture now steps on native and browser hardware, and a GPU
 buffer-layout check has passed on both. An opt-in browser scene now draws
 directly from GPU state. A local Chrome run completed 60 full-size ticks over
 one second of model time, and a native Metal run completed 120 ticks. Local
-repository checks passed. M3 is validated locally; P1 is under way;
+repository checks passed locally and in GitHub CI. M3 is validated; P1 is under way;
 P2-P9 are deferred.
 The baseline (M0), engineering work E00-E03, and the Rust fluid work E05-E06 are
 validated locally. M1's separate circuit work (E04) remains planned. M2 is
