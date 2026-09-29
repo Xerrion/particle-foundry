@@ -89,20 +89,19 @@ try {
 		},
 	);
 	let ready = false;
-	const startup = AbortSignal.timeout(5000);
+	const startup = AbortSignal.timeout(15_000);
 	while (!startup.aborted) {
 		if (server.exitCode !== null)
 			throw new Error("Browser test server exited; see server-error.log");
 		try {
-			const announced = (await Bun.file(`${output}/server.log`).text()).includes("127.0.0.1:4174");
-			ready = announced && (await fetch(url, { signal: startup })).ok;
+			ready = (await fetch(url, { signal: startup })).ok;
 		} catch {
 			/* Startup is bounded below. */
 		}
 		if (ready) break;
 		await Bun.sleep(100);
 	}
-	if (!ready) throw new Error("Browser test server did not become ready in 5 seconds");
+	if (!ready) throw new Error("Browser test server did not become ready in 15 seconds");
 	const browserProcess = Bun.spawn(
 		[
 			binary,
