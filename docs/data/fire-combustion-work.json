@@ -1,12 +1,12 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-09-23",
+  "updatedAt": "2026-09-27",
   "kind": "planning-fire-work-not-implementation-evidence",
   "plan": "plans/fire-combustion/plan.md",
   "acceptance": "validation/fire-combustion.md",
   "architectureDecision": "architecture/adr-001-rust-wasm-wgpu.md",
   "sourceEvidence": "data/fire-review-manifest.json",
-  "nextWorkItem": "FIRE-W00",
+  "nextWorkItem": "FIRE-W02",
   "workItems": [
     {
       "id": "FIRE-W00",
@@ -34,8 +34,10 @@
       "title": "Capture characterization and corrected fire specifications",
       "work": "Preserve F01-F12 unchanged, verify their source fingerprint, and reproduce them only in a fresh evidence directory on the real checkout. Add distinct corrected FIRE-A specifications, including full-pipeline closed-boundary and cold-FIRE cases, without first rewriting the legacy TypeScript reactions.",
       "acceptance": "The baseline states which observations still reproduce, distinguishes ten isolated checks from two full-tick checks, and freezes independent oracles, scales and tolerances. Characterization success is never counted as corrected acceptance.",
-      "status": "planned",
-      "evidence": []
+      "status": "validated",
+      "evidence": [
+        "validation/p1-m0.md"
+      ]
     },
     {
       "id": "FIRE-W01",
@@ -52,8 +54,10 @@
       "title": "Define inventory, boundary, source and flame contracts",
       "work": "Extend the small active-component contract with fuel, O2, carrier gas, declared products and supported soot/residue identities; define one energy reference, source transactions, boundary face fluxes, model eligibility and derived flame/smoke outputs. Keep chemistry disabled in M3.",
       "acceptance": "Schema/layout and round-trip tests preserve component amounts, network identity and feature settings. No separate spendable oxygen counter, dense all-118 cell allocation, or FIRE material authority is introduced.",
-      "status": "planned",
-      "evidence": []
+      "status": "validated",
+      "evidence": [
+        "validation/p1-m1-e02.md"
+      ]
     },
     {
       "id": "FIRE-W02",
@@ -257,7 +261,7 @@
       "title": "Extend fuel chemistry without reopening foundational defects",
       "work": "Extend the same engine in C3-C6 with additional bounded fuel-release profiles, char/surface channels, soot formation/oxidation/deposition and selected radiative heat transfer where supported. Reuse the P3 data compiler and preflight the complete reaction-product closure.",
       "acceptance": "Every newly enabled channel has declared composition, yields, properties and calibration/source status, plus the applicable FIRE-A regression evidence. Core oxygen, product and ignition correctness was already delivered in P1, not deferred to P4.",
-      "status": "planned",
+      "status": "deferred",
       "evidence": []
     }
   ],

@@ -1,0 +1,5 @@
+    Checking particle-sim v0.1.0 (/Users/lasn/.codex/worktrees/16ee1bfb-b941-405f-8290-e37decc87d34/particle-foundry/crates/sim)
+    Checking particle-sim-gpu v0.1.0 (/Users/lasn/.codex/worktrees/16ee1bfb-b941-405f-8290-e37decc87d34/particle-foundry/crates/sim-gpu)
+    Checking particle-sim-cpu v0.1.0 (/Users/lasn/.codex/worktrees/16ee1bfb-b941-405f-8290-e37decc87d34/particle-foundry/crates/sim-cpu)
+    Checking particle-wasm v0.1.0 (/Users/lasn/.codex/worktrees/16ee1bfb-b941-405f-8290-e37decc87d34/particle-foundry/crates/wasm)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.40s

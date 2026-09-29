@@ -2,11 +2,11 @@
 
 Implementation proposal · Particle Foundry · 21 September 2026
 
-Status: P2, planned follow-up; not implemented. [Start here](../../START_HERE.md). The default queue completes P1 first; the fixed-wall numerical prototype is technically possible after M3 without enlarging that demonstrator.
+Status: P2, **deferred**; not implemented. [Start here](../../START_HERE.md). P1 current-sandbox replacement is the sole active release goal. P2 requires separate user activation after the [current-sandbox scope](../rust-wasm-migration/current-sandbox-scope.md) passes P1 acceptance. P1 completion does not activate this plan.
 
 ## Goal and placement
 
-Add a follow-up milestone to the existing [GPU redesign plan](../fluid-gpu-redesign/plan.md). Keep its initial fluid demonstrator unchanged.
+Retain a possible expansion after the existing [GPU redesign plan](../fluid-gpu-redesign/plan.md). Its technical dependencies remain conditional until the user activates P2. The fixed-wall prototype is technically possible after M3, but that fact does not authorize parallel work or enlarge the initial fluid demonstrator.
 
 The new mode should produce expanding gas, travelling pressure waves, reflections, directed flow through openings, and material failure under excessive stress. These effects must come from simulated state and conserved energy.
 
@@ -42,7 +42,7 @@ The new mode should produce expanding gas, travelling pressure waves, reflection
 ## Delivery stages and interfaces
 
 1. **Capture the baseline.** Preserve all pre-existing working-tree changes and capture a reproducible baseline. The earlier documentation reports removal of an incomplete `blastEnergyJ` addition during its earlier closeout; that is historical context, not a source edit performed by this revision. Inspect the actual checkout before implementation.
-2. **CPU gas reference, after GPU M3.** Deliver compression, shock propagation, reflection, finite venting, and prescribed energy-release fixtures with fixed walls.
+2. **CPU gas reference, after P2 activation.** M3 is its numerical prerequisite; accepted P1 coverage is its release-scope prerequisite. Deliver compression, shock propagation, reflection, finite venting, and prescribed energy-release fixtures with fixed walls.
 3. **GPU gas parity.** Port the same equations and stage ordering to WGSL. Keep authoritative state on the GPU; render directly and read back only asynchronous probes, reductions, and checkpoints.
 4. **Reactive scenes and breakage.** Integrate fuel release and the moving-solid infrastructure from M5. Add structural loading, fracture, fragment coupling, and supported material profiles.
 5. **Product integration and promotion.** Enable complete supported scenes after numerical, browser, recovery, and performance gates pass. Initially support gas, reactive grains, and solids; liquid-containing scenes remain on the existing model until compressible multiphase coupling is separately validated.

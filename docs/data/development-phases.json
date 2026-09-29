@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-09-23",
+  "updatedAt": "2026-09-29",
   "kind": "planning-manifest",
   "nextPhase": "P1",
-  "nextMilestone": "M0",
+  "nextMilestone": "M4",
   "phases": [
     {
       "id": "P1",
@@ -22,8 +22,10 @@
       "document": "plans/fluid-gpu-redesign/plan.md",
       "gate": "GPU-M7",
       "rosterTarget": null,
-      "status": "planned",
-      "evidence": [],
+      "status": "in-progress",
+      "evidence": [
+        "validation/p1-m0.md"
+      ],
       "supplementalGates": [
         "FIRE-PRECONDITIONS",
         "FIRE-M6",
@@ -46,7 +48,7 @@
       "document": "plans/pressure-waves-breakage/plan.md",
       "gate": "WAVE-W4",
       "rosterTarget": null,
-      "status": "planned",
+      "status": "deferred",
       "evidence": []
     },
     {
@@ -63,7 +65,7 @@
       "document": "plans/materials-and-chemistry/plan.md",
       "gate": "MAT-C2",
       "rosterTarget": null,
-      "status": "planned",
+      "status": "deferred",
       "evidence": []
     },
     {
@@ -81,7 +83,7 @@
       "document": "plans/materials-and-chemistry/plan.md",
       "gate": "MAT-C6",
       "rosterTarget": 40,
-      "status": "planned",
+      "status": "deferred",
       "evidence": [],
       "fireWorkItems": [
         "FIRE-W08"
@@ -101,7 +103,7 @@
       "document": "plans/materials-and-chemistry/plan.md",
       "gate": "MAT-C9",
       "rosterTarget": 83,
-      "status": "planned",
+      "status": "deferred",
       "evidence": []
     },
     {
@@ -119,7 +121,7 @@
       "document": "plans/nuclear-simulation/plan.md",
       "gate": "NUC-N3",
       "rosterTarget": 103,
-      "status": "planned",
+      "status": "deferred",
       "evidence": []
     },
     {
@@ -136,7 +138,7 @@
       "document": "plans/nuclear-simulation/plan.md",
       "gate": "NUC-N6",
       "rosterTarget": 103,
-      "status": "planned",
+      "status": "deferred",
       "evidence": []
     },
     {
@@ -152,7 +154,7 @@
       "document": "plans/nuclear-simulation/plan.md",
       "gate": "NUC-N8",
       "rosterTarget": 118,
-      "status": "planned",
+      "status": "deferred",
       "evidence": []
     },
     {
@@ -169,11 +171,12 @@
       "document": "validation/acceptance.md",
       "gate": "REL-Q2",
       "rosterTarget": 118,
-      "status": "planned",
+      "status": "deferred",
       "evidence": []
     }
   ],
   "architectureDecision": "architecture/adr-001-rust-wasm-wgpu.md",
   "engineMigrationWork": "data/engine-migration-work.json",
-  "fireWork": "data/fire-combustion-work.json"
+  "fireWork": "data/fire-combustion-work.json",
+  "currentFeatureScope": "plans/rust-wasm-migration/current-sandbox-scope.md"
 }

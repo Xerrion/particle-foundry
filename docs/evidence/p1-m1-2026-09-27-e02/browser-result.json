@@ -1,0 +1,19 @@
+{
+  "status": "pass",
+  "backend": "WASM CPU bootstrap",
+  "cycles": 3,
+  "invalidInputs": 31,
+  "concurrentSessions": 2,
+  "unavailableGpuRejected": true,
+  "gpu": {
+    "status": "pass",
+    "backend": "BrowserWebGpu"
+  },
+  "wasm": {
+    "bytes": 76489,
+    "mime": "application/wasm",
+    "url": "http://127.0.0.1:4174/engine-smoke/assets/particle_wasm_bg-DE8XuZDm.wasm"
+  },
+  "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.8010.12 Safari/537.36",
+  "secureContext": true
+}

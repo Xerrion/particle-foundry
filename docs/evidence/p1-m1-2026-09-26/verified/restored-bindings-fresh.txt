@@ -1,0 +1,3 @@
+$ bun scripts/build-wasm.ts --check
+    Finished `release` profile [optimized] target(s) in 0.10s
+Verified 4 generated WASM assets byte-for-byte

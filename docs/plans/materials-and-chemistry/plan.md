@@ -1,8 +1,10 @@
 # Materials and chemistry implementation plan
 
-**Status:** planned. **Roadmap:** P3-P5, after the GPU and pressure/breakage work. The identity subset is required earlier in GPU M1. [Start here](../../START_HERE.md).
+**Status:** deferred. **Roadmap:** P3-P5. Each phase requires separate user activation and its recorded dependencies; P1 completion does not start this plan. The existing sandbox's bounded identity, property, composition and reaction support remains required in P1. [Start here](../../START_HERE.md).
 
 ## Goal and boundaries
+
+P1 is the sole active release goal. The [current-sandbox scope](../rust-wasm-migration/current-sandbox-scope.md) must pass its GPU coverage and promotion gates before expansion. In particular, the existing eight elemental models migrate in P1/M4-M6; C3 revalidates that completed work under an expanded data system. No requirement for existing behavior may be postponed to C0-C9.
 
 Deliver 40 core elemental-material identities, then 43 more to reach 83, with useful compounds and shared physical mechanisms. Keep all 118 element identities in the reference catalogue throughout. The later 20 nuclear-first and 15 exotic identities belong to the nuclear plan.
 
@@ -12,11 +14,11 @@ The exact cohorts are in [elements.md](../../elements.md) and [element-roadmap.j
 
 ## P3 / C0: registry and property ingestion
 
-**Dependency:** P1 state contract and completed P2 in the default work queue. **Suggested owners:** existing `web/src/materials/` for legacy/presentation data, `engine/crates/sim/src/matter/` for portable contracts, Rust offline data tooling when required, and generated shared data projections. Numerical references use `engine/crates/sim-cpu/`; GPU execution uses `engine/crates/sim-gpu/` and `engine/crates/sim-gpu/shaders/chemistry/`.
+**Activation/dependency:** separate user activation, accepted P1 current-sandbox replacement, and completed P2 in the retained conditional phase order. **Suggested owners:** existing `web/src/materials/` for legacy/presentation data, `engine/crates/sim/src/matter/` for portable contracts, Rust offline data tooling when required, and generated shared data projections. Numerical references use `engine/crates/sim-cpu/`; GPU execution uses `engine/crates/sim-gpu/` and `engine/crates/sim-gpu/shaders/chemistry/`.
 
 Implement the full [matter model](../../architecture/matter-model.md): elements, nuclides, species, material forms, recipes, runtime components, property domains, source status, and capability declarations. Preserve the old numeric IDs. Imported data must have source/version/checksum and redistribution review. Compile immutable CPU/GPU property tables from one source.
 
-Start with the existing eight elements plus water, air, and the compounds already produced by their reactions. Do not turn a missing value into a universal metal/gas profile. Overview sources can guide selection; property curves and nuclear data require the appropriate source type. [Sources](../../sources.md).
+Use the P1-migrated eight elements, water, air and existing reaction products as compatibility fixtures for the expanded pipeline. The P1 implementation already needs sufficient bounded properties and product closure for those behaviors. Do not turn a missing value into a universal metal/gas profile. Overview sources can guide selection; property curves and nuclear data require the appropriate source type. [Sources](../../sources.md).
 
 **Exit:** complete unique Z=1..118 identity registry; all required properties either sourced, explicitly approximated, or unsupported; invalid units, duplicate IDs, missing form references, and unlabelled predictions fail validation.
 
@@ -26,7 +28,7 @@ Implement active component storage, conservative splitting/mixing, recipe compos
 
 Keep molecular forms explicit. H2 is not H, O2 is not O, and water is not an elemental material. Keep graphite and diamond as distinct forms of carbon; do not infer structural transitions from a single temperature threshold. [Carbon reference](../../sources.md#rsc-carbon).
 
-Migrate legacy pseudo-materials with clear labels. Existing generic oil, metal, sand, smoke, and wood remain usable in the legacy engine or a documented approximation; do not invent exact molecular formulas to make the new ledger appear complete.
+Extend the P1 pseudo-material contracts with clear labels. Existing generic oil, metal, sand, smoke, and wood must already meet the P1 migration scope through documented bounded approximations; C1 must preserve them when extending composition support. Do not invent exact molecular formulas to make the new ledger appear complete.
 
 **Exit:** closed transport, phase-cycle, split/merge, concentration, isotope-tag, and save/load fixtures conserve supported inventories. Legacy import reports unsupported states without modifying their originals.
 
@@ -44,17 +46,17 @@ Port a validated CPU implementation to the GPU stage graph. Sparse circuit heat 
 
 ## Fire foundation inherited from P1
 
-[The fire integration plan](../fire-combustion/plan.md) is implemented in P1/M6 and promoted through FIRE-M7. P3 generalizes its catalogue, product-closure and source contracts; it must preserve its finite shared O2, balanced products, thermal ignition/extinction, physical-time rates and persistent supported smoke/residue. Do not recreate a material-specific oxygen rule in the general chemistry engine.
+P1/M6 owns implementation of [the fire integration plan](../fire-combustion/plan.md), with promotion through FIRE-M7; those gates remain open until evidence passes. P3 generalizes the accepted catalogue, product-closure and source contracts; it must preserve finite shared O2, balanced products, thermal ignition/extinction, physical-time rates and persistent supported smoke/residue. Do not recreate a material-specific oxygen rule in the general chemistry engine.
 
 FIRE-W08 is the P4/C5 extension task across C3-C6: additional bounded fuel release, char/surface channels, soot oxidation/deposition and selected radiative heat transfer where supported. A declared simplified profile is acceptable; a hidden unsupported composition or temperature range is not. Core water suppression and condensed-fuel release for already promoted P1 scenes cannot be postponed to this phase.
 
-## P4 / C3: migrate the existing eight elements
+## P4 / C3: revalidate the migrated eight elements
 
-Port H, He, C, N, O, S, Fe, and Cu from their [documented legacy scope](../../elements.md#legacy-eight-element-models). Preserve tests for H2/O2 water production, carbon/sulfur oxidation, element conduction, and thermal mass scaling. Add the new amount/volume/energy tests instead of treating old cell-swap assertions as continuum references.
+Integrate the P1-migrated H, He, C, N, O, S, Fe and Cu models with the generalized C0-C2 data and reaction system. Their [documented legacy scope](../../elements.md#legacy-eight-element-models) and the [P1 scope contract](../rust-wasm-migration/current-sandbox-scope.md) establish the existing coverage that must already work before P1 promotion. Preserve H2/O2 water production, carbon/sulfur oxidation, element conduction, thermal mass scaling and the accepted amount/volume/energy references. Old cell-swap assertions do not substitute for continuum references.
 
-The GPU M4 water domain does not cover cryogenic nitrogen/oxygen or very hot metals. Introduce separate bounded property support, or keep those phases unavailable in the new backend with an explanation. A legacy property value is not automatically validated new-model thermodynamics.
+The GPU M4 water domain does not cover cryogenic nitrogen/oxygen or very hot metals. P1 must resolve the bounded property support required by existing behavior; an unresolved item blocks its coverage gate. C3 may extend those domains only with new evidence and must not silently clamp an unsupported phase range. A legacy property value is not automatically validated new-model thermodynamics.
 
-**Exit:** the eight elements have backend-specific support records and migrated scenarios; no unsupported phase range is silently clamped. Thermal, chemical, and transport effects meet their new reference tests.
+**Exit:** the eight elements retain their P1 support records and scenarios after generalized-pipeline integration; new domains have explicit support and reference evidence; thermal, chemical and transport regressions pass. C3 is not the first migration gate for these elements.
 
 ## P4 / C4: core matter and compound foundation
 
@@ -88,7 +90,7 @@ Build essential compounds alongside the elements:
 
 Extend the P1 combustion slice through FIRE-W08 and add a deliberately small network covering oxidation, metal-water behavior, neutralisation, dissolution, and precipitation only where the products and domains are defined. Reuse the shared transported O2 inventory for every compatible fuel, preflight all products/residues, and rerun the applicable FIRE-A gates for each new channel. Richer pyrolysis, char and soot models require source/calibration status and balanced yields; physical radiative loss must be accounted rather than inferred from a shader. There is no requirement to invent all reactions involving all 40 elements.
 
-Replace whole-cell acid/base cancellation with amount-based partial conversion. Preserve remaining acid/base concentration and identify the selected salt/ion products. Separate mixing, chemical equilibration, and heat release. Do not report accurate pH without an activity/equilibrium model appropriate to the selected solution.
+Extend the bounded P1 acid/base conversion to the selected solution and ion network. Preserve accepted partial-conversion and remaining-reagent behavior; identify new salt/ion products with explicit composition and domain support. Separate mixing, chemical equilibration, and heat release. Do not report accurate pH without an activity/equilibrium model appropriate to the selected solution.
 
 Represent passivation with a surface state or layer model that actually changes access/rates. Oxidation must consume reactants and create products. A protective colour overlay is not a reaction barrier. Early surface kinetics may be calibrated and labelled.
 
@@ -143,6 +145,6 @@ All validation and phase evidence requirements apply from [acceptance](../../val
 
 ## Execution ownership under ADR-001
 
-Use [the selected Rust/WASM + wgpu architecture](../../architecture/adr-001-rust-wasm-wgpu.md) for C0-C9. C0 migrates the single authored data pipeline deliberately, keeping the legacy TypeScript catalogue compatible until consumers transition. C1/C2 implement amount/reaction references in Rust and matching table-driven WGSL stages. C3-C9 extend shared forms, mechanisms and data rather than add independent Rust/TS/GPU implementations of every element.
+If separately activated, use [the selected Rust/WASM + wgpu architecture](../../architecture/adr-001-rust-wasm-wgpu.md) for C0-C9. C0 extends the single authored data pipeline deliberately, preserving the accepted P1 catalogue/projection contracts during transition. C1/C2 generalize the bounded P1 amount/reaction references in Rust and matching table-driven WGSL stages. C3-C9 revalidate and extend shared forms, mechanisms and data rather than add independent Rust/TS/GPU implementations of every element.
 
 The TypeScript picker, legends and probes consume compact generated metadata and tick-stamped observations. They do not mutate material arrays or require a full-world download to display concentrations. Reuse the [engine boundary](../../architecture/engine-boundary.md), source transactions, active-set capacity handling and versioned snapshots. Verify generated-data freshness and browser WASM/GPU behavior alongside the existing chemistry gates.

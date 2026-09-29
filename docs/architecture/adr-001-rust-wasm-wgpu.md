@@ -1,6 +1,6 @@
 # ADR-001: change the engine, keep the application
 
-**Date:** 21 September 2026. **Decision:** selected for the implementation plan. **Implementation status:** planned, not delivered. **Applies to:** P1-P9. Start with [START_HERE](../START_HERE.md).
+**Date:** 21 September 2026. **Decision:** selected for the implementation plan. **Implementation status:** bootstrap and contracts exist; the [engine tracker](../data/engine-migration-work.json) owns work-item status. **Applies to:** P1-P9. Start with [START_HERE](../START_HERE.md).
 
 ## Decision
 
@@ -39,7 +39,7 @@ Keep pressure and temperature derived where required by the model. The example l
 
 ## Delivery policy
 
-Retain P1 M0-M7 and P2-P9. Integrate Rust workspace/bootstrap, facade, bindings, data projection and browser capability checks inside M0/M1. M2 implements the Rust reference. M3 brings the same solver to WGSL with direct rendering. M4 adds complete supported thermodynamics and phase closure; M5 adds solids and granular coupling; M6 integrates chemistry/circuits and UI; M7 makes an evidence-based promotion decision.
+Scope decision, 27 September 2026: P1 M0-M7 is the only active release. P2-P9 remain deferred and require separate user activation. Complete the [current-sandbox scope](../plans/rust-wasm-migration/current-sandbox-scope.md), including the existing eight elemental models, before the default GPU switch. Integrate Rust workspace/bootstrap, facade, bindings, data projection and browser capability checks inside M0/M1. M2 implements the Rust reference. M3 brings the same solver to WGSL with direct rendering. M4 adds complete supported thermodynamics and phase closure; M5 adds solids and granular coupling; M6 integrates chemistry/circuits and UI; M7 requires evidence for every current-sandbox row plus browser performance and recovery. Experimental subset promotion does not complete P1.
 
 The initial demonstrator remains one liquid, carrier gas and fixed walls with passive thermal/species markers. Full phase physics, sand, existing chemistry integration, the 40/83-element expansion and nuclear reactions keep their existing gates. Establish regressions before replacement, but do not require every legacy defect to be fixed twice.
 
@@ -49,13 +49,13 @@ See [migration work packages](../plans/rust-wasm-migration/plan.md), [GPU numeri
 
 Require WebGPU compute for the accelerated backend. WebGL2 cannot run this compute pipeline; it is not a transparent fallback. Keep legacy TypeScript/Canvas for unmigrated scenes, and allow a corrected Rust CPU backend only for scenes it actually supports. Unsupported combinations must be rejected before state replacement. [Compute support](../sources.md#wgpu-downlevel).
 
-Start M3 on the main browser thread with asynchronous GPU work and bounded submission. Validate a worker/OffscreenCanvas deployment in M6 where supported and useful. The Rust core must not depend on a DOM or on a particular scheduler placement. Workers, threads, shared memory and native packaging are separate decisions, not prerequisites for correcting the fluid solver.
+Start M3 on the main browser thread with asynchronous GPU work and bounded submission. Keep that deployment through P1; worker/OffscreenCanvas evaluation is deferred. The Rust core must not depend on a DOM or on a particular scheduler placement. Workers, threads, shared memory and native packaging are separate decisions, not prerequisites for correcting the fluid solver.
 
 ## Alternatives and costs
 
 TypeScript plus WebGPU would be the smaller browser-only change. It remains a valid architectural alternative, but is not the selected implementation in this plan. Do not maintain both a production TypeScript WebGPU backend and a Rust/wgpu backend to avoid choosing.
 
-A full Rust shell or Bevy would expand scope into UI, application lifecycle and asset architecture. Reconsider only when there is a concrete native-product requirement, outside the default P1-P9 delivery sequence.
+A full Rust shell or Bevy would expand scope into UI, application lifecycle and asset architecture. Reconsider only when there is a concrete native-product requirement, outside the current-sandbox migration.
 
 Costs of this decision include a Rust/WASM toolchain, generated bindings, two numerical implementations for reference/parity, browser-specific GPU validation, explicit async lifecycle management and data-layout tests. Numerical correctness and browser availability still require tests. Avoid speculative abstraction and lock tool versions after a real browser smoke test.
 

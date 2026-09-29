@@ -1,8 +1,10 @@
 # Nuclear simulation implementation plan
 
-**Status:** planned. **Roadmap:** P6-P8. **Dependencies:** validated matter/composition contracts, selected material coverage, and source/energy accounting. [Developer entrypoint](../../START_HERE.md).
+**Status:** deferred. **Roadmap:** P6-P8. Each phase requires separate user activation and its recorded dependencies; no earlier phase completion starts nuclear work automatically. **Dependencies:** validated matter/composition contracts, selected material coverage, and source/energy accounting. [Developer entrypoint](../../START_HERE.md).
 
 ## Purpose and scope
+
+P1 current-sandbox Rust/WASM/GPU replacement is the sole active release goal. Its [current-feature coverage and promotion gates](../rust-wasm-migration/current-sandbox-scope.md) must pass before expansion. The milestones below retain conditional future design and acceptance requirements; they authorize no current implementation.
 
 Add isotope-specific decay, radiation, explicit fusion/fission channels, and eventual representation of all 118 element identities. The target is an educational game simulation with declared approximations, not reactor engineering, weapons design, radiation-dose prediction, or universal high-energy physics.
 
@@ -123,7 +125,7 @@ Permit paintable visible quantities of exotic material through separate creative
 
 When stabilisation is switched off, resume from the stored population under the selected time convention. Do not apply an accumulated retroactive decay burst unless an explicitly separate, documented time-advance command requested it. Data-mode or creative-setting changes are ordered simulation commands.
 
-**Exit / NUC-N8:** 118 reference identities and their supported material/nuclide/creative representations; stable snapshot/recovery of overrides; no hidden energy or population changes; clear scientific-versus-creative badges. Then proceed to [P9 acceptance](../../validation/acceptance.md).
+**Exit / NUC-N8:** 118 reference identities and their supported material/nuclide/creative representations; stable snapshot/recovery of overrides; no hidden energy or population changes; clear scientific-versus-creative badges. [P9 acceptance](../../validation/acceptance.md) remains deferred and requires separate user activation; NUC-N8 does not start it automatically.
 
 ## Execution ownership under ADR-001
 

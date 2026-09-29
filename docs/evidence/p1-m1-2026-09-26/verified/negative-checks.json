@@ -1,0 +1,32 @@
+[
+  {
+    "name": "stale-bindings-rejected",
+    "command": [
+      "bun",
+      "run",
+      "check:wasm"
+    ],
+    "expectedExitCode": 1,
+    "exitCode": 1
+  },
+  {
+    "name": "restore-bindings",
+    "command": [
+      "bun",
+      "run",
+      "build:wasm"
+    ],
+    "expectedExitCode": 0,
+    "exitCode": 0
+  },
+  {
+    "name": "restored-bindings-fresh",
+    "command": [
+      "bun",
+      "run",
+      "check:wasm"
+    ],
+    "expectedExitCode": 0,
+    "exitCode": 0
+  }
+]

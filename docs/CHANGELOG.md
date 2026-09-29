@@ -1,5 +1,44 @@
 # Documentation change log
 
+## 27 September 2026: scope P1 to the current sandbox and defer expansion
+
+Made current-sandbox Rust/WASM + wgpu replacement the sole active release goal.
+Added the [fixed current-feature scope](plans/rust-wasm-migration/current-sandbox-scope.md)
+with 17 required coverage rows, current catalogue/tool inventory, source/test
+pointers and explicit missing evidence. Existing eight-element migration belongs
+to P1/M4-M6; deferred P4/C3 revalidates that coverage under expanded data contracts.
+
+Separated the small M3 GPU proof, M4-M6 current-feature integration and M7 full
+replacement gate. Required rows cannot be removed or left legacy-only to claim
+completion. Preserved numerical, fire, circuit, browser, performance and recovery
+requirements, including internal checkpoint contracts. Deferred optional worker
+and new product UI work along with P2-P9 and FIRE-W08; no phase activates
+automatically after P1.
+
+Updated the human overview, technical entrypoints, owning plans, acceptance and
+manifests. Added validator support for deferred states, rejection of deferred
+next-work selection and explicit null next pointers for completed active queues.
+Historical evidence, element roster and implementation
+statuses remain unchanged. This revision changes planning and documentation
+validation only; it does not implement or validate new simulation behavior.
+
+## 27 September 2026: E03 experimental browser session
+
+Added bounded queued commands, owner-per-epoch reset, asynchronous stamped
+probes, explicit scene preflight and a one-source candidate catalogue export.
+The legacy UI retains its synchronous simulation path. See
+[E03 evidence](validation/p1-m1-e03.md) for test scope and limits.
+
+## 27 September 2026: recover E00-E02 onto the reorganized main branch
+
+Recovered the baseline, Rust/WASM bootstrap and portable contracts from
+`codex/p1-rust-wasm` into `engine/` and `web/`. Restored current mise/CI commands,
+browser smoke integration and manifest status without changing the legacy physics
+or the recovered Rust implementation. Added [RESUME](RESUME.md) with original
+commits, current commands, fresh verification and the E03 continuation point.
+Historical evidence remains unchanged; P1 and the numerical/GPU migration are
+incomplete.
+
 ## 27 September 2026: validate documentation against the working tree
 
 Removed the optional historical source-ZIP verification argument and its missing

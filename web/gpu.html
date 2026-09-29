@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#071019" />
+    <meta name="description" content="An experimental WebGPU preview of Particle Foundry's water and air scene." />
+    <title>GPU preview · Particle Foundry</title>
+    <link rel="stylesheet" href="/src/styles/gpu.css" />
+  </head>
+  <body>
+    <div class="page">
+      <header class="topbar">
+        <div class="brand">
+          <span class="brand-mark" aria-hidden="true">◼</span>
+          <span>Particle Foundry</span>
+        </div>
+        <span class="preview-label">Experimental GPU preview</span>
+        <a class="back-link" href="/">Back to sandbox</a>
+      </header>
+
+      <main class="workspace">
+        <section class="scene-panel" aria-labelledby="sceneHeading">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">Rust/WASM and WebGPU</p>
+              <h1 id="sceneHeading">Water and air</h1>
+            </div>
+            <span class="scene-size">480 × 270 cells</span>
+          </div>
+          <div class="canvas-frame">
+            <canvas
+              id="gpuCanvas"
+              width="480"
+              height="270"
+              aria-label="Experimental GPU water and air scene. Pause, then click to paint."
+            ></canvas>
+          </div>
+          <p class="scene-note">Pause the scene, then click to paint water or air. Use the cell coordinates to inspect one cell. Fixed walls stay in place. Hidden tabs pause until you resume.</p>
+        </section>
+
+        <aside class="control-panel" aria-labelledby="controlsHeading">
+          <div class="panel-heading">
+            <p class="eyebrow">Scene controls</p>
+            <h2 id="controlsHeading">Run the preview</h2>
+          </div>
+
+          <div class="state-row" role="status" aria-live="polite">
+            <span class="state-light" id="gpuStateLight" data-state="loading" aria-hidden="true"></span>
+            <span id="gpuStatus">Loading GPU scene</span>
+          </div>
+
+          <div class="actions">
+            <button id="gpuPause" type="button" disabled>Pause</button>
+            <button id="gpuReset" type="button" disabled>Reset scene</button>
+          </div>
+
+          <fieldset class="paint-controls">
+            <legend>Paint the scene</legend>
+            <label class="paint-field" for="gpuPaintMaterial">Material
+              <select id="gpuPaintMaterial">
+                <option value="water">Water</option>
+                <option value="air">Air</option>
+              </select>
+            </label>
+            <label class="paint-field" for="gpuPaintRadius">Brush radius
+              <span class="range-row"><input id="gpuPaintRadius" type="range" min="0" max="16" step="1" value="4" /><output id="gpuPaintRadiusValue" for="gpuPaintRadius">4 cells</output></span>
+            </label>
+            <div class="paint-coordinates">
+              <label for="gpuPaintX">Cell X<input id="gpuPaintX" type="number" min="0" max="479" step="1" value="240" required /></label>
+              <label for="gpuPaintY">Cell Y<input id="gpuPaintY" type="number" min="0" max="269" step="1" value="100" required /></label>
+              <button id="gpuPaintAt" type="button" disabled>Paint at cell</button>
+              <button id="gpuProbeAt" type="button" disabled>Inspect cell</button>
+            </div>
+            <p class="paint-message" id="gpuPaintMessage" role="status" aria-live="polite">Pause before painting.</p>
+            <p class="paint-message" id="gpuProbeMessage" role="status" aria-live="polite">Pause to inspect a cell.</p>
+          </fieldset>
+
+          <p class="error" id="gpuError" role="alert" hidden></p>
+
+          <dl class="readouts">
+            <div><dt>Accepted model time</dt><dd><output id="gpuModelTime">0.000 s</output></dd></div>
+            <div><dt>Completed ticks</dt><dd><output id="gpuTick">0</output></dd></div>
+            <div><dt>Scene epoch</dt><dd><output id="gpuEpoch">1</output></dd></div>
+            <div><dt>GPU backend</dt><dd><output id="gpuBackend">Loading</output></dd></div>
+          </dl>
+
+          <p class="panel-note">The live sandbox at <a href="/">the main page</a> still uses its existing simulation.</p>
+        </aside>
+      </main>
+    </div>
+    <script type="module" src="/src/gpu-main.ts"></script>
+  </body>
+</html>

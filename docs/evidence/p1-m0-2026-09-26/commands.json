@@ -1,0 +1,82 @@
+[
+  {
+    "argv": [
+      "bun",
+      "install",
+      "--frozen-lockfile"
+    ],
+    "exitCode": 0,
+    "log": "install.log"
+  },
+  {
+    "argv": [
+      "bun",
+      "run",
+      "lint"
+    ],
+    "exitCode": 0,
+    "log": "lint.log"
+  },
+  {
+    "argv": [
+      "bun",
+      "run",
+      "check"
+    ],
+    "exitCode": 0,
+    "log": "check.log"
+  },
+  {
+    "argv": [
+      "bun",
+      "run",
+      "build"
+    ],
+    "exitCode": 0,
+    "log": "build.log"
+  },
+  {
+    "argv": [
+      "python3",
+      "docs/scripts/validate-docs.py"
+    ],
+    "exitCode": 1,
+    "log": "docs.log"
+  },
+  {
+    "argv": [
+      "node",
+      "docs/plans/fluid-gpu-redesign/audit.cjs",
+      "/Users/lasn/.codex/worktrees/16ee1bfb-b941-405f-8290-e37decc87d34/particle-foundry/artifacts/validation/p1-m0/20260926-e00-verified/audit-build",
+      "/Users/lasn/.codex/worktrees/16ee1bfb-b941-405f-8290-e37decc87d34/particle-foundry/artifacts/validation/p1-m0/20260926-e00-verified/audit-results.json"
+    ],
+    "exitCode": 1,
+    "log": "audit.log"
+  },
+  {
+    "argv": [
+      "node",
+      "/Users/lasn/.codex/worktrees/16ee1bfb-b941-405f-8290-e37decc87d34/particle-foundry/artifacts/validation/p1-m0/20260926-e00-verified/fire/audit-fire.cjs"
+    ],
+    "exitCode": 0,
+    "log": "fire-characterization.log"
+  },
+  {
+    "argv": [
+      "bun",
+      "scripts/fire-corrected-baseline.ts",
+      "/Users/lasn/.codex/worktrees/16ee1bfb-b941-405f-8290-e37decc87d34/particle-foundry/artifacts/validation/p1-m0/20260926-e00-verified/fire/corrected-results.json"
+    ],
+    "exitCode": 1,
+    "log": "fire-corrected.log"
+  },
+  {
+    "argv": [
+      "bun",
+      "scripts/measure-legacy.ts",
+      "/Users/lasn/.codex/worktrees/16ee1bfb-b941-405f-8290-e37decc87d34/particle-foundry/artifacts/validation/p1-m0/20260926-e00-verified/legacy-performance.json"
+    ],
+    "exitCode": 0,
+    "log": "legacy-performance.log"
+  }
+]

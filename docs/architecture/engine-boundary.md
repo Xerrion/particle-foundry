@@ -1,6 +1,6 @@
 # Engine boundary, execution and state contracts
 
-**Status:** proposed implementation contract under [ADR-001](adr-001-rust-wasm-wgpu.md). No interface below is claimed to exist in the supplied source. This extends the [matter model](matter-model.md), not the numerical equations in the [GPU plan](../plans/fluid-gpu-redesign/plan.md).
+**Status:** accepted implementation contract under [ADR-001](adr-001-rust-wasm-wgpu.md). E01 lifecycle initialization and E02 portable schemas/checkpoint packing exist. E03 adds a bounded experimental host session tested with mock owners. The E07 Rust/WGSL ABI sentinel and a small coupled fluid fixture run on native and browser GPU adapters. E08 now has an opt-in browser owner, direct rendering, bounded water/air paint, a stamped one-cell probe and explicit capture prototype. A local 60-tick sustained Chrome run and full repository CI pass; M3 is validated locally. [Project structure](../project-structure.md#implemented-bootstrap-and-contracts) links the implemented subset and its tests. This extends the [matter model](matter-model.md), not the numerical equations in the [GPU plan](../plans/fluid-gpu-redesign/plan.md).
 
 ## 1. Concrete separation
 
@@ -22,11 +22,11 @@ Existing web/src/app/, web/src/styles/, web/src/main.ts
                          GPU buffers stay resident
 ```
 
-Keep the browser application in `web/` and the Rust workspace in `engine/`. The existing TypeScript backend is isolated in `web/src/legacy/`, reached through `web/src/engine-client/`. The current client re-exports the synchronous legacy API; E03 still defines the async Rust/WASM contract. Exact paths and source replacements are in [project structure](../project-structure.md).
+Keep the browser application in `web/` and the Rust workspace in `engine/`. The existing TypeScript backend is isolated in `web/src/legacy/`, reached through `web/src/engine-client/`. The active UI uses the synchronous legacy adapter; E03 defines a separate experimental queued contract. That general contract is not yet connected to Rust scene execution. The opt-in E08 page reaches its limited Rust scene through a dedicated adapter. Exact paths and source replacements are in [project structure](../project-structure.md).
 
 ## 2. Identity and configuration
 
-Use independent axes for execution and physics. New sessions select execution `cpu-reference` or `wgpu` and a supported model such as `lowMach` or, from P2, `compressible`. The retained legacy adapter has model `legacy-cellular`. Record the actual wgpu runtime backend separately, such as browser WebGPU or a native backend. Preserve older `fluid-cpu`/`fluid-gpu` labels through an explicit alias map, not a new schema for every label.
+Use independent axes for execution and physics. New sessions select execution `cpu-reference` or `wgpu` and a supported model such as `lowMach` or, if deferred P2 is separately activated, `compressible`. The retained legacy adapter has model `legacy-cellular`. Record the actual wgpu runtime backend separately, such as browser WebGPU or a native backend. Preserve older `fluid-cpu`/`fluid-gpu` labels through an explicit alias map, not a new schema for every label.
 
 A session owns an epoch, command sequence, accepted tick/substep and physical time. Load, reset and replacement advance the epoch so late callbacks cannot affect a new world. Keep safe integer validation at the JS boundary; wider serialized counters need an explicit string/BigInt encoding rather than precision-losing numeric conversion.
 
@@ -101,6 +101,10 @@ Define and version the Rust/WGSL ABI explicitly: byte offsets, alignment, stride
 
 Use distinct stable IDs wider than the legacy byte material field and a compact active-set mapping. Do not allocate one dense field for all 118 elements or every nuclide. Check actual device limits, aggregate allocations and binding counts before committing a scene. Allocation below a stated device maximum can still fail. [Limits](../sources.md#wgpu-limits).
 
+E02's `PFSN` version 1 checkpoint is a detached, little-endian low-Mach contract, not a legacy save importer or a live CPU mirror. It stores compact component-major kg masses, a passive J marker, MAC m/s faces, fixed walls, source/boundary ledgers, catalogue fingerprint, optional declared network identity, and epoch/tick/time. Its chemical reference is explicitly disabled; a declared network does not enable reactions. The optional nuclear payload is bounded and absent without allocation. Unknown versions, malformed values and unsupported energy references are rejected before scene replacement. The scalar GPU records are packed field-by-field as f32/u32. Rust offsets and byte order are tested; an E07 device shader sentinel validates selected grid, cell and component-major values on native and browser hardware. It does not establish a physical GPU scene.
+
+No E02 import converts legacy `world.energy` into thermodynamic internal energy. That field is parcel enthalpy H in J, while legacy chemical/diagnostic totals use kJ; converting the latter to J does not make it available U. A future converter must identify a supported property/reference-state version for every active phase, obtain its consistent pressure and physical volume, then calculate U = H - pV in J and establish a new ledger baseline. It must reject missing domains, unsupported phases or unknown reference zeros with a conversion report. It cannot silently relabel H, infer U from temperature alone, or charge the same chemical release both to formation energies and a stored reaction account. Until that converter and its physical gates pass, snapshots accept only the passive marker and disabled chemistry.
+
 ## 7. GPU scheduling and failure
 
 Use separately dispatched stages for whole-grid dependencies. Owned face fluxes, gather updates and reductions avoid conflicting floating-point scatter. Pressure/closure success depends on residuals and invariants, not a fixed arbitrary number of iterations.
@@ -135,7 +139,7 @@ On device loss, stop new work, reject/cancel affected readbacks and report the l
 
 ## 11. Data and tests
 
-Keep `web/src/materials/definitions.ts` as the single legacy catalogue while bootstrapping. M1 adds a reproducible validated export/projection for the small supported scene, not a second handwritten Rust or WGSL catalogue. P3 deliberately migrates scientific source records to the full data pipeline and regenerates each consumer. Version/hash the outputs and test IDs, units and precision conversion. UI presentation may remain authored in TypeScript when joined by stable IDs.
+Keep `web/src/materials/definitions.ts` as the single legacy catalogue while bootstrapping. M1 adds a reproducible validated export/projection for the small supported scene, not a second handwritten Rust or WGSL catalogue. P1 extends generated properties only for the [required current-sandbox coverage](../plans/rust-wasm-migration/current-sandbox-scope.md). Deferred P3 would migrate scientific source records to a generalized data pipeline if separately activated. Version/hash the outputs and test IDs, units and precision conversion. UI presentation may remain authored in TypeScript when joined by stable IDs.
 
 All phases use the same boundary. Chemistry, phase changes and nuclear stages produce validated amount/energy transactions in the owning backend; none gets its own world transport loop. See [backend acceptance](../validation/backend-migration.md) and the [work-package mapping](../plans/rust-wasm-migration/plan.md).
 

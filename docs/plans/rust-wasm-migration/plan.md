@@ -1,8 +1,43 @@
 # Rust/WASM + wgpu migration work packages
 
-**Status:** all work planned. **Placement:** inside P1, not a new phase before the GPU redesign. **Selected decision:** [ADR-001](../../architecture/adr-001-rust-wasm-wgpu.md). **Entrypoint:** [START_HERE](../../START_HERE.md).
+**Revision:** 29 September 2026, current-sandbox migration scope. **Status:** E00-E03 and E05-E08 validated locally; E04 circuits and E09-E14 remain planned. [Baseline evidence](../../validation/p1-m0.md), [bootstrap evidence](../../validation/p1-m1.md), [E02 evidence](../../validation/p1-m1-e02.md), [E03 evidence](../../validation/p1-m1-e03.md), [E07 evidence](../../validation/p1-m3-e07.md) and [E08 evidence](../../validation/p1-m3-e08.md). P1 is the sole active release scope. P2-P9 are deferred and require a separate user decision to activate. **Selected decision:** [ADR-001](../../architecture/adr-001-rust-wasm-wgpu.md). **Entrypoint:** [START_HERE](../../START_HERE.md).
 
-The [fluid/GPU plan](../fluid-gpu-redesign/plan.md) controls equations, scope and numerical exit gates. This document controls the language/runtime migration and integration work needed to execute that plan. It replaces the earlier TypeScript-reference/source-layout assumptions without weakening the numerical gates. The [engine boundary](../../architecture/engine-boundary.md) controls commands, state authority, async behavior and persistence.
+## Goal
+
+Deliver the current sandbox feature set on the Rust/WASM + wgpu engine, with verified physics, browser interactions, recovery and measured performance, before adding new capabilities.
+
+The [current-sandbox scope](current-sandbox-scope.md) fixes the required materials, interactions, tools and controls. It owns the product coverage for P1. The [fluid/GPU plan](../fluid-gpu-redesign/plan.md) owns equations and numerical exit gates. This document owns work sequencing and runtime integration. The [engine boundary](../../architecture/engine-boundary.md) owns commands, state authority, async behavior and persistence. A subset demonstration cannot satisfy the full replacement gate.
+
+## Scope decisions
+
+| Decision | Required interpretation | Basis |
+| --- | --- | --- |
+| Current functionality before expansion | M4-M6 includes the existing eight elemental models and their current interactions. Their first migration cannot wait for P4/C3. | [Current-sandbox scope](current-sandbox-scope.md) and the user's 27 September 2026 scope decision |
+| Preserve user capabilities with corrected physics | Use legacy behavior/tests as regression context. Record intentional numerical changes and fix known conservation, fire and circuit defects; do not reproduce bugs to obtain pixel parity. | [Baseline evidence](../../validation/p1-m0.md), [fire acceptance](../../validation/fire-combustion.md) |
+| Prove the GPU path early | Keep M3 small; validate a complete browser compute/render/input path before extending current feature coverage. | [M3 numerical plan](../fluid-gpu-redesign/plan.md), [backend validation](../../validation/backend-migration.md) |
+| Defer unrelated work | P2-P9, FIRE-W08, expanded catalogue/reactions, optional worker deployment, native UI and additional product features are outside this release. Completing P1 does not start them. | [Phase tracker](../../data/development-phases.json) |
+
+## Delivery checkpoints
+
+| Checkpoint | Work | Completion criterion |
+| --- | --- | --- |
+| 1. Working GPU slice | M2-M3 / E05-E08 | One liquid, carrier gas, fixed walls and passive markers; validated Rust reference, browser GPU simulation/direct rendering, basic interaction and measured transfers. Experimental only. |
+| 2. Current sandbox coverage | M4-M6 / E09-E12, with E04 before E11 | Every current-sandbox scope row has an implementation and applicable reference/integration results, including current elemental forms, sources, fire, circuits and controls. |
+| 3. Verified default switch | M7 / E13-E14 | Every scope row passes on the declared browser/device targets, including failure/recovery and sustained performance; the full GPU-M7 and FIRE-M7 evidence is recorded. |
+
+E00-E03 remain validated foundation work. E05-E06 have local CPU validation evidence, and E07-E08 have local native and browser GPU evidence. Checkpoint 1 is validated locally, and both [branch](https://github.com/Xerrion/particle-foundry/actions/runs/36572329356) and [pull request](https://github.com/Xerrion/particle-foundry/actions/runs/36572326343) CI passed on code commit `de34f1b`. E04 and checkpoint 2 remain planned. Execute only assigned work; this plan does not authorize automatic execution of deferred work.
+
+Freeze scene definitions, expected observables, accepted numerical changes and tolerances for each scope row before implementing it. Missing behavior, insufficient property domains, unrun hardware checks or a failing performance target keep the relevant row and P1 incomplete. An experimental subset may remain available, but cannot be used to narrow the default-switch checklist. Any removal of an existing capability from that checklist requires an explicit user scope decision.
+
+Property tables, generated metadata and reaction products needed to preserve current behavior belong in P1. The generalized P3 data pipeline, new selectable materials, new chemical mechanisms, pressure waves, fracture and nuclear behavior remain deferred. GPU recovery checkpoints and bounded CPU circuit work remain required engine mechanisms; a new save-management UI or moving every irregular algorithm to the GPU is not a P1 requirement.
+
+When all active release work is validated, represent the stopped queue explicitly:
+set phase `nextPhase` and `nextMilestone` to `null`, engine `nextWorkItem` to `null`,
+and fire `nextWorkItem` to `null` after FIRE-W00-W07 are validated. Deferred phases
+and FIRE-W08 retain `deferred`. An empty queue is invalid while applicable active
+work remains unfinished. Do not retain a completed item as "next" or select a
+deferred item to satisfy the tracker. This is the terminal state after evidence,
+not a status change made by the present planning revision.
 
 ## Non-negotiable implementation boundaries
 
@@ -100,61 +135,61 @@ Implement matching f32 operators/transport with owned writes, reductions, conver
 
 **P1 / M3. Dependencies:** E07. **Source:** SRC-02, SRC-03, SRC-09, SRC-12.
 
-Render from the same wgpu device/state. Add tick/epoch-stamped probes/reductions, startup fallback, viewport/overlay behavior, async checkpoint prototype and completed-work telemetry.
+Render from the same wgpu device/state. Add tick/epoch-stamped probes/reductions, explicit startup capability handling, viewport/overlay behavior, async checkpoint prototype and completed-work telemetry. Exercise painting, pause and reset on the limited M3 scene in the actual browser, plus controlled stepping through the test harness. A new single-step UI control is deferred.
 
-**Exit:** 480 x 270 experimental scene works; no full-state normal-frame readback, no reused 2D context, no stale-as-current observations, measured transfer bytes and completed-time throughput.
+**Exit:** 480 x 270 experimental scene works with the stated basic controls; no full-state normal-frame readback, no reused 2D context, no stale-as-current observations, measured transfer bytes and completed-time throughput. This subset does not satisfy current-sandbox coverage or authorize a default switch.
 
 ### E09: Add full supported thermodynamics and phase closure
 
 **P1 / M4. Dependencies:** E08. **Source:** SRC-08.
 
-Implement Rust reference then GPU parity for bounded properties, partial phases, available-volume closure, chamber pressure and finite venting. Execute FIRE-W02: conservative passive O2/product transport, finite ventilation and explicit high-temperature reactant/product/water domain coverage or supported-scene rejection.
+Implement Rust reference then GPU parity for the current-sandbox thermal and phase scope: bounded property tables, partial phases, available-volume closure, chamber pressure and finite venting. Include existing elemental phase forms and the domains required by current tools and scenes. Execute FIRE-W02 for passive O2/product transport, finite ventilation and explicit reactant/product/water domain coverage.
 
-**Exit:** M4 closed/open energy/mass/volume fixtures pass, invalid EOS domains are explicit, and table provenance/conversion limits are recorded. FIRE-PRECONDITIONS (FIRE-A03 and FIRE-A12) pass before coupled fire scenes; no connected-interior O2 refill or silent hot-state clamp.
+**Exit:** M4 closed/open energy/mass/volume fixtures and the applicable current-sandbox thermal rows pass; table provenance and conversion limits are recorded. FIRE-PRECONDITIONS (FIRE-A03 and FIRE-A12) pass before coupled fire scenes. Invalid domains reject explicitly during development and remain blockers for required coverage; no connected-interior O2 refill, silent hot-state clamp or removal of a required row to claim completion.
 
 ### E10: Add granular and solid-fluid coupling
 
 **P1 / M5. Dependencies:** E09. **Source:** SRC-05, SRC-06.
 
-Replace repeated per-grain search with the M5 batched proposal/reservation/commit design; preserve mass, composition, swept volume and work.
+Implement current sand, anchored/dynamic solid and multi-liquid behavior with the M5 batched proposal/reservation/commit design. Preserve mass, composition, swept volume and work across all current material families. New fracture mechanics and additional materials remain deferred.
 
-**Exit:** Contention, sealed/no-outlet, motion, impact and multiphase fixtures pass; publish visit counts and transfers instead of asserting a complexity gain.
+**Exit:** Current-sandbox motion rows and contention, sealed/no-outlet, sinking, impact, narrow-channel and oil/water fixtures pass. Publish visit counts and transfers instead of asserting a complexity gain. Current liquid and solid families cannot remain legacy-only at the final default switch.
 
 ### E11: Integrate chemistry and bounded CPU circuits
 
 **P1 / M6. Dependencies:** E04, E10. **Source:** SRC-10, SRC-11.
 
-Port supported existing sources and amount-based chemistry into the owning state. Couple Rust CPU circuit graphs through bounded topology/sample events and funded heat transactions. Execute FIRE-W03-FIRE-W05: corrected Rust gas combustion, bounded condensed-fuel release, thermal suppression and persistent products/soot, then WGSL parity with shared-reactant reservations and exactly-once energy/amount commits.
+Migrate the current-sandbox interactions, including all eight existing elemental models, their reaction products, acid/base presets, funded plant growth, Fire, gunpowder and the bounded Blast interaction. Use only the property/composition/reaction support needed for those capabilities. Couple the E04 Rust CPU circuit reference through bounded topology/sample events and funded heat transactions. Execute FIRE-W03-FIRE-W05 in Rust then WGSL with shared-reactant reservations and exactly-once commits. New palette entries, generalized chemistry, resolved shocks and structural fracture remain deferred.
 
-**Exit:** M6 finite-source, excess-reagent, conductor-change and graph overflow/dense-cost fixtures pass; no whole-world circuit mirror. FIRE-A01-FIRE-A13 pass for the supported combustion slice; no cold-label ignition, unledgered O2, missing products, contact-only water kill switch or per-substep duplication of per-tick burn rates.
+**Exit:** Every applicable current-sandbox interaction row has reference and GPU integration evidence, including excess reactants, finite sources, phase/domain limits and source accounting. Circuit conductor changes, graph overflow and dense-cost fixtures pass without a whole-world mirror. FIRE-A01-FIRE-A13 pass for the required existing combustion coverage; no cold-label ignition, unledgered O2, missing products, contact-only water kill switch or per-substep replay of per-tick rates.
 
-### E12: Complete browser host and optional worker deployment
+### E12: Complete current browser controls and presentation
 
 **P1 / M6. Dependencies:** E11. **Source:** SRC-01, SRC-03, SRC-09.
 
-Preserve controls, held tools, maps, zoom/pan, paused edits and browser lifecycle. Evaluate worker/OffscreenCanvas against main-thread wgpu using the same contracts. Execute FIRE-W06: funded Fire commands, tick-stamped composition/heat-release probes and derived particle/shader flames with no physical changes from visual lifetime or quality settings.
+Connect all current-sandbox palette/reference, held-tool, map/probe, zoom/pan, paused-edit, speed, reset/clear and starter-scene behavior to the new engine. Retain the TypeScript UI and main-thread asynchronous wgpu deployment. Execute FIRE-W06 with funded Fire commands, stamped composition/heat-release probes and state-derived particle/shader flames. Worker/OffscreenCanvas deployment and new product controls remain deferred.
 
-**Exit:** Interaction and lifecycle tests pass on supported contexts; unsupported worker paths use explicit main-thread GPU or compatible CPU/legacy routes. FIRE-M6 integrated fire scenes and render-on/off inventory equivalence pass; cosmetic effects do not become combustion authority.
+**Exit:** All current-sandbox interaction and presentation rows pass on the actual browser path with one live state owner and bounded queues. FIRE-M6 integrated scenes and render-on/off inventory equivalence pass. Unsupported GPU startup is explicit; current legacy access remains available during migration, but missing required controls or scenes block full replacement.
 
 ### E13: Validate snapshots, device loss and reversible rollout
 
 **P1 / M7. Dependencies:** E12. **Source:** SRC-03, SRC-07.
 
-Complete consistent saves/loads, component/version preflight, rollback/recovery notices, teardown, reset races and checkpoint replay policy. Include fire network/property versions, active products, physical smoke/residue and source/approximation settings in the FIRE-W07 save/recovery scope.
+Complete engine checkpoint/save-load contracts, component/version preflight, rollback/recovery notices, teardown, reset races and checkpoint replay policy for the frozen current-sandbox scope. Include fire network/property versions, products, physical smoke/residue and source/approximation settings in FIRE-W07. New user-facing save-management workflows remain deferred.
 
-**Exit:** Failure injection never publishes partial state; late callbacks cannot affect a new epoch; rollback limits are visible and no incompatible legacy hot swap occurs. FIRE-A14 snapshot/transaction cases reject unsupported data or roll back explicitly without duplicate burning or lost products.
+**Exit:** Failure injection never publishes partial state; late callbacks cannot affect a new epoch; checkpoint round trips cover all required current components and settings. Rollback limits are visible and no incompatible legacy hot swap occurs. FIRE-A14 rejects unsupported data or rolls back explicitly without duplicate burning or lost products.
 
-### E14: Measure and promote only supported scenes
+### E14: Validate current-sandbox coverage and default GPU rollout
 
 **P1 / M7. Dependencies:** E13. **Source:** SRC-09, SRC-12.
 
-Run native reference, browser GPU, regression, memory/readback, sustained and input-latency tests on agreed devices. Retain unsupported legacy coverage until a complete replacement passes. Complete FIRE-W07 using FIRE-M7 for each promoted combustion scene, including hot-domain eligibility, water/smoke capability coverage and measured transfer/performance limits.
+Run the complete current-sandbox scope matrix through native references, actual browser GPU scenes, regressions, memory/readback, sustained performance and input-latency checks on declared target devices. Complete FIRE-W07/FIRE-M7 for all required current combustion scenarios. Record per-row evidence and all intentional numerical corrections before changing the default backend.
 
-**Exit:** GPU-M7 evidence supports the coverage actually promoted. No promised speed multiplier, no submitted-time benchmark, no premature legacy deletion. FIRE-M7 evidence is new corrected acceptance, not the retained F01-F12 characterization; unsupported fire scenes remain explicitly separate.
+**Exit:** GPU-M7 and FIRE-M7 pass and every required current-sandbox scope row has evidence on its declared targets. No current feature remains legacy-only, silently removed or relabelled optional to pass this gate. Report actual completed simulation time, latency and transfer costs; unrun or failed required gates keep P1 incomplete. Retain reversible legacy access until rollout is proven. P2-P9 remain deferred after completion.
 
 ## Proposed repository additions
 
-The existing frontend now lives in `web/`. Proposed package names remain `particle-sim`, `particle-sim-cpu`, `particle-sim-gpu` and `particle-wasm`; create them under `engine/` at E01. `sim` owns portable contracts and generic orchestration, not a duplicate GPU-world mirror. Concrete backend construction belongs to the host/bridge. The current engine client is only a synchronous legacy entrypoint; it does not complete E03.
+The existing frontend now lives in `web/`. Proposed package names remain `particle-sim`, `particle-sim-cpu`, `particle-sim-gpu` and `particle-wasm`; create them under `engine/` at E01. `sim` owns portable contracts and generic orchestration, not a duplicate GPU-world mirror. Concrete backend construction belongs to the host/bridge. The current UI uses the synchronous legacy adapter; E03 adds a separate experimental queued session contract tested with mock owners. No physical Rust scene consumes it yet.
 
 ```text
 engine/
@@ -200,13 +235,13 @@ Verify deployment MIME, WASM loading paths, caching/version compatibility, secur
 
 ## Legacy-to-new migration policy
 
-Migrate complete supported scenes/subsystems, not isolated expensive functions with full-state shuttling between them. A supported initial scene converts once on load, then the new engine owns it. Existing complex scenes stay entirely in the legacy backend until the relevant feature gate passes.
+Migrate complete scenes/subsystems with one state owner. An initial supported scene converts once on load, then the new engine owns it. Existing complex scenes stay entirely in the legacy backend during development until their gates pass. The current-sandbox checklist remains mandatory for P1 completion; keeping a required feature in legacy mode is a migration state, not a completed replacement.
 
 Preserve old IDs, tool validation, coordinate rules, seed behavior and source accounting through explicit adapters. Record intentional numerical/model changes rather than preserve physically incorrect behavior just to match pixels. Keep input/visual regression tests alongside new reference tests. Retire old branches only after the promoted coverage no longer depends on them.
 
 Fresh synchronous cell reads, Canvas-only renderer signatures and submitted-time timing cannot survive unchanged across the GPU boundary. These are explicit API migrations, not compatibility promised by an identical method name. Saves/loads are new backend contracts: the supplied Sandbox interface does not expose them, so inspect any persistence code in the full repository before inventing an existing save format.
 
-## How every later phase uses the chosen stack
+## Deferred phase ownership
 
 | Phase | Implementation ownership | Existing detailed milestones |
 | --- | --- | --- |
@@ -220,14 +255,14 @@ Fresh synchronous cell reads, Canvas-only renderer signatures and submitted-time
 | P8 | shared catalogue/network/override persistence; TypeScript labels; no special second physics engine | N7-N8 |
 | P9 | Rust/native plus browser WASM/GPU matrix, TypeScript product regressions and package/recovery evidence | Q0-Q2 |
 
-The default order still completes P1 before P2, then P3-P9. New physics sources always apply through the owning backend's stage/transaction rules. P2 remains a distinct compressible model. P3-P5 retain the exact 40/83-element milestones. P6-P8 retain nuclide/radiation/reaction validation and 103/118-identity coverage; Rust/WASM does not change those scientific limits. P9 validates combined features, including browser execution and loss recovery.
+P2-P9 are deferred. The table preserves conditional ownership if a phase is separately activated; it is not an execution queue. Completing P1 does not activate P2 or any later phase. New physics sources always apply through the owning backend's stage/transaction rules. P2 remains a distinct compressible model. P3-P5 retain the exact 40/83-element milestones. P6-P8 retain nuclide/radiation/reaction validation and 103/118-identity coverage; Rust/WASM does not change those scientific limits. P9 validates combined features, including browser execution and loss recovery.
 
-Use [the roadmap](../../roadmap.md) for dependencies and [backend-migration acceptance](../../validation/backend-migration.md) alongside each phase's existing numerical gates. Do not restart architecture planning at every phase or build separate worlds for chemistry and nuclear populations.
+Use [the roadmap](../../roadmap.md) for deferred dependencies. If later work is explicitly activated, apply [backend-migration acceptance](../../validation/backend-migration.md) alongside its numerical gates and reuse the existing state owner. Do not build future modules during P1.
 
 ## Fire integration inside the selected migration
 
 [FIRE-W00-W08](../fire-combustion/plan.md#8-work-packages) specialize the existing E-work; they do not add a prerequisite whole-engine rewrite or a second simulation. E00 captures the two full-pipeline bug regressions and useful controls. E02 reserves small inventory/source/visual contracts. E09 validates finite ventilation and hot property domains. E11 builds corrected Rust combustion then equivalent WGSL, E12 connects state-derived visuals, and E13-E14 require persistence and FIRE-M7 before promotion.
 
-Do not copy oxygen flood fills, cold-FIRE ignition, missing product transformations, contact-water extinction or timed smoke erasure into Rust. Preserve ledgered ignition and conservation controls. M3 remains nonreactive. P4 extends the same engine with FIRE-W08, rerunning relevant fire gates for new fuels, char, soot and selected radiation mechanisms.
+Do not copy oxygen flood fills, cold-FIRE ignition, missing product transformations, contact-water extinction or timed smoke erasure into Rust. Preserve ledgered ignition and conservation controls. M3 remains nonreactive. FIRE-W08 and its P4 extensions are deferred; they require separate activation and are not P1 dependencies.
 
 The [fire work manifest](../../data/fire-combustion-work.json) and [acceptance specification](../../validation/fire-combustion.md) separate historical F-characterization records from planned corrected FIRE-A evidence. The E00-E14 dependency graph remains unchanged.
