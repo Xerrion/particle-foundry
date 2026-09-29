@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-09-27",
+  "updatedAt": "2026-09-29",
   "kind": "planning-manifest",
   "nextPhase": "P1",
-  "nextMilestone": "M2",
+  "nextMilestone": "M4",
   "phases": [
     {
       "id": "P1",

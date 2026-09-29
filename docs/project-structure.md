@@ -1,10 +1,12 @@
 # Project structure
 
-**Current layout: 27 September 2026.** TypeScript lives in `web/`. `engine/` contains
-the E01 Rust/WASM bootstrap and E02 portable contracts, with
+**Current layout: 29 September 2026.** TypeScript lives in `web/`. `engine/` contains
+the E01 Rust/WASM bootstrap, E02 portable contracts and the experimental E07/E08
+GPU scene, with
 [scoped engine guidance](../engine/AGENTS.override.md). The running application
 still uses the existing TypeScript backend. E03 supplies an experimental host
-contract; E04-E14 remain planned.
+contract; local E08 sustained browser validation passes. E04 circuits and E09-E14
+feature coverage remain deferred until separately assigned.
 Start with [the knowledge map](README.md).
 
 ## Current checkout
@@ -16,12 +18,14 @@ particle-foundry/
   mise.toml                         Root tool versions and task orchestration
   .github/workflows/                CI uses the same mise tasks
   web/
-    index.html                      Vite browser entry
+    index.html                      Live legacy Vite browser entry
+    gpu.html                        Opt-in experimental GPU preview entry
     package.json, bun.lock          Frontend dependencies
     vite.config.ts                  Build configuration; output is web/dist/
     tsconfig*.json, biome.json       Type checks, formatting and import boundaries
     src/
-      main.ts                       Browser startup and frame loop
+      main.ts                       Live browser startup and frame loop
+      gpu-main.ts                   Experimental GPU controls and loop
       app/                          DOM, controls, viewport, pointer mapping, clock
       engine-client/index.ts        Public browser access to the legacy backend
       engine-client/session.ts      Bounded experimental command/probe contract
@@ -62,9 +66,11 @@ Sandbox through a separate legacy adapter. The experimental E03 session contract
 is also exported but has no physical owner in the running app. Biome rejects UI
 imports of private legacy modules and generated bindings.
 
-The separate `engine-client/wasm.ts` module is consumed by the E01 browser fixture.
-It keeps the experimental bootstrap out of the normal application bundle until
-E03 defines the queued session contract; a Rust scene adapter remains future work.
+The separate `engine-client/wasm.ts` module is consumed by the E01 browser fixture
+and the opt-in `gpu.html` page. It keeps the experimental path out of the normal
+application bundle. E03 defines the queued session contract; the current M3 GPU
+preview uses a narrower dedicated adapter while that general session remains a
+mock-owner contract.
 
 `web/src/legacy/simulation/world.ts` owns current mutable state;
 `physics.ts` orders its passes, and `sandbox.ts` composes state, tools and rendering.
@@ -80,12 +86,15 @@ Rust/WGSL projections from the authored catalogue; do not duplicate definitions.
 The E03 session contract handles bounded commands, accepted-time receipts, epoch
 reset and asynchronous stamped probes with mock owners. The current UI still uses
 the synchronous legacy adapter. Canvas ownership is selected before context
-acquisition. A physical Rust scene and its GPU rendering remain future work under
+acquisition. E07 has a small physical GPU qualification scene. The opt-in E08
+browser scene owns one WebGPU canvas, resident solver state and a renderer on
+the same device. It supports bounded water/air paint, a stamped one-cell probe
+and explicit capture prototype. A local sustained browser run passes under
 [the engine boundary](architecture/engine-boundary.md).
 
 ## Rust workspace
 
-The recovered E01/E02 implementation lives under `engine/`:
+The Rust implementation lives under `engine/`:
 
 ```text
 engine/
@@ -97,7 +106,7 @@ engine/
     sim-cpu/                        Rust f64 references and bounded CPU algorithms
     sim-gpu/                        wgpu state, scheduling, reductions and rendering
       src/
-      shaders/                      Future WGSL, added when a pipeline needs it
+      shaders/                      WGSL beside the owning pipeline
     wasm/                           Browser bindings and backend construction
 ```
 
@@ -131,14 +140,22 @@ identity, inventory and source types in [`contracts.rs`](../engine/crates/sim/sr
 checkpoints; [`gpu_layout.rs`](../engine/crates/sim/src/gpu_layout.rs) packs scalar
 GPU records. [E02 regression tests](../engine/crates/sim/tests/e02_contracts.rs)
 cover IDs, malformed checkpoints, capacity and byte layouts. This is not a live
-save/load service or a shader ABI test on hardware.
+save/load service. The [E07 ABI sentinel](../engine/crates/sim-gpu/src/abi.rs)
+and [WGSL shader](../engine/crates/sim-gpu/shaders/abi_sentinel.wgsl) now verify
+selected packed records on native and browser GPU adapters. The private
+[E07 coupled scene](../engine/crates/sim-gpu/src/scene/coupled.rs) qualifies one
+small two-phase tick and rejected-candidate rollback on both adapters. The
+[E08 browser owner](../engine/crates/sim-gpu/src/browser_scene.rs) uses that
+stage graph for the persistent 480 x 270 experimental scene. Its
+[evidence](validation/p1-m3-e08.md) records the passed sustained browser run
+and the remaining limits.
 
 [`particle-sim-cpu`](../engine/crates/sim-cpu/src/lib.rs) and
 [`particle-sim-gpu`](../engine/crates/sim-gpu/src/lib.rs) own separate bootstrap
-sessions. The CPU session can now own [validated f64 pressure fields](../engine/crates/sim-cpu/src/fluid.rs)
+sessions. The CPU session owns [validated f64 pressure fields](../engine/crates/sim-cpu/src/fluid.rs)
 for a staggered MAC grid: cell density and correction pressure, face velocity,
-face aperture, and declared outer boundaries. The fields are isolated by session
-and do not yet advance a physical world. [Pressure-field tests](../engine/crates/sim-cpu/tests/pressure_fields.rs)
+face aperture, and declared outer boundaries. The fields are isolated by session;
+the E06 coupled step advances closed small fixtures. [Pressure-field tests](../engine/crates/sim-cpu/tests/pressure_fields.rs)
 cover layout and invalid inputs. [MAC operators](../engine/crates/sim-cpu/src/operator.rs)
 compute aperture-weighted divergence and matching cell-pressure gradients,
 including supplied open-face velocity flux and reservoir pressure at the
@@ -157,7 +174,9 @@ sealed components only; open-reservoir projection remains planned. The CPU
 session keys its pressure assembly cache by boundary
 geometry, aperture, and density revisions; [cache tests](../engine/crates/sim-cpu/tests/pressure_cache.rs)
 compare reused and forced-rebuild solves after input changes. The GPU session
-initializes a wgpu device but does not yet advance a physical world.
+initializes a wgpu device, validates its ABI and core-grid limit preflight,
+and exposes an experimental coupled scene. Its full-size browser scene has
+passed a local 60-tick sustained run on Chrome with a required GPU adapter.
 
 The CPU session also owns an optional [phase inventory](../engine/crates/sim-cpu/src/transport.rs)
 for one liquid, carrier gas, fixed walls, and phase-associated passive markers.
@@ -170,8 +189,10 @@ and a periodic shear oracle. [Compatible momentum](../engine/crates/sim-cpu/src/
 uses the same phase face ledger, and the [coupled CPU step](../engine/crates/sim-cpu/src/coupled.rs)
 stages transport, momentum, optional shear, gravity, and pressure before it
 accepts physical time and replaces both owners. Rejected stages leave the
-session unchanged. These paths have no live browser caller yet. Named scene,
-dam-break/refinement, and full E06 qualification remain in progress.
+session unchanged. A bounded shared-face correction removes pressure-solver
+roundoff from the accepted closed-face velocity before the next transport step.
+The [E06 evidence](validation/p1-m2-e06.md) records local named-scene and
+dam-refinement results. These paths have no live browser caller yet.
 
 [`Grid`](../engine/crates/sim/src/lib.rs) carries cell width as part of its
 identity. The default remains 0.01 m; a CPU reference grid can use another
@@ -182,8 +203,10 @@ nondefault grids until their formats are extended.
 [`particle-wasm`](../engine/crates/wasm/src/lib.rs) exposes initialization and disposal
 through [`engine-client/wasm.ts`](../web/src/engine-client/wasm.ts).
 The [browser smoke](../web/tests/browser/engine-smoke.ts) exercises lifecycle,
-malformed inputs, independent sessions, missing GPU rejection and actual adapter
-initialization from a production bundle under `/engine-smoke/`.
+malformed inputs, independent sessions, missing GPU rejection, the Rust-owned
+WGSL ABI sentinel and disposal during its asynchronous readback from a production
+bundle under `/engine-smoke/`. Require a real browser adapter when using this
+smoke as hardware evidence.
 
 [`engine/fixtures/engine-reference-v1.json`](../engine/fixtures/engine-reference-v1.json)
 freezes reference conventions for future numerical work. It does not establish
@@ -200,8 +223,8 @@ Paths in the first column are relative to `web/src/`.
 | `engine-client/`, `legacy/simulation/sandbox.ts` | Async facade and separate legacy adapter; E03/E08 |
 | `legacy/simulation/world.ts`, `physical-scale.ts` | `particle-sim` contracts and selected-backend state; E02 |
 | `legacy/physics/` | Corrected Rust references then matching WGSL stages; E04-E11 |
-| `legacy/rendering/` | Same-device GPU rendering and overlays; E08/E12 |
-| `legacy/simulation/diagnostics.ts` | Bounded GPU reductions and async observations; E08 |
+| `legacy/rendering/` | Same-device rendering in `sim-gpu` and browser overlays in `app/`; E08/E12 |
+| `legacy/simulation/diagnostics.ts` | Bounded `sim-gpu` reductions and async browser observations; E08 |
 | `legacy/tools/`, `legacy/scenes/` | Ordered, funded engine commands and initialization; E03/E11/E12 |
 | `materials/` | Single-source validated projections at E03, expanded data pipeline in P3 |
 

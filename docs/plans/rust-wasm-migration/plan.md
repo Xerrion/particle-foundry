@@ -1,6 +1,6 @@
 # Rust/WASM + wgpu migration work packages
 
-**Revision:** 27 September 2026, current-sandbox migration scope. **Status:** E00-E03 contract work validated; E05 is next, while E04 circuits remain planned. [Baseline evidence](../../validation/p1-m0.md), [bootstrap evidence](../../validation/p1-m1.md), [E02 evidence](../../validation/p1-m1-e02.md), [E03 evidence](../../validation/p1-m1-e03.md). P1 is the sole active release scope. P2-P9 are deferred and require a separate user decision to activate. **Selected decision:** [ADR-001](../../architecture/adr-001-rust-wasm-wgpu.md). **Entrypoint:** [START_HERE](../../START_HERE.md).
+**Revision:** 29 September 2026, current-sandbox migration scope. **Status:** E00-E03 and E05-E08 validated locally; E04 circuits and E09-E14 remain planned. [Baseline evidence](../../validation/p1-m0.md), [bootstrap evidence](../../validation/p1-m1.md), [E02 evidence](../../validation/p1-m1-e02.md), [E03 evidence](../../validation/p1-m1-e03.md), [E07 evidence](../../validation/p1-m3-e07.md) and [E08 evidence](../../validation/p1-m3-e08.md). P1 is the sole active release scope. P2-P9 are deferred and require a separate user decision to activate. **Selected decision:** [ADR-001](../../architecture/adr-001-rust-wasm-wgpu.md). **Entrypoint:** [START_HERE](../../START_HERE.md).
 
 ## Goal
 
@@ -25,7 +25,7 @@ The [current-sandbox scope](current-sandbox-scope.md) fixes the required materia
 | 2. Current sandbox coverage | M4-M6 / E09-E12, with E04 before E11 | Every current-sandbox scope row has an implementation and applicable reference/integration results, including current elemental forms, sources, fire, circuits and controls. |
 | 3. Verified default switch | M7 / E13-E14 | Every scope row passes on the declared browser/device targets, including failure/recovery and sustained performance; the full GPU-M7 and FIRE-M7 evidence is recorded. |
 
-E00-E03 remain validated foundation work; this revision does not reopen their evidence or claim checkpoint 1 is complete. E05 is the next implementation task. Execute only assigned work; the revised plan does not authorize automatic execution of its backlog.
+E00-E03 remain validated foundation work. E05-E06 have local CPU validation evidence, and E07-E08 have local native and browser GPU evidence. Checkpoint 1 is validated locally; remote CI has not been established. E04 and checkpoint 2 remain planned. Execute only assigned work; this plan does not authorize automatic execution of deferred work.
 
 Freeze scene definitions, expected observables, accepted numerical changes and tolerances for each scope row before implementing it. Missing behavior, insufficient property domains, unrun hardware checks or a failing performance target keep the relevant row and P1 incomplete. An experimental subset may remain available, but cannot be used to narrow the default-switch checklist. Any removal of an existing capability from that checklist requires an explicit user scope decision.
 

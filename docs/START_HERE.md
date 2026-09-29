@@ -1,14 +1,19 @@
 # Current-sandbox GPU migration: developer entrypoint
 
-**Revision:** 29 September 2026. **Active release:** P1 only. E00-E03 and E05
-have recorded validation. E06 is in progress; E04 and E07-E14 remain planned.
-E05 supplies a sealed Rust f64 pressure reference. The E06 phase-transport and
-viscous-shear candidates now run through an atomic CPU substep, but its named
-scene and refinement gates are not yet validated. The live sandbox still runs
-TypeScript.
-[E05 evidence](validation/p1-m2-e05.md) records the verified slice;
-[RESUME](RESUME.md) preserves the dated recovery handoff, and the
-[engine tracker](data/engine-migration-work.json) owns status.
+**Revision:** 29 September 2026. **Active release:** P1 only. E00-E03 and
+E05-E08 have recorded local validation. E04 and
+E09-E14 remain planned.
+
+E05 supplies a sealed Rust f64 pressure reference. E06 adds conservative phase
+and marker transport, compatible momentum, viscous shear and atomic bounded
+substeps. Its named CPU scenes and dam refinement pass locally. The live
+sandbox still runs TypeScript.
+[E05 evidence](validation/p1-m2-e05.md) and
+[E06 evidence](validation/p1-m2-e06.md) record the verified CPU slices.
+[E07 GPU-stage evidence](validation/p1-m3-e07.md) and
+[E08 browser-scene evidence](validation/p1-m3-e08.md) record current local
+results and open gates. [RESUME](RESUME.md) preserves the dated recovery handoff;
+the [engine tracker](data/engine-migration-work.json) owns status.
 
 ## Goal and scope
 
@@ -51,7 +56,7 @@ GPU engine; the scene retains one authoritative state owner.
 Read docs/README.md, this entrypoint and the assigned E-work package.
 The sole active release is P1: migrate the current sandbox to Rust/WASM + wgpu.
 Use docs/plans/rust-wasm-migration/current-sandbox-scope.md as required coverage.
-E00-E03 and the E05 CPU pressure reference are validated. E06 is in progress.
+E00-E03 and E05-E08 are validated locally. E09-E14 remain planned.
 E04 circuits remain planned and are required before E11.
 Execute only the assigned work item or explicitly authorized sequence.
 Preserve the TypeScript UI in web/, Rust/WGSL in engine/, and current legacy access.

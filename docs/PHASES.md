@@ -12,11 +12,16 @@ holds the detailed checklist of what must work before the switch is complete.
 
 **Where things stand (29 September 2026):** The browser sandbox still runs on
 the existing TypeScript engine. The Rust/WebAssembly foundation and browser
-contract exist, but the new fluid solver is still being built and GPU simulation
-does not run yet. P1 is under way; P2-P9 are deferred. The baseline (M0),
-engineering work E00-E03, and the Rust pressure reference (E05) are validated.
-M1's separate circuit work (E04) remains planned. Fluid transport and substeps
-(E06) are in progress within M2. For live status, see the
+contract exist. The small Rust CPU fluid reference has passed its local tests.
+A small GPU fluid fixture now steps on native and browser hardware, and a GPU
+buffer-layout check has passed on both. An opt-in browser scene now draws
+directly from GPU state. A local Chrome run completed 60 full-size ticks over
+one second of model time, and a native Metal run completed 120 ticks. Local
+repository checks passed. M3 is validated locally; P1 is under way;
+P2-P9 are deferred.
+The baseline (M0), engineering work E00-E03, and the Rust fluid work E05-E06 are
+validated locally. M1's separate circuit work (E04) remains planned. M2 is
+validated. For live status, see the
 [phase tracker](data/development-phases.json) and
 [engine work tracker](data/engine-migration-work.json).
 
@@ -53,10 +58,10 @@ energy correctly; reproducing known bugs is not a requirement.
 
 - **M2 - Prove fluid physics on the CPU.** Build a small, precise Rust model of
   pressure, liquid movement and transport; show that it conserves what it should.
-  **In progress.**
+  **Validated locally.**
 - **M3 - Show the first GPU scene.** Run the same basic fluid model in the browser
   and draw it directly from GPU state. It is an experimental scene with limited
-  materials, not a replacement for every existing scene. **Planned.**
+  materials, not a replacement for every existing scene. **Validated locally.**
 
 ### Checkpoint 2: today's features work on the new engine
 
@@ -78,8 +83,8 @@ energy correctly; reproducing known bugs is not a requirement.
   only when the full current-feature checklist passes. **Planned.**
 
 After M7, stop and review the evidence. Later phases need a separate decision
-to start. The current engineering task is **E06**, the Rust fluid transport and
-substep reference in M2.
+to start. The completed local engineering work is **E07-E08**. Checkpoint 2
+has not started; E04 circuits and M4-M6 feature coverage remain planned.
 
 ## Deferred ideas: P2-P9
 

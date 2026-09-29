@@ -1,11 +1,13 @@
 # Rust simulation engine
 
-This directory owns the Rust/WASM workspace and future WGSL shaders. E01's
-lifecycle bootstrap, E02's portable contracts and E05's sealed f64 CPU pressure
-reference are implemented. E06 has isolated CPU phase-transport and viscous-shear
-candidates. The coupled fluid reference is still in progress. The running
-application still uses [`web/src/legacy/`](../web/src/legacy/); GPU rendering
-and scene promotion remain planned.
+This directory owns the Rust/WASM workspace and WGSL shaders. E01's
+lifecycle bootstrap, E02's portable contracts and E05-E06's locally validated
+f64 CPU fluid reference are implemented. E06 includes owned phase transport,
+compatible momentum, viscous shear and atomic bounded substeps. The running
+application still uses [`web/src/legacy/`](../web/src/legacy/). E07 has a
+locally qualified GPU stage graph. E08 has an opt-in browser scene with
+same-device rendering. A local 60-tick sustained browser run passes; scene
+promotion remains open.
 
 The workspace follows the [migration plan](../docs/plans/rust-wasm-migration/plan.md):
 
@@ -19,7 +21,7 @@ engine/
     sim-cpu/                 Rust references and bounded CPU algorithms
     sim-gpu/                 wgpu state, scheduling and rendering
       src/
-      shaders/               Future WGSL; create when a pipeline needs it
+      shaders/               WGSL beside its owning pipeline
     wasm/                    Browser bindings and backend construction
 ```
 

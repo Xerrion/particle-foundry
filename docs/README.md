@@ -8,12 +8,21 @@ links when needed; there is no repository-wide required reading sequence.
 [AGENTS.md](../AGENTS.md) owns working rules. [The root README](../README.md)
 owns setup, and [mise.toml](../mise.toml) owns executable commands and tool versions.
 The running application is TypeScript in `web/`. `engine/` contains the Rust/WASM
-bootstrap, portable contracts and the E05 sealed f64 CPU pressure reference.
-E03 adds an experimental browser session contract and one generated catalogue
-projection. E06 now has a Rust-owned phase-transport candidate and a detached
-viscous-shear candidate, plus an atomic coupled CPU substep. Named-scene and
-refinement qualification remain open. A physical GPU scene is still planned.
-See [E05 validation](validation/p1-m2-e05.md) for the CPU reference result and
+bootstrap, portable contracts and the locally validated E05-E06 f64 CPU fluid
+reference. E03 adds an experimental browser session contract and one generated
+catalogue projection. E06 owns conservative phase and marker transport,
+compatible momentum, viscous shear and bounded atomic substeps. Its named
+closed-scene and dam-refinement checks pass locally. E07 adds a limited
+Rust/WGSL GPU stage graph with native and browser qualification. E08 has an
+experimental 480 x 270 browser scene that directly renders committed GPU
+state. Bounded paint, inspection, pause and reset have passed isolated browser
+checks, and a local Chrome run completed 60 sustained ticks. M3 passed local
+checks; the broader current-sandbox migration remains incomplete.
+The live sandbox still uses TypeScript. See
+[E05 validation](validation/p1-m2-e05.md) and
+[E06 validation](validation/p1-m2-e06.md) for the CPU reference results,
+[E07 evidence](validation/p1-m3-e07.md) for the GPU stage checks,
+[E08 evidence](validation/p1-m3-e08.md) for browser-scene results, and
 [the dated recovery handoff](RESUME.md) for the earlier recovered commits.
 A plan or reference entry is not evidence of implementation.
 

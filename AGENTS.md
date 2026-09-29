@@ -4,9 +4,11 @@
 
 Particle Foundry is a TypeScript browser sandbox. The Rust/WASM bootstrap,
 portable state contracts, experimental browser session contract, and f64 CPU
-pressure reference are implemented through E05. E06 transport is in progress;
-the live sandbox still uses the legacy backend. GPU simulation and rendering
-remain planned.
+fluid reference through E06 are locally validated. The live sandbox still uses
+the legacy backend. E07 has a local GPU stage graph and E08 has an opt-in
+browser scene with direct GPU rendering. A local 60-tick, full-size sustained
+browser run passes; M3 is validated locally. The default switch remains gated
+on full current-sandbox coverage and recovery.
 
 | Location | Responsibility |
 | --- | --- |
@@ -16,13 +18,13 @@ remain planned.
 | `web/src/materials/` | Single authored legacy catalogue, validation, presentation and element reference |
 | `web/tests/`, `web/benchmarks/` | TypeScript verification; backend-specific tests and fixtures live under `tests/legacy/` |
 | `web/` configuration | Bun package/lockfile, Vite, TypeScript, Biome and browser HTML |
-| `engine/` | Rust workspace, portable contracts and lifecycle bootstrap; see `engine/AGENTS.override.md` |
+| `engine/` | Rust workspace, portable contracts and experimental GPU scene; see `engine/AGENTS.override.md` |
 | `docs/README.md` | Knowledge map by question and topic; `docs/START_HERE.md` is the engine migration brief |
 | `mise.toml`, `.github/workflows/` | Root toolchain/task orchestration and CI |
 
 ## Architecture boundaries
 
-- Keep authored TypeScript application code in `web/` and future Rust/WGSL code in
+- Keep authored TypeScript application code in `web/` and Rust/WGSL code in
   `engine/`. Do not reintroduce root `src/`, `tests/`, `crates/` or `shaders/` trees.
 - Browser modules import simulation operations, observations and view metadata
   through `web/src/engine-client/index.ts`. Do not import legacy backend internals

@@ -3,7 +3,7 @@
   "kind": "planning-work-packages-not-implementation-status",
   "decision": "architecture/adr-001-rust-wasm-wgpu.md",
   "plan": "plans/rust-wasm-migration/plan.md",
-  "nextWorkItem": "E06",
+  "nextWorkItem": "E09",
   "workItems": [
     {
       "id": "E00",
@@ -143,8 +143,10 @@
       "title": "Implement conservative Rust transport and substeps",
       "work": "Add bounded VOF, shared mass/tracer/compatible momentum fluxes, viscosity and rollback. Keep phase chemistry off and thermal transport passive.",
       "acceptance": "M2 conservation, marker displacement, shear, symmetry, dam-break/refinement and failure tests pass before the equivalent solver is ported.",
-      "status": "in-progress",
-      "evidence": [],
+      "status": "validated",
+      "evidence": [
+        "validation/p1-m2-e06.md"
+      ],
       "fireWorkItems": []
     },
     {
@@ -161,8 +163,8 @@
       "title": "Implement WGSL stage graph under Rust wgpu",
       "work": "Implement matching f32 operators/transport with owned writes, reductions, convergence flags, candidate/committed generations and bounded submission. Validate Rust/WGSL ABI on hardware.",
       "acceptance": "Small-fixture CPU/GPU comparisons at equal time, failure/no-partial-commit tests and adapter-limit checks pass. Native testing does not waive browser testing.",
-      "status": "planned",
-      "evidence": [],
+      "status": "validated",
+      "evidence": ["validation/p1-m3-e07.md"],
       "fireWorkItems": []
     },
     {
@@ -181,8 +183,8 @@
       "title": "Deliver direct GPU rendering and asynchronous observations",
       "work": "Render from the same wgpu device/state. Add tick/epoch-stamped probes/reductions, explicit startup capability handling, viewport/overlay behavior, async checkpoint prototype and completed-work telemetry. Exercise painting, pause and reset on the limited M3 scene in the actual browser, plus controlled stepping through the test harness. A new single-step UI control is deferred.",
       "acceptance": "480 x 270 experimental scene works with the stated basic controls; no full-state normal-frame readback, no reused 2D context, no stale-as-current observations, measured transfer bytes and completed-time throughput. This subset does not satisfy current-sandbox coverage or authorize a default switch.",
-      "status": "planned",
-      "evidence": [],
+      "status": "validated",
+      "evidence": ["validation/p1-m3-e08.md"],
       "fireWorkItems": []
     },
     {

@@ -67,7 +67,7 @@ som en GPU-test, der er bestået. Se [genoptagelse af Rust-porten](docs/RESUME.m
 | Sti | Ansvar |
 | --- | --- |
 | `web/` | TypeScript-app, HTML/CSS, tests, benchmarks og frontendkonfiguration |
-| `engine/` | Rust/WASM-bootstrap, portable kontrakter og fremtidige WGSL-shaders |
+| `engine/` | Rust/WASM-kontrakter, eksperimentel GPU-simulering og WGSL-shaders |
 | `docs/` | Aktuel model, arkitektur, migrationsplaner og historisk evidens |
 | `mise.toml` | Fælles værktøjsversioner og opgaver; appopgaver kører automatisk i `web/` |
 | [AGENTS.md](AGENTS.md) | Projektets regler for ejerskab, imports, tests og dokumentation |
@@ -78,6 +78,9 @@ Start i [projektets vidensbase](docs/README.md). Se
 [Rust-motorens placering](docs/project-structure.md#rust-workspace).
 
 Den kørende motor er samlet i `web/src/legacy/`. Browserens kontroller bruger
-`web/src/engine-client/`. E01-bootstrap og E02-kontrakter er implementeret;
-GPU-fysik og rendering er fortsat planlagt. Standardscenen bruger legacy-motoren.
+`web/src/engine-client/`. E01-bootstrap og E02-kontrakter er implementeret.
+En eksperimentel GPU-scene med Rust/WGSL-simulering og rendering kan prøves på
+`/gpu.html`; en lokal browserprøve på 60 trin og ét sekund modeltid er bestået.
+Scenen er stadig en begrænset prøve, og standardscenen bruger fortsat
+legacy-motoren.
 Lokale profiler, logs, browseroptagelser og snapshots ligger i ignoreret `artifacts/`.
