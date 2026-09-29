@@ -30,7 +30,7 @@ jobs:
             echo 'code=true' >> "$GITHUB_OUTPUT"
             exit 0
           }
-          git diff --name-only "$DIFF_BASE" "$HEAD_SHA" > "$RUNNER_TEMP/changed-files"
+          git diff --no-renames --name-only "$DIFF_BASE" "$HEAD_SHA" > "$RUNNER_TEMP/changed-files"
           if awk '$0 !~ /^docs\// { found = 1 } END { exit !found }' "$RUNNER_TEMP/changed-files"; then
             echo 'code=true' >> "$GITHUB_OUTPUT"
           else
