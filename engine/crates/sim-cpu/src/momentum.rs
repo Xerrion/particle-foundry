@@ -4,7 +4,8 @@
 //! above and below. Closed outer faces own half of one cell. Each dual edge
 //! receives the average of the two adjacent primal mass fluxes from the
 //! liquid and carrier ledger. This construction makes dual mass change match
-//! cell mass change, including transverse flux. Aligned u.x and v.y edges
+//! cell mass change, including transverse flux. The x sweep precedes the y
+//! sweep, as in phase transport. Aligned u.x and v.y edges
 //! upwind their net interpolated flux. Transverse u.y and v.x edges retain two
 //! signed subfaces and upwind each one before adding momentum. A fixed face
 //! discards its resulting momentum through an explicit wall impulse. This
@@ -70,7 +71,7 @@ pub enum MomentumError {
         /// Row-major dual cell index.
         index: usize,
     },
-    /// A dual cell would send more mass than it owns at the start of the step.
+    /// A dual cell would send more mass than it owns at the start of a sweep.
     DualDonorOverdraw {
         /// `u` or `v` dual grid.
         axis: &'static str,
@@ -739,9 +740,29 @@ fn advect_component(
     aperture: &[f64],
 ) -> Result<(Vec<f64>, f64), MomentumError> {
     let mut momentum = vec![0.0; width * height];
+    let mut mass_after_x = vec![0.0; width * height];
     for index in 0..momentum.len() {
         check_dual_mass_balance(axis, index, width, mass_before, mass_after, flux)?;
-        check_dual_outgoing(axis, index, width, mass_before, flux, subfaces)?;
+        let x = index % width;
+        let y = index / width;
+        let left = flux.x_mass_kg[y * (width + 1) + x];
+        let right = flux.x_mass_kg[y * (width + 1) + x + 1];
+        check_dual_outgoing(
+            axis,
+            index,
+            mass_before[index],
+            outgoing_x(axis, index, width, flux, subfaces),
+        )?;
+        mass_after_x[index] = mass_before[index] + left - right;
+        if !mass_after_x[index].is_finite() {
+            return Err(MomentumError::NonFiniteResult {
+                field: "dual mass after x sweep",
+                index,
+            });
+        }
+        if aperture[index] != 0.0 && mass_before[index] <= 0.0 {
+            return Err(MomentumError::EmptyOpenFace { axis, index });
+        }
         momentum[index] = mass_before[index] * velocity_before[index];
         if !momentum[index].is_finite() {
             return Err(MomentumError::NonFiniteResult {
@@ -774,6 +795,16 @@ fn advect_component(
             }
         }
     }
+    let (velocity_after_x, x_wall_impulse) =
+        face_velocity_from_momentum(axis, &mass_after_x, &mut momentum, aperture)?;
+    for (index, &available_mass) in mass_after_x.iter().enumerate() {
+        check_dual_outgoing(
+            axis,
+            index,
+            available_mass,
+            outgoing_y(axis, index, width, flux, subfaces),
+        )?;
+    }
     for edge_y in 1..height {
         for x in 0..width {
             let edge = edge_y * width + x;
@@ -787,7 +818,7 @@ fn advect_component(
             for mass_flux in y_fluxes {
                 transfer_momentum(
                     &mut momentum,
-                    velocity_before,
+                    &velocity_after_x,
                     mass_flux,
                     top,
                     bottom,
@@ -798,11 +829,30 @@ fn advect_component(
         }
     }
 
-    let mut velocity_after = vec![0.0; width * height];
+    let (velocity_after, y_wall_impulse) =
+        face_velocity_from_momentum(axis, mass_after, &mut momentum, aperture)?;
+    let wall_impulse = x_wall_impulse + y_wall_impulse;
+    if !wall_impulse.is_finite() {
+        return Err(MomentumError::NonFiniteResult {
+            field: "wall impulse",
+            index: 0,
+        });
+    }
+    Ok((velocity_after, wall_impulse))
+}
+
+fn face_velocity_from_momentum(
+    axis: &'static str,
+    mass: &[f64],
+    momentum: &mut [f64],
+    aperture: &[f64],
+) -> Result<(Vec<f64>, f64), MomentumError> {
+    let mut velocity = vec![0.0; momentum.len()];
     let mut wall_impulse = 0.0;
-    for index in 0..velocity_after.len() {
+    for index in 0..velocity.len() {
         if aperture[index] == 0.0 {
             wall_impulse -= momentum[index];
+            momentum[index] = 0.0;
             if !wall_impulse.is_finite() {
                 return Err(MomentumError::NonFiniteResult {
                     field: "wall impulse",
@@ -810,11 +860,11 @@ fn advect_component(
                 });
             }
         } else {
-            if mass_before[index] <= 0.0 || mass_after[index] <= 0.0 {
+            if mass[index] <= 0.0 {
                 return Err(MomentumError::EmptyOpenFace { axis, index });
             }
-            velocity_after[index] = momentum[index] / mass_after[index];
-            if !velocity_after[index].is_finite() {
+            velocity[index] = momentum[index] / mass[index];
+            if !velocity[index].is_finite() {
                 return Err(MomentumError::NonFiniteResult {
                     field: "advected face velocity",
                     index,
@@ -822,47 +872,64 @@ fn advect_component(
             }
         }
     }
-    Ok((velocity_after, wall_impulse))
+    Ok((velocity, wall_impulse))
 }
 
 fn check_dual_outgoing(
     axis: &'static str,
     index: usize,
-    width: usize,
-    mass_before: &[f64],
-    flux: &DualFaceFluxes,
-    subfaces: &DualSubfaceFluxes,
+    available_mass: f64,
+    outgoing: f64,
 ) -> Result<(), MomentumError> {
-    let x = index % width;
-    let y = index / width;
-    let left = subfaces.x_mass_kg[y * (width + 1) + x];
-    let right = subfaces.x_mass_kg[y * (width + 1) + x + 1];
-    let top = subfaces.y_mass_kg[y * width + x];
-    let bottom = subfaces.y_mass_kg[(y + 1) * width + x];
-    let outgoing_x = if axis == "u" {
-        (-flux.x_mass_kg[y * (width + 1) + x]).max(0.0)
-            + flux.x_mass_kg[y * (width + 1) + x + 1].max(0.0)
-    } else {
-        left.into_iter().map(|value| (-value).max(0.0)).sum::<f64>()
-            + right.into_iter().map(|value| value.max(0.0)).sum::<f64>()
-    };
-    let outgoing_y = if axis == "v" {
-        (-flux.y_mass_kg[y * width + x]).max(0.0) + flux.y_mass_kg[(y + 1) * width + x].max(0.0)
-    } else {
-        top.into_iter().map(|value| (-value).max(0.0)).sum::<f64>()
-            + bottom.into_iter().map(|value| value.max(0.0)).sum::<f64>()
-    };
-    let outgoing = outgoing_x + outgoing_y;
     if !outgoing.is_finite() {
         return Err(MomentumError::NonFiniteResult {
             field: "dual outgoing mass",
             index,
         });
     }
-    if outgoing > mass_before[index] * (1.0 + LEDGER_REL_TOL) {
+    if outgoing > available_mass * (1.0 + LEDGER_REL_TOL) {
         return Err(MomentumError::DualDonorOverdraw { axis, index });
     }
     Ok(())
+}
+
+fn outgoing_x(
+    axis: &'static str,
+    index: usize,
+    width: usize,
+    flux: &DualFaceFluxes,
+    subfaces: &DualSubfaceFluxes,
+) -> f64 {
+    let x = index % width;
+    let y = index / width;
+    let left = subfaces.x_mass_kg[y * (width + 1) + x];
+    let right = subfaces.x_mass_kg[y * (width + 1) + x + 1];
+    if axis == "u" {
+        (-flux.x_mass_kg[y * (width + 1) + x]).max(0.0)
+            + flux.x_mass_kg[y * (width + 1) + x + 1].max(0.0)
+    } else {
+        left.into_iter().map(|value| (-value).max(0.0)).sum::<f64>()
+            + right.into_iter().map(|value| value.max(0.0)).sum::<f64>()
+    }
+}
+
+fn outgoing_y(
+    axis: &'static str,
+    index: usize,
+    width: usize,
+    flux: &DualFaceFluxes,
+    subfaces: &DualSubfaceFluxes,
+) -> f64 {
+    let x = index % width;
+    let y = index / width;
+    let top = subfaces.y_mass_kg[y * width + x];
+    let bottom = subfaces.y_mass_kg[(y + 1) * width + x];
+    if axis == "v" {
+        (-flux.y_mass_kg[y * width + x]).max(0.0) + flux.y_mass_kg[(y + 1) * width + x].max(0.0)
+    } else {
+        top.into_iter().map(|value| (-value).max(0.0)).sum::<f64>()
+            + bottom.into_iter().map(|value| value.max(0.0)).sum::<f64>()
+    }
 }
 
 fn check_dual_mass_balance(
@@ -1077,6 +1144,46 @@ mod tests {
         );
     }
 
+    #[test]
+    fn y_sweep_can_send_mass_that_arrived_in_the_x_sweep() {
+        let mut x_mass_kg = vec![0.0; 6];
+        x_mass_kg[1] = -0.5;
+        let mut y_mass_kg = vec![0.0; 6];
+        y_mass_kg[2] = 1.2;
+        let flux = DualFaceFluxes {
+            x_mass_kg,
+            y_mass_kg,
+        };
+        let mut y_subfaces = vec![[0.0; 2]; 6];
+        y_subfaces[2] = [0.6, 0.6];
+        let subfaces = DualSubfaceFluxes {
+            x_mass_kg: vec![[0.0; 2]; 6],
+            y_mass_kg: y_subfaces,
+        };
+        let (velocity, wall_impulse) = advect_component(
+            "u",
+            2,
+            2,
+            &[1.0; 4],
+            &[0.3, 0.5, 2.2, 1.0],
+            &flux,
+            &subfaces,
+            &[2.0, 4.0, 0.0, 0.0],
+            &[1.0; 4],
+        )
+        .unwrap();
+
+        // Cell 0 starts with 1 kg, receives 0.5 kg from x, then sends 1.2 kg in y.
+        assert_near(velocity[0], 8.0 / 3.0);
+        assert_near(velocity[2], 3.2 / 2.2);
+        assert_near(velocity[1], 4.0);
+        assert_eq!(wall_impulse, 0.0);
+        assert_near(
+            0.3 * velocity[0] + 0.5 * velocity[1] + 2.2 * velocity[2],
+            6.0,
+        );
+    }
+
     fn upwind_momentum(mass_flux: f64, negative_velocity: f64, positive_velocity: f64) -> f64 {
         mass_flux
             * if mass_flux >= 0.0 {
@@ -1245,21 +1352,42 @@ mod tests {
             velocity.u[top_u],
             velocity.u[grid.u_face_index(2, 0).unwrap()],
         );
+        let top_u_after_x_momentum = result.dual_mass_before_kg.u[top_u] * velocity.u[top_u]
+            + u_left_momentum
+            - u_right_momentum;
+        let top_u_after_x_mass = result.dual_mass_before_kg.u[top_u]
+            + result.dual_mass_fluxes.u.x_mass_kg[1]
+            - result.dual_mass_fluxes.u.x_mass_kg[2];
+        let top_u_after_x_velocity = top_u_after_x_momentum / top_u_after_x_mass;
+        let bottom_left_flux = result.dual_mass_fluxes.u.x_mass_kg[5];
+        let bottom_right_flux = result.dual_mass_fluxes.u.x_mass_kg[6];
+        let bottom_u_after_x_momentum = result.dual_mass_before_kg.u[bottom_u]
+            * velocity.u[bottom_u]
+            + upwind_momentum(
+                bottom_left_flux,
+                velocity.u[grid.u_face_index(0, 1).unwrap()],
+                velocity.u[bottom_u],
+            )
+            - upwind_momentum(
+                bottom_right_flux,
+                velocity.u[bottom_u],
+                velocity.u[grid.u_face_index(2, 1).unwrap()],
+            );
+        let bottom_u_after_x_mass =
+            result.dual_mass_before_kg.u[bottom_u] + bottom_left_flux - bottom_right_flux;
+        let bottom_u_after_x_velocity = bottom_u_after_x_momentum / bottom_u_after_x_mass;
         let u_bottom_momentum = upwind_momentum(
             0.5 * primal_v(0, 1),
-            velocity.u[top_u],
-            velocity.u[bottom_u],
+            top_u_after_x_velocity,
+            bottom_u_after_x_velocity,
         ) + upwind_momentum(
             0.5 * primal_v(1, 1),
-            velocity.u[top_u],
-            velocity.u[bottom_u],
+            top_u_after_x_velocity,
+            bottom_u_after_x_velocity,
         );
         assert!(u_bottom_momentum > 0.0);
-        let expected_u = (result.dual_mass_before_kg.u[top_u] * velocity.u[top_u]
-            + u_left_momentum
-            - u_right_momentum
-            - u_bottom_momentum)
-            / result.dual_mass_after_kg.u[top_u];
+        let expected_u =
+            (top_u_after_x_momentum - u_bottom_momentum) / result.dual_mass_after_kg.u[top_u];
         assert_near(result.velocity_m_s.u[top_u], expected_u);
 
         let left_v = grid.v_face_index(0, 1).unwrap();
@@ -1274,29 +1402,31 @@ mod tests {
             velocity.v[left_v],
             velocity.v[right_v],
         );
+        let left_v_after_x_momentum =
+            result.dual_mass_before_kg.v[left_v] * velocity.v[left_v] - v_right_momentum;
+        let left_v_after_x_mass = result.dual_mass_before_kg.v[left_v]
+            - result.dual_mass_fluxes.v.x_mass_kg[transverse_edge];
+        let left_v_after_x_velocity = left_v_after_x_momentum / left_v_after_x_mass;
         let v_top_momentum = upwind_momentum(
             0.5 * primal_v(0, 0),
             velocity.v[grid.v_face_index(0, 0).unwrap()],
-            velocity.v[left_v],
+            left_v_after_x_velocity,
         ) + upwind_momentum(
             0.5 * primal_v(0, 1),
             velocity.v[grid.v_face_index(0, 0).unwrap()],
-            velocity.v[left_v],
+            left_v_after_x_velocity,
         );
         let v_bottom_momentum = upwind_momentum(
             0.5 * primal_v(0, 1),
-            velocity.v[left_v],
+            left_v_after_x_velocity,
             velocity.v[grid.v_face_index(0, 2).unwrap()],
         ) + upwind_momentum(
             0.5 * primal_v(0, 2),
-            velocity.v[left_v],
+            left_v_after_x_velocity,
             velocity.v[grid.v_face_index(0, 2).unwrap()],
         );
         assert!(v_right_momentum < 0.0);
-        let expected_v = (result.dual_mass_before_kg.v[left_v] * velocity.v[left_v]
-            - v_right_momentum
-            + v_top_momentum
-            - v_bottom_momentum)
+        let expected_v = (left_v_after_x_momentum + v_top_momentum - v_bottom_momentum)
             / result.dual_mass_after_kg.v[left_v];
         assert_near(result.velocity_m_s.v[left_v], expected_v);
     }
@@ -1332,9 +1462,27 @@ mod tests {
         let aligned_left_mass = 0.5 * primal_u(0, 0) + 0.5 * primal_u(1, 0);
         let aligned_right_mass = 0.5 * primal_u(1, 0) + 0.5 * primal_u(2, 0);
         assert_near(aligned_right_mass, 0.0);
-        let transverse_momentum =
-            upwind_momentum(0.5 * primal_v(0, 1), velocity.u[center], velocity.u[below])
-                + upwind_momentum(0.5 * primal_v(1, 1), velocity.u[center], velocity.u[below]);
+        let after_x_velocity = |face: usize, x: usize, y: usize| {
+            let edge_stride = grid.width() as usize + 2;
+            let left_mass = result.dual_mass_fluxes.u.x_mass_kg[y * edge_stride + x];
+            let right_mass = result.dual_mass_fluxes.u.x_mass_kg[y * edge_stride + x + 1];
+            let momentum = result.dual_mass_before_kg.u[face] * velocity.u[face]
+                + upwind_momentum(left_mass, velocity.u[face - 1], velocity.u[face])
+                - upwind_momentum(right_mass, velocity.u[face], velocity.u[face + 1]);
+            let mass = result.dual_mass_before_kg.u[face] + left_mass - right_mass;
+            momentum / mass
+        };
+        let center_after_x_velocity = after_x_velocity(center, 1, 0);
+        let below_after_x_velocity = after_x_velocity(below, 1, 1);
+        let transverse_momentum = upwind_momentum(
+            0.5 * primal_v(0, 1),
+            center_after_x_velocity,
+            below_after_x_velocity,
+        ) + upwind_momentum(
+            0.5 * primal_v(1, 1),
+            center_after_x_velocity,
+            below_after_x_velocity,
+        );
         let expected = (result.dual_mass_before_kg.u[center] * velocity.u[center]
             + upwind_momentum(aligned_left_mass, velocity.u[left], velocity.u[center])
             - upwind_momentum(aligned_right_mass, velocity.u[center], velocity.u[right])
