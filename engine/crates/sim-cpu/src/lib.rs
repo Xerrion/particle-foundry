@@ -4,6 +4,7 @@ pub mod assembly;
 pub mod fluid;
 pub mod operator;
 pub mod solver;
+pub mod substep;
 pub mod transport;
 pub mod viscosity;
 
