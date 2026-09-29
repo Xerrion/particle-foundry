@@ -1,14 +1,16 @@
-//! Rust f64 reference backend. The bootstrap deliberately exposes no fluid stepping.
+//! Rust f64 reference backend. Fluid stepping is not yet connected to the live browser.
 
 pub mod assembly;
 pub mod fluid;
 pub mod operator;
 pub mod solver;
+pub mod transport;
 
 use assembly::{PressureAssembly, PressureAssemblyError};
 use fluid::{FaceValues, PressureFieldError, PressureFields};
 use particle_sim::Grid;
 use solver::{PressureSolveError, Projection, SolveConfig, project_closed_with_assembly};
+use transport::{TransportError, TransportInventory};
 
 /// Versions of the inputs from which a session's pressure coefficients are built.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -46,12 +48,13 @@ impl std::fmt::Display for PressureSessionError {
 
 impl std::error::Error for PressureSessionError {}
 
-/// Isolated CPU session with pressure inputs and derived assembly cache.
-/// Transport and live fluid stepping remain future work.
+/// Isolated CPU session with pressure inputs, transported inventory and derived
+/// assembly cache. A coupled fluid step remains future work.
 #[derive(Debug)]
 pub struct ReferenceSession {
     grid: Grid,
     pressure_fields: Option<PressureFields>,
+    transport_inventory: Option<TransportInventory>,
     pressure_versions: PressureInputVersions,
     pressure_assembly: Option<CachedPressureAssembly>,
     pressure_assembly_builds: u64,
@@ -63,6 +66,7 @@ impl ReferenceSession {
         Self {
             grid,
             pressure_fields: None,
+            transport_inventory: None,
             pressure_versions: PressureInputVersions::default(),
             pressure_assembly: None,
             pressure_assembly_builds: 0,
@@ -108,6 +112,23 @@ impl ReferenceSession {
     /// Returns this session's owned pressure fields, if initialized.
     pub fn pressure_fields(&self) -> Option<&PressureFields> {
         self.pressure_fields.as_ref()
+    }
+
+    /// Replaces this session's owned transport inventory after geometry validation.
+    pub fn set_transport_inventory(
+        &mut self,
+        inventory: TransportInventory,
+    ) -> Result<(), TransportError> {
+        if inventory.grid() != self.grid {
+            return Err(TransportError::GridMismatch);
+        }
+        self.transport_inventory = Some(inventory);
+        Ok(())
+    }
+
+    /// Returns this session's transported mass and marker authority, if initialized.
+    pub fn transport_inventory(&self) -> Option<&TransportInventory> {
+        self.transport_inventory.as_ref()
     }
 
     /// Current private revisions of the three coefficient inputs.
