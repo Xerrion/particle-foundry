@@ -25,3 +25,10 @@ Until branch protection is available, use pull requests and manually confirm
 that the `verify` job in [ci.yml](workflows/ci.yml) passes and review conversations
 are resolved before squash merging. This is a contributor convention, not an
 enforced GitHub gate.
+
+CI runs once for each pull request update and once after a push to `main`.
+The documentation check always runs. Changes confined to `docs/` skip the web,
+Rust and browser jobs; every other change runs all three in parallel. The final
+`verify` job fails if any applicable job fails or is missing. `mise run ci` remains
+the complete local check. Splitting jobs gives earlier results, but the Rust
+refinement fixture can still determine the time until a code change is fully green.
