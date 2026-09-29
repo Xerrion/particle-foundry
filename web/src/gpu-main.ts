@@ -200,7 +200,12 @@ async function probeCell(x: number, y: number): Promise<void> {
 	} finally {
 		activeProbe = false;
 		if (!disposed && scene === currentScene) {
+			const previousEpoch = progress?.epoch;
 			progress = parseStatus(currentScene.status_json());
+			if (progress.epoch !== previousEpoch) {
+				pendingResetEpoch = undefined;
+				currentScene.render();
+			}
 			refreshView();
 		}
 	}
@@ -345,12 +350,17 @@ resetButton.addEventListener("click", () => {
 });
 
 window.addEventListener("pagehide", () => {
+	if (disposed) return;
 	disposed = true;
 	if (scheduledFrame !== undefined) {
 		cancelAnimationFrame(scheduledFrame);
 	}
 	scene?.dispose();
 	scene?.free();
+});
+
+window.addEventListener("pageshow", (event) => {
+	if (event.persisted) location.reload();
 });
 
 async function start(): Promise<void> {
