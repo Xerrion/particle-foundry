@@ -1,9 +1,10 @@
 # Rust simulation engine
 
 This directory owns the Rust/WASM workspace and future WGSL shaders. E01's
-lifecycle bootstrap and E02's portable contracts are implemented. The running
-application still uses [`web/src/legacy/`](../web/src/legacy/); numerical solvers,
-GPU rendering and scene promotion remain planned.
+lifecycle bootstrap, E02's portable contracts and E05's sealed f64 CPU pressure
+reference are implemented. The running application still uses
+[`web/src/legacy/`](../web/src/legacy/); conservative transport, GPU rendering
+and scene promotion remain planned.
 
 The workspace follows the [migration plan](../docs/plans/rust-wasm-migration/plan.md):
 

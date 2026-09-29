@@ -3,7 +3,7 @@
   "kind": "planning-work-packages-not-implementation-status",
   "decision": "architecture/adr-001-rust-wasm-wgpu.md",
   "plan": "plans/rust-wasm-migration/plan.md",
-  "nextWorkItem": "E05",
+  "nextWorkItem": "E06",
   "workItems": [
     {
       "id": "E00",
@@ -122,8 +122,10 @@
       "title": "Implement Rust f64 pressure and boundary reference",
       "work": "Build matching MAC D/G operators, density/aperture coefficients, gravity balance, sealed-component compatibility, scaled residuals and cache invalidation in sim-cpu.",
       "acceptance": "Analytic/manufactured operator fixtures and hydrostatic rest pass; forced-rebuild comparisons validate cache correctness.",
-      "status": "planned",
-      "evidence": [],
+      "status": "validated",
+      "evidence": [
+        "validation/p1-m2-e05.md"
+      ],
       "fireWorkItems": []
     },
     {

@@ -1,6 +1,6 @@
 # Active work and delivered-history boundary
 
-**Status date:** 27 September 2026. **Next task in the scoped GPU port:** P1/M2/E05. E04 circuits remain planned. M0/E00/FIRE-W00, E01 bootstrap and E02-E03/FIRE-W01 contracts are validated; see [baseline evidence](validation/p1-m0.md), [bootstrap evidence](validation/p1-m1.md) and [E02 evidence](validation/p1-m1-e02.md). M1 and P1 remain incomplete. Follow [START_HERE.md](START_HERE.md) and [the roadmap](roadmap.md).
+**Status date:** 29 September 2026. **Next task in the scoped GPU port:** P1/M2/E06. E04 circuits remain planned. M0/E00/FIRE-W00, E01 bootstrap, E02-E03/FIRE-W01 contracts and the E05 CPU pressure reference are validated; see [baseline evidence](validation/p1-m0.md), [bootstrap evidence](validation/p1-m1.md), [E02 evidence](validation/p1-m1-e02.md) and [E05 evidence](validation/p1-m2-e05.md). M1, M2 and P1 remain incomplete. Follow [START_HERE.md](START_HERE.md) and [the roadmap](roadmap.md).
 
 ## Current active queue: P1 only
 
@@ -12,7 +12,7 @@ optional worker deployment are deferred.
 | Work item | Phase / milestones | Deliverable and acceptance | Status |
 | --- | --- | --- | --- |
 | R9 | P1 / M0-M1, E00-E04 | Fresh baseline; Rust/WASM workspace and browser smoke test; async facade, IDs/ABI/data projection, independent Rust circuit reference and invalidation | In progress; E00-E03 validated; E04 circuits planned |
-| R10 | P1 / M2-M3, E05-E08 | Rust f64 conservative reference and equivalent Rust/wgpu WGSL demonstrator; direct rendering, async probes, equal-time parity and measured transfers | Planned |
+| R10 | P1 / M2-M3, E05-E08 | Rust f64 conservative reference and equivalent Rust/wgpu WGSL demonstrator; direct rendering, async probes, equal-time parity and measured transfers | In progress; E05 validated, E06-E08 planned |
 | R11 | P1 / M4-M7, E09-E14 | All required current-sandbox thermal, motion, eight-element, reaction and source behavior; bounded Rust CPU circuits, existing TypeScript controls, recovery and full-matrix promotion | Planned |
 
 ## Deferred backlog: separate activation required
@@ -41,7 +41,8 @@ No phase completion can be inferred from roster counts. [development-phases.json
 
 - [x] E00-E03 baseline, Rust/WASM bootstrap and browser/state contracts have recorded validation.
 - [x] Freeze the current feature inventory and defer P2-P9; this is a scope decision, not simulation evidence.
-- [ ] E05-E08: freeze per-row fixtures, implement Rust references and prove the limited browser GPU path.
+- [x] E05: validate the sealed Rust f64 pressure reference and record its limits.
+- [ ] E06-E08: freeze remaining fixtures, implement conservative transport and prove the limited browser GPU path.
 - [ ] E04/E09-E12: implement and verify all required current-feature rows, including existing elemental behavior and controls.
 - [ ] E13-E14: validate full-matrix recovery, actual-browser behavior and measured performance before the default switch.
 
@@ -76,7 +77,7 @@ Record new results separately and update [model.md](model.md) only when implemen
 
 ## Selected engine migration and status
 
-E00-E03 in [the engine tracker](data/engine-migration-work.json) have baseline, bootstrap and contract evidence. E04-E14 remain planned. E03 supplies a mock-tested bounded session contract and one generated candidate catalogue projection; the physical Rust scene is still future work. The independent E04 circuit implementation does not block E05 fluid references. The stack decision is settled by [ADR-001](architecture/adr-001-rust-wasm-wgpu.md); numerical details remain governed by the phase plans. Narrow scope does not authorize promoting unsupported scenes or bypassing fire gates.
+E00-E03 and E05 in [the engine tracker](data/engine-migration-work.json) have validation evidence. E04 and E06-E14 remain planned. E03 supplies a mock-tested bounded session contract and one generated candidate catalogue projection. E05 adds a sealed Rust f64 pressure reference; conservative transport and a physical browser GPU scene remain future work. The independent E04 circuit implementation does not block E06 transport. The stack decision is settled by [ADR-001](architecture/adr-001-rust-wasm-wgpu.md); numerical details remain governed by the phase plans. Narrow scope does not authorize promoting unsupported scenes or bypassing fire gates.
 
 Deferred P2 and later chemistry/nuclear work would use Rust references and equivalent WGSL if activated. The current UI remains TypeScript. See [the execution mapping](plans/rust-wasm-migration/plan.md#deferred-phase-ownership).
 
