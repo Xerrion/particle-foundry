@@ -1,6 +1,7 @@
 //! Rust f64 reference backend. Fluid stepping is not yet connected to the live browser.
 
 pub mod assembly;
+pub mod coupled;
 pub mod fluid;
 pub mod momentum;
 pub mod operator;
@@ -10,9 +11,13 @@ pub mod transport;
 pub mod viscosity;
 
 use assembly::{PressureAssembly, PressureAssemblyError};
+use coupled::{
+    CoupledSelection, CoupledStepConfig, CoupledStepError, CoupledStepOutcome, stage_coupled_step,
+};
 use fluid::{FaceValues, PressureFieldError, PressureFields};
 use particle_sim::Grid;
 use solver::{PressureSolveError, Projection, SolveConfig, project_closed_with_assembly};
+use substep::SubstepClock;
 use transport::{TransportError, TransportInventory};
 
 /// Versions of the inputs from which a session's pressure coefficients are built.
@@ -52,7 +57,7 @@ impl std::fmt::Display for PressureSessionError {
 impl std::error::Error for PressureSessionError {}
 
 /// Isolated CPU session with pressure inputs, transported inventory and derived
-/// assembly cache. A coupled fluid step remains future work.
+/// assembly cache. Coupled substeps commit both owners with accepted time.
 #[derive(Debug)]
 pub struct ReferenceSession {
     grid: Grid,
@@ -88,6 +93,11 @@ impl ReferenceSession {
         if fields.grid() != self.grid {
             return Err(PressureFieldError::GridMismatch);
         }
+        self.install_pressure_fields(fields);
+        Ok(())
+    }
+
+    fn install_pressure_fields(&mut self, fields: PressureFields) {
         let mut versions = self.pressure_versions;
         if let Some(previous) = &self.pressure_fields {
             if previous.boundaries() != fields.boundaries() {
@@ -109,7 +119,6 @@ impl ReferenceSession {
         }
         self.pressure_versions = versions;
         self.pressure_fields = Some(fields);
-        Ok(())
     }
 
     /// Returns this session's owned pressure fields, if initialized.
@@ -142,6 +151,44 @@ impl ReferenceSession {
     /// Number of session-owned coefficient builds, excluding forced comparisons.
     pub fn pressure_assembly_builds(&self) -> u64 {
         self.pressure_assembly_builds
+    }
+
+    /// Advances one bounded closed-boundary CPU substep atomically.
+    ///
+    /// All fluid stages use detached buffers. A rejection leaves pressure,
+    /// transported amounts, coefficient-cache versions, cache build count and
+    /// accepted physical time unchanged. `Complete` and `Paused` also preserve
+    /// those owners. A successful step accepts time before its infallible owner
+    /// replacements. The coupled solver applies a tighter divergence cap than
+    /// the standalone pressure reference. This cap is necessary but does not
+    /// guarantee advancement when source cell volume is already near its
+    /// closure limit. A rejected transport candidate leaves the clock and both
+    /// owners unchanged. The caller can reproject the source velocity or retry
+    /// a shorter interval after examining the error.
+    pub fn advance_coupled_substep(
+        &mut self,
+        clock: &mut SubstepClock,
+        config: CoupledStepConfig<'_>,
+    ) -> Result<CoupledStepOutcome, CoupledStepError> {
+        let fields = self
+            .pressure_fields
+            .as_ref()
+            .ok_or(CoupledStepError::MissingPressureFields)?;
+        let inventory = self
+            .transport_inventory
+            .as_ref()
+            .ok_or(CoupledStepError::MissingTransportInventory)?;
+        match stage_coupled_step(self.grid, fields, inventory, clock, config)? {
+            CoupledSelection::NoChange(outcome) => Ok(outcome),
+            CoupledSelection::Staged(staged) => {
+                clock
+                    .accept(staged.clock_candidate)
+                    .map_err(CoupledStepError::Substep)?;
+                self.install_pressure_fields(staged.pressure_fields);
+                self.transport_inventory = Some(staged.inventory);
+                Ok(staged.outcome)
+            }
+        }
     }
 
     /// Projects with a session-owned assembly, rebuilding it only after its inputs change.
