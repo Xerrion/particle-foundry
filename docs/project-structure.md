@@ -143,13 +143,21 @@ cover layout and invalid inputs. [MAC operators](../engine/crates/sim-cpu/src/op
 compute aperture-weighted divergence and matching cell-pressure gradients,
 including supplied open-face velocity flux and reservoir pressure at the
 half-cell distance; [manufactured tests](../engine/crates/sim-cpu/tests/pressure_operator.rs)
-cover their signs and boundary behavior. The GPU session initializes a wgpu
-device but does not yet advance a physical world.
+cover their signs and boundary behavior.
 The [matrix-free CPU pressure assembly](../engine/crates/sim-cpu/src/assembly.rs)
 uses cell-derived face density and the same aperture convention for sealed
 components. It rejects incompatible component right-hand sides; [assembly tests](../engine/crates/sim-cpu/tests/pressure_assembly.rs)
-cover variable density, disconnected cells, and coefficient failures. It does
-not yet solve for pressure or assemble open-reservoir components.
+cover variable density, disconnected cells, and coefficient failures.
+The [bounded f64 solver](../engine/crates/sim-cpu/src/solver.rs) applies that
+assembly to correct face velocities, checks both scaled pressure residual and
+post-correction divergence, and returns no candidate on failure. [Solver tests](../engine/crates/sim-cpu/tests/pressure_solver.rs)
+include manufactured pressure, disconnected gauges, and 1,000 ticks of
+stratified hydrostatic rest. Pressure assembly and projection currently support
+sealed components only; open-reservoir projection and transported fluid state
+remain planned. The CPU session keys its pressure assembly cache by boundary
+geometry, aperture, and density revisions; [cache tests](../engine/crates/sim-cpu/tests/pressure_cache.rs)
+compare reused and forced-rebuild solves after input changes. The GPU session
+initializes a wgpu device but does not yet advance a physical world.
 [`particle-wasm`](../engine/crates/wasm/src/lib.rs) exposes initialization and disposal
 through [`engine-client/wasm.ts`](../web/src/engine-client/wasm.ts).
 The [browser smoke](../web/tests/browser/engine-smoke.ts) exercises lifecycle,

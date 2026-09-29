@@ -7,7 +7,7 @@ use wasm_bindgen::prelude::*;
 
 /// Exactly one selected lifecycle owner. GPU construction never creates a CPU world.
 enum Owner {
-    Cpu(ReferenceSession),
+    Cpu(Box<ReferenceSession>),
     Gpu(GpuContext),
 }
 
@@ -50,7 +50,7 @@ impl Engine {
 pub async fn initialize(width: f64, height: f64, execution: String) -> Result<Engine, JsValue> {
     let grid = Grid::new(width, height).map_err(JsValue::from_str)?;
     let owner = match execution.as_str() {
-        "cpu-reference" => Owner::Cpu(ReferenceSession::new(grid)),
+        "cpu-reference" => Owner::Cpu(Box::new(ReferenceSession::new(grid))),
         "wgpu" => Owner::Gpu(
             GpuContext::new()
                 .await

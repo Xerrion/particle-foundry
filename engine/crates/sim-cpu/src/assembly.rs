@@ -174,6 +174,11 @@ impl PressureAssembly {
         })
     }
 
+    /// Geometry for which these face coefficients and components were built.
+    pub fn grid(&self) -> Grid {
+        self.grid
+    }
+
     /// Inverse adjacent-cell arithmetic-mean density, in m³/kg; zero on blocked and outer faces.
     pub fn inverse_face_density_m3_kg(&self) -> &FaceValues {
         &self.inverse_face_density_m3_kg
