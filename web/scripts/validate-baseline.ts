@@ -1,13 +1,14 @@
 import { createHash } from "node:crypto";
-import { copyFile, mkdir, open, readFile } from "node:fs/promises";
-import { dirname, resolve } from "node:path";
+import { copyFile, open, readFile } from "node:fs/promises";
+import { resolve } from "node:path";
 
-process.chdir(resolve(import.meta.dir, "../.."));
+import { createEvidenceDirectory } from "./evidence-output";
+
+const root = resolve(import.meta.dir, "../..");
+process.chdir(root);
 
 // E00 evidence runner. Historical harnesses run unchanged against fresh bundles.
-const output = resolve(process.argv[2] ?? `artifacts/validation/p1-m0/${Date.now()}`);
-await mkdir(dirname(output), { recursive: true });
-await mkdir(output, { recursive: false }); // Never overwrite an earlier run.
+const output = await createEvidenceDirectory(root, process.argv[2], "p1-m0");
 const commands: { argv: string[]; exitCode: number; log: string }[] = [];
 
 async function run(argv: string[], name: string, env = process.env): Promise<number> {

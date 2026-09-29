@@ -645,5 +645,28 @@ try {
 	result.textContent = JSON.stringify({ status: "fail", error: String(error) });
 }
 
-const reportUrl = new URL(location.href).searchParams.get("report");
-if (reportUrl) await fetch(reportUrl, { method: "POST", body: result.textContent });
+const reportParameter = new URL(location.href).searchParams.get("report");
+if (reportParameter) {
+	const reportTarget = new URL(reportParameter);
+	const port = Number(reportTarget.port);
+	if (
+		reportTarget.protocol !== "http:" ||
+		reportTarget.hostname !== "127.0.0.1" ||
+		!Number.isSafeInteger(port) ||
+		port < 1 ||
+		port > 65_535 ||
+		reportTarget.username !== "" ||
+		reportTarget.password !== "" ||
+		reportTarget.search !== "" ||
+		reportTarget.hash !== "" ||
+		!/^\/[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+			reportTarget.pathname,
+		)
+	) {
+		throw new Error("Browser smoke report target must be a local receiver");
+	}
+	await fetch(`http://127.0.0.1:${port}${reportTarget.pathname}`, {
+		method: "POST",
+		body: result.textContent,
+	});
+}

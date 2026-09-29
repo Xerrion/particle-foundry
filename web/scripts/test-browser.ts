@@ -1,11 +1,13 @@
-import { mkdir, mkdtemp, rm } from "node:fs/promises";
+import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { dirname, join, resolve } from "node:path";
+import { join, resolve } from "node:path";
+
+import { createEvidenceDirectory } from "./evidence-output";
 
 // Isolated headless test process, never the user's running browser/profile.
 const root = resolve(import.meta.dir, "../..");
 const web = resolve(root, "web");
-const output = resolve(root, process.argv[2] ?? `artifacts/validation/browser/${Date.now()}`);
+const output = await createEvidenceDirectory(root, process.argv[2], "browser");
 const requireGpu = process.argv[3] === "--require-gpu";
 const sustainedGpu = process.argv[4] === "--sustained-gpu";
 if (
@@ -16,8 +18,6 @@ if (
 		"Usage: test-browser.ts [new-evidence-directory] [--require-gpu] [--sustained-gpu]",
 	);
 }
-await mkdir(dirname(output), { recursive: true });
-await mkdir(output); // Never overwrite prior evidence.
 const profile = await mkdtemp(join(tmpdir(), "particle-foundry-smoke-"));
 const binary =
 	process.env.CHROME_BIN ??
