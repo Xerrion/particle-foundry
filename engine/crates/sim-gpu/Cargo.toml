@@ -9,8 +9,12 @@ rust-version.workspace = true
 particle-sim.workspace = true
 wgpu.workspace = true
 
+[dev-dependencies]
+particle-sim-cpu.workspace = true
+
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 wgpu = { workspace = true, features = ["webgpu"] }
+web-sys = { version = "=0.3.85", features = ["HtmlCanvasElement"] }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 wgpu = { workspace = true, features = ["metal", "vulkan", "dx12"] }

@@ -2,10 +2,35 @@
 //!
 //! Device availability is not numerical or supported-scene acceptance.
 
+mod abi;
+#[cfg(target_arch = "wasm32")]
+mod browser_scene;
+mod cfl;
+mod checkpoint;
+mod density;
+mod gravity;
+mod momentum;
+mod pressure;
+mod probe;
+mod render;
+mod scene;
+#[cfg(target_arch = "wasm32")]
+mod surface;
+pub mod transport;
+pub mod viscosity;
+
+pub use abi::{GpuAbiReport, GpuCoreFieldPlan};
+#[cfg(target_arch = "wasm32")]
+pub use browser_scene::{GpuBrowserAdvance, GpuBrowserProbe, GpuBrowserProgress, GpuBrowserScene};
+pub use scene::GpuSceneValidationReport;
+#[cfg(target_arch = "wasm32")]
+pub use surface::{GpuFrame, GpuSurface};
+
 /// Owns GPU resources without a ticking CPU world mirror.
+#[derive(Clone)]
 pub struct GpuContext {
     device: wgpu::Device,
-    _queue: wgpu::Queue,
+    queue: wgpu::Queue,
     adapter: wgpu::AdapterInfo,
 }
 
@@ -29,7 +54,7 @@ impl GpuContext {
             .map_err(|error| format!("Compute device initialization failed: {error}"))?;
         Ok(Self {
             device,
-            _queue: queue,
+            queue,
             adapter: info,
         })
     }
@@ -39,8 +64,14 @@ impl GpuContext {
         format!("{:?}", self.adapter.backend)
     }
 
-    /// Explicitly destroys the device during browser teardown.
+    /// Qualifies one small closed GPU fluid scene on this actual device.
+    /// This experimental E07 fixture does not promote the live sandbox.
+    pub async fn validate_scene_fixture(&self) -> Result<GpuSceneValidationReport, String> {
+        scene::validate_scene_fixture(self).await
+    }
+
+    /// Releases this owner. Other context clones and scene owners stay usable.
     pub fn dispose(self) {
-        self.device.destroy();
+        drop(self);
     }
 }

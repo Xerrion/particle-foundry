@@ -7,8 +7,14 @@ const root = resolve(import.meta.dir, "../..");
 const web = resolve(root, "web");
 const output = resolve(root, process.argv[2] ?? `artifacts/validation/browser/${Date.now()}`);
 const requireGpu = process.argv[3] === "--require-gpu";
-if (process.argv.length > (requireGpu ? 4 : 3)) {
-	throw new Error("Usage: test-browser.ts [new-evidence-directory] [--require-gpu]");
+const sustainedGpu = process.argv[4] === "--sustained-gpu";
+if (
+	process.argv.length > (sustainedGpu ? 5 : requireGpu ? 4 : 3) ||
+	(sustainedGpu && !requireGpu)
+) {
+	throw new Error(
+		"Usage: test-browser.ts [new-evidence-directory] [--require-gpu] [--sustained-gpu]",
+	);
 }
 await mkdir(dirname(output), { recursive: true });
 await mkdir(output); // Never overwrite prior evidence.
@@ -20,6 +26,7 @@ const binary =
 		: "/usr/bin/google-chrome");
 const url = new URL("http://127.0.0.1:4174/engine-smoke/tests/browser/engine-smoke.html");
 if (requireGpu) url.searchParams.set("require-gpu", "");
+if (sustainedGpu) url.searchParams.set("sustained-gpu", "");
 let finish: (report: Record<string, unknown>) => void;
 const completion = new Promise<Record<string, unknown>>((resolve) => {
 	finish = resolve;
@@ -113,9 +120,13 @@ try {
 			throw new Error(`Browser exited before reporting (exit ${code}); see ${output}`);
 		}),
 		new Promise<never>((_, reject) => {
+			const timeoutMs = sustainedGpu ? 90_000 : 30_000;
 			timeout = setTimeout(
-				() => reject(new Error(`Browser smoke timed out after 30 seconds; see ${output}`)),
-				30_000,
+				() =>
+					reject(
+						new Error(`Browser smoke timed out after ${timeoutMs / 1000} seconds; see ${output}`),
+					),
+				timeoutMs,
 			);
 		}),
 	]);

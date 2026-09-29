@@ -6,6 +6,8 @@ export default defineConfig(({ mode }) => ({
 		outDir: "dist",
 		emptyOutDir: true,
 		rollupOptions:
-			mode === "engine-smoke" ? { input: "tests/browser/engine-smoke.html" } : undefined,
+			mode === "engine-smoke"
+				? { input: "tests/browser/engine-smoke.html" }
+				: { input: ["index.html", "gpu.html"] },
 	},
 }));
