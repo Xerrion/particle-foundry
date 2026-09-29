@@ -1,5 +1,12 @@
 # Documentation change log
 
+## 29 September 2026: record falling-sand gameplay references
+
+Recorded browser observations from Sandspiel and BoredHumans as qualitative design
+references. Linked Sandspiel's oil-fire smoke to the existing FIRE-W06 visual review.
+Manual wind, configurable sources and user-facing saves remain ideas for a later
+product decision. P1 scope, implementation status and acceptance gates are unchanged.
+
 ## 27 September 2026: scope P1 to the current sandbox and defer expansion
 
 Made current-sandbox Rust/WASM + wgpu replacement the sole active release goal.

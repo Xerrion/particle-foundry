@@ -103,6 +103,8 @@ Rust owns reference tests, network definitions, resource orchestration and spars
 
 Flame appearance must be derived from actual reacting/hot material, transported gas and supported soot fields. Preserve the useful particle-based appearance, with shader treatment tied to the simulated field/particles rather than an unrelated decorative fire overlay. Cosmetic particles may sample state, but cannot burn fuel, create soot or inject heat. A luminous hot object with zero heat-release rate is not labeled as active combustion.
 
+For qualitative visual review during FIRE-W06, compare the existing oil-fire and ventilation scenes with the [Sandspiel smoke reference](../../sources.md#falling-sand-gameplay-references). Look for distinct bright fire near the source and softer smoke that rises and moves with the wind. This reference does not add a new material, a separate smoke state, or a pixel-matching acceptance gate.
+
 Retain the Fire tool as a funded ignition command. Probes return component amounts, thermal state, heat-release rate, ignition/extinction reason and model limits with completed tick/epoch stamps. Unsupported oxygen or product data is not replaced by a misleading single material label. Quality settings and disabling glow/smoke rendering must not alter physical outcomes.
 
 ## 8. Work packages

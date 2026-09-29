@@ -4,6 +4,14 @@
 
 The proposed cohorts, architecture, milestones, UI, and acceptance process are design decisions. They are not statements from the cited institutions. The complete previous documentation and its historical references are preserved under [history](history/README.md).
 
+## Falling-sand gameplay references
+
+**Visual review:** 29 September 2026. The games below were inspected in a browser. These observations are qualitative design references, not physical validation or new P1 requirements.
+
+**Sandspiel.** The [game](https://sandspiel.club/) shows bright, discrete fire near burning oil and softer, translucent gray smoke above it. The smoke rises in uneven plumes and disperses sideways. The [element guide](https://sandspiel.club/info/) identifies burning oil as a smoke source. In the author's [2019 implementation account](https://maxbittker.com/making-sandspiel/), wind and fluid motion have a separate simulation, and the interface favors direct touch interaction. For Particle Foundry, this is a visual comparison for the existing fire and smoke migration. The current [fire contract](plans/fire-combustion/plan.md#7-gpu-and-visual-integration) still owns physical smoke inventory, transport, and state-derived rendering; the reference does not prescribe a second simulation or pixel parity.
+
+**BoredHumans Falling Sand.** The [browser game](https://boredhumans.com/falling_sand.php) exposes four configurable continuous sources, pen size, overwrite, speed, and Save, Load, and Clear controls. The sources suggest repeatable self-running experiments. A manual Wind tool from Sandspiel, configurable sources, and user-facing scene saves are candidates for a later product decision after P1. If selected, sources need bounded matter and energy accounting, and saves need a versioned scene contract. P1's internal recovery snapshots do not imply a user-facing save feature.
+
 ## iupac-periodic-table
 
 **IUPAC: periodic table of the elements.** [Official reference](https://iupac.org/what-we-do/periodic-table-of-elements/).
