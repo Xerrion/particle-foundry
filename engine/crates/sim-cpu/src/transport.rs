@@ -761,20 +761,15 @@ fn donor_flux(
     } else if neighbor_gradient.abs() <= 1e-12 {
         swept_volume_m3 * alpha
     } else {
-        let liquid_start = if neighbor_gradient > 0.0 {
-            1.0 - alpha
+        // A swept strip touches one end of the donor. Compute its overlap in
+        // volume units. Normalized end coordinates lose tiny fluxes when a
+        // nearly full phase sits beside a much smaller swept strip.
+        let liquid_at_outgoing_face = (neighbor_gradient > 0.0) == toward_positive;
+        if liquid_at_outgoing_face {
+            swept_volume_m3.min(liquid_volume)
         } else {
-            0.0
-        };
-        let liquid_end = liquid_start + alpha;
-        let strip_start = if toward_positive {
-            1.0 - swept_fraction
-        } else {
-            0.0
-        };
-        let strip_end = strip_start + swept_fraction;
-        let overlap = (strip_end.min(liquid_end) - strip_start.max(liquid_start)).max(0.0);
-        donor_volume * overlap
+            (swept_volume_m3 - carrier_volume).max(0.0)
+        }
     };
     if !liquid_swept_volume.is_finite()
         || liquid_swept_volume < 0.0
@@ -792,8 +787,8 @@ fn donor_flux(
             reason: "negative carrier strip volume",
         });
     }
-    let liquid_flux = liquid_swept_volume * inventory.liquid_density_kg_m3;
-    let carrier_flux = carrier_swept_volume * inventory.carrier_density_kg_m3;
+    let liquid_flux = phase_mass_flux(liquid_mass, liquid_volume, liquid_swept_volume);
+    let carrier_flux = phase_mass_flux(carrier_mass, carrier_volume, carrier_swept_volume);
     let liquid_marker_flux = marker_flux(inventory.liquid_marker[donor], liquid_mass, liquid_flux)?;
     let carrier_marker_flux =
         marker_flux(inventory.carrier_marker[donor], carrier_mass, carrier_flux)?;
@@ -803,6 +798,16 @@ fn donor_flux(
         liquid_marker: liquid_marker_flux,
         carrier_marker: carrier_marker_flux,
     })
+}
+
+fn phase_mass_flux(owned_mass: f64, owned_volume: f64, swept_volume: f64) -> f64 {
+    if swept_volume >= owned_volume {
+        // A saturated strip owns the whole phase. Dividing its mass by density
+        // and multiplying back can otherwise overdraw the donor by one ULP.
+        owned_mass
+    } else {
+        owned_mass * (swept_volume / owned_volume)
+    }
 }
 
 fn marker_flux(marker: f64, phase_mass: f64, phase_flux: f64) -> Result<f64, TransportError> {
@@ -1071,6 +1076,76 @@ mod tests {
             left.carrier_mass_kg,
             CELL_VOLUME_M3 * 0.25 * CARRIER_RHO,
             1e-21,
+        );
+    }
+
+    #[test]
+    fn swept_strip_keeps_tiny_and_intermediate_full_liquid_fluxes_bounded() {
+        let grid = grid(3.0, 1.0);
+        let mut state = phase_state(grid, &[0.0, 0.5, 1.0], vec![false; 3]);
+        for (liquid_volume, carrier_volume, swept_volume) in [
+            (
+                1.0000000000000027e-6,
+                2.1741867565575974e-21,
+                4.1633363423443376e-22,
+            ),
+            (
+                8.766006390343263e-7,
+                1.2266945323446473e-7,
+                1.3900031245618323e-7,
+            ),
+        ] {
+            // The second state is a valid intermediate directional sweep.
+            // Its whole-cell volume closes only after the other axis moves.
+            state.liquid_mass_kg[1] = liquid_volume * LIQUID_RHO;
+            state.carrier_mass_kg[1] = carrier_volume * CARRIER_RHO;
+            let flux =
+                donor_flux(&state, 1, swept_volume, Axis::X, true, EdgeMode::Closed).unwrap();
+            let expected_liquid_mass = swept_volume * LIQUID_RHO;
+            near(
+                flux.liquid_mass_kg,
+                expected_liquid_mass,
+                4.0 * f64::EPSILON * expected_liquid_mass,
+            );
+            assert_eq!(flux.carrier_mass_kg, 0.0);
+        }
+    }
+
+    #[test]
+    fn saturated_liquid_strip_uses_exact_owned_mass() {
+        let grid = grid(3.0, 1.0);
+        let mut state = phase_state(grid, &[0.0, 0.5, 1.0], vec![false; 3]);
+        let owned_liquid = 0.000030181535687548446;
+        state.liquid_mass_kg[1] = owned_liquid;
+        state.carrier_mass_kg[1] =
+            (grid.cell_volume_m3() - owned_liquid / LIQUID_RHO) * CARRIER_RHO;
+        let swept_volume = 2.5e-7;
+        let flux = donor_flux(&state, 1, swept_volume, Axis::X, true, EdgeMode::Closed).unwrap();
+        assert_eq!(flux.liquid_mass_kg, owned_liquid);
+        let implied_volume = flux.liquid_mass_kg / LIQUID_RHO + flux.carrier_mass_kg / CARRIER_RHO;
+        near(
+            implied_volume,
+            swept_volume,
+            4.0 * f64::EPSILON * swept_volume,
+        );
+    }
+
+    #[test]
+    fn saturated_carrier_strip_uses_exact_owned_mass() {
+        let grid = grid(3.0, 1.0);
+        let mut state = phase_state(grid, &[1.0, 0.5, 0.0], vec![false; 3]);
+        let owned_carrier = 1.009062743011089e-7;
+        state.carrier_mass_kg[1] = owned_carrier;
+        state.liquid_mass_kg[1] =
+            (grid.cell_volume_m3() - owned_carrier / CARRIER_RHO) * LIQUID_RHO;
+        let swept_volume = 2.5e-7;
+        let flux = donor_flux(&state, 1, swept_volume, Axis::X, true, EdgeMode::Closed).unwrap();
+        assert_eq!(flux.carrier_mass_kg, owned_carrier);
+        let implied_volume = flux.liquid_mass_kg / LIQUID_RHO + flux.carrier_mass_kg / CARRIER_RHO;
+        near(
+            implied_volume,
+            swept_volume,
+            4.0 * f64::EPSILON * swept_volume,
         );
     }
 
