@@ -68,7 +68,8 @@ run = "tsc --noEmit -p tsconfig.catalogue.json"
 description = "Run unit and integration tests"
 dir = "{{config_root}}/web"
 depends = ["install"]
-run = "bun test ./tests"
+# CI compiles Rust in parallel, which slows the existing CPU-heavy fixtures.
+run = "bun test --timeout 30000 ./tests"
 
 [tasks.check]
 description = "Run both type checks and all tests"
