@@ -2,6 +2,7 @@
 
 pub mod assembly;
 pub mod fluid;
+pub mod momentum;
 pub mod operator;
 pub mod solver;
 pub mod substep;
