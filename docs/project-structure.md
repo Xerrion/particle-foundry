@@ -139,8 +139,17 @@ sessions. The CPU session can now own [validated f64 pressure fields](../engine/
 for a staggered MAC grid: cell density and correction pressure, face velocity,
 face aperture, and declared outer boundaries. The fields are isolated by session
 and do not yet advance a physical world. [Pressure-field tests](../engine/crates/sim-cpu/tests/pressure_fields.rs)
-cover layout and invalid inputs. The GPU session initializes a wgpu device but
-does not yet advance a physical world.
+cover layout and invalid inputs. [MAC operators](../engine/crates/sim-cpu/src/operator.rs)
+compute aperture-weighted divergence and matching cell-pressure gradients,
+including supplied open-face velocity flux and reservoir pressure at the
+half-cell distance; [manufactured tests](../engine/crates/sim-cpu/tests/pressure_operator.rs)
+cover their signs and boundary behavior. The GPU session initializes a wgpu
+device but does not yet advance a physical world.
+The [matrix-free CPU pressure assembly](../engine/crates/sim-cpu/src/assembly.rs)
+uses cell-derived face density and the same aperture convention for sealed
+components. It rejects incompatible component right-hand sides; [assembly tests](../engine/crates/sim-cpu/tests/pressure_assembly.rs)
+cover variable density, disconnected cells, and coefficient failures. It does
+not yet solve for pressure or assemble open-reservoir components.
 [`particle-wasm`](../engine/crates/wasm/src/lib.rs) exposes initialization and disposal
 through [`engine-client/wasm.ts`](../web/src/engine-client/wasm.ts).
 The [browser smoke](../web/tests/browser/engine-smoke.ts) exercises lifecycle,

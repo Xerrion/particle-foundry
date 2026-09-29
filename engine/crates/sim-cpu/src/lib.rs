@@ -1,6 +1,8 @@
 //! Rust f64 reference backend. The bootstrap deliberately exposes no fluid stepping.
 
+pub mod assembly;
 pub mod fluid;
+pub mod operator;
 
 use fluid::{PressureFieldError, PressureFields};
 use particle_sim::Grid;
