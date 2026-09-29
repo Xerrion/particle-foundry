@@ -135,7 +135,12 @@ save/load service or a shader ABI test on hardware.
 
 [`particle-sim-cpu`](../engine/crates/sim-cpu/src/lib.rs) and
 [`particle-sim-gpu`](../engine/crates/sim-gpu/src/lib.rs) own separate bootstrap
-sessions. The latter initializes a wgpu device; neither advances a physical world.
+sessions. The CPU session can now own [validated f64 pressure fields](../engine/crates/sim-cpu/src/fluid.rs)
+for a staggered MAC grid: cell density and correction pressure, face velocity,
+face aperture, and declared outer boundaries. The fields are isolated by session
+and do not yet advance a physical world. [Pressure-field tests](../engine/crates/sim-cpu/tests/pressure_fields.rs)
+cover layout and invalid inputs. The GPU session initializes a wgpu device but
+does not yet advance a physical world.
 [`particle-wasm`](../engine/crates/wasm/src/lib.rs) exposes initialization and disposal
 through [`engine-client/wasm.ts`](../web/src/engine-client/wasm.ts).
 The [browser smoke](../web/tests/browser/engine-smoke.ts) exercises lifecycle,
