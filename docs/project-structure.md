@@ -166,9 +166,19 @@ detached, bounded transport candidate. A separate
 [shear candidate](../engine/crates/sim-cpu/src/viscosity.rs) applies tangential
 viscous stress to MAC faces and reports mechanical energy diagnostics. Their
 tests cover sealed conservation, periodic marker displacement, wall rejection,
-and a periodic shear oracle. They have no live browser caller yet. Momentum
-advection, atomic coupling, dam-break/refinement qualification, and the full
-E06 gate remain in progress.
+and a periodic shear oracle. [Compatible momentum](../engine/crates/sim-cpu/src/momentum.rs)
+uses the same phase face ledger, and the [coupled CPU step](../engine/crates/sim-cpu/src/coupled.rs)
+stages transport, momentum, optional shear, gravity, and pressure before it
+accepts physical time and replaces both owners. Rejected stages leave the
+session unchanged. These paths have no live browser caller yet. Named scene,
+dam-break/refinement, and full E06 qualification remain in progress.
+
+[`Grid`](../engine/crates/sim/src/lib.rs) carries cell width as part of its
+identity. The default remains 0.01 m; a CPU reference grid can use another
+validated spacing for physical refinement. CPU operators, transport, momentum,
+viscosity, and coupled substeps derive scale from that grid. Snapshot v1 and the
+current GPU grid uniform carry dimensions but not spacing, so they reject
+nondefault grids until their formats are extended.
 [`particle-wasm`](../engine/crates/wasm/src/lib.rs) exposes initialization and disposal
 through [`engine-client/wasm.ts`](../web/src/engine-client/wasm.ts).
 The [browser smoke](../web/tests/browser/engine-smoke.ts) exercises lifecycle,

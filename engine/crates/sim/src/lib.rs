@@ -4,7 +4,7 @@ pub mod contracts;
 pub mod gpu_layout;
 pub mod snapshot;
 
-/// Physical cell width and represented depth in metres.
+/// Default physical cell width in metres.
 pub const CELL_WIDTH_M: f64 = 0.01;
 /// Represented depth of a cell in metres.
 pub const REPRESENTED_DEPTH_M: f64 = 0.01;
@@ -16,18 +16,40 @@ pub const OUTER_DT_S: f64 = 1.0 / 60.0;
 pub struct Grid {
     width: u32,
     height: u32,
+    cell_width_m_bits: u64,
 }
 
 impl Grid {
-    /// Validates JS-facing dimensions before any integer conversion or allocation.
+    /// Constructs a grid at the default physical scale.
     pub fn new(width: f64, height: f64) -> Result<Self, &'static str> {
+        Self::with_cell_width(width, height, CELL_WIDTH_M)
+    }
+
+    /// Validates dimensions and cell scale before any integer conversion or allocation.
+    pub fn with_cell_width(
+        width: f64,
+        height: f64,
+        cell_width_m: f64,
+    ) -> Result<Self, &'static str> {
         let valid = |n: f64| n.is_finite() && n.fract() == 0.0 && (1.0..=4096.0).contains(&n);
         if !valid(width) || !valid(height) || width * height > 1_048_576.0 {
             return Err("grid dimensions must be integers in 1..4096 with at most 1048576 cells");
         }
+        let area_m2 = cell_width_m * cell_width_m;
+        let volume_m3 = area_m2 * REPRESENTED_DEPTH_M;
+        if !cell_width_m.is_finite()
+            || cell_width_m <= 0.0
+            || !area_m2.is_finite()
+            || area_m2 <= 0.0
+            || !volume_m3.is_finite()
+            || volume_m3 <= 0.0
+        {
+            return Err("grid cell width must have finite positive area and volume");
+        }
         Ok(Self {
             width: width as u32,
             height: height as u32,
+            cell_width_m_bits: cell_width_m.to_bits(),
         })
     }
 
@@ -38,6 +60,14 @@ impl Grid {
     /// Vertical cell count.
     pub fn height(self) -> u32 {
         self.height
+    }
+    /// Physical cell width in metres.
+    pub fn cell_width_m(self) -> f64 {
+        f64::from_bits(self.cell_width_m_bits)
+    }
+    /// Physical volume of one cell at the represented depth, in cubic metres.
+    pub fn cell_volume_m3(self) -> f64 {
+        self.cell_width_m() * self.cell_width_m() * REPRESENTED_DEPTH_M
     }
     /// Number of owned cell entries.
     pub fn cells(self) -> usize {
@@ -77,9 +107,38 @@ mod tests {
 
     #[test]
     fn default_scale_and_real_grid_are_preserved() {
-        assert_eq!(Grid::new(480.0, 270.0).unwrap().cells(), 129_600);
+        let grid = Grid::new(480.0, 270.0).unwrap();
+        assert_eq!(grid.cells(), 129_600);
+        assert_eq!(grid.cell_width_m(), CELL_WIDTH_M);
+        assert_eq!(
+            grid.cell_volume_m3(),
+            CELL_WIDTH_M * CELL_WIDTH_M * REPRESENTED_DEPTH_M
+        );
         assert_eq!(CELL_WIDTH_M, 0.01);
         assert_eq!(OUTER_DT_S, 1.0 / 60.0);
+    }
+
+    #[test]
+    fn spacing_is_part_of_grid_identity() {
+        let default = Grid::new(2.0, 3.0).unwrap();
+        let refined = Grid::with_cell_width(2.0, 3.0, 0.005).unwrap();
+        assert_ne!(default, refined);
+        assert_eq!(refined.cell_width_m(), 0.005);
+        assert_eq!(
+            refined.cell_volume_m3(),
+            0.005 * 0.005 * REPRESENTED_DEPTH_M
+        );
+        assert_eq!(
+            default,
+            Grid::with_cell_width(2.0, 3.0, CELL_WIDTH_M).unwrap()
+        );
+    }
+
+    #[test]
+    fn rejects_spacing_without_representable_area_and_volume() {
+        for bad in [0.0, -0.01, f64::NAN, f64::INFINITY, 1.0e-162, 1.0e155] {
+            assert!(Grid::with_cell_width(2.0, 3.0, bad).is_err());
+        }
     }
 
     #[test]

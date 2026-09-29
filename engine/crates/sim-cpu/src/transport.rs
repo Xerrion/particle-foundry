@@ -9,7 +9,7 @@ use particle_sim::{CELL_WIDTH_M, Grid, REPRESENTED_DEPTH_M, contracts::Boundary}
 
 use crate::fluid::{FaceValues, PressureFields};
 
-/// Whole geometric cell volume in m³. This initial kernel has no partial-solid cells.
+/// Default-scale whole-cell volume in m³. This kernel has no partial-solid cells.
 pub const CELL_VOLUME_M3: f64 = CELL_WIDTH_M * CELL_WIDTH_M * REPRESENTED_DEPTH_M;
 /// Maximum normal displacement in cell widths for one transport substep.
 pub const MAX_FACE_CFL: f64 = 0.5;
@@ -224,7 +224,8 @@ impl TransportInventory {
     /// Derived whole-cell liquid volume fraction; absent for an invalid index.
     pub fn alpha(&self, cell: usize) -> Option<f64> {
         self.liquid_mass_kg.get(cell).and_then(|mass| {
-            (!self.fixed_wall[cell]).then(|| mass / self.liquid_density_kg_m3 / CELL_VOLUME_M3)
+            (!self.fixed_wall[cell])
+                .then(|| mass / self.liquid_density_kg_m3 / self.grid.cell_volume_m3())
         })
     }
 
@@ -336,6 +337,7 @@ impl TransportInventory {
 
     fn validate_completed(&self) -> Result<(), TransportError> {
         self.validate_nonnegative()?;
+        let cell_volume_m3 = self.grid.cell_volume_m3();
         for cell in 0..self.grid.cells() {
             let liquid_volume = self.liquid_mass_kg[cell] / self.liquid_density_kg_m3;
             let carrier_volume = self.carrier_mass_kg[cell] / self.carrier_density_kg_m3;
@@ -355,8 +357,8 @@ impl TransportInventory {
             if !closure.is_finite()
                 || (self.liquid_mass_kg[cell] > 0.0 && liquid_volume == 0.0)
                 || (self.carrier_mass_kg[cell] > 0.0 && carrier_volume == 0.0)
-                || (closure - CELL_VOLUME_M3).abs() > VOLUME_CLOSURE_REL_TOL * CELL_VOLUME_M3
-                || liquid_volume > CELL_VOLUME_M3 * (1.0 + VOLUME_CLOSURE_REL_TOL)
+                || (closure - cell_volume_m3).abs() > VOLUME_CLOSURE_REL_TOL * cell_volume_m3
+                || liquid_volume > cell_volume_m3 * (1.0 + VOLUME_CLOSURE_REL_TOL)
             {
                 return Err(TransportError::InvalidCell {
                     index: cell,
@@ -620,7 +622,7 @@ fn transport_axis(
             } else {
                 (positive_cell, negative_cell)
             };
-            let cfl = speed.abs() * dt_s / CELL_WIDTH_M;
+            let cfl = speed.abs() * dt_s / grid.cell_width_m();
             if !cfl.is_finite() {
                 return Err(TransportError::InvalidFace {
                     axis: axis.label(),
@@ -636,7 +638,7 @@ fn transport_axis(
                 });
             }
             *max_face_cfl = max_face_cfl.max(cfl);
-            let swept_volume = cfl * open * CELL_VOLUME_M3;
+            let swept_volume = cfl * open * grid.cell_volume_m3();
             let phase_flux = donor_flux(inventory, donor, swept_volume, axis, speed > 0.0, edges)?;
             outgoing[donor].add(phase_flux);
             incoming[receiver].add(phase_flux);
@@ -883,7 +885,11 @@ mod tests {
         let mut liquid = Vec::with_capacity(grid.cells());
         let mut carrier = Vec::with_capacity(grid.cells());
         for (cell, &fraction) in alpha.iter().enumerate() {
-            let available = if wall[cell] { 0.0 } else { CELL_VOLUME_M3 };
+            let available = if wall[cell] {
+                0.0
+            } else {
+                grid.cell_volume_m3()
+            };
             liquid.push(fraction * available * LIQUID_RHO);
             carrier.push((1.0 - fraction) * available * CARRIER_RHO);
         }
@@ -976,6 +982,60 @@ mod tests {
         assert!(matches!(
             invalid_marker,
             Err(TransportError::InvalidCell { index: 0, .. })
+        ));
+    }
+
+    #[test]
+    fn refined_grid_uses_its_own_phase_volume_and_swept_flux() {
+        let refined = Grid::with_cell_width(2.0, 2.0, CELL_WIDTH_M / 2.0).unwrap();
+        let source = phase_state(refined, &[0.5; 4], vec![false; 4]);
+        near(source.alpha(0).unwrap(), 0.5, 1e-15);
+
+        let wrong_volume = TransportInventory::new(
+            refined,
+            LIQUID_RHO,
+            CARRIER_RHO,
+            vec![0.0; 4],
+            vec![CELL_VOLUME_M3 * CARRIER_RHO; 4],
+            vec![0.0; 4],
+            vec![0.0; 4],
+            vec![false; 4],
+        );
+        assert!(matches!(
+            wrong_volume,
+            Err(TransportError::InvalidCell { index: 0, .. })
+        ));
+
+        let mut velocity = face_values(refined, 0.0);
+        velocity.u[refined.u_face_index(1, 0).unwrap()] = 1.0;
+        velocity.u[refined.u_face_index(1, 1).unwrap()] = -1.0;
+        velocity.v[refined.v_face_index(0, 1).unwrap()] = -1.0;
+        velocity.v[refined.v_face_index(1, 1).unwrap()] = 1.0;
+        let refined_fields = fields(refined, closed_aperture(refined));
+        let candidate = source
+            .candidate(&refined_fields, &velocity, 0.00125)
+            .unwrap();
+        let face = refined.u_face_index(1, 0).unwrap();
+        near(candidate.max_face_cfl, 0.25, 1e-15);
+        near(
+            candidate.fluxes.volume_m3.u[face],
+            0.25 * refined.cell_volume_m3(),
+            1e-21,
+        );
+        near(
+            candidate.fluxes.liquid_mass_kg.u[face],
+            0.125 * refined.cell_volume_m3() * LIQUID_RHO,
+            1e-18,
+        );
+        for cell in 0..refined.cells() {
+            near(candidate.inventory.alpha(cell).unwrap(), 0.5, 1e-12);
+        }
+
+        let default_scale = grid(2.0, 2.0);
+        let foreign_fields = fields(default_scale, closed_aperture(default_scale));
+        assert!(matches!(
+            source.candidate(&foreign_fields, &velocity, 0.00125),
+            Err(TransportError::GridMismatch)
         ));
     }
 

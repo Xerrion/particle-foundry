@@ -2,7 +2,7 @@
 
 use std::{collections::BTreeMap, num::NonZeroU32};
 
-use particle_sim::{CELL_WIDTH_M, contracts::Boundary};
+use particle_sim::contracts::Boundary;
 
 use crate::fluid::{FaceValues, PressureFieldError, PressureFields};
 
@@ -57,7 +57,7 @@ pub struct ReservoirPressure {
 /// Returns the aperture-weighted volume-velocity divergence in s⁻¹.
 ///
 /// Positive `u` points right and positive `v` points down. The cell result is
-/// `(a_r u_r - a_l u_l + a_b v_b - a_t v_t) / CELL_WIDTH_M`. An open face uses
+/// `(a_r u_r - a_l u_l + a_b v_b - a_t v_t) / grid.cell_width_m()`. An open face uses
 /// its supplied normal velocity, including inward flow; this operator does not
 /// infer a velocity from reservoir pressure. It reads, but never advances or
 /// changes, the owning pressure fields.
@@ -70,6 +70,7 @@ pub fn divergence_per_s(
     let grid = fields.grid();
     let width = grid.width() as usize;
     let height = grid.height() as usize;
+    let cell_width_m = grid.cell_width_m();
     let aperture = fields.aperture();
     let mut divergence = vec![0.0; grid.cells()];
 
@@ -83,7 +84,7 @@ pub fn divergence_per_s(
                 - aperture.u[left] * velocity_m_s.u[left]
                 + aperture.v[bottom] * velocity_m_s.v[bottom]
                 - aperture.v[top] * velocity_m_s.v[top])
-                / CELL_WIDTH_M;
+                / cell_width_m;
         }
     }
     reject_nonfinite_output("divergence_per_s", &divergence)?;
@@ -121,6 +122,7 @@ pub fn pressure_gradient_with_reservoirs_pa_per_m(
 
     let width = grid.width() as usize;
     let height = grid.height() as usize;
+    let cell_width_m = grid.cell_width_m();
     let aperture = fields.aperture();
     let mut gradient = FaceValues {
         u: vec![0.0; grid.u_faces()],
@@ -132,7 +134,7 @@ pub fn pressure_gradient_with_reservoirs_pa_per_m(
             let face = y * (width + 1) + x;
             if aperture.u[face] > 0.0 {
                 gradient.u[face] =
-                    (pressure_pa[y * width + x] - pressure_pa[y * width + x - 1]) / CELL_WIDTH_M;
+                    (pressure_pa[y * width + x] - pressure_pa[y * width + x - 1]) / cell_width_m;
             }
         }
     }
@@ -141,11 +143,11 @@ pub fn pressure_gradient_with_reservoirs_pa_per_m(
             let face = y * width + x;
             if aperture.v[face] > 0.0 {
                 gradient.v[face] =
-                    (pressure_pa[y * width + x] - pressure_pa[(y - 1) * width + x]) / CELL_WIDTH_M;
+                    (pressure_pa[y * width + x] - pressure_pa[(y - 1) * width + x]) / cell_width_m;
             }
         }
     }
-    let half_cell_width_m = CELL_WIDTH_M / 2.0;
+    let half_cell_width_m = cell_width_m / 2.0;
     for y in 0..height {
         let left_face = y * (width + 1);
         let right_face = left_face + width;

@@ -11,8 +11,8 @@ The running application is TypeScript in `web/`. `engine/` contains the Rust/WAS
 bootstrap, portable contracts and the E05 sealed f64 CPU pressure reference.
 E03 adds an experimental browser session contract and one generated catalogue
 projection. E06 now has a Rust-owned phase-transport candidate and a detached
-viscous-shear candidate. Their coupled fluid step and a physical GPU scene remain
-unfinished.
+viscous-shear candidate, plus an atomic coupled CPU substep. Named-scene and
+refinement qualification remain open. A physical GPU scene is still planned.
 See [E05 validation](validation/p1-m2-e05.md) for the CPU reference result and
 [the dated recovery handoff](RESUME.md) for the earlier recovered commits.
 A plan or reference entry is not evidence of implementation.

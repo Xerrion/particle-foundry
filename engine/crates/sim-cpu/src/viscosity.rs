@@ -6,7 +6,7 @@
 //! momentum advection, and conversion of lost kinetic energy to internal energy
 //! are separate stages; the diagnostics here do not close a thermal ledger.
 
-use particle_sim::{CELL_WIDTH_M, Grid, REPRESENTED_DEPTH_M, contracts::Boundary};
+use particle_sim::{Grid, REPRESENTED_DEPTH_M, contracts::Boundary};
 
 use crate::fluid::{FaceValues, PressureFields};
 
@@ -115,7 +115,7 @@ pub fn shear_viscosity_candidate(
         fields.aperture(),
         cell_dynamic_viscosity_pa_s,
         dt_s,
-        CELL_WIDTH_M,
+        fields.grid().cell_width_m(),
         EdgeMode::Closed,
     )
 }
@@ -538,6 +538,36 @@ mod tests {
             "{spatial_fine} < {spatial_coarse}"
         );
         assert!(spatial_fine < 1e-6, "error: {spatial_fine}");
+    }
+
+    #[test]
+    fn public_shear_candidate_uses_grid_cell_width() {
+        let default = fixture(4, 4);
+        let refined_grid = Grid::with_cell_width(4.0, 4.0, 0.005).unwrap();
+        let refined = PressureFields::new(
+            refined_grid,
+            default.boundaries(),
+            default.density_kg_m3().to_vec(),
+            default.correction_pressure_pa().to_vec(),
+            FaceValues {
+                u: vec![0.0; refined_grid.u_faces()],
+                v: vec![0.0; refined_grid.v_faces()],
+            },
+            FaceValues {
+                u: default.aperture().u.clone(),
+                v: default.aperture().v.clone(),
+            },
+        )
+        .unwrap();
+        let viscosity = vec![1.2e-4; default.grid().cells()];
+        let default_candidate =
+            shear_viscosity_candidate(&default, default.velocity_m_s(), &viscosity, 1e-5).unwrap();
+        let refined_candidate =
+            shear_viscosity_candidate(&refined, refined.velocity_m_s(), &viscosity, 1e-5).unwrap();
+        assert_eq!(
+            refined_candidate.diagnostics.max_stable_dt_s,
+            default_candidate.diagnostics.max_stable_dt_s / 4.0
+        );
     }
 
     #[test]

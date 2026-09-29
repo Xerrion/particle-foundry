@@ -1,7 +1,7 @@
 //! Explicit little-endian Rust/WGSL scalar layouts; never memcpy a Rust Vec or enum.
 
 use crate::{
-    Grid,
+    CELL_WIDTH_M, Grid,
     contracts::{ContractError, MAX_ACTIVE_COMPONENTS},
 };
 
@@ -71,6 +71,11 @@ pub struct GpuGridParams {
 impl GpuGridParams {
     /// Records dimensions and the actual compact active set, never all 118 identities.
     pub fn new(grid: Grid, active_count: usize) -> Result<Self, ContractError> {
+        if grid.cell_width_m() != CELL_WIDTH_M {
+            return Err(ContractError::Unsupported(
+                "GPU grid params cannot encode nondefault cell width",
+            ));
+        }
         if active_count == 0 || active_count > MAX_ACTIVE_COMPONENTS {
             return Err(ContractError::Capacity {
                 requested: active_count,
@@ -130,5 +135,21 @@ mod tests {
         assert_eq!(offset_of!(GpuGridParams, height), 4);
         assert_eq!(offset_of!(GpuGridParams, active_count), 8);
         assert_eq!(offset_of!(GpuGridParams, reserved), 12);
+    }
+
+    #[test]
+    fn grid_params_keep_default_bytes_and_reject_refined_spacing() {
+        let default = Grid::new(2.0, 3.0).unwrap();
+        let params = GpuGridParams::new(default, 1).unwrap();
+        assert_eq!(
+            params.to_le_bytes(),
+            [2, 0, 0, 0, 3, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0]
+        );
+
+        let refined = Grid::with_cell_width(2.0, 3.0, 0.005).unwrap();
+        assert!(matches!(
+            GpuGridParams::new(refined, 1),
+            Err(ContractError::Unsupported(_))
+        ));
     }
 }

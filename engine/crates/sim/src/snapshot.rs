@@ -3,7 +3,7 @@
 use std::num::NonZeroU32;
 
 use crate::{
-    Grid,
+    CELL_WIDTH_M, Grid,
     contracts::{
         ActiveComponents, Boundaries, Boundary, ChemicalReference, ComponentDefinition,
         ComponentId, ComponentRole, ContractError, EnergyReference, FormId, MAX_ACTIVE_COMPONENTS,
@@ -80,6 +80,11 @@ pub struct Snapshot {
 impl Snapshot {
     /// Checks a complete detached generation before serializing or loading it.
     pub fn validate(&self) -> Result<(), ContractError> {
+        if self.grid.cell_width_m() != CELL_WIDTH_M {
+            return Err(ContractError::Unsupported(
+                "snapshot v1 cannot encode nondefault cell width",
+            ));
+        }
         if self.model != PhysicalModel::LowMach {
             return Err(ContractError::Unsupported("snapshot model is not lowMach"));
         }
@@ -437,5 +442,62 @@ impl<'a> Reader<'a> {
             .iter()
             .map(|chunk| f64::from_le_bytes(*chunk))
             .collect())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn sample(grid: Grid) -> Snapshot {
+        let active = ActiveComponents::new(vec![ComponentDefinition {
+            id: ComponentId::new(1).unwrap(),
+            species: SpeciesId::new(1).unwrap(),
+            form: FormId::new(1).unwrap(),
+            isotope_signature: None,
+            role: ComponentRole::Carrier,
+            property_domain: None,
+        }])
+        .unwrap();
+        Snapshot {
+            grid,
+            model: PhysicalModel::LowMach,
+            catalogue_sha256: [1; 32],
+            network: None,
+            energy_reference: EnergyReference::PassiveMarker,
+            chemical_reference: ChemicalReference::Disabled,
+            boundaries: [Boundary::Closed; 4],
+            epoch: 1,
+            tick: 0,
+            accepted_time_s: 0.0,
+            last_applied_sequence: 0,
+            random_counter: 0,
+            active,
+            component_mass_kg: vec![1.0; grid.cells()],
+            energy_j: vec![0.0; grid.cells()],
+            u_m_s: vec![0.0; grid.u_faces()],
+            v_m_s: vec![0.0; grid.v_faces()],
+            fixed_wall: vec![0; grid.cells()],
+            source_mass_kg: vec![0.0],
+            boundary_mass_kg: vec![0.0; 4],
+            source_energy_j: 0.0,
+            boundary_energy_j: [0.0; 4],
+            nuclear_extension: None,
+        }
+    }
+
+    #[test]
+    fn version_one_round_trips_default_grid_and_rejects_refined_grid() {
+        let default = sample(Grid::new(1.0, 1.0).unwrap());
+        assert_eq!(
+            Snapshot::decode(&default.encode().unwrap()).unwrap(),
+            default
+        );
+
+        let refined = sample(Grid::with_cell_width(1.0, 1.0, 0.005).unwrap());
+        assert!(matches!(
+            refined.encode(),
+            Err(ContractError::Unsupported(_))
+        ));
     }
 }

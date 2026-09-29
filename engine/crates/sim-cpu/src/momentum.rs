@@ -11,7 +11,7 @@
 //! module does not apply viscosity,
 //! pressure, gravity, or a higher-order momentum reconstruction.
 
-use particle_sim::{CELL_WIDTH_M, Grid, REPRESENTED_DEPTH_M, contracts::Boundary};
+use particle_sim::{Grid, REPRESENTED_DEPTH_M, contracts::Boundary};
 
 use crate::{
     fluid::{FaceValues, PressureFields},
@@ -390,7 +390,7 @@ fn validate_face_inputs(
                     reason: "volume flux disagrees with face velocity",
                 });
             }
-            let expected_volume = speed * dt_s * CELL_WIDTH_M * REPRESENTED_DEPTH_M * open;
+            let expected_volume = speed * dt_s * grid.cell_width_m() * REPRESENTED_DEPTH_M * open;
             if !expected_volume.is_finite() {
                 return Err(MomentumError::NonFiniteResult {
                     field: "expected face volume flux",
@@ -929,9 +929,7 @@ fn transfer_momentum(
 mod tests {
     use std::num::NonZeroU32;
 
-    use particle_sim::{CELL_WIDTH_M, contracts::Boundary};
-
-    use crate::transport::CELL_VOLUME_M3;
+    use particle_sim::contracts::Boundary;
 
     use super::*;
 
@@ -954,17 +952,18 @@ mod tests {
     }
 
     fn inventory(grid: Grid, alpha: &[f64]) -> TransportInventory {
+        let cell_volume_m3 = grid.cell_volume_m3();
         TransportInventory::new(
             grid,
             1000.0,
             1.0,
             alpha
                 .iter()
-                .map(|fraction| fraction * CELL_VOLUME_M3 * 1000.0)
+                .map(|fraction| fraction * cell_volume_m3 * 1000.0)
                 .collect(),
             alpha
                 .iter()
-                .map(|fraction| (1.0 - fraction) * CELL_VOLUME_M3)
+                .map(|fraction| (1.0 - fraction) * cell_volume_m3)
                 .collect(),
             vec![0.0; grid.cells()],
             vec![0.0; grid.cells()],
@@ -1024,12 +1023,14 @@ mod tests {
         let mut velocity = zero_velocity(grid);
         for y in 0..height {
             for x in 0..=width {
-                velocity.u[y * (width + 1) + x] = (stream(x, y + 1) - stream(x, y)) / CELL_WIDTH_M;
+                velocity.u[y * (width + 1) + x] =
+                    (stream(x, y + 1) - stream(x, y)) / grid.cell_width_m();
             }
         }
         for y in 0..=height {
             for x in 0..width {
-                velocity.v[y * width + x] = -(stream(x + 1, y) - stream(x, y)) / CELL_WIDTH_M;
+                velocity.v[y * width + x] =
+                    -(stream(x + 1, y) - stream(x, y)) / grid.cell_width_m();
             }
         }
         velocity
@@ -1162,6 +1163,47 @@ mod tests {
                 assert_eq!(*speed, 0.0);
             }
         }
+    }
+
+    #[test]
+    fn refined_grid_accepts_matching_transport_volume_and_rejects_other_scale() {
+        let grid = Grid::with_cell_width(4.0, 4.0, 0.005).unwrap();
+        let source = inventory(grid, &vec![0.5; grid.cells()]);
+        let velocity = vortex_velocity(grid);
+        let fields = pressure_fields(grid, [Boundary::Closed; 4], closed_aperture(grid));
+        let dt_s = 0.001;
+        let transport = source.candidate(&fields, &velocity, dt_s).unwrap();
+        let face = grid.u_face_index(1, 1).unwrap();
+        assert_near(
+            transport.fluxes.volume_m3.u[face],
+            velocity.u[face] * dt_s * grid.cell_width_m() * REPRESENTED_DEPTH_M,
+        );
+        let result = momentum_candidate(&source, &transport, &fields, &velocity, dt_s).unwrap();
+        assert_accounted_momentum(
+            &result.dual_mass_before_kg.u,
+            &velocity.u,
+            &result.dual_mass_after_kg.u,
+            &result.velocity_m_s.u,
+            result.wall_impulse_kg_m_s[0],
+        );
+        assert_accounted_momentum(
+            &result.dual_mass_before_kg.v,
+            &velocity.v,
+            &result.dual_mass_after_kg.v,
+            &result.velocity_m_s.v,
+            result.wall_impulse_kg_m_s[1],
+        );
+
+        let default_scale = Grid::new(4.0, 4.0).unwrap();
+        let foreign_fields = pressure_fields(
+            default_scale,
+            [Boundary::Closed; 4],
+            closed_aperture(default_scale),
+        );
+        assert_eq!(
+            momentum_candidate(&source, &transport, &foreign_fields, &velocity, dt_s),
+            Err(MomentumError::GridMismatch)
+        );
     }
 
     #[test]

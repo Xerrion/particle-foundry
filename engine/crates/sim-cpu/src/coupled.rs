@@ -6,7 +6,7 @@
 //! heat deposition, reservoirs, chemistry, or GPU execution. All stage results
 //! are detached until the owning session accepts them with physical time.
 
-use particle_sim::{CELL_WIDTH_M, Grid, contracts::Boundary};
+use particle_sim::{Grid, contracts::Boundary};
 
 use crate::{
     fluid::{FaceValues, PressureFieldError, PressureFields},
@@ -16,7 +16,7 @@ use crate::{
         PressureSolveError, SolveConfig, SolveDiagnostics, gravity_predictor_closed, project_closed,
     },
     substep::{PauseReason, SubstepCandidate, SubstepClock, SubstepError, SubstepSelection},
-    transport::{CELL_VOLUME_M3, TransportError, TransportInventory, VOLUME_CLOSURE_REL_TOL},
+    transport::{TransportError, TransportInventory, VOLUME_CLOSURE_REL_TOL},
     viscosity::{ViscosityDiagnostics, ViscosityError, shear_viscosity_candidate},
 };
 
@@ -187,7 +187,7 @@ pub(crate) fn stage_coupled_step(
     validate_owner_match(grid, fields, inventory)?;
     let max_nu_m2_s = validate_viscosity(inventory, config.cell_dynamic_viscosity_pa_s)?;
     let selected = clock
-        .select(grid, fields.velocity_m_s(), CELL_WIDTH_M, max_nu_m2_s)
+        .select(grid, fields.velocity_m_s(), max_nu_m2_s)
         .map_err(CoupledStepError::Substep)?;
     let clock_candidate = match selected {
         SubstepSelection::Complete => {
@@ -331,7 +331,8 @@ fn derived_density(inventory: &TransportInventory) -> Result<Vec<f64>, CoupledSt
         let value = if inventory.fixed_wall()[cell] {
             inventory.carrier_density_kg_m3()
         } else {
-            (inventory.liquid_mass_kg()[cell] + inventory.carrier_mass_kg()[cell]) / CELL_VOLUME_M3
+            (inventory.liquid_mass_kg()[cell] + inventory.carrier_mass_kg()[cell])
+                / inventory.grid().cell_volume_m3()
         };
         if !value.is_finite() || value <= 0.0 {
             return Err(CoupledStepError::DensityMismatch { cell });
@@ -399,7 +400,8 @@ fn copy_faces(faces: &FaceValues) -> FaceValues {
 mod tests {
     use super::*;
     use crate::ReferenceSession;
-    use particle_sim::OUTER_DT_S;
+    use crate::transport::CELL_VOLUME_M3;
+    use particle_sim::{CELL_WIDTH_M, OUTER_DT_S};
 
     fn grid() -> Grid {
         Grid::new(2.0, 2.0).unwrap()
@@ -571,6 +573,47 @@ mod tests {
             )
             .unwrap();
         assert_eq!(session.pressure_assembly_builds(), 2);
+    }
+
+    #[test]
+    fn refined_grid_coupled_step_uses_its_own_cell_volume_and_width() {
+        let grid = Grid::with_cell_width(2.0, 2.0, 0.005).unwrap();
+        let inventory = TransportInventory::new(
+            grid,
+            1000.0,
+            1.2,
+            vec![0.0; grid.cells()],
+            vec![1.2 * grid.cell_volume_m3(); grid.cells()],
+            vec![0.0; grid.cells()],
+            vec![1.0; grid.cells()],
+            vec![false; grid.cells()],
+        )
+        .unwrap();
+        let before = inventory.totals();
+        let mut session = ReferenceSession::new(grid);
+        session
+            .set_pressure_fields(fields(grid, &inventory, vortex(grid, 0.05)))
+            .unwrap();
+        session.set_transport_inventory(inventory).unwrap();
+        let mut clock = SubstepClock::new(0.001, 4).unwrap();
+        assert!(matches!(
+            session.advance_coupled_substep(&mut clock, config(0.0)),
+            Ok(CoupledStepOutcome::Advanced { dt_s: 0.001, .. })
+        ));
+        assert_eq!(clock.accepted_time_s(), 0.001);
+        let after = session.transport_inventory().unwrap().totals();
+        assert!(
+            (after.carrier_mass_kg - before.carrier_mass_kg).abs()
+                <= 1e-12 * before.carrier_mass_kg
+        );
+        assert!(
+            session
+                .pressure_fields()
+                .unwrap()
+                .density_kg_m3()
+                .iter()
+                .all(|density| (density - 1.2).abs() <= 1e-12)
+        );
     }
 
     #[test]
@@ -863,7 +906,7 @@ mod tests {
         let mut clock = SubstepClock::new(OUTER_DT_S, 10).unwrap();
         for accepted in 1..=10 {
             let SubstepSelection::Candidate(candidate) =
-                clock.select(grid, &velocity, CELL_WIDTH_M, 0.0).unwrap()
+                clock.select(grid, &velocity, 0.0).unwrap()
             else {
                 panic!("expected candidate {accepted}");
             };
@@ -872,7 +915,7 @@ mod tests {
             assert_eq!(clock.accepted_substeps(), accepted);
         }
         assert_eq!(
-            clock.select(grid, &velocity, CELL_WIDTH_M, 0.0).unwrap(),
+            clock.select(grid, &velocity, 0.0).unwrap(),
             SubstepSelection::Complete
         );
 

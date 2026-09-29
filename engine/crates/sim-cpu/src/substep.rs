@@ -176,7 +176,6 @@ impl SubstepClock {
         &self,
         grid: Grid,
         velocity_m_s: &FaceValues,
-        cell_width_m: f64,
         max_kinematic_viscosity_m2_s: f64,
     ) -> Result<SubstepSelection, SubstepError> {
         let remaining_s = self.remaining_time_s();
@@ -190,9 +189,7 @@ impl SubstepClock {
             });
         }
 
-        if !cell_width_m.is_finite() || cell_width_m <= 0.0 {
-            return Err(SubstepError::InvalidScalar("cell_width_m"));
-        }
+        let cell_width_m = grid.cell_width_m();
         if !max_kinematic_viscosity_m2_s.is_finite() || max_kinematic_viscosity_m2_s < 0.0 {
             return Err(SubstepError::InvalidScalar("max_kinematic_viscosity_m2_s"));
         }
@@ -212,23 +209,7 @@ impl SubstepClock {
                 Some(limit)
             }
         };
-        let max_diffusion_dt_s = if max_kinematic_viscosity_m2_s == 0.0 {
-            None
-        } else {
-            let quarter_squared_width = cell_width_m * cell_width_m * 0.25;
-            let limit = if quarter_squared_width.is_finite() && quarter_squared_width > 0.0 {
-                quarter_squared_width / max_kinematic_viscosity_m2_s
-            } else {
-                (cell_width_m / max_kinematic_viscosity_m2_s) * (cell_width_m * 0.25)
-            };
-            if limit.is_infinite() {
-                None
-            } else if !limit.is_finite() || limit <= 0.0 {
-                return Err(SubstepError::UnrepresentableStep);
-            } else {
-                Some(limit)
-            }
-        };
+        let max_diffusion_dt_s = diffusion_limit(cell_width_m, max_kinematic_viscosity_m2_s)?;
         let mut dt_s = remaining_s;
         if let Some(limit) = max_cfl_dt_s {
             dt_s = dt_s.min(limit);
@@ -282,6 +263,28 @@ impl SubstepClock {
         self.accepted_time_s = next_time_s;
         self.accepted_substeps += 1;
         Ok(())
+    }
+}
+
+fn diffusion_limit(
+    cell_width_m: f64,
+    kinematic_viscosity_m2_s: f64,
+) -> Result<Option<f64>, SubstepError> {
+    if kinematic_viscosity_m2_s == 0.0 {
+        return Ok(None);
+    }
+    let quarter_squared_width = cell_width_m * cell_width_m * 0.25;
+    let limit = if quarter_squared_width.is_finite() && quarter_squared_width > 0.0 {
+        quarter_squared_width / kinematic_viscosity_m2_s
+    } else {
+        (cell_width_m / kinematic_viscosity_m2_s) * (cell_width_m * 0.25)
+    };
+    if limit.is_infinite() {
+        Ok(None)
+    } else if !limit.is_finite() || limit <= 0.0 {
+        Err(SubstepError::UnrepresentableStep)
+    } else {
+        Ok(Some(limit))
     }
 }
 
@@ -355,7 +358,7 @@ mod tests {
         let cap_s = 0.005 / 3.0;
         let mut durations = Vec::new();
         loop {
-            match clock.select(single_cell(), &velocity, 0.01, 0.0).unwrap() {
+            match clock.select(single_cell(), &velocity, 0.0).unwrap() {
                 SubstepSelection::Candidate(step) => {
                     durations.push(step.dt_s());
                     assert!(step.dt_s() <= cap_s);
@@ -376,13 +379,13 @@ mod tests {
         let clock = SubstepClock::new(OUTER_DT_S, 20).unwrap();
         let outward = candidate(
             clock
-                .select(single_cell(), &faces(-3.0, 3.0, 0.0, 0.0), 0.01, 0.0)
+                .select(single_cell(), &faces(-3.0, 3.0, 0.0, 0.0), 0.0)
                 .unwrap(),
         );
         assert_eq!(outward.max_cfl_dt_s(), Some(0.005 / 6.0));
         let diagonal = candidate(
             clock
-                .select(single_cell(), &faces(3.0, 3.0, 4.0, 4.0), 0.01, 0.0)
+                .select(single_cell(), &faces(3.0, 3.0, 4.0, 4.0), 0.0)
                 .unwrap(),
         );
         assert_eq!(diagonal.max_cfl_dt_s(), Some(0.005 / 7.0));
@@ -392,7 +395,7 @@ mod tests {
     fn viscosity_and_remaining_time_limit_candidate() {
         let mut clock = SubstepClock::new(0.002, 3).unwrap();
         let velocity = faces(0.0, 0.0, 0.0, 0.0);
-        let first = candidate(clock.select(single_cell(), &velocity, 0.01, 0.05).unwrap());
+        let first = candidate(clock.select(single_cell(), &velocity, 0.05).unwrap());
         assert_eq!(first.max_cfl_dt_s(), None);
         assert_eq!(first.max_diffusion_dt_s(), Some(0.0005));
         assert_eq!(first.dt_s(), 0.0005);
@@ -403,16 +406,22 @@ mod tests {
 
     #[test]
     fn diffusion_limit_survives_square_overflow() {
-        let clock = SubstepClock::new(1e10, 10).unwrap();
-        let zero_velocity = faces(0.0, 0.0, 0.0, 0.0);
+        let limit_s = diffusion_limit(1e155, 1e300).unwrap().unwrap();
+        assert!((limit_s / 2.5e9 - 1.0).abs() < 1e-12);
+    }
+
+    #[test]
+    fn refined_grid_uses_its_own_cell_width_for_cfl_and_diffusion() {
+        let grid = Grid::with_cell_width(1.0, 1.0, 0.005).unwrap();
+        let clock = SubstepClock::new(0.01, 20).unwrap();
         let step = candidate(
             clock
-                .select(single_cell(), &zero_velocity, 1e155, 1e300)
+                .select(grid, &faces(3.0, 3.0, 0.0, 0.0), 0.05)
                 .unwrap(),
         );
-        let limit_s = step.max_diffusion_dt_s().unwrap();
-        assert!((limit_s / 2.5e9 - 1.0).abs() < 1e-12);
-        assert_eq!(step.dt_s(), limit_s);
+        assert_eq!(step.max_cfl_dt_s(), Some(0.0025 / 3.0));
+        assert_eq!(step.max_diffusion_dt_s(), Some(0.000125));
+        assert_eq!(step.dt_s(), 0.000125);
     }
 
     #[test]
@@ -420,13 +429,13 @@ mod tests {
         let mut clock = SubstepClock::new(OUTER_DT_S, 2).unwrap();
         let velocity = faces(3.0, 3.0, 0.0, 0.0);
         for _ in 0..2 {
-            let step = candidate(clock.select(single_cell(), &velocity, 0.01, 0.0).unwrap());
+            let step = candidate(clock.select(single_cell(), &velocity, 0.0).unwrap());
             assert!(step.dt_s() <= 0.005 / 3.0);
             clock.accept(step).unwrap();
         }
         let remaining_s = clock.remaining_time_s();
         assert_eq!(
-            clock.select(single_cell(), &velocity, 0.01, 0.0).unwrap(),
+            clock.select(single_cell(), &velocity, 0.0).unwrap(),
             SubstepSelection::Paused {
                 reason: PauseReason::SubstepBudgetExhausted,
                 remaining_s,
@@ -439,10 +448,10 @@ mod tests {
     fn failed_stage_does_not_advance_and_stale_candidate_is_rejected() {
         let mut clock = SubstepClock::new(OUTER_DT_S, 3).unwrap();
         let velocity = faces(3.0, 3.0, 0.0, 0.0);
-        let abandoned = candidate(clock.select(single_cell(), &velocity, 0.01, 0.0).unwrap());
+        let abandoned = candidate(clock.select(single_cell(), &velocity, 0.0).unwrap());
         assert_eq!(clock.accepted_time_s(), 0.0);
         assert_eq!(clock.accepted_substeps(), 0);
-        let accepted = candidate(clock.select(single_cell(), &velocity, 0.01, 0.0).unwrap());
+        let accepted = candidate(clock.select(single_cell(), &velocity, 0.0).unwrap());
         clock.accept(accepted).unwrap();
         let accepted_time_s = clock.accepted_time_s();
         assert_eq!(clock.accept(abandoned), Err(SubstepError::StaleCandidate));
@@ -457,7 +466,7 @@ mod tests {
         let first_velocity = faces(3.0, 3.0, 0.0, 0.0);
         let first_candidate = candidate(
             first_clock
-                .select(single_cell(), &first_velocity, 0.01, 0.0)
+                .select(single_cell(), &first_velocity, 0.0)
                 .unwrap(),
         );
         let second_velocity = faces(0.0, 0.0, 0.0, 0.0);
@@ -470,7 +479,7 @@ mod tests {
         second_clock
             .accept(candidate(
                 second_clock
-                    .select(single_cell(), &second_velocity, 0.01, 0.0)
+                    .select(single_cell(), &second_velocity, 0.0)
                     .unwrap(),
             ))
             .unwrap();
@@ -489,11 +498,11 @@ mod tests {
         );
         let clock = SubstepClock::new(OUTER_DT_S, 1).unwrap();
         assert_eq!(
-            clock.select(single_cell(), &faces(0.0, 0.0, 0.0, 0.0), 0.01, -1.0),
+            clock.select(single_cell(), &faces(0.0, 0.0, 0.0, 0.0), -1.0),
             Err(SubstepError::InvalidScalar("max_kinematic_viscosity_m2_s"))
         );
         assert_eq!(
-            clock.select(single_cell(), &faces(f64::NAN, 0.0, 0.0, 0.0), 0.01, 0.0),
+            clock.select(single_cell(), &faces(f64::NAN, 0.0, 0.0, 0.0), 0.0),
             Err(SubstepError::NonFiniteSpeed {
                 axis: "u",
                 index: 0
@@ -506,7 +515,6 @@ mod tests {
                     u: vec![0.0],
                     v: vec![0.0, 0.0],
                 },
-                0.01,
                 0.0,
             ),
             Err(SubstepError::Length {

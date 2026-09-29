@@ -57,6 +57,58 @@ fn assert_near(actual: f64, expected: f64) {
 }
 
 #[test]
+fn same_shape_at_different_cell_widths_scales_closed_mac_operators() {
+    let default_grid = Grid::new(2.0, 1.0).unwrap();
+    let refined_grid = Grid::with_cell_width(2.0, 1.0, CELL_WIDTH_M / 2.0).unwrap();
+
+    for grid in [default_grid, refined_grid] {
+        let fields = closed_fields(grid, vec![2.0, 4.0], closed_aperture(grid));
+        let gradient = pressure_gradient_pa_per_m(&fields, &[2.0, 4.0]).unwrap();
+        let face = grid.u_face_index(1, 0).unwrap();
+        assert_near(gradient.u[face], 2.0 / grid.cell_width_m());
+
+        let mut velocity = zero_velocity(grid);
+        velocity.u[face] = 3.0;
+        let divergence = divergence_per_s(&fields, &velocity).unwrap();
+        assert_near(divergence[0], 3.0 / grid.cell_width_m());
+        assert_near(divergence[1], -3.0 / grid.cell_width_m());
+    }
+}
+
+#[test]
+fn nondefault_cell_width_scales_open_reservoir_half_cell_gradient() {
+    let grid = Grid::with_cell_width(1.0, 1.0, CELL_WIDTH_M / 2.0).unwrap();
+    let reservoir = NonZeroU32::new(1).unwrap();
+    let fields = PressureFields::new(
+        grid,
+        [
+            Boundary::Open { reservoir },
+            Boundary::Closed,
+            Boundary::Closed,
+            Boundary::Closed,
+        ],
+        vec![1.0],
+        vec![10.0],
+        zero_velocity(grid),
+        FaceValues {
+            u: vec![1.0, 0.0],
+            v: vec![0.0, 0.0],
+        },
+    )
+    .unwrap();
+    let gradient = pressure_gradient_with_reservoirs_pa_per_m(
+        &fields,
+        &[10.0],
+        &[ReservoirPressure {
+            reservoir,
+            pressure_pa: 8.0,
+        }],
+    )
+    .unwrap();
+    assert_near(gradient.u[0], (10.0 - 8.0) / (grid.cell_width_m() / 2.0));
+}
+
+#[test]
 fn constant_pressure_and_zero_velocity_have_zero_operators() {
     let grid = Grid::new(3.0, 2.0).unwrap();
     let fields = closed_fields(grid, vec![12.0; grid.cells()], closed_aperture(grid));

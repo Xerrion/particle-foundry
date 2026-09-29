@@ -3,8 +3,9 @@
 **Revision:** 29 September 2026. **Active release:** P1 only. E00-E03 and E05
 have recorded validation. E06 is in progress; E04 and E07-E14 remain planned.
 E05 supplies a sealed Rust f64 pressure reference. The E06 phase-transport and
-viscous-shear candidates do not yet form a validated coupled fluid scene. The live
-sandbox still runs TypeScript.
+viscous-shear candidates now run through an atomic CPU substep, but its named
+scene and refinement gates are not yet validated. The live sandbox still runs
+TypeScript.
 [E05 evidence](validation/p1-m2-e05.md) records the verified slice;
 [RESUME](RESUME.md) preserves the dated recovery handoff, and the
 [engine tracker](data/engine-migration-work.json) owns status.

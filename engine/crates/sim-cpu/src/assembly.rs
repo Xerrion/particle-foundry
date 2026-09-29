@@ -1,6 +1,6 @@
 //! Matrix-free sealed pressure assembly for the CPU reference.
 
-use particle_sim::{CELL_WIDTH_M, Grid, contracts::Boundary};
+use particle_sim::{Grid, contracts::Boundary};
 
 use crate::fluid::{FaceValues, PressureFields};
 
@@ -74,7 +74,7 @@ impl std::error::Error for PressureAssemblyError {}
 /// The closed-boundary matrix `A = -D[(1/rho_face)G]` in a MAC layout.
 ///
 /// `D` includes the face aperture once. An interior edge therefore has weight
-/// `aperture / (rho_face * CELL_WIDTH_M²)`, and the two neighboring rows receive
+/// `aperture / (rho_face * grid.cell_width_m()²)`, and the two neighboring rows receive
 /// equal and opposite edge contributions. Positive weights make `A` symmetric
 /// positive semidefinite, with one constant-pressure null mode per connected
 /// component. `A * pressure_pa` has units s⁻². Density is an input coefficient;
@@ -110,6 +110,7 @@ impl PressureAssembly {
         let grid = fields.grid();
         let width = grid.width() as usize;
         let height = grid.height() as usize;
+        let cell_width_m = grid.cell_width_m();
         let density = fields.density_kg_m3();
         let aperture = fields.aperture();
         let mut inverse_face_density_m3_kg = FaceValues {
@@ -134,6 +135,7 @@ impl PressureAssembly {
                         aperture.u[face],
                         density[left],
                         density[right],
+                        cell_width_m,
                     )?;
                     inverse_face_density_m3_kg.u[face] = beta;
                     weights_m_kg.u[face] = weight;
@@ -154,6 +156,7 @@ impl PressureAssembly {
                         aperture.v[face],
                         density[top],
                         density[bottom],
+                        cell_width_m,
                     )?;
                     inverse_face_density_m3_kg.v[face] = beta;
                     weights_m_kg.v[face] = weight;
@@ -341,6 +344,7 @@ fn face_coefficients(
     aperture: f64,
     first_density: f64,
     second_density: f64,
+    cell_width_m: f64,
 ) -> Result<(f64, f64), PressureAssemblyError> {
     let face_density = first_density + 0.5 * (second_density - first_density);
     let beta = 1.0 / face_density;
@@ -351,7 +355,7 @@ fn face_coefficients(
             coefficient: "inverse_face_density_m3_kg",
         });
     }
-    let weight = (aperture / (CELL_WIDTH_M * CELL_WIDTH_M)) * beta;
+    let weight = (aperture / (cell_width_m * cell_width_m)) * beta;
     if !weight.is_finite() || weight <= 0.0 {
         return Err(PressureAssemblyError::InvalidFaceCoefficient {
             axis,

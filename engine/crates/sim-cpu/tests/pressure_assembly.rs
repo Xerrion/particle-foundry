@@ -55,6 +55,24 @@ fn dot(a: &[f64], b: &[f64]) -> f64 {
 }
 
 #[test]
+fn same_shape_at_different_cell_widths_scales_pressure_matrix() {
+    let default_grid = Grid::new(2.0, 1.0).unwrap();
+    let refined_grid = Grid::with_cell_width(2.0, 1.0, CELL_WIDTH_M / 2.0).unwrap();
+
+    for grid in [default_grid, refined_grid] {
+        let fields = fields(grid, vec![1.0, 3.0], closed_aperture(grid));
+        let assembly = PressureAssembly::new(&fields).unwrap();
+        let face = grid.u_face_index(1, 0).unwrap();
+        let weight = 0.5 / grid.cell_width_m().powi(2);
+        assert_near(assembly.weights_m_kg().u[face], weight);
+        assert_eq!(assembly.diagonal_m_kg(), &[weight, weight]);
+        let result = assembly.apply(&[0.0, 2.0]).unwrap();
+        assert_near(result[0], -2.0 * weight);
+        assert_near(result[1], 2.0 * weight);
+    }
+}
+
+#[test]
 fn two_cell_stencil_uses_arithmetic_face_density_and_expected_units() {
     let grid = Grid::new(2.0, 1.0).unwrap();
     let fields = fields(grid, vec![1.0, 3.0], closed_aperture(grid));
