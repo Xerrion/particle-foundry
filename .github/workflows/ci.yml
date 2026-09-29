@@ -67,6 +67,7 @@ jobs:
       - run: mise run rust:test
 
   browser:
+    name: Browser WASM smoke (GPU optional)
     needs: changes
     if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
@@ -83,6 +84,7 @@ jobs:
         with:
           name: engine-browser-smoke
           path: artifacts/validation/browser
+          retention-days: 1
 
   verify:
     if: always()
