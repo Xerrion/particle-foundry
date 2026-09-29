@@ -20,10 +20,20 @@ use crate::{
     viscosity::{ViscosityDiagnostics, ViscosityError, shear_viscosity_candidate},
 };
 
-/// The maximum scaled source and projected divergence for this transport path.
+/// The maximum scaled source and committed divergence for this transport path.
 /// This cap alone does not guarantee a valid transport candidate. A source cell
 /// can already be near its allowed volume-closure error.
 pub const MAX_SCALED_DIVERGENCE: f64 = VOLUME_CLOSURE_REL_TOL * 0.25;
+
+/// The pressure solve must first reach this scaled residual and divergence.
+/// A separate bounded shared-face correction then enforces the stricter
+/// committed-volume gate before this CPU session accepts any state or time.
+const MAX_INTERMEDIATE_SCALED_DIVERGENCE: f64 = VOLUME_CLOSURE_REL_TOL * 4.0;
+
+/// A routed face change is at most 2.5e-10 cell widths per substep, forty
+/// times smaller than the frozen M2 projection-divergence tolerance. The
+/// independent final divergence check remains much stricter than this bound.
+const MAX_FACE_CORRECTION_CFL: f64 = 2.5e-10;
 
 /// Inputs for one fixed-wall fluid substep.
 #[derive(Clone, Copy, Debug)]
@@ -94,6 +104,24 @@ pub enum CoupledStepError {
     Pressure(PressureSolveError),
     /// A derived field could not meet the validated pressure-field contract.
     Field(PressureFieldError),
+    /// A bounded shared-face roundoff correction could not close volume flux.
+    VolumeFluxCorrection {
+        /// Cell or face at which the correction failed.
+        index: usize,
+        /// Failed finite, size, or post-correction check.
+        reason: &'static str,
+    },
+    /// A shared-face correction would exceed the pressure-roundoff budget.
+    ExcessiveFaceCorrection {
+        /// `u` or `v` face array.
+        axis: &'static str,
+        /// Row-major face index.
+        face: usize,
+        /// Required change in cell widths over this substep.
+        correction_cfl: f64,
+        /// Maximum permitted change in cell widths over this substep.
+        limit_cfl: f64,
+    },
 }
 
 impl std::fmt::Display for CoupledStepError {
@@ -121,6 +149,21 @@ pub struct MomentumDiagnostics {
     pub numerical_change_j: f64,
 }
 
+/// Conservative cleanup of pressure-solver roundoff on sealed face fluxes.
+///
+/// The pressure diagnostics describe the solver output. These measurements
+/// describe the face velocity that the session actually accepts. Each face
+/// correction is shared by its two adjacent cells.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct VolumeClosureDiagnostics {
+    /// Largest `dt * |D u|` before the face-flux cleanup.
+    pub scaled_divergence_before: f64,
+    /// Largest `dt * |D u|` on the accepted face velocity.
+    pub scaled_divergence_after: f64,
+    /// Largest face-velocity change times `dt / cell_width`.
+    pub max_face_correction_cfl: f64,
+}
+
 /// One completed state transition or a bounded stop without state changes.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum CoupledStepOutcome {
@@ -135,8 +178,10 @@ pub enum CoupledStepOutcome {
         /// Mechanical shear observations when viscosity was requested.
         /// No energy is deposited into a thermal field by this CPU path.
         shear: Option<ViscosityDiagnostics>,
-        /// Pressure residual and corrected divergence from this candidate.
+        /// Pressure solver residual and divergence before face-flux cleanup.
         pressure: SolveDiagnostics,
+        /// Face-flux closure on the velocity actually accepted by the session.
+        volume_closure: VolumeClosureDiagnostics,
     },
     /// The requested outer interval has completed.
     Complete,
@@ -249,15 +294,37 @@ pub(crate) fn stage_coupled_step(
     let shear_fields = make_fields(
         &advected_fields,
         advected_fields.density_kg_m3().to_vec(),
-        advected_fields.correction_pressure_pa().to_vec(),
+        // This is a new pressure correction for the current predictor and
+        // density. Reusing the preceding substep's correction as an initial
+        // guess caused systematic hydrostatic drift near the solver floor.
+        vec![0.0; grid.cells()],
         velocity_after_shear,
     )?;
     let gravity_velocity = gravity_predictor_closed(&shear_fields, dt_s, config.gravity_m_s2)
         .map_err(CoupledStepError::Pressure)?;
     let mut pressure_config = config.pressure;
+    for (field, tolerance) in [
+        (
+            "scaled_residual_tolerance",
+            pressure_config.scaled_residual_tolerance,
+        ),
+        (
+            "scaled_divergence_tolerance",
+            pressure_config.scaled_divergence_tolerance,
+        ),
+    ] {
+        if !tolerance.is_finite() || tolerance <= 0.0 {
+            return Err(CoupledStepError::Pressure(
+                PressureSolveError::InvalidTolerance { field },
+            ));
+        }
+    }
+    pressure_config.scaled_residual_tolerance = pressure_config
+        .scaled_residual_tolerance
+        .min(MAX_INTERMEDIATE_SCALED_DIVERGENCE);
     pressure_config.scaled_divergence_tolerance = pressure_config
         .scaled_divergence_tolerance
-        .min(MAX_SCALED_DIVERGENCE);
+        .min(MAX_INTERMEDIATE_SCALED_DIVERGENCE);
     let projection = project_closed(
         &shear_fields,
         &gravity_velocity,
@@ -267,11 +334,17 @@ pub(crate) fn stage_coupled_step(
     )
     .map_err(CoupledStepError::Pressure)?;
     let pressure = projection.diagnostics;
+    let (closed_velocity, volume_closure) = close_projected_face_fluxes(
+        &shear_fields,
+        projection.velocity_m_s,
+        dt_s,
+        pressure.scaled_divergence,
+    )?;
     let pressure_fields = make_fields(
         &shear_fields,
         shear_fields.density_kg_m3().to_vec(),
         projection.pressure_pa,
-        projection.velocity_m_s,
+        closed_velocity,
     )?;
     Ok(CoupledSelection::Staged(Box::new(StagedCoupledStep {
         clock_candidate,
@@ -283,6 +356,7 @@ pub(crate) fn stage_coupled_step(
             momentum: momentum_diagnostics,
             shear: shear_diagnostics,
             pressure,
+            volume_closure,
         },
     })))
 }
@@ -394,6 +468,214 @@ fn copy_faces(faces: &FaceValues) -> FaceValues {
         u: faces.u.clone(),
         v: faces.v.clone(),
     }
+}
+
+#[derive(Clone, Copy)]
+enum FluxAxis {
+    U,
+    V,
+}
+
+#[derive(Clone, Copy)]
+struct ParentFace {
+    axis: FluxAxis,
+    index: usize,
+    parent_cell: usize,
+    child_on_positive_side: bool,
+}
+
+/// Removes only pressure-solver roundoff from a closed face-velocity graph.
+/// The parent face is shared, so its adjustment changes two cell divergences
+/// with opposite signs. A spanning forest routes each cell's residual toward
+/// one root per sealed component. Large or unresolved corrections reject the
+/// entire detached step instead of changing phase mass outside its face ledger.
+fn close_projected_face_fluxes(
+    fields: &PressureFields,
+    mut velocity: FaceValues,
+    dt_s: f64,
+    pressure_scaled_divergence: f64,
+) -> Result<(FaceValues, VolumeClosureDiagnostics), CoupledStepError> {
+    let grid = fields.grid();
+    let width = grid.width() as usize;
+    let height = grid.height() as usize;
+    let aperture = fields.aperture();
+    let cell_width_m = grid.cell_width_m();
+    let mut residual = vec![0.0; grid.cells()];
+    let mut scaled_divergence_before = 0.0_f64;
+    let mut max_source_face_cfl = 0.0_f64;
+    for (&speed, &open) in velocity
+        .u
+        .iter()
+        .zip(&aperture.u)
+        .chain(velocity.v.iter().zip(&aperture.v))
+    {
+        max_source_face_cfl = max_source_face_cfl.max(speed.abs() * dt_s / cell_width_m * open);
+    }
+    if !max_source_face_cfl.is_finite() {
+        return Err(CoupledStepError::VolumeFluxCorrection {
+            index: 0,
+            reason: "nonfinite projected face displacement",
+        });
+    }
+    let divergence_before =
+        divergence_per_s(fields, &velocity).map_err(CoupledStepError::Operator)?;
+    for (cell, &divergence) in divergence_before.iter().enumerate() {
+        residual[cell] = divergence * cell_width_m;
+        let scaled = dt_s * divergence.abs();
+        if !scaled.is_finite() || !residual[cell].is_finite() {
+            return Err(CoupledStepError::VolumeFluxCorrection {
+                index: cell,
+                reason: "nonfinite projected divergence",
+            });
+        }
+        scaled_divergence_before = scaled_divergence_before.max(scaled);
+    }
+    if scaled_divergence_before > MAX_INTERMEDIATE_SCALED_DIVERGENCE {
+        return Err(CoupledStepError::VolumeFluxCorrection {
+            index: 0,
+            reason: "pressure solve exceeded the volume correction gate",
+        });
+    }
+
+    let mut visited = vec![false; grid.cells()];
+    let mut parent = vec![None; grid.cells()];
+    let mut order = Vec::with_capacity(grid.cells());
+    let mut max_face_correction_cfl = 0.0_f64;
+    // The correction is limited by the pressure solver's actual residual and
+    // by an absolute cap independent of the connected component's cell count.
+    let correction_cap_cfl = (1024.0 * pressure_scaled_divergence
+        + 1024.0 * f64::EPSILON * max_source_face_cfl)
+        .min(MAX_FACE_CORRECTION_CFL);
+    for root in 0..grid.cells() {
+        if visited[root] {
+            continue;
+        }
+        let component_start = order.len();
+        visited[root] = true;
+        order.push(root);
+        let mut head = component_start;
+        while head < order.len() {
+            let cell = order[head];
+            head += 1;
+            let x = cell % width;
+            let y = cell / width;
+            let neighbors = [
+                (
+                    x > 0,
+                    cell.wrapping_sub(1),
+                    FluxAxis::U,
+                    y * (width + 1) + x,
+                    false,
+                ),
+                (
+                    x + 1 < width,
+                    cell + 1,
+                    FluxAxis::U,
+                    y * (width + 1) + x + 1,
+                    true,
+                ),
+                (
+                    y > 0,
+                    cell.wrapping_sub(width),
+                    FluxAxis::V,
+                    y * width + x,
+                    false,
+                ),
+                (
+                    y + 1 < height,
+                    cell + width,
+                    FluxAxis::V,
+                    (y + 1) * width + x,
+                    true,
+                ),
+            ];
+            for (in_grid, neighbor, axis, face, positive) in neighbors {
+                if !in_grid || visited[neighbor] {
+                    continue;
+                }
+                let open = match axis {
+                    FluxAxis::U => aperture.u[face],
+                    FluxAxis::V => aperture.v[face],
+                };
+                if open <= 0.0 {
+                    continue;
+                }
+                visited[neighbor] = true;
+                parent[neighbor] = Some(ParentFace {
+                    axis,
+                    index: face,
+                    parent_cell: cell,
+                    child_on_positive_side: positive,
+                });
+                order.push(neighbor);
+            }
+        }
+        for position in (component_start + 1..order.len()).rev() {
+            let cell = order[position];
+            let edge = parent[cell].expect("each non-root cell has a parent face");
+            let correction = if edge.child_on_positive_side {
+                residual[cell]
+            } else {
+                -residual[cell]
+            };
+            let (speed, open) = match edge.axis {
+                FluxAxis::U => (&mut velocity.u[edge.index], aperture.u[edge.index]),
+                FluxAxis::V => (&mut velocity.v[edge.index], aperture.v[edge.index]),
+            };
+            let previous = *speed;
+            if correction != 0.0 {
+                *speed = (open * previous + correction) / open;
+            }
+            let correction_cfl = (*speed - previous).abs() * dt_s / cell_width_m;
+            if !speed.is_finite() || !correction_cfl.is_finite() {
+                return Err(CoupledStepError::VolumeFluxCorrection {
+                    index: edge.index,
+                    reason: "nonfinite face correction",
+                });
+            }
+            if correction_cfl > correction_cap_cfl {
+                return Err(CoupledStepError::ExcessiveFaceCorrection {
+                    axis: match edge.axis {
+                        FluxAxis::U => "u",
+                        FluxAxis::V => "v",
+                    },
+                    face: edge.index,
+                    correction_cfl,
+                    limit_cfl: correction_cap_cfl,
+                });
+            }
+            max_face_correction_cfl = max_face_correction_cfl.max(correction_cfl);
+            residual[edge.parent_cell] += residual[cell];
+        }
+    }
+
+    let divergence_after =
+        divergence_per_s(fields, &velocity).map_err(CoupledStepError::Operator)?;
+    let mut scaled_divergence_after = 0.0_f64;
+    for (cell, divergence) in divergence_after.iter().enumerate() {
+        let scaled = dt_s * divergence.abs();
+        if !scaled.is_finite() {
+            return Err(CoupledStepError::VolumeFluxCorrection {
+                index: cell,
+                reason: "nonfinite corrected divergence",
+            });
+        }
+        scaled_divergence_after = scaled_divergence_after.max(scaled);
+        if scaled > VOLUME_CLOSURE_REL_TOL * 0.01 {
+            return Err(CoupledStepError::VolumeFluxCorrection {
+                index: cell,
+                reason: "shared-face correction did not close volume",
+            });
+        }
+    }
+    Ok((
+        velocity,
+        VolumeClosureDiagnostics {
+            scaled_divergence_before,
+            scaled_divergence_after,
+            max_face_correction_cfl,
+        },
+    ))
 }
 
 #[cfg(test)]
@@ -516,6 +798,8 @@ mod tests {
             dt_s,
             momentum,
             shear,
+            pressure,
+            volume_closure,
             ..
         } = result
         else {
@@ -523,6 +807,11 @@ mod tests {
         };
         assert_eq!(dt_s, 0.001);
         assert_eq!(shear, None);
+        assert_eq!(
+            volume_closure.scaled_divergence_before,
+            pressure.scaled_divergence
+        );
+        assert!(volume_closure.scaled_divergence_after <= VOLUME_CLOSURE_REL_TOL * 0.01);
         assert!(momentum.kinetic_before_j.is_finite());
         assert!(momentum.kinetic_after_j.is_finite());
         assert_eq!(
@@ -558,6 +847,14 @@ mod tests {
         );
         let final_fields = session.pressure_fields().unwrap();
         let divergence = divergence_per_s(final_fields, final_fields.velocity_m_s()).unwrap();
+        let stored_scaled_divergence = divergence
+            .iter()
+            .map(|value| value.abs() * dt_s)
+            .fold(0.0_f64, f64::max);
+        assert_eq!(
+            stored_scaled_divergence,
+            volume_closure.scaled_divergence_after
+        );
         assert!(
             divergence
                 .iter()
@@ -573,6 +870,42 @@ mod tests {
             )
             .unwrap();
         assert_eq!(session.pressure_assembly_builds(), 2);
+    }
+
+    #[test]
+    fn face_flux_cleanup_keeps_a_circulation_and_closes_only_small_residuals() {
+        let grid = grid();
+        let inventory = inventory(grid, false);
+        let fields = fields(grid, &inventory, vortex(grid, 0.05));
+        let mut projected = vortex(grid, 0.05);
+        projected.u[grid.u_face_index(1, 0).unwrap()] += 1e-12;
+        let dt_s = 0.001;
+        let solver_scaled_divergence = divergence_per_s(&fields, &projected)
+            .unwrap()
+            .iter()
+            .map(|value| value.abs() * dt_s)
+            .fold(0.0_f64, f64::max);
+        assert!(solver_scaled_divergence > 0.0);
+        assert!(solver_scaled_divergence <= MAX_SCALED_DIVERGENCE);
+
+        let (closed, diagnostics) = close_projected_face_fluxes(
+            &fields,
+            copy_faces(&projected),
+            dt_s,
+            solver_scaled_divergence,
+        )
+        .unwrap();
+        assert!(diagnostics.scaled_divergence_after <= VOLUME_CLOSURE_REL_TOL * 0.01);
+        assert!(diagnostics.max_face_correction_cfl > 0.0);
+        let circulation = closed.u[grid.u_face_index(1, 0).unwrap()]
+            + closed.v[grid.v_face_index(1, 1).unwrap()]
+            - closed.u[grid.u_face_index(1, 1).unwrap()]
+            - closed.v[grid.v_face_index(0, 1).unwrap()];
+        assert!((circulation - 0.2).abs() <= 1e-10);
+        assert!(matches!(
+            close_projected_face_fluxes(&fields, projected, dt_s, 0.0),
+            Err(CoupledStepError::ExcessiveFaceCorrection { .. })
+        ));
     }
 
     #[test]
@@ -704,6 +1037,34 @@ mod tests {
             )
             .unwrap();
         assert_eq!(session.pressure_assembly_builds(), builds);
+    }
+
+    #[test]
+    fn coupled_pressure_cap_does_not_hide_invalid_tolerances() {
+        let grid = grid();
+        let inventory = inventory(grid, false);
+        let mut session = ReferenceSession::new(grid);
+        session
+            .set_pressure_fields(fields(grid, &inventory, vortex(grid, 0.0)))
+            .unwrap();
+        session.set_transport_inventory(inventory.clone()).unwrap();
+        let mut clock = SubstepClock::new(0.001, 8).unwrap();
+        for (residual, divergence, field) in [
+            (f64::NAN, 1e-8, "scaled_residual_tolerance"),
+            (1e-8, f64::INFINITY, "scaled_divergence_tolerance"),
+        ] {
+            let mut invalid = config(0.0);
+            invalid.pressure.scaled_residual_tolerance = residual;
+            invalid.pressure.scaled_divergence_tolerance = divergence;
+            assert_eq!(
+                session.advance_coupled_substep(&mut clock, invalid),
+                Err(CoupledStepError::Pressure(
+                    PressureSolveError::InvalidTolerance { field }
+                ))
+            );
+        }
+        assert_eq!(clock.accepted_time_s(), 0.0);
+        assert_eq!(session.transport_inventory(), Some(&inventory));
     }
 
     #[test]

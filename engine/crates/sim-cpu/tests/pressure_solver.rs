@@ -4,7 +4,7 @@ use particle_sim::{Grid, contracts::Boundary};
 use particle_sim_cpu::{
     assembly::{PressureAssembly, PressureAssemblyError},
     fluid::{FaceValues, PressureFields},
-    operator::pressure_gradient_pa_per_m,
+    operator::{divergence_per_s, pressure_gradient_pa_per_m},
     solver::{PressureSolveError, SolveConfig, gravity_predictor_closed, project_closed},
 };
 
@@ -198,6 +198,39 @@ fn disconnected_chambers_and_isolated_cell_have_independent_gauges() {
     assert!(matches!(
         error,
         PressureSolveError::Assembly(PressureAssemblyError::IncompatibleRhs { component: 1, .. })
+    ));
+}
+
+#[test]
+fn balanced_large_source_cancels_predictor_before_time_division() {
+    let grid = Grid::new(2.0, 1.0).unwrap();
+    let fields = closed_fields(
+        grid,
+        vec![1.2; grid.cells()],
+        vec![0.0; grid.cells()],
+        zeros(grid),
+        full_interior_apertures(grid),
+    );
+    let mut predictor = zeros(grid);
+    predictor.u[1] = 1e298;
+    let source = divergence_per_s(&fields, &predictor).unwrap();
+    let dt_s = 1e-20;
+    assert!(source.iter().all(|value| value.is_finite()));
+    assert!((source[0] / dt_s).is_infinite());
+    assert_eq!(source[0], -source[1]);
+
+    let result = project_closed(&fields, &predictor, &source, dt_s, strict()).unwrap();
+    assert_eq!(result.diagnostics.iterations, 0);
+    assert_eq!(result.diagnostics.scaled_residual, 0.0);
+    assert_eq!(result.diagnostics.scaled_divergence, 0.0);
+    assert_eq!(result.velocity_m_s.u[1], predictor.u[1]);
+
+    let incompatible_source = [source[0] * 1.0001, source[1]];
+    assert!(matches!(
+        project_closed(&fields, &predictor, &incompatible_source, dt_s, strict()),
+        Err(PressureSolveError::Assembly(
+            PressureAssemblyError::IncompatibleRhs { component: 0, .. }
+        ))
     ));
 }
 

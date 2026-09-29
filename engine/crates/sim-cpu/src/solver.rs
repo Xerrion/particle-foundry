@@ -221,6 +221,14 @@ pub(crate) fn project_closed_with_assembly(
             return Err(PressureSolveError::NonFiniteSource { cell });
         }
     }
+    // Every sealed predictor face belongs to two cells with opposite signs.
+    // Its component sum is zero by construction. Check only prescribed volume
+    // sources for physical compatibility; independently rounded cell
+    // divergences can give the assembled RHS a false nonzero component sum.
+    // A common positive dt does not change component balance. Check before
+    // division so large balanced sources remain valid if the actual RHS is
+    // finite after source and predictor divergence cancel in each cell.
+    assembly.check_compatible_rhs(volume_source_per_s)?;
 
     let predictor_divergence = divergence_per_s(fields, predictor_m_s)?;
     let mut rhs = vec![0.0; grid.cells()];
@@ -230,8 +238,6 @@ pub(crate) fn project_closed_with_assembly(
             return Err(PressureSolveError::NumericalBreakdown { stage: "RHS" });
         }
     }
-    assembly.check_compatible_rhs(&rhs)?;
-
     let mut pressure = fields.correction_pressure_pa().to_vec();
     remove_component_means(&mut pressure, assembly)?;
     let mut candidate = evaluate_candidate(
