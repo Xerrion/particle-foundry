@@ -18,7 +18,6 @@ if (
 		"Usage: test-browser.ts [new-evidence-directory] [--require-gpu] [--sustained-gpu]",
 	);
 }
-const profile = await mkdtemp(join(tmpdir(), "particle-foundry-smoke-"));
 const binary =
 	process.env.CHROME_BIN ??
 	(process.platform === "darwin"
@@ -31,26 +30,30 @@ let finish: (report: Record<string, unknown>) => void;
 const completion = new Promise<Record<string, unknown>>((resolve) => {
 	finish = resolve;
 });
-const reportPath = `/${crypto.randomUUID()}`;
+const reportToken = crypto.randomUUID();
 // Real-time completion: dump-dom/virtual time can finish before GPU promises settle.
 const receiver = Bun.serve({
 	hostname: "127.0.0.1",
-	port: 0,
+	port: 4175,
 	maxRequestBodySize: 65_536,
 	async fetch(request) {
 		if (
 			request.method !== "POST" ||
-			new URL(request.url).pathname !== reportPath ||
+			new URL(request.url).pathname !== "/report" ||
 			request.headers.get("origin") !== url.origin
 		) {
 			return new Response("Unexpected smoke report", { status: 400 });
 		}
-		const report = await request.json();
-		finish(report);
+		const payload = await request.json();
+		if (payload?.token !== reportToken || typeof payload.report !== "string") {
+			return new Response("Invalid smoke report token", { status: 400 });
+		}
+		finish(JSON.parse(payload.report));
 		return new Response("ok", { headers: { "Access-Control-Allow-Origin": url.origin } });
 	},
 });
-url.searchParams.set("report", `http://127.0.0.1:${receiver.port}${reportPath}`);
+url.searchParams.set("report-token", reportToken);
+const profile = await mkdtemp(join(tmpdir(), "particle-foundry-smoke-"));
 let server: ReturnType<typeof Bun.spawn> | undefined;
 let browser: ReturnType<typeof Bun.spawn> | undefined;
 let timeout: ReturnType<typeof setTimeout> | undefined;

@@ -645,28 +645,13 @@ try {
 	result.textContent = JSON.stringify({ status: "fail", error: String(error) });
 }
 
-const reportParameter = new URL(location.href).searchParams.get("report");
-if (reportParameter) {
-	const reportTarget = new URL(reportParameter);
-	const port = Number(reportTarget.port);
-	if (
-		reportTarget.protocol !== "http:" ||
-		reportTarget.hostname !== "127.0.0.1" ||
-		!Number.isSafeInteger(port) ||
-		port < 1 ||
-		port > 65_535 ||
-		reportTarget.username !== "" ||
-		reportTarget.password !== "" ||
-		reportTarget.search !== "" ||
-		reportTarget.hash !== "" ||
-		!/^\/[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
-			reportTarget.pathname,
-		)
-	) {
-		throw new Error("Browser smoke report target must be a local receiver");
+const reportToken = new URL(location.href).searchParams.get("report-token");
+if (reportToken) {
+	if (!/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(reportToken)) {
+		throw new Error("Invalid browser smoke report token");
 	}
-	await fetch(`http://127.0.0.1:${port}${reportTarget.pathname}`, {
+	await fetch("http://127.0.0.1:4175/report", {
 		method: "POST",
-		body: result.textContent,
+		body: JSON.stringify({ token: reportToken, report: result.textContent }),
 	});
 }
