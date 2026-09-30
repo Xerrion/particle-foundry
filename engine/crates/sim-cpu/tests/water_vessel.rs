@@ -1,12 +1,12 @@
 //! Isolated E09 water closure, conservation, source and domain regressions.
 
 use particle_sim_cpu::water::{
-    MAX_TEMPERATURE_K, MIN_PRESSURE_PA, SaturationTable, WaterError, WaterInventory, WaterVessel,
+    MAX_TEMPERATURE_K, MIN_PRESSURE_PA, WaterError, WaterInventory, WaterTable, WaterVessel,
     close_water,
 };
 
-fn inventory(table: &SaturationTable, t: f64, x: f64, mass: f64) -> WaterInventory {
-    let s = table.sample(t).unwrap();
+fn inventory(table: &WaterTable, t: f64, x: f64, mass: f64) -> WaterInventory {
+    let s = table.saturation().sample(t).unwrap();
     WaterInventory {
         mass_kg: mass,
         internal_energy_j: mass
@@ -25,12 +25,12 @@ fn relative(actual: f64, expected: f64, tolerance: f64) {
 
 #[test]
 fn pure_water_mass_energy_and_actual_volume_close_without_a_phase_cycle() {
-    let table = SaturationTable::new();
+    let table = WaterTable::new();
     // Independent equilibrium constraints: both phases share p_sat and T,
     // while their extensive mass, volume and internal energy sums fit the input.
     for mass in [1e-6, 1.0, 1e6] {
         for t in [
-            table.min_temperature_k(),
+            table.saturation().min_temperature_k(),
             350.37,
             450.73,
             600.21,
@@ -59,7 +59,7 @@ fn pure_water_mass_energy_and_actual_volume_close_without_a_phase_cycle() {
 
 #[test]
 fn heating_a_rigid_vessel_changes_pressure_and_phase_amount_with_a_source_ledger() {
-    let table = SaturationTable::new();
+    let table = WaterTable::new();
     let input = inventory(&table, 450.0, 0.1, 1.0);
     let mut vessel = WaterVessel::new(&table, input).unwrap();
     let before = vessel.equilibrium();
@@ -91,7 +91,7 @@ fn heating_a_rigid_vessel_changes_pressure_and_phase_amount_with_a_source_ledger
 
 #[test]
 fn available_geometry_volume_controls_pressure_and_partial_evaporation() {
-    let table = SaturationTable::new();
+    let table = WaterTable::new();
     let input = inventory(&table, 450.0, 0.1, 1.0);
     let a = close_water(&table, input).unwrap();
     // Separate equilibria at equal U. This is not moving-wall work or a timestep.
@@ -113,8 +113,13 @@ fn available_geometry_volume_controls_pressure_and_partial_evaporation() {
 
 #[test]
 fn saturated_phase_endpoints_remain_bounded() {
-    let table = SaturationTable::new();
-    for t in [table.min_temperature_k(), 373.15, 500.0, MAX_TEMPERATURE_K] {
+    let table = WaterTable::new();
+    for t in [
+        table.saturation().min_temperature_k(),
+        373.15,
+        500.0,
+        MAX_TEMPERATURE_K,
+    ] {
         for x in [0.0, 1.0] {
             let input = inventory(&table, t, x, 1.0);
             let state = close_water(&table, input).unwrap();
@@ -127,13 +132,14 @@ fn saturated_phase_endpoints_remain_bounded() {
 
 #[test]
 fn energy_increases_monotonically_at_fixed_volume_over_each_feasible_interval() {
-    let table = SaturationTable::new();
+    let table = WaterTable::new();
     for v in [0.0011, 0.002, 0.005, 0.01, 0.1, 1.0, 10.0] {
         let mut previous_u = None;
         for i in 0..=4000 {
-            let t = table.min_temperature_k()
-                + (MAX_TEMPERATURE_K - table.min_temperature_k()) * f64::from(i) / 4000.0;
-            let s = table.sample(t).unwrap();
+            let t = table.saturation().min_temperature_k()
+                + (MAX_TEMPERATURE_K - table.saturation().min_temperature_k()) * f64::from(i)
+                    / 4000.0;
+            let s = table.saturation().sample(t).unwrap();
             let x = (v - s.liquid_volume_m3_kg) / (s.vapor_volume_m3_kg - s.liquid_volume_m3_kg);
             if !(0.0..=1.0).contains(&x) {
                 continue;
@@ -150,13 +156,25 @@ fn energy_increases_monotonically_at_fixed_volume_over_each_feasible_interval() 
 
 #[test]
 fn pressure_depends_on_temperature_and_enthalpy_is_distinct_from_internal_energy() {
-    let table = SaturationTable::new();
-    let s = table.sample(373.15).unwrap();
+    let table = WaterTable::new();
+    let s = table.saturation().sample(373.15).unwrap();
     // Published IF97 Table 35 values. Table interpolation has a separate error bound.
-    relative(table.sample(500.0).unwrap().pressure_pa, 2638897.76, 5e-6);
-    relative(table.sample(600.0).unwrap().pressure_pa, 12344314.6, 5e-6);
     relative(
-        table.sample(table.min_temperature_k()).unwrap().pressure_pa,
+        table.saturation().sample(500.0).unwrap().pressure_pa,
+        2638897.76,
+        5e-6,
+    );
+    relative(
+        table.saturation().sample(600.0).unwrap().pressure_pa,
+        12344314.6,
+        5e-6,
+    );
+    relative(
+        table
+            .saturation()
+            .sample(table.saturation().min_temperature_k())
+            .unwrap()
+            .pressure_pa,
         MIN_PRESSURE_PA,
         1e-12,
     );
@@ -175,7 +193,7 @@ fn pressure_depends_on_temperature_and_enthalpy_is_distinct_from_internal_energy
 
 #[test]
 fn accepted_heat_reports_the_representable_energy_change() {
-    let table = SaturationTable::new();
+    let table = WaterTable::new();
     let mut vessel = WaterVessel::new(&table, inventory(&table, 450.0, 0.1, 1.0)).unwrap();
     let before = vessel.inventory();
     assert_eq!(vessel.apply_heat(&table, 1e-20).unwrap(), 0.0);
@@ -189,7 +207,7 @@ fn accepted_heat_reports_the_representable_energy_change() {
 
 #[test]
 fn unsupported_heating_cooling_and_nonfinite_inputs_never_change_state() {
-    let table = SaturationTable::new();
+    let table = WaterTable::new();
     let mut vessel = WaterVessel::new(&table, inventory(&table, 450.0, 0.1, 1.0)).unwrap();
     let inventory = vessel.inventory();
     let equilibrium = vessel.equilibrium();
@@ -209,7 +227,7 @@ fn unsupported_heating_cooling_and_nonfinite_inputs_never_change_state() {
 
 #[test]
 fn invalid_and_unsupported_domains_reject_instead_of_clamping() {
-    let table = SaturationTable::new();
+    let table = WaterTable::new();
     let input = inventory(&table, 450.0, 0.1, 1.0);
     for bad in [
         WaterInventory {
@@ -279,11 +297,14 @@ fn invalid_and_unsupported_domains_reject_instead_of_clamping() {
     }
     for t in [273.15, 273.16, 318.0, 650.0, 723.15, 3273.15] {
         assert_eq!(
-            table.sample(t).unwrap_err(),
+            table.saturation().sample(t).unwrap_err(),
             WaterError::TemperatureOutsideTable
         );
     }
     for t in [f64::NAN, f64::INFINITY, f64::NEG_INFINITY] {
-        assert_eq!(table.sample(t).unwrap_err(), WaterError::NonFiniteInput);
+        assert_eq!(
+            table.saturation().sample(t).unwrap_err(),
+            WaterError::NonFiniteInput
+        );
     }
 }

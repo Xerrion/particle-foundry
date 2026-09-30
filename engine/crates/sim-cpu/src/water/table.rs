@@ -44,7 +44,7 @@ impl SaturationProperties {
 /// It does not read or reinterpret legacy parcel enthalpy.
 #[derive(Debug)]
 pub struct SaturationTable {
-    nodes: Vec<SaturationProperties>,
+    pub(super) nodes: Vec<SaturationProperties>,
 }
 
 impl Default for SaturationTable {
@@ -59,7 +59,7 @@ impl SaturationTable {
         Self::generate(2440)
     }
 
-    fn generate(intervals: usize) -> Self {
+    pub(super) fn generate(intervals: usize) -> Self {
         let mut lower = 273.15;
         let mut upper = MAX_TEMPERATURE_K;
         for _ in 0..64 {

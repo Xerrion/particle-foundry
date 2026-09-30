@@ -1,7 +1,7 @@
 //! IAPWS R7-97(2012), regions 1, 2 and 4. Numerical coefficients are attributed
 //! to the International Association for the Properties of Water and Steam.
 //! Source: https://iapws.org/technical-guidance/release/IF97-Rev
-//! Only the saturation table exposes these equations to callers.
+//! Only the bounded water projections expose these equations to callers.
 
 const R_J_KG_K: f64 = 461.526;
 

@@ -6,7 +6,8 @@ GPU scene, with
 [scoped engine guidance](../engine/AGENTS.override.md). The running application
 still uses the existing TypeScript backend. E03 supplies an experimental host
 contract; local E08 sustained browser validation passes. E09 has an isolated
-saturated-water CPU reference. E04 circuits and E10-E14 remain planned.
+saturated and single-phase water CPU reference. E04 circuits and E10-E14 remain
+planned.
 Start with [the knowledge map](README.md).
 
 ## Current checkout
