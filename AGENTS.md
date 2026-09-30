@@ -39,7 +39,7 @@ Keep dependent edits sequential and review the combined diff before delivery.
   Use numbered steps for sequences. Ask one concise question when missing information blocks a material decision.
 - Use plain language in `docs/PHASES.md` and user-facing project summaries.
   Keep other technical documents precise and suitable for agent use.
-  Do not use long dashes as punctuation.
+  Do not use em dashes, en dashes or repeated hyphens as punctuation.
 - Use checkpoint names when speaking to the user. `P` means phase, `M` means milestone and `E` means engineering item.
   These are repository identifiers, not a Linear or Jira convention.
 - Track migration work in the existing
