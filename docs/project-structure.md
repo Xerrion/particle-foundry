@@ -1,12 +1,12 @@
 # Project structure
 
-**Current layout: 29 September 2026.** TypeScript lives in `web/`. `engine/` contains
+**Current layout: 30 September 2026.** TypeScript lives in `web/`. `engine/` contains
 the E01 Rust/WASM bootstrap, E02 portable contracts and the experimental E07/E08
 GPU scene, with
 [scoped engine guidance](../engine/AGENTS.override.md). The running application
 still uses the existing TypeScript backend. E03 supplies an experimental host
-contract; local E08 sustained browser validation passes. E04 circuits and E09-E14
-feature coverage remain deferred until separately assigned.
+contract; local E08 sustained browser validation passes. E09 has an isolated
+saturated-water CPU reference. E04 circuits and E10-E14 remain planned.
 Start with [the knowledge map](README.md).
 
 ## Current checkout
@@ -152,7 +152,9 @@ and the remaining limits.
 
 [`particle-sim-cpu`](../engine/crates/sim-cpu/src/lib.rs) and
 [`particle-sim-gpu`](../engine/crates/sim-gpu/src/lib.rs) own separate bootstrap
-sessions. The CPU session owns [validated f64 pressure fields](../engine/crates/sim-cpu/src/fluid.rs)
+sessions. A separate [`water`](../engine/crates/sim-cpu/src/water/mod.rs) module owns
+isolated E09 vessel closure. [Thermodynamics](thermodynamics.md) defines its domain.
+The fluid session owns [validated f64 pressure fields](../engine/crates/sim-cpu/src/fluid.rs)
 for a staggered MAC grid: cell density and correction pressure, face velocity,
 face aperture, and declared outer boundaries. The fields are isolated by session;
 the E06 coupled step advances closed small fixtures. [Pressure-field tests](../engine/crates/sim-cpu/tests/pressure_fields.rs)

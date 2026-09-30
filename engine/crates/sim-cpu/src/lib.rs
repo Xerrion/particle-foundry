@@ -9,6 +9,7 @@ pub mod solver;
 pub mod substep;
 pub mod transport;
 pub mod viscosity;
+pub mod water;
 
 use assembly::{PressureAssembly, PressureAssemblyError};
 use coupled::{

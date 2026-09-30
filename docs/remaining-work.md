@@ -1,7 +1,8 @@
 # Active work and delivered-history boundary
 
-**Status date:** 29 September 2026. **Most recent scoped work:** P1/M3/E07-E08,
-validated locally. E04 circuits and E09-E14 remain planned. M0/E00/FIRE-W00,
+**Status date:** 30 September 2026. **Most recent scoped work:** P1/M4/E09,
+with an isolated [saturated-water reference](thermodynamics.md).
+E09 is in progress. E04 circuits and E10-E14 remain planned. M0/E00/FIRE-W00,
 E01 bootstrap, E02-E03/FIRE-W01 contracts and E05-E08 have local evidence;
 see [baseline](validation/p1-m0.md), [bootstrap](validation/p1-m1.md),
 [E02](validation/p1-m1-e02.md), [E05](validation/p1-m2-e05.md),
@@ -85,7 +86,8 @@ Record new results separately and update [model.md](model.md) only when implemen
 ## Selected engine migration and status
 
 E00-E03 and E05-E08 in [the engine tracker](data/engine-migration-work.json)
-have local validation evidence. E04 and E09-E14 remain planned. E03 supplies a
+have local validation evidence. E09 has an isolated water reference and remains
+in progress. E04 and E10-E14 remain planned. E03 supplies a
 mock-tested bounded session contract and one generated candidate catalogue
 projection. E05 adds a sealed Rust f64 pressure reference. E06 adds owned phase
 and marker transport, compatible momentum, tangential shear, and an atomic

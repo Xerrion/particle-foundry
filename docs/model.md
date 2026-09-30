@@ -1,6 +1,6 @@
 # Physical model specification
 
-**Evidence boundary:** this overview combines retained documentation, the [static review of src(3).zip](validation/source-review-2026-09-21.md), and the [historical fire characterization](validation/fire-combustion.md). The [combustion article](combustion.md) separately identifies its 27 September 2026 working-tree source review. Historical results are not current verification; all redesign, expanded chemistry and nuclear capabilities remain planned.
+**Evidence boundary:** this overview combines retained documentation, the [static review of src(3).zip](validation/source-review-2026-09-21.md), and the [historical fire characterization](validation/fire-combustion.md). The [combustion article](combustion.md) separately identifies its 27 September 2026 working-tree source review. Historical results are not current verification. Current Rust/GPU slices have separate evidence. Expanded chemistry and nuclear capabilities remain planned.
 
 This is a reproducible coarse-grained sandbox, not a validated engineering simulator. [The knowledge map](README.md) routes current topics; [START_HERE.md](START_HERE.md) is the migration brief and [roadmap.md](roadmap.md) explains phase order. The full original model description is preserved in [the input archive](history/README.md).
 
@@ -78,6 +78,12 @@ The separate September 23 fire review characterizes 12 cases against the uploade
 Preserve seeded replay, source accounting, input/control behavior, phase/boiling fixtures, pool/barrier geometry, material metadata transport, and existing circuit/chemistry tests while changing the model. Translate assertions tied to superseded physics openly; do not delete inconvenient references or treat regression success as laboratory validation.
 
 ## Planned model: P1 GPU redesign
+
+E09 now implements an isolated saturated-water reference in
+[`sim-cpu::water`](../engine/crates/sim-cpu/src/water/mod.rs).
+It derives temperature, pressure and partial phase amounts from mass, U and actual
+volume. [Thermodynamics](thermodynamics.md) owns its domain and source heat contract.
+It does not implement coupled M4 flow or complete the current thermal rows.
 
 Follow [GPU M0-M7](plans/fluid-gpu-redesign/plan.md). Introduce a versioned conservative state with component masses, phase volumes, SI internal energy, compatible face momentum/velocity, and matched divergence/gradient operators. Thermodynamic chamber pressure and projection pressure have different roles. Convert legacy enthalpy explicitly; do not rename it internal energy.
 
