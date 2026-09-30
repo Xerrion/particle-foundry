@@ -200,8 +200,8 @@
       "title": "Add full supported thermodynamics and phase closure",
       "work": "Implement Rust reference then GPU parity for the current-sandbox thermal and phase scope: bounded property tables, partial phases, available-volume closure, chamber pressure and finite venting. Include existing elemental phase forms and the domains required by current tools and scenes. Execute FIRE-W02 for passive O2/product transport, finite ventilation and explicit reactant/product/water domain coverage.",
       "acceptance": "M4 closed/open energy/mass/volume fixtures and the applicable current-sandbox thermal rows pass; table provenance and conversion limits are recorded. FIRE-PRECONDITIONS (FIRE-A03 and FIRE-A12) pass before coupled fire scenes. Invalid domains reject explicitly during development and remain blockers for required coverage; no connected-interior O2 refill, silent hot-state clamp or removal of a required row to claim completion.",
-      "status": "planned",
-      "evidence": [],
+      "status": "in-progress",
+      "evidence": ["validation/p1-m4-e09.md"],
       "fireWorkItems": [
         "FIRE-W02"
       ]
@@ -356,7 +356,7 @@
       "milestones": "Q0-Q2"
     }
   ],
-  "updatedAt": "2026-09-27",
+  "updatedAt": "2026-09-30",
   "fireWorkManifest": "data/fire-combustion-work.json",
   "currentFeatureScope": "plans/rust-wasm-migration/current-sandbox-scope.md"
 }

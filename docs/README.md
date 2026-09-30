@@ -18,6 +18,9 @@ experimental 480 x 270 browser scene that directly renders committed GPU
 state. Bounded paint, inspection, pause and reset have passed isolated browser
 checks, and a local Chrome run completed 60 sustained ticks. M3 passed local
 checks; the broader current-sandbox migration remains incomplete.
+E09 now has an isolated saturated-water CPU reference. It closes phase amounts
+from mass, internal energy and actual volume. [Thermodynamics](thermodynamics.md)
+owns its bounded domain; [E09 evidence](validation/p1-m4-e09.md) records its limits.
 The live sandbox still uses TypeScript. See
 [E05 validation](validation/p1-m2-e05.md) and
 [E06 validation](validation/p1-m2-e06.md) for the CPU reference results,
@@ -63,6 +66,7 @@ evidence. Generated HTML is a view of its canonical Markdown, not a second sourc
 - [Project structure](project-structure.md): current module ownership, browser/engine boundary and proposed Rust placement.
 - [Existing sandbox](legacy-sandbox.md): controls, tools, materials and current TypeScript implementation.
 - [Physical model](model.md): units, state ownership, conservation, solver limitations and explicitly planned model changes.
+- [Thermodynamics](thermodynamics.md): isolated E09 water closure, IF97 source, generated table, source heat and unsupported domains.
 - [Combustion](combustion.md): ignition, generic fuels, explicit oxidation, tick ordering, known defects and regression coverage.
 - [Elements](elements.md): eight documented legacy elemental models and a separately labelled future roster. The [roster manifest](data/element-roadmap.json) and [schema](data/element-roadmap.schema.json) are planning data, not runtime properties.
 

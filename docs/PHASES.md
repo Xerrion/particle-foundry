@@ -10,7 +10,7 @@ is a smaller result within it. A milestone is complete only when its tests and
 evidence pass. The [current sandbox scope](plans/rust-wasm-migration/current-sandbox-scope.md)
 holds the detailed checklist of what must work before the switch is complete.
 
-**Where things stand (29 September 2026):** The browser sandbox still runs on
+**Where things stand (30 September 2026):** The browser sandbox still runs on
 the existing TypeScript engine. The Rust/WebAssembly foundation and browser
 contract exist. The small Rust CPU fluid reference has passed its local tests.
 A small GPU fluid fixture now steps on native and browser hardware, and a GPU
@@ -67,7 +67,8 @@ energy correctly; reproducing known bugs is not a requirement.
 
 - **M4 - Migrate heat and phase changes.** Cover today's heating, melting,
   freezing and boiling behavior, including water, steam and air. Test material,
-  energy, volume and finite venting together. **Planned.**
+  energy, volume and finite venting together. **In progress:** the first isolated
+  water reference is implemented; flow, other materials and GPU parity remain open.
 - **M5 - Add sand and moving solids.** Make grains, obstacles and liquids interact
   without losing material when many things move at once. **Planned.**
 - **M6 - Complete the current interactions.** Migrate existing reactions,
@@ -84,7 +85,8 @@ energy correctly; reproducing known bugs is not a requirement.
 
 After M7, stop and review the evidence. Later phases need a separate decision
 to start. The completed local engineering work is **E07-E08**. Checkpoint 2
-has not started; E04 circuits and M4-M6 feature coverage remain planned.
+started with E09's isolated water reference. E04 circuits and complete M4-M6
+feature coverage remain open.
 
 ## Deferred ideas: P2-P9
 
