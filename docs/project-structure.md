@@ -209,6 +209,12 @@ malformed inputs, independent sessions, missing GPU rejection, the Rust-owned
 WGSL ABI sentinel and disposal during its asynchronous readback from a production
 bundle under `/engine-smoke/`. Require a real browser adapter when using this
 smoke as hardware evidence.
+[`test-browser.ts`](../web/scripts/test-browser.ts) owns the isolated server and
+browser processes. Its [startup check](../web/scripts/browser-server.ts) gives
+each HTTP probe 500 ms within a 15-second startup budget.
+A stalled request can therefore retry while the server starts.
+[Startup regressions](../web/tests/scripts/browser-server.test.ts) cover stalled
+requests, permanent failure, non-success HTTP responses and early server exit.
 
 [`engine/fixtures/engine-reference-v1.json`](../engine/fixtures/engine-reference-v1.json)
 freezes reference conventions for future numerical work. It does not establish

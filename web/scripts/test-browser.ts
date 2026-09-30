@@ -2,6 +2,7 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 
+import { waitForBrowserServer } from "./browser-server";
 import { createEvidenceDirectory } from "./evidence-output";
 
 // Isolated headless test process, never the user's running browser/profile.
@@ -68,7 +69,7 @@ try {
 		},
 	);
 	if ((await build.exited) !== 0) throw new Error(`Browser fixture build failed; see ${output}`);
-	server = Bun.spawn(
+	const serverProcess = Bun.spawn(
 		[
 			...vite,
 			"preview",
@@ -88,20 +89,8 @@ try {
 			stderr: Bun.file(`${output}/server-error.log`),
 		},
 	);
-	let ready = false;
-	const startup = AbortSignal.timeout(15_000);
-	while (!startup.aborted) {
-		if (server.exitCode !== null)
-			throw new Error("Browser test server exited; see server-error.log");
-		try {
-			ready = (await fetch(url, { signal: startup })).ok;
-		} catch {
-			/* Startup is bounded below. */
-		}
-		if (ready) break;
-		await Bun.sleep(100);
-	}
-	if (!ready) throw new Error("Browser test server did not become ready in 15 seconds");
+	server = serverProcess;
+	await waitForBrowserServer(url, () => serverProcess.exitCode);
 	const browserProcess = Bun.spawn(
 		[
 			binary,
