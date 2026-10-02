@@ -52,9 +52,10 @@ build og typekontrol genererer bindings i ignoreret `web/generated/wasm/`.
 | `mise run docs:render` | Generér GPU-planens HTML fra Markdown. |
 | `mise run ci` | Kør TypeScript/Rust-checks, tests, WASM-build/freshness, browser-smoke og docs. |
 
-GitHub Actions kører `mise run ci` ved push og pull requests med samme versioner og
-kommandoer som lokalt. `mise tasks` viser alle opgaver. Opgaverne installerer selv
-deres afhængigheder; ekstra argumenter sendes videre, f.eks.
+Forgejo Actions kører de samme checks ved push til `main` og pull requests.
+Se [CI og mergekrav](.forgejo/README.md). `mise run ci` kører alle checks lokalt
+med samme versioner og kommandoer. `mise tasks` viser alle opgaver.
+Opgaverne installerer selv deres afhængigheder; ekstra argumenter sendes videre, f.eks.
 `mise run dev --host 127.0.0.1`.
 
 Browser-smoke bruger Chrome; `CHROME_BIN` kan vælge en anden executable. Kør

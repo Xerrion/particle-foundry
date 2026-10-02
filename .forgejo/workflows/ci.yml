@@ -1,0 +1,173 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+env:
+  GITHUB_TOKEN: ""
+
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    outputs:
+      code: ${{ steps.scope.outputs.code }}
+    steps:
+      - uses: https://github.com/actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Detect code changes
+        id: scope
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          if ! git cat-file -e "${BASE_SHA}^{commit}" 2>/dev/null ||
+             ! git cat-file -e "${HEAD_SHA}^{commit}" 2>/dev/null; then
+            echo 'code=true' >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          DIFF_BASE=$(git merge-base "$BASE_SHA" "$HEAD_SHA") || {
+            echo 'code=true' >> "$GITHUB_OUTPUT"
+            exit 0
+          }
+          git diff --no-renames --name-only "$DIFF_BASE" "$HEAD_SHA" > "$RUNNER_TEMP/changed-files"
+          if awk '$0 !~ /^docs\// { found = 1 } END { exit !found }' "$RUNNER_TEMP/changed-files"; then
+            echo 'code=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'code=false' >> "$GITHUB_OUTPUT"
+          fi
+
+  docs:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: https://github.com/actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: https://github.com/jdx/mise-action@5228313ee0372e111a38da051671ca30fc5a96db # v3
+        with:
+          cache: false
+          github_token: ""
+      - run: mise run docs:check
+
+  web:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: https://github.com/actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: https://github.com/jdx/mise-action@5228313ee0372e111a38da051671ca30fc5a96db # v3
+        with:
+          cache: false
+          github_token: ""
+      - run: mise run lint
+      - run: mise run typecheck:catalogue
+      - run: mise run test
+
+  rust:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: https://github.com/actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: https://github.com/jdx/mise-action@5228313ee0372e111a38da051671ca30fc5a96db # v3
+        with:
+          cache: false
+          github_token: ""
+      - name: Set up Rust build tools
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends build-essential pkg-config libssl-dev
+          if ! command -v rustup >/dev/null 2>&1; then
+            curl --fail --silent --show-error --location https://sh.rustup.rs -o "$RUNNER_TEMP/rustup-init.sh"
+            sh "$RUNNER_TEMP/rustup-init.sh" -y --profile minimal --default-toolchain none
+          fi
+          echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
+      - run: mise run rust:fmt
+      - run: mise run rust:clippy
+      - run: mise run rust:test
+
+  browser:
+    name: Browser WASM smoke (GPU optional)
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: https://github.com/actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: https://github.com/jdx/mise-action@5228313ee0372e111a38da051671ca30fc5a96db # v3
+        with:
+          cache: false
+          github_token: ""
+      - name: Set up Rust build tools
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends build-essential pkg-config libssl-dev
+          if ! command -v rustup >/dev/null 2>&1; then
+            curl --fail --silent --show-error --location https://sh.rustup.rs -o "$RUNNER_TEMP/rustup-init.sh"
+            sh "$RUNNER_TEMP/rustup-init.sh" -y --profile minimal --default-toolchain none
+          fi
+          echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
+      - name: Set up Chrome for the isolated job container
+        run: |
+          curl --fail --silent --show-error --location \
+            https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb \
+            -o "$RUNNER_TEMP/google-chrome.deb"
+          apt-get install -y --no-install-recommends "$RUNNER_TEMP/google-chrome.deb"
+          cat > "$RUNNER_TEMP/chrome-ci" <<'SCRIPT'
+          #!/bin/sh
+          exec /usr/bin/google-chrome --no-sandbox "$@"
+          SCRIPT
+          chmod +x "$RUNNER_TEMP/chrome-ci"
+          echo "CHROME_BIN=$RUNNER_TEMP/chrome-ci" >> "$GITHUB_ENV"
+      - run: mise run build
+      - run: mise run typecheck
+      - run: mise run test:browser
+      - run: mise run check:wasm
+      - run: mise run check:catalogue
+      - uses: https://github.com/actions/upload-artifact@ff15f0306b3f739f7b6fd43fb5d26cd321bd4de5 # v3
+        if: always()
+        with:
+          name: engine-browser-smoke
+          path: artifacts/validation/browser
+          retention-days: 1
+
+  verify:
+    if: always()
+    needs: [changes, docs, web, rust, browser]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Require applicable checks
+        env:
+          CHANGES_RESULT: ${{ needs.changes.result }}
+          DOCS_RESULT: ${{ needs.docs.result }}
+          WEB_RESULT: ${{ needs.web.result }}
+          RUST_RESULT: ${{ needs.rust.result }}
+          BROWSER_RESULT: ${{ needs.browser.result }}
+          CODE_CHANGED: ${{ needs.changes.outputs.code }}
+        run: |
+          test "$CHANGES_RESULT" = success
+          test "$DOCS_RESULT" = success
+          if test "$CODE_CHANGED" = true; then
+            test "$WEB_RESULT" = success
+            test "$RUST_RESULT" = success
+            test "$BROWSER_RESULT" = success
+          else
+            test "$WEB_RESULT" = skipped
+            test "$RUST_RESULT" = skipped
+            test "$BROWSER_RESULT" = skipped
+          fi

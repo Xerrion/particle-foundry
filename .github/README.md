@@ -1,5 +1,8 @@
 # GitHub merge policy
 
+This records the former GitHub configuration.
+The primary repository now uses [Forgejo CI and merge requirements](../.forgejo/README.md).
+
 ## Repository settings
 
 Verified against GitHub on 2026-09-30:

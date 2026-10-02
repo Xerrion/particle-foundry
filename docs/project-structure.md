@@ -1,6 +1,6 @@
 # Project structure
 
-**Current layout: 30 September 2026.** TypeScript lives in `web/`. `engine/` contains
+**Current layout: 2 October 2026.** TypeScript lives in `web/`. `engine/` contains
 the E01 Rust/WASM bootstrap, E02 portable contracts and the experimental E07/E08
 GPU scene, with
 [scoped engine guidance](../engine/AGENTS.override.md). The running application
@@ -17,7 +17,7 @@ particle-foundry/
   AGENTS.md                         Project development rules
   README.md                         Quick start and navigation
   mise.toml                         Root tool versions and task orchestration
-  .github/workflows/                CI uses the same mise tasks
+  .forgejo/workflows/               Forgejo CI uses the same mise tasks
   web/
     index.html                      Live legacy Vite browser entry
     gpu.html                        Opt-in experimental GPU preview entry
