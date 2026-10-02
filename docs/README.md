@@ -18,7 +18,8 @@ experimental 480 x 270 browser scene that directly renders committed GPU
 state. Bounded paint, inspection, pause and reset have passed isolated browser
 checks, and a local Chrome run completed 60 sustained ticks. M3 passed local
 checks; the broader current-sandbox migration remains incomplete.
-E09 now has an isolated saturated-water CPU reference. It closes phase amounts
+E09 now has an isolated pure-water CPU reference with saturation and single-phase
+closure. It closes phase amounts
 from mass, internal energy and actual volume. [Thermodynamics](thermodynamics.md)
 owns its bounded domain; [E09 evidence](validation/p1-m4-e09.md) records its limits.
 The live sandbox still uses TypeScript. See

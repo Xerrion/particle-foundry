@@ -1,7 +1,7 @@
 # Active work and delivered-history boundary
 
 **Status date:** 30 September 2026. **Most recent scoped work:** P1/M4/E09,
-with an isolated [saturated-water reference](thermodynamics.md).
+with an isolated [pure-water reference](thermodynamics.md).
 E09 is in progress. E04 circuits and E10-E14 remain planned. M0/E00/FIRE-W00,
 E01 bootstrap, E02-E03/FIRE-W01 contracts and E05-E08 have local evidence;
 see [baseline](validation/p1-m0.md), [bootstrap](validation/p1-m1.md),
