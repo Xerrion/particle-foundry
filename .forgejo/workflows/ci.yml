@@ -51,7 +51,9 @@ jobs:
           persist-credentials: false
       - uses: https://github.com/jdx/mise-action@5228313ee0372e111a38da051671ca30fc5a96db # v3
         with:
-          cache: false
+          version: 2026.9.13
+          cache: true
+          cache_key_prefix: particle-foundry-mise-act24-amd64-v1
           github_token: ""
       - run: mise run docs:check
 
@@ -66,7 +68,9 @@ jobs:
           persist-credentials: false
       - uses: https://github.com/jdx/mise-action@5228313ee0372e111a38da051671ca30fc5a96db # v3
         with:
-          cache: false
+          version: 2026.9.13
+          cache: true
+          cache_key_prefix: particle-foundry-mise-act24-amd64-v1
           github_token: ""
       - run: mise run lint
       - run: mise run typecheck:catalogue
@@ -83,10 +87,31 @@ jobs:
           persist-credentials: false
       - uses: https://github.com/jdx/mise-action@5228313ee0372e111a38da051671ca30fc5a96db # v3
         with:
-          cache: false
+          version: 2026.9.13
+          cache: true
+          cache_key_prefix: particle-foundry-mise-act24-amd64-v1
           github_token: ""
+      - name: Restore Rust toolchain and build cache
+        uses: https://data.forgejo.org/actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: |
+            ~/.rustup
+            ~/.cargo/bin
+            ~/.cargo/.crates.toml
+            ~/.cargo/.crates2.json
+            ~/.cargo/registry/index
+            ~/.cargo/registry/cache
+            ~/.cargo/registry/src
+            ~/.cargo/git/db
+            ~/.cargo/git/checkouts
+            engine/target
+          key: particle-foundry-rust-v1-act24-amd64-${{ github.job }}-${{ hashFiles('engine/rust-toolchain.toml') }}-${{ hashFiles('engine/Cargo.lock') }}-${{ hashFiles('engine/Cargo.toml', 'engine/crates/**', 'mise.toml') }}
+          restore-keys: |
+            particle-foundry-rust-v1-act24-amd64-${{ github.job }}-${{ hashFiles('engine/rust-toolchain.toml') }}-${{ hashFiles('engine/Cargo.lock') }}-
+            particle-foundry-rust-v1-act24-amd64-${{ github.job }}-${{ hashFiles('engine/rust-toolchain.toml') }}-
       - name: Set up Rust build tools
         run: |
+          export PATH="$HOME/.cargo/bin:$PATH"
           apt-get update
           apt-get install -y --no-install-recommends build-essential pkg-config libssl-dev
           if ! command -v rustup >/dev/null 2>&1; then
@@ -110,10 +135,31 @@ jobs:
           persist-credentials: false
       - uses: https://github.com/jdx/mise-action@5228313ee0372e111a38da051671ca30fc5a96db # v3
         with:
-          cache: false
+          version: 2026.9.13
+          cache: true
+          cache_key_prefix: particle-foundry-mise-act24-amd64-v1
           github_token: ""
+      - name: Restore Rust toolchain and build cache
+        uses: https://data.forgejo.org/actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: |
+            ~/.rustup
+            ~/.cargo/bin
+            ~/.cargo/.crates.toml
+            ~/.cargo/.crates2.json
+            ~/.cargo/registry/index
+            ~/.cargo/registry/cache
+            ~/.cargo/registry/src
+            ~/.cargo/git/db
+            ~/.cargo/git/checkouts
+            engine/target
+          key: particle-foundry-rust-v1-act24-amd64-${{ github.job }}-${{ hashFiles('engine/rust-toolchain.toml') }}-${{ hashFiles('engine/Cargo.lock') }}-${{ hashFiles('engine/Cargo.toml', 'engine/crates/**', 'mise.toml') }}
+          restore-keys: |
+            particle-foundry-rust-v1-act24-amd64-${{ github.job }}-${{ hashFiles('engine/rust-toolchain.toml') }}-${{ hashFiles('engine/Cargo.lock') }}-
+            particle-foundry-rust-v1-act24-amd64-${{ github.job }}-${{ hashFiles('engine/rust-toolchain.toml') }}-
       - name: Set up Rust build tools
         run: |
+          export PATH="$HOME/.cargo/bin:$PATH"
           apt-get update
           apt-get install -y --no-install-recommends build-essential pkg-config libssl-dev
           if ! command -v rustup >/dev/null 2>&1; then
