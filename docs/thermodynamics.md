@@ -1,7 +1,7 @@
-# Rust water thermodynamics
+# Rust water and carrier-air thermodynamics
 
 E09 has an isolated Rust f64 reference for saturated and stable single-phase
-pure-water vessels.
+pure-water vessels and a bounded air/steam mixture approximation.
 [`water`](../engine/crates/sim-cpu/src/water/mod.rs) owns this reference.
 It does not advance the M3 fluid scene or the default legacy sandbox.
 [E09 evidence](validation/p1-m4-e09.md) records the checks and remaining gates.
@@ -105,6 +105,87 @@ and `q`. The version is `iapws-if97-r7-97-2012-single-phase-v1`.
 Generation evaluates IF97 when constructing each table. Property lookups and closure use only the tables.
 The f64 CPU reference has no per-frame performance qualification or GPU projection.
 
+## Air/steam mixture approximation
+
+[`mixture.rs`](../engine/crates/sim-cpu/src/water/mixture.rs) owns the isolated
+`MixtureInventory`, `close_mixture` and `MixtureVessel` API.
+Its version is `e09-air-steam-v1`. One inventory contains water mass, inert
+carrier-air mass, total internal energy U and actual available volume.
+Liquid and vapor water masses are derived observations. Carrier air is a single
+nonreactive component; it does not supply O2 or combustion-product inventories.
+
+The carrier model fixes `R_air = 287.05 J/(kg K)` and `gamma = 1.4`.
+It uses `cv_air = R_air / (gamma - 1) = 717.625 J/(kg K)` and
+`u_air(T) = cv_air * (T - 273.15 K)`.
+The coefficient is a project model choice. Constant heat capacity across the
+supported temperature range is an approximation.
+[NASA's equation-of-state reference](https://www1.grc.nasa.gov/beginners-guide-to-aeronautics/equation-of-state/)
+describes the ideal-gas relation; its
+[specific-heat reference](https://www1.grc.nasa.gov/beginners-guide-to-aeronautics/specific-heats-cp-and-cv-1/)
+describes `cp - cv = R` and `gamma = cp/cv`.
+
+Air and water vapor occupy one shared gas volume. Liquid water displaces that
+volume. The rigid-vessel constraints are:
+
+```text
+m_water = m_liquid + m_vapor
+V_available = m_liquid * v_liquid(T, p0) + V_gas
+p_air = m_air * R_air * T / V_gas
+p0 = p_vapor + p_air
+U = m_liquid * u_liquid(T, p0)
+  + m_vapor * u_vapor(T, p_vapor) + m_air * u_air(T)
+```
+
+When liquid is present, `p_vapor = p_sat(T)` and
+`V_gas = m_vapor * v_vapor(T, p_sat(T))`.
+Liquid properties use total pressure p0. Vapor properties use water's partial
+pressure. When all water is vapor, `V_gas = V_available`; a volume inversion of
+the existing vapor projection supplies `p_vapor` and water internal energy.
+The mixture never adds a separate air volume to the steam volume.
+
+This development model omits humidity enhancement, water/air interaction and
+dissolved air. It combines real-water projections with ideal carrier air and
+additive partial pressures. It is not the full humid-air equation of state in
+[IAPWS G8-10, sections 3 and 6](https://iapws.org/technical-guidance/release/SeaAir.download).
+The 1 MPa total-pressure limit is a model guard, not a validated accuracy bound
+for humid air. The tests establish closure consistency and conservation;
+they do not measure mixture accuracy against independent humid-air data.
+
+With positive air and water masses, temperature starts at the existing water
+saturation floor near 318.958 K and ends at 623.15 K. Water vapor partial pressure
+must be at least 10 kPa; total pressure must be at most 1 MPa. A state with liquid
+therefore reaches its pressure limit below 623.15 K. A superheated mixture can
+remain valid up to 623.15 K when its partial pressures satisfy the limits.
+Room-temperature humidity and steam diluted below 10 kPa are unsupported.
+
+Exactly zero air delegates to `close_water` and retains its wider pure-water
+domain. A compressed pure liquid has no gas volume or vapor partial pressure;
+its pressure comes from the liquid closure. The sum of gas partial pressures
+does not describe that component limit. Exactly zero water uses analytic dry
+air from 273.15 to 623.15 K and 10 kPa to 1 MPa. Derived dry-air temperature and
+pressure checks and the mixture total-pressure guard allow `8 * f64::EPSILON`
+relative arithmetic roundoff at inclusive endpoints. U, volume and observed
+temperature/pressure remain unchanged. Empty vessels reject.
+
+The solve normalizes mass, U and volume by total mass. It first finds the feasible
+temperature interval from the vapor floor and total-pressure guard. For a
+two-phase candidate, up to 64 logarithmic gas-volume bisections satisfy water
+mass and actual volume with liquid properties at p0. Up to 64 temperature bisections then satisfy
+total internal energy. Invalid candidates are never used as an energy-residual
+sign. The energy tolerance is `1e-11 * max(abs(U/total_mass), 1000 J/kg)`.
+The inner occupied-volume tolerance is `2e-13 * available_volume`.
+The pressure-bound gas-volume endpoint can satisfy this tolerance directly;
+it is accepted after checking phase masses and total pressure.
+The logarithmic coordinate resolves very small gas volumes without an overflowing
+volume ratio. Conservation tolerances do not guarantee relative accuracy for a
+phase amount or partial pressure that is negligible at the supplied U/V precision.
+Reported residuals retain extensive units.
+
+`MixtureVessel::apply_heat` validates each candidate before committing its U and
+observations. Its return value is the representable energy change for the
+caller's source ledger. Rejected heat preserves both inventories and equilibrium.
+This API does not advance fluid transport, chamber topology, vents or conduction.
+
 ## Unsupported states and remaining work
 
 Invalid finite-value, mass, volume and temperature inputs return typed errors.
@@ -114,13 +195,11 @@ Compressed liquid and superheated vapor are supported within the domains above.
 Fully liquid heated cavities reject if the pressure or temperature exceeds them.
 The solver never clamps temperature, energy or phase amounts into the table.
 
-Ice, carrier air, hot fire/water mixtures and elemental phase families remain
+Ice, reactive carrier species, hot fire/water mixtures and elemental phase families remain
 outside this reference. It does not satisfy CUR-07 or CUR-09.
 It does not establish FIRE-A03, FIRE-A12 or FIRE-PRECONDITIONS.
-Air/steam mixtures must use vapor partial pressure rather than total pressure.
-
-The next E09 deliverable is bounded air/steam mixture closure.
-Finite ventilation, transport/conduction coupling,
+The next E09 deliverable is bounded finite ventilation with source accounting.
+Transport/conduction coupling,
 chamber topology, broader current-material domains and GPU parity follow under
 the [M4 contract](plans/fluid-gpu-redesign/plan.md#thermodynamics-and-chamber-closure).
 All remain required before M4 or E09 can be validated.
@@ -140,12 +219,19 @@ checks a published liquid inversion point, cold and hot states, domain boundarie
 all mass scales, finite liquid pressure, reversible source heat, rejected edits
 and transitions across both saturation endpoints.
 Table error and nonlinear closure residual are separate measurements.
+[`water_mixture.rs`](../engine/crates/sim-cpu/tests/water_mixture.rs) checks shared
+gas volume, partial versus total pressure, superheated states, mass scales,
+repeat closure, reversible heating across the zero-liquid boundary, component
+limits, rejected inputs and atomic thermal edits. A stratified fixed-inventory
+unit test checks contiguous feasibility and increasing energy/pressure along
+the mixture temperature interval. These samples support the bisection assumption;
+they are not a proof over every possible inventory.
 
 Run focused checks from `engine/`:
 
 ```sh
 cargo test --locked -p particle-sim-cpu water:: -- --nocapture
-cargo test --locked -p particle-sim-cpu --test water_vessel --test water_single_phase
+cargo test --locked -p particle-sim-cpu --test water_vessel --test water_single_phase --test water_mixture
 ```
 
 Run `mise run ci` from the repository root before delivering engine changes.

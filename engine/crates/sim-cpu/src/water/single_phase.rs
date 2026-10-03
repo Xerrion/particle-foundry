@@ -139,6 +139,40 @@ impl WaterTable {
         }
         Err(WaterError::UnsupportedEquilibrium)
     }
+
+    /// Inverts only the existing vapor projection at a supplied temperature.
+    /// Mixture closure uses this pressure as water's partial pressure.
+    pub(super) fn vapor_at_volume(
+        &self,
+        temperature_k: f64,
+        volume_m3_kg: f64,
+    ) -> Result<WaterProperties, WaterError> {
+        if !temperature_k.is_finite() || !volume_m3_kg.is_finite() {
+            return Err(WaterError::NonFiniteInput);
+        }
+        let (row, t) = self.vapor.interval(temperature_k)?;
+        let last = self.vapor.rows[row].nodes.len() - 1;
+        let minimum = self.vapor.node(row, t, last).volume;
+        let maximum = self.vapor.node(row, t, 0).volume;
+        let tolerance = 2e-13 * volume_m3_kg;
+        if volume_m3_kg <= 0.0
+            || volume_m3_kg < minimum - tolerance
+            || volume_m3_kg > maximum + tolerance
+        {
+            return Err(WaterError::UnsupportedEquilibrium);
+        }
+        let (node, q) = self.vapor.at_volume(row, t, volume_m3_kg);
+        if (node.volume - volume_m3_kg).abs() > tolerance {
+            return Err(WaterError::UnsupportedEquilibrium);
+        }
+        let (lower, upper) = self.vapor.pressures(row, t);
+        Ok(WaterProperties {
+            temperature_k,
+            pressure_pa: lower * (upper / lower).powf(q * (2.0 - q)),
+            volume_m3_kg: node.volume,
+            energy_j_kg: node.energy,
+        })
+    }
 }
 
 fn mix(a: f64, b: f64, t: f64) -> f64 {

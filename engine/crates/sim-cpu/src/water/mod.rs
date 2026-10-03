@@ -1,10 +1,17 @@
-//! Isolated E09 pure-water thermodynamic reference. Conserved mass, internal energy
+//! Isolated E09 water and carrier-air thermodynamic reference. Conserved masses, internal energy
 //! and available volume determine phase amounts. This is not a fluid stage.
-//! No GPU, air mixture, legacy conversion or fire property support is implied.
+//! No GPU, legacy conversion or fire property support is implied.
 
 mod if97;
+mod mixture;
 mod single_phase;
 mod table;
+
+pub use mixture::{
+    AIR_GAS_CONSTANT_J_KG_K, AIR_HEAT_CAPACITY_J_KG_K, AIR_REFERENCE_TEMPERATURE_K,
+    MAX_MIXTURE_PRESSURE_PA, MIXTURE_PROPERTY_VERSION, MixtureEquilibrium, MixtureInventory,
+    MixtureVessel, close_mixture,
+};
 
 pub use single_phase::{
     MAX_PRESSURE_PA, MIN_TEMPERATURE_K, SINGLE_PHASE_PROPERTY_VERSION, WaterPhase, WaterProperties,
@@ -21,15 +28,15 @@ pub use table::{
 pub enum WaterError {
     /// An input or a derived specific quantity is not finite.
     NonFiniteInput,
-    /// Mass and available volume must both be positive.
+    /// Component masses must be nonnegative; total mass and volume must be positive.
     NonPositiveInventory,
     /// A property lookup temperature is outside the bounded table.
     TemperatureOutsideTable,
     /// A pressure query is outside 10 kPa to 20 MPa.
     PressureOutsideTable,
-    /// No liquid/vapor equilibrium fits the inventory within this table.
+    /// No equilibrium fits the inventory within the selected property domain.
     UnsupportedEquilibrium,
-    /// The bounded nonlinear solve did not meet its energy tolerance.
+    /// The bounded nonlinear solve did not meet its residual tolerance.
     IterationLimit,
 }
 
