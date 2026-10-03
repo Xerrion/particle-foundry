@@ -93,6 +93,19 @@ description = "Run all continuous integration checks"
 depends = ["lint", "check", "build", "docs:check", "rust:fmt", "rust:test", "rust:clippy", "test:browser"]
 run = ["mise run check:wasm", "mise run check:catalogue"]
 
+[tasks."ci:web"]
+description = "Run web CI checks with one dependency installation"
+depends = ["lint", "typecheck:catalogue", "test"]
+
+[tasks."ci:rust"]
+description = "Run native CI checks with one toolchain check"
+depends = ["rust:fmt", "rust:clippy", "rust:test"]
+
+[tasks."ci:browser"]
+description = "Build and check browser assets with one shared WASM generation"
+depends = ["build", "typecheck", "test:browser"]
+run = ["mise run check:wasm", "mise run check:catalogue"]
+
 [tasks."build:catalogue"]
 description = "Generate the candidate engine material projection from the authored catalogue"
 dir = "{{config_root}}/web"
@@ -111,10 +124,14 @@ dir = "{{config_root}}/engine"
 run = "rustup show"
 
 [tasks."rust:bindings-tool"]
-description = "Install the wasm-bindgen CLI paired with the locked Rust library"
+description = "Verify or install the wasm-bindgen CLI paired with the locked Rust library"
 dir = "{{config_root}}/engine"
 depends = ["rust:toolchain"]
-run = "cargo install wasm-bindgen-cli --version 0.2.108 --locked"
+run = """
+if test "$(wasm-bindgen --version 2>/dev/null)" != 'wasm-bindgen 0.2.108'; then
+  cargo install wasm-bindgen-cli --version 0.2.108 --locked
+fi
+"""
 
 [tasks."rust:fmt"]
 description = "Check Rust formatting"

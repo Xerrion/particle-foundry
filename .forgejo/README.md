@@ -6,51 +6,79 @@ The primary repository is
 The former [GitHub settings](../.github/README.md) are a dated record.
 They do not establish the Forgejo branch settings.
 
-## Runner requirements
+## Runner and tool image
 
-The `ubuntu-latest` label must select an Ubuntu 24.04 Docker job with root access
-and outbound access to the tool and package servers.
-The existing Forgejo run uses `ghcr.io/catthehacker/ubuntu:act-24.04` with runner v13.
-These containers need explicit compiler, Rust and Chrome setup.
-The engine toolchain remains pinned in `engine/rust-toolchain.toml`.
+CI uses the existing self-hosted Docker runners through the `ubuntu-latest` label.
+Every job selects a prepared Debian Bookworm image from this Forgejo instance.
+The workflow pins the published image by digest. It requires amd64 Docker support
+and access to Forgejo, the npm registry and crates.io. The automatic job token
+authenticates image pulls. Jobs run as root inside
+isolated containers. No extra runner is required.
 
-All remote actions use full URLs and commit hashes.
-This avoids dependence on the instance's default action server.
-Mise is pinned to 2026.9.13 and caches its tools. Its GitHub token inputs are empty
-because the automatic Forgejo token belongs to this instance.
-Checkout uses that token only to read the repository and removes its Git credentials.
-Artifact upload uses v3 because Forgejo does not support the stock v4 action.
-See the [Forgejo Actions guide](https://forgejo.org/docs/v15.0/user/actions/actions/)
-and [artifact support](https://forgejo.org/docs/v15.0/user/actions/advanced-features/).
+The [Dockerfile](ci/Dockerfile) contains digest-pinned Docker Hub tool images,
+the pinned Rust toolchain, compiler tools, wasm-bindgen and a checksum-pinned Chrome.
+Mise links the existing Bun, Node and Python installations. Its offline setting
+prevents tool downloads during CI. Cargo uses the sparse crates.io protocol.
+GitHub-hosted actions, their Forgejo mirrors and GitHub container images are absent
+from the workflow. All checkout, cache and artifact operations use local steps.
 
-## Build cache
+To update the tool image:
 
-Mise restores its tool directory using a key derived from its version, configuration
-and the Ubuntu 24.04 amd64 cache prefix. Change the prefix when the runner image
-changes or the cache needs to be reset.
+1. Keep tool versions aligned with `mise.toml` and `engine/rust-toolchain.toml`.
+2. Build from `.forgejo/ci/` with `docker build --platform linux/amd64 -t git.xerrion.io/xerrion/particle-foundry-ci:<new-tag> .forgejo/ci`.
+3. Check the tool versions and browser execution inside the image. Push it with an existing Forgejo registry credential.
+4. Set every workflow container image to the new immutable digest. The cache key also includes the image source and mise configuration.
 
-The Rust and browser jobs use the Forgejo-hosted `actions/cache` mirror with
-Forgejo Runner's cache service. They keep separate caches for the pinned Rust toolchain,
-Cargo downloads, installed binaries and `engine/target/`.
-The browser cache includes Cargo installation metadata. This lets the existing
-exact-version install reuse `wasm-bindgen-cli` without compiling it again.
-Cargo credentials and global configuration are outside the cached paths.
+No credentials belong in the build context, Dockerfile or image layers.
+The image build obtains tools from Docker Hub, Rust components from the official
+Rust distribution, packages from Debian and Chrome from Google.
+Some upstream tool projects develop their software on GitHub. CI does not contact
+GitHub to obtain their tools or execute their actions.
 
-Each build key includes the job, runner image, toolchain, lockfile and authored
-Rust source or mise configuration. A changed source creates a new cache entry.
-Restore prefixes can reuse earlier outputs for the same toolchain, including
-when dependencies change. Cargo checks which outputs need to be rebuilt.
-Tests and freshness checks still run on every applicable CI run.
+## Checkout and native helpers
 
-The runner cache service must be reachable from job containers.
-Each runner stores its cache in `/data/cache` on its existing persistent bind mount.
-The runners keep separate entries, so a job can have a cold build on each runner.
-A shared Forgejo cache server is needed to reuse entries across runners.
-A pull request writes entries isolated to that pull request. The first run on
-`main` can therefore be cold after merge.
-A missing or evicted entry causes a normal build.
-See [Forgejo cache support](https://forgejo.org/docs/v15.0/user/actions/advanced-features/#cache)
-and [Cargo cache paths](https://doc.rust-lang.org/cargo/guide/cargo-home.html).
+Checkout fetches the exact pull request head or push commit from Forgejo.
+The temporary HTTP authentication header exists only during the fetch.
+It is removed before repository scripts run and is never written to Git configuration.
+The scope job fetches the commit history to find the common base.
+Other jobs use a shallow checkout.
+
+The Python helpers use Forgejo's runtime APIs directly:
+
+- [Cache](ci/cache.py) uses Forgejo Runner's lookup, reserve, chunk upload and finalize endpoints.
+- [Artifact upload](ci/artifact.py) uses Forgejo's artifact v3 API with a checksum for each chunk and one-day retention.
+- [HTTP client](ci/runtime.py) rejects redirects and unexpected origins. Errors omit opaque runtime URLs and tokens.
+
+The docs job runs [helper contract tests](ci/test_helpers.py). These cover cache
+misses, exact hits, previous-build restores, path restrictions and artifact chunks.
+See the [Forgejo environment reference](https://forgejo.org/docs/v15.0/user/actions/reference/),
+[runner cache implementation](https://code.forgejo.org/forgejo/runner/src/tag/v13.0.0/act/artifactcache/handler.go)
+and [artifact implementation](https://codeberg.org/forgejo/forgejo/src/tag/v15.0.9/routers/api/actions/artifacts.go).
+
+## Build cache and task grouping
+
+Each web, Rust and browser job has a separate native cache. All three cache Bun
+package downloads and `web/node_modules/`. Rust and browser also cache Cargo
+registry/git downloads and `engine/target/`. Installed toolchains and Chrome live
+in the image, so cache archives do not transfer them on every run.
+Cargo credentials and global configuration are outside the selected paths.
+
+Keys include the job, image source, mise configuration, Rust toolchain, lockfiles
+and engine source. A changed engine source creates a new immutable cache entry.
+Restore prefixes can reuse earlier outputs for the same tools. Cargo checks which
+outputs need to be rebuilt. Cache failures issue a warning and allow a normal build.
+Every applicable check still runs. Successful jobs save new entries. Exact hits
+avoid recompressing and uploading the same cache.
+
+The cache service must be reachable from job containers. Each existing runner
+stores its cache in `/data/cache` on its persistent bind mount. The runners keep
+separate entries, so each runner can need an initial build. Pull request writes
+are isolated to that pull request. The first run on `main` can therefore be cold.
+See [Forgejo cache support](https://forgejo.org/docs/v15.0/user/actions/advanced-features/#cache).
+
+`ci:web` shares one dependency installation. `ci:rust` shares one toolchain check.
+`ci:browser` shares WASM generation across production build, types and browser smoke.
+The WASM and catalogue freshness checks run after those tasks complete.
 
 ## Checks and merge requirements
 
@@ -70,8 +98,8 @@ Do not infer their configuration from this policy or the old GitHub ruleset.
 
 ## Browser evidence
 
-CI installs Chrome and selects a temporary wrapper through `CHROME_BIN`.
-The wrapper disables the Chrome sandbox inside the isolated root job container.
+The image selects [a Chrome wrapper](ci/chrome-ci) through `CHROME_BIN`.
+It disables the sandbox only when Chrome runs as root in the isolated job container.
 Local browser execution keeps its existing settings.
 
 The default browser smoke can pass with `gpu.status: unavailable`.
@@ -79,5 +107,5 @@ That result covers the executed browser and WASM checks.
 It does not prove GPU simulation or rendering.
 Run `mise run test:browser artifacts/validation/browser/<new-run> --require-gpu`
 on a machine with a real adapter for that gate.
-Record hardware evidence separately.
-Browser artifacts have a one-day retention period.
+Record hardware evidence separately. Native artifact upload preserves nonempty
+browser evidence files and excludes symbolic links.

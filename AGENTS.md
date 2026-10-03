@@ -178,7 +178,7 @@ Report hardware-dependent or unrun checks explicitly. Do not report planned migr
 
 Forgejo CI uses self-hosted Ubuntu Docker runners and separate docs, web, Rust and browser jobs.
 The final `verify` job requires all applicable jobs. See the workflow and merge policy for path-filter behavior.
-The workflow installs compiler tools, Rust and Chrome inside the job containers.
+The workflow uses a prepared Forgejo-hosted image with compiler tools, Rust and Chrome.
 Do not configure additional or paid GPU runners without explicit user approval.
 Keep required GPU validation as separate local hardware evidence.
 
