@@ -58,7 +58,7 @@ Keep dependent edits sequential and review the combined diff before delivery.
 - Work on feature branches. Preserve unrelated tracked and untracked changes.
   Use small, atomic commits with conventional prefixes such as `feat:`, `fix:`, `docs:` and `refactor:`.
   NEVER commit a change that knowingly breaks existing tests.
-- Use `gh` for operations on the primary GitHub repository.
+- GitHub is the authoritative Git host. Use `gh` for GitHub operations.
   Follow the [CI and merge policy](.github/README.md).
   Create commits and draft PRs when the assigned task includes delivery.
   Passing checks do not authorize a merge or deployment.
