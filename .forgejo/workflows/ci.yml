@@ -45,10 +45,20 @@ jobs:
         id: scope
         env:
           COOLIFY_DEPLOY_ENABLED: ${{ vars.COOLIFY_DEPLOY_ENABLED }}
+          COOLIFY_PREVIEW_ENABLED: ${{ vars.COOLIFY_PREVIEW_ENABLED }}
+          PR_BASE_REF: ${{ forgejo.event.pull_request.base.ref }}
+          PR_HEAD_REPOSITORY: ${{ forgejo.event.pull_request.head.repo.full_name }}
         run: |
           if test "$FORGEJO_EVENT_NAME" = push &&
              test "$FORGEJO_REF" = refs/heads/main &&
              test "$COOLIFY_DEPLOY_ENABLED" = true; then
+            echo 'code=true' >> "$FORGEJO_OUTPUT"
+            exit 0
+          fi
+          if test "$FORGEJO_EVENT_NAME" = pull_request &&
+             test "${COOLIFY_PREVIEW_ENABLED:-}" = true &&
+             test "${PR_BASE_REF:-}" = main &&
+             test "${PR_HEAD_REPOSITORY:-}" = "$FORGEJO_REPOSITORY"; then
             echo 'code=true' >> "$FORGEJO_OUTPUT"
             exit 0
           fi

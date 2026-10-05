@@ -103,7 +103,7 @@ Do not infer their configuration from this policy or the old GitHub ruleset.
 ## Optional Coolify deployment
 
 The `deploy` job runs after successful `verify` for pushes to `refs/heads/main`.
-Pull requests do not deploy.
+Pull requests do not deploy to production.
 The job remains disabled until the repository variable `COOLIFY_DEPLOY_ENABLED`
 equals `true`. Configure these values in Forgejo repository Actions settings:
 
@@ -163,6 +163,65 @@ These contracts and local fixture tests do not establish a real deployment.
 After enabling the job, check the deployed application in a browser and record
 the public URL and deployed commit separately. See the
 [Coolify application setup](../docs/deployment.md) for the Dockerfile and host settings.
+
+## Optional PR previews
+
+The separate `preview.yml` workflow handles PR previews with trusted control code.
+The [preview helper](ci/preview.py) owns CI gating and the application lifecycle.
+It uses `pull_request_target` for opened, updated, reopened, edited and closed PRs targeting `main`.
+Manual execution can reconcile an existing PR by number.
+The workflow executes from `main` and never checks out PR code with the Coolify secret.
+
+Enable previews only after the dedicated Coolify environment and domain are configured:
+
+| Variable | Value |
+| --- | --- |
+| `COOLIFY_PREVIEW_ENABLED` | `true` to enable previews |
+| `COOLIFY_PREVIEW_PROJECT_UUID` | The Coolify project UUID |
+| `COOLIFY_PREVIEW_SERVER_UUID` | The preview deployment server UUID |
+| `COOLIFY_PREVIEW_ENV_UUID` | The dedicated preview environment UUID |
+| `COOLIFY_PREVIEW_DOMAIN_TEMPLATE` | `https://sand-pr-{pr}.xerrion.io` |
+| `COOLIFY_PREVIEW_KEY_NAME` | The unique stored repository read key name |
+
+Previews reuse `COOLIFY_URL`, `COOLIFY_APP_UUID` and the approved `COOLIFY_TOKEN` secret.
+The production application UUID identifies the source configuration only.
+The helper does not update or delete that application.
+Read and Write permissions suffice. No Sensitive or additional Deploy ability is required.
+Key discovery reads only key metadata and does not read private key material.
+
+Only same-repository PRs targeting `main` are eligible.
+Eligible PRs receive full CI, including documentation changes, when previews are enabled.
+The controller requires changes, docs, web, Rust, browser and verify tasks to succeed
+for the current PR head in the latest matching CI attempt.
+It rejects fork PRs and rechecks the live PR before changing Coolify.
+Repository writers can change the CI workflow and test logic in eligible PRs.
+Successful task results establish completion of those checked-in CI definitions.
+
+Coolify creates one separate application per PR in the preview environment.
+Each deployment pins the verified full head SHA and monitors a new deployment UUID.
+The job fails on a failed, cancelled, mismatched or timed-out deployment.
+Closing or merging a PR targeting `main` removes only its managed preview application.
+Cleanup waits for active deployment jobs before deletion and guards against renewed eligibility.
+It requests no volume, connected-network or server-wide Docker cleanup.
+After retargeting a PR away from `main`, run manual reconciliation to remove its preview.
+Forgejo selects a target workflow from the PR base branch, which can lack the new workflow.
+Automatic target events stay restricted to `main` to preserve the trusted workflow source.
+
+Workflow concurrency uses the PR number, because target events share the `main` ref.
+Forgejo concurrency provides best-effort ordering.
+Live PR checks and exact commit selection provide additional stale-run protection.
+The helper cannot make Forgejo state and Coolify changes one atomic transaction.
+A later event reconciles newer PR state.
+
+See [PR preview setup](../docs/deployment.md#pr-preview-setup) for live configuration
+and browser verification. Local fixture tests do not prove a real preview deployment.
+
+The implementation targets the Coolify v4.3.23
+[application API](https://github.com/coollabsio/coolify/blob/v4.3.23/app/Http/Controllers/Api/ApplicationsController.php)
+and [deletion job](https://github.com/coollabsio/coolify/blob/v4.3.23/app/Jobs/DeleteResourceJob.php).
+Forgejo v15 supplies the
+[run and task API](https://codeberg.org/forgejo/forgejo/src/tag/v15.0.9/routers/api/v1/repo/action.go)
+and [trusted target workflow selection](https://codeberg.org/forgejo/forgejo/src/tag/v15.0.9/services/actions/notifier_helper.go).
 
 ## Browser evidence
 

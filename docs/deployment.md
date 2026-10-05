@@ -1,6 +1,7 @@
 # Coolify deployment
 
 Deploy the static browser application from the Forgejo `main` branch.
+Optional PR previews use separate applications in a dedicated Coolify environment.
 The [production Dockerfile](../Dockerfile) builds the existing TypeScript sandbox
 and the experimental GPU page. This setup does not promote the GPU engine to the default sandbox.
 The Dockerfile defines the container. Live Coolify settings and a successful deployment require separate checks.
@@ -64,6 +65,44 @@ See the [CI and merge policy](../.forgejo/README.md) for the required checks.
 
 A container build alone does not run all repository checks. A healthy HTTP
 response also does not establish browser or GPU correctness.
+
+## PR preview setup
+
+Create an empty `pr-previews` environment in the same Coolify project.
+Select the deployment server and the existing repository read key for preview builds.
+Keep this environment separate from production. Do not copy production environment
+variables, persistent storage, host port mappings or custom Docker options.
+
+Configure the Forgejo preview variables listed in the
+[CI policy](../.forgejo/README.md#optional-pr-previews).
+Use `https://sand-pr-{pr}.xerrion.io` as the domain template.
+The helper replaces `{pr}` with the PR number, such as `sand-pr-16.xerrion.io`.
+DNS and HTTPS must cover those addresses before preview deployment is enabled.
+
+Coolify v4.3.23 cannot independently pin an API-triggered Git preview to its PR commit.
+The helper therefore creates one separate Dockerfile application per PR.
+It uses the same port and healthcheck as production, with a full PR commit SHA.
+Keep Coolify's native preview and push-based auto-deployment settings disabled.
+Forgejo owns preview creation, updates and removal.
+
+PRs from this repository targeting `main` can receive previews after full CI succeeds.
+PRs from forks do not receive previews on the deployment server.
+Repository writers control eligible branches and their build and test definitions.
+The secret-bearing preview workflow executes control code from `main`.
+It reads PR metadata and CI results as data.
+
+New commits update the same preview application after their checks pass.
+Closing or merging a PR that targets `main` removes its managed preview application.
+Cleanup waits for active deployments to finish and rechecks whether removal still applies.
+It preserves volumes, connected networks and server-wide Docker resources.
+If cleanup fails, use the preview workflow's manual PR-number input to retry.
+Also run that manual reconciliation after retargeting a PR away from `main`.
+Forgejo selects target workflows from the PR's base branch, so the new base may have no cleanup workflow.
+The manual controller removes only the existing managed preview and stops if the PR targets `main` again.
+
+Check the preview address and its deployed SHA separately from the CI result.
+Also check that production still serves its original revision after a preview update.
+The existing experimental GPU limitations apply to previews too.
 
 ## Check a deployment
 
