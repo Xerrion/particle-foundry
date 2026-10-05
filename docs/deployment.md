@@ -1,12 +1,13 @@
 # Coolify deployment
 
 Deploy the static browser application from GitHub `main` through Coolify's
-GitHub App integration. The intended setup uses native PR previews at
+GitHub App integration. The verified setup uses native PR previews at
 `sand-pr-<PR>.xerrion.io` and production at `sand.xerrion.io`.
 The [production Dockerfile](../Dockerfile) builds the existing TypeScript sandbox
 and the experimental GPU page. This setup does not promote the GPU engine to the default sandbox.
-The Dockerfile defines the container. The GitHub return, native preview setup
-and live deployment checks are pending until recorded with deployment evidence.
+The GitHub source, baseline deployment and native preview lifecycle passed setup
+checks on 2026-10-05. The [recorded revisions and limits](#verified-setup) apply to
+that test, not to later commits on `main`.
 
 ## Build and runtime
 
@@ -27,11 +28,9 @@ The builder needs no private container registry credential.
 
 ## Coolify settings
 
-Use a Coolify application connected to the GitHub App source. Select the public
-`Xerrion/particle-foundry` repository and the existing deployment server.
-Check that the selected application supports native PR previews before enabling them.
-An existing resource that uses a Forgejo deploy key can require a new resource
-with the GitHub App source.
+The application uses the existing GitHub App source with access to the public
+`Xerrion/particle-foundry` repository. It runs on the existing Charles server.
+The former Forgejo application is stopped, and its image remains available.
 
 | Setting | Value |
 | --- | --- |
@@ -44,8 +43,9 @@ with the GitHub App source.
 | Healthcheck | HTTP `GET /` on port `80`, expected status `200` |
 | Healthcheck timing | Interval `30` seconds, timeout `3` seconds, retries `3`, start period `5` seconds |
 | Domain | `https://sand.xerrion.io` |
-| Auto deploy | Enabled for pushes to protected GitHub `main` after setup verification |
+| Auto deploy | Enabled for pushes to protected GitHub `main` |
 | Application environment | Empty |
+| Persistent storage | Empty |
 
 Use the GitHub App connection for repository access and webhook events.
 Keep its private key and webhook secret in Coolify.
@@ -55,6 +55,8 @@ source files or the build context. The static application needs no runtime secre
 Coolify terminates HTTPS and forwards requests to container port `80`.
 HTTPS is required for the browser GPU preview. A browser still needs a supported
 WebGPU adapter. The existing TypeScript sandbox remains the default page.
+Only `sand.xerrion.io` is configured for production. The automatic `www.sand.xerrion.io`
+alias was removed because the existing edge wildcard does not cover that nested hostname.
 
 ## Deployment trigger
 
@@ -63,19 +65,20 @@ Resolve review conversations before squash merging. Coolify's native auto-deploy
 receives the resulting push to `main`. It does not wait for the separate CI run
 after that push. See the [CI and merge policy](../.github/README.md) for the requirements.
 
-Enable the native trigger only after the GitHub App source, build and public
-production URL pass their setup checks. Keep the former Forgejo deployment
-workflow inactive. No mirrored repository or custom API trigger is required.
+The native push trigger is enabled. After a protected `main` merge, check that
+the resulting deployment uses the merged revision and passes public checks. Forgejo's
+`COOLIFY_DEPLOY_ENABLED` and `COOLIFY_PREVIEW_ENABLED` are both `false`.
+No mirrored repository or custom API trigger is required.
 
 A container build alone does not run all repository checks. A healthy HTTP
 response also does not establish browser or GPU correctness.
 
 ## PR preview setup
 
-Keep native preview deployments disabled until the baseline deployment works.
-Set the custom preview domain to `sand-pr-{{pr_id}}.xerrion.io` in Coolify v4.3.23.
+Native preview deployments are enabled for repository members only.
+The custom preview domain is `sand-pr-{{pr_id}}.xerrion.io` in Coolify v4.3.23.
 Coolify replaces `{{pr_id}}` with the GitHub pull request number.
-DNS and HTTPS must cover the preview addresses before previews are enabled.
+The tested preview address passed public HTTPS checks.
 
 Preview builds use the root Dockerfile, port `80` and HTTP `GET /` healthcheck.
 Keep preview environment variables empty. Do not copy production secrets,
@@ -90,8 +93,48 @@ Use a same-repository PR targeting `main` to check the native lifecycle:
 5. Record HTTPS, browser behavior and cleanup results with the tested revisions.
 
 Native preview events and GitHub CI results are separate checks. Check `verify`
-before merging. The preview lifecycle still needs live verification.
-The experimental GPU limitations apply to previews too.
+before merging. The experimental GPU limitations apply to previews too.
+
+## Verified setup
+
+Setup checks ran on 2026-10-05. [Migration PR #9](https://github.com/Xerrion/particle-foundry/pull/9)
+merged through the protected GitHub path. Its imported tree matched `ffc85b4`.
+The original Forgejo commits remain on
+[`codex/forgejo-main-archive`](https://github.com/Xerrion/particle-foundry/tree/codex/forgejo-main-archive).
+The [PR run](https://github.com/Xerrion/particle-foundry/actions/runs/37303593682)
+and [main run](https://github.com/Xerrion/particle-foundry/actions/runs/37304373719)
+passed all six CI jobs with Bun `1.3.12`. Hosted browser evidence reported
+`gpu.status: unavailable`.
+
+Production checks used
+[`c2dbad4`](https://github.com/Xerrion/particle-foundry/commit/c2dbad41a5233c9d59f8c61bf1e070b9aecf471f)
+from `main`. Coolify's source was `main` with commit selection `HEAD`.
+The root Dockerfile built a healthy container with HTTP `GET /` returning `200`.
+Public [production](https://sand.xerrion.io) checks passed for `/`, `/gpu.html`,
+JavaScript assets, WASM MIME type, missing-path `404` and HTTP-to-HTTPS `301`.
+
+[Controlled draft PR #10](https://github.com/Xerrion/particle-foundry/pull/10)
+tested native creation and update at
+[`f74a02f`](https://github.com/Xerrion/particle-foundry/commit/f74a02fe2a9e31adf977bb9004248f29f9473a26)
+and
+[`4a431ea`](https://github.com/Xerrion/particle-foundry/commit/4a431ea680a0dd9b1a86c72783220f69326eb4c2).
+Both automatic deployments succeeded. Both revisions passed HTTPS, page, asset,
+WASM MIME, missing-path and redirect checks. The default browser sandbox passed
+draw, pause and resume checks. The [first docs-only run](https://github.com/Xerrion/particle-foundry/actions/runs/37305228319)
+and [second docs-only run](https://github.com/Xerrion/particle-foundry/actions/runs/37305574616)
+passed with the expected job skips. Docker showed separate healthy production
+and preview containers at their expected revisions.
+
+PR #10 closed without a merge. Coolify removed its preview record, and Docker
+no longer listed its container. The former preview address returned `503`, while
+production still returned `200`. The temporary bot comment was removed.
+
+The experimental GPU page selected `BrowserWebGpu` and repeated its known
+pressure-projection stop at 125 ticks, or 2.083 seconds of model time.
+These setup checks do not establish broader GPU correctness.
+
+The optional Sonar check still failed on existing Dockerfile findings.
+Review found no migration blocker and added no waiver.
 
 ## Check a deployment
 
