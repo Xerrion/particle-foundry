@@ -66,7 +66,11 @@ The former two-slot Charles configuration is retained for recovery, with its
 The browser job runs on `ubuntu-latest`. Its smoke test passes when no
 WebGPU adapter exists, and the report records `gpu.status: unavailable`. A green
 browser job therefore verifies WASM loading and browser fallback behavior, not
-GPU simulation or rendering. Use
+GPU simulation or rendering. Ordinary smoke uses Chrome's default headless
+graphics selection. Only `--require-gpu` forces hardware rendering, which can
+require an X11 display on Linux. See
+[Chromium's headless GPU guidance](https://chromium.googlesource.com/chromium/src/+/HEAD/docs/gpu/using-gpu-hardware-in-headless-chrome.md).
+Use
 `mise run test:browser artifacts/validation/browser/<new-run> --require-gpu` on a
 machine with a real GPU for the hardware gate. Record that result separately
 before claiming GPU validation. No paid GitHub GPU runner is configured. The
