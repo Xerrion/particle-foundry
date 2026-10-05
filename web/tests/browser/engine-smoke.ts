@@ -181,6 +181,36 @@ function readGpuCheckpointKineticEnergy(checkpoint: Uint8Array): number {
 	return energy;
 }
 
+function checkGpuPressureGates(
+	report: {
+		scaledResidual: number | null;
+		scaledDivergence: number | null;
+		pressureIterations: number | null;
+	},
+	label: string,
+): asserts report is {
+	scaledResidual: number;
+	scaledDivergence: number;
+	pressureIterations: number;
+} {
+	if (
+		typeof report.scaledResidual !== "number" ||
+		!Number.isFinite(report.scaledResidual) ||
+		report.scaledResidual < 0 ||
+		report.scaledResidual > 1e-5 ||
+		typeof report.scaledDivergence !== "number" ||
+		!Number.isFinite(report.scaledDivergence) ||
+		report.scaledDivergence < 0 ||
+		report.scaledDivergence > 1e-5 ||
+		typeof report.pressureIterations !== "number" ||
+		!Number.isSafeInteger(report.pressureIterations) ||
+		report.pressureIterations < 0 ||
+		report.pressureIterations > 512
+	) {
+		throw new Error(`${label} failed its pressure gates: ${JSON.stringify(report)}`);
+	}
+}
+
 function checkGpuAttemptAccounting(report: GpuAttemptAccounting, label: string): void {
 	if (
 		[
@@ -821,23 +851,12 @@ try {
 						rejectedReadbackBytes += next.rejectedReadbackBytes;
 						lastAcceptedTimeS = next.acceptedTimeS;
 						if (next.completedOuterTick) {
+							checkGpuPressureGates(next, `Sustained GPU tick ${next.tick}`);
 							completedTicks += 1;
 							if (
 								next.tick !== completedTicks ||
 								Math.abs(next.acceptedTimeS - completedTicks / 60) > 1e-6 ||
 								next.remainingOuterS !== 0 ||
-								typeof next.scaledResidual !== "number" ||
-								!Number.isFinite(next.scaledResidual) ||
-								next.scaledResidual < 0 ||
-								next.scaledResidual > 1e-5 ||
-								typeof next.scaledDivergence !== "number" ||
-								!Number.isFinite(next.scaledDivergence) ||
-								next.scaledDivergence < 0 ||
-								next.scaledDivergence > 1e-5 ||
-								typeof next.pressureIterations !== "number" ||
-								!Number.isSafeInteger(next.pressureIterations) ||
-								next.pressureIterations < 0 ||
-								next.pressureIterations > 512 ||
 								!browserScene.render()
 							) {
 								throw new Error(
@@ -1104,23 +1123,12 @@ try {
 							}
 							continue;
 						}
+						checkGpuPressureGates(next, `Surface perturbation tick ${next.tick}`);
 						completedTicks += 1;
 						if (
 							next.tick !== completedTicks ||
 							Math.abs(next.acceptedTimeS - completedTicks / 60) > 1e-6 ||
 							next.remainingOuterS !== 0 ||
-							typeof next.scaledResidual !== "number" ||
-							!Number.isFinite(next.scaledResidual) ||
-							next.scaledResidual < 0 ||
-							next.scaledResidual > 1e-5 ||
-							typeof next.scaledDivergence !== "number" ||
-							!Number.isFinite(next.scaledDivergence) ||
-							next.scaledDivergence < 0 ||
-							next.scaledDivergence > 1e-5 ||
-							typeof next.pressureIterations !== "number" ||
-							!Number.isSafeInteger(next.pressureIterations) ||
-							next.pressureIterations < 0 ||
-							next.pressureIterations > 512 ||
 							!browserScene.render()
 						) {
 							throw new Error(
