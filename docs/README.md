@@ -36,6 +36,7 @@ A plan or reference entry is not evidence of implementation.
 | --- | --- | --- |
 | Where does behavior belong? | [Project structure](project-structure.md) | [Existing controls and sandbox](legacy-sandbox.md) |
 | How does CI run and what must pass before merging? | [Forgejo CI and merge policy](../.forgejo/README.md) | [mise tasks](../mise.toml) |
+| How does Coolify deploy the browser application? | [Coolify deployment](deployment.md) | [Forgejo CI and merge policy](../.forgejo/README.md) |
 | How does the simulation behave? | [Physical model](model.md) | [Combustion](combustion.md), [elements](elements.md) and the relevant source/tests |
 | Why was this architecture chosen? | [ADR-001](architecture/adr-001-rust-wasm-wgpu.md) | [Engine boundary](architecture/engine-boundary.md), [matter model](architecture/matter-model.md) |
 | What should an assigned migration item deliver? | [Active work](remaining-work.md) | Its controlling plan, dependencies and acceptance gates below |

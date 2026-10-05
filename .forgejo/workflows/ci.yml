@@ -5,6 +5,10 @@ on:
     branches: [main]
   pull_request:
 
+concurrency:
+  group: ci-${{ forgejo.ref }}
+  cancel-in-progress: false
+
 env:
   CI_SHA: ${{ forgejo.event.pull_request.head.sha || forgejo.sha }}
   CI_BASE_SHA: ${{ forgejo.event.pull_request.base.sha || forgejo.event.before }}
@@ -39,7 +43,15 @@ jobs:
           mise trust
       - name: Detect code changes
         id: scope
+        env:
+          COOLIFY_DEPLOY_ENABLED: ${{ vars.COOLIFY_DEPLOY_ENABLED }}
         run: |
+          if test "$FORGEJO_EVENT_NAME" = push &&
+             test "$FORGEJO_REF" = refs/heads/main &&
+             test "$COOLIFY_DEPLOY_ENABLED" = true; then
+            echo 'code=true' >> "$FORGEJO_OUTPUT"
+            exit 0
+          fi
           if ! git cat-file -e "${CI_BASE_SHA}^{commit}" 2>/dev/null ||
              ! git cat-file -e "${CI_SHA}^{commit}" 2>/dev/null; then
             echo 'code=true' >> "$FORGEJO_OUTPUT"
@@ -209,3 +221,35 @@ jobs:
             test "$RUST_RESULT" = skipped
             test "$BROWSER_RESULT" = skipped
           fi
+
+  deploy:
+    runs-on: ubuntu-latest
+    container:
+      image: git.xerrion.io/xerrion/particle-foundry-ci@sha256:8a251ca7be81fbbd17037f0210fd6361d0e328dc9e3c9c5cb44983a282e38969
+      credentials:
+        username: ${{ forgejo.actor }}
+        password: ${{ forgejo.token }}
+    timeout-minutes: 25
+    needs: [changes, verify]
+    if: forgejo.event_name == 'push' && forgejo.ref == 'refs/heads/main' && needs.verify.result == 'success' && needs.changes.outputs.code == 'true' && vars.COOLIFY_DEPLOY_ENABLED == 'true'
+    steps:
+      - name: Checkout from Forgejo
+        env:
+          CI_TOKEN: ${{ forgejo.token }}
+        run: |
+          git init -q
+          git remote add origin "$FORGEJO_SERVER_URL/$FORGEJO_REPOSITORY.git"
+          export GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=http.extraHeader
+          export GIT_CONFIG_VALUE_0="Authorization: Basic $(printf 'x-access-token:%s' "$CI_TOKEN" | base64 -w0)"
+          git fetch --no-tags --depth=1 origin "$CI_SHA"
+          git checkout -q --detach FETCH_HEAD
+          unset GIT_CONFIG_COUNT GIT_CONFIG_KEY_0 GIT_CONFIG_VALUE_0 CI_TOKEN
+          test "$(git rev-parse HEAD)" = "$CI_SHA"
+          mise trust
+      - name: Deploy the verified main commit to Coolify
+        env:
+          COOLIFY_URL: ${{ vars.COOLIFY_URL }}
+          COOLIFY_APP_UUID: ${{ vars.COOLIFY_APP_UUID }}
+          COOLIFY_TOKEN: ${{ secrets.COOLIFY_TOKEN }}
+          CI_TOKEN: ${{ forgejo.token }}
+        run: python .forgejo/ci/deploy.py

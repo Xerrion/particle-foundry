@@ -51,6 +51,7 @@ The Python helpers use Forgejo's runtime APIs directly:
 
 The docs job runs [helper contract tests](ci/test_helpers.py). These cover cache
 misses, exact hits, previous-build restores, path restrictions and artifact chunks.
+It also runs [deployment contract tests](ci/test_deploy.py) against a local HTTP fixture.
 See the [Forgejo environment reference](https://forgejo.org/docs/v15.0/user/actions/reference/),
 [runner cache implementation](https://code.forgejo.org/forgejo/runner/src/tag/v13.0.0/act/artifactcache/handler.go)
 and [artifact implementation](https://codeberg.org/forgejo/forgejo/src/tag/v15.0.9/routers/api/actions/artifacts.go).
@@ -84,8 +85,10 @@ The WASM and catalogue freshness checks run after those tasks complete.
 
 CI runs for pull request updates and pushes to `main`.
 The documentation check always runs.
-Changes confined to `docs/` skip the web, Rust and browser jobs.
-Every other change runs all three jobs.
+Changes confined to `docs/` skip the web, Rust and browser jobs for pull requests
+and when deployment is disabled. Every other change runs all three jobs.
+When deployment is enabled, every push to `main` runs all three jobs, including
+documentation changes. This validates the latest source revision for deployment.
 The final `verify` job requires every applicable job to succeed.
 `mise run ci` remains the complete local check.
 
@@ -93,8 +96,73 @@ Use a feature branch and a conventional PR title.
 Review the complete change before delivery.
 Require a successful `verify` result and resolve review findings before merging.
 Passing checks do not authorize a merge or deployment.
+The optional deployment automation below requires separate enablement.
 The Forgejo branch protection settings need separate verification.
 Do not infer their configuration from this policy or the old GitHub ruleset.
+
+## Optional Coolify deployment
+
+The `deploy` job runs after successful `verify` for pushes to `refs/heads/main`.
+Pull requests do not deploy.
+The job remains disabled until the repository variable `COOLIFY_DEPLOY_ENABLED`
+equals `true`. Configure these values in Forgejo repository Actions settings:
+
+| Kind | Name | Value |
+| --- | --- | --- |
+| Variable | `COOLIFY_DEPLOY_ENABLED` | `true` only after deployment authorization and setup |
+| Variable | `COOLIFY_URL` | Coolify base URL without `/api/v1` |
+| Variable | `COOLIFY_APP_UUID` | The selected Coolify application UUID |
+| Secret | `COOLIFY_TOKEN` | An approved Coolify API token with Read and Write permissions |
+
+Enabling deployment makes every push to `main` run the complete CI checks.
+This costs a full validation run for documentation changes.
+It prevents a newer documentation commit from blocking deployment of an earlier
+application change. Older runs skip after the source check, and the latest main
+revision can deploy after its own checks pass.
+
+Coolify v4.3.23 API tokens apply to the creating user's entire team.
+Read and Write permissions cover all applications in that team.
+Coolify cannot restrict this token to one application.
+The user must approve that scope before creating the token.
+The UI defaults to a 30-day expiry. Refresh the Forgejo secret before the token
+expires, or deployment will fail. Keep tokens out of source, logs and image layers.
+The Forgejo job token supplies repository read access for the source check.
+Runner containers must reach both API endpoints.
+
+[The deployment helper](ci/deploy.py) checks the current Forgejo `main` commit
+immediately before changing Coolify. If it differs from the verified `CI_SHA`,
+the helper reports a skipped deployment. This prevents an old workflow rerun
+from intentionally restoring an older commit.
+One `PATCH /api/v1/applications/{uuid}` sets the full `git_commit_sha` and
+`instant_deploy: true`. Coolify saves and queues from the same application object.
+The helper does not send a separate branch-based deploy request.
+
+The helper reads `/api/v1/deployments/applications/{uuid}?skip=0&take=10` before
+the request and until it finds a new deployment UUID with the verified commit
+and no pull request. It then monitors `/api/v1/deployments/{deployment_uuid}`
+directly. Newer previews or manual deployments cannot hide the tracked deployment
+by displacing it from recent history. A prior finished deployment cannot satisfy
+the queue check. HTTP 200 alone does not prove that Coolify accepted the deployment.
+The helper fails if no matching deployment appears within 60 seconds, if it
+fails or is cancelled, or if it does not finish within 20 minutes.
+API responses, build logs, tokens and raw HTTP errors are absent from CI output.
+Authenticated requests reject redirects.
+
+Use HTTPS for public API endpoints. The helper permits explicitly configured
+HTTP endpoints under `.ts.net` for a private Tailscale connection.
+The workflow groups runs by `forgejo.ref` with `cancel-in-progress: false`.
+[Forgejo 15 concurrency](https://forgejo.org/docs/v15.0/user/actions/reference/#concurrency)
+provides best-effort ordering. Exact commit selection does not depend on that ordering.
+
+The API contract comes from the Coolify v4.3.23
+[application update controller](https://github.com/coollabsio/coolify/blob/v4.3.23/app/Http/Controllers/Api/ApplicationsController.php),
+[queue helper](https://github.com/coollabsio/coolify/blob/v4.3.23/bootstrap/helpers/applications.php),
+[deployment controller](https://github.com/coollabsio/coolify/blob/v4.3.23/app/Http/Controllers/Api/DeployController.php)
+and [status enum](https://github.com/coollabsio/coolify/blob/v4.3.23/app/Enums/ApplicationDeploymentStatus.php).
+These contracts and local fixture tests do not establish a real deployment.
+After enabling the job, check the deployed application in a browser and record
+the public URL and deployed commit separately. See the
+[Coolify application setup](../docs/deployment.md) for the Dockerfile and host settings.
 
 ## Browser evidence
 

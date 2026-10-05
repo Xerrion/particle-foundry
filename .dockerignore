@@ -1,0 +1,30 @@
+# Only authored build inputs enter the context.
+**
+!mise.toml
+!web/
+!web/**
+!engine/
+!engine/**
+
+# Never copy local dependencies, generated assets or private configuration.
+**/.git
+**/.env
+**/.env.*
+**/.npmrc
+**/.cargo/credentials
+**/.cargo/credentials.toml
+**/*credentials*
+**/*secret*
+**/*.pem
+**/*.key
+**/*.p12
+**/*.pfx
+**/node_modules
+**/target
+**/dist
+**/generated
+**/.venv
+**/__pycache__
+**/artifacts
+**/.cache
+**/*.log
