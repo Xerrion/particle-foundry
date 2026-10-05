@@ -2,8 +2,8 @@
 
 The primary repository is
 [Xerrion/particle-foundry](https://github.com/Xerrion/particle-foundry).
-GitHub Actions runs the pinned mise tasks. The retained
-[Forgejo tooling](../.forgejo/README.md) is inactive former configuration.
+GitHub Actions runs the pinned mise tasks. Former Forgejo configuration remains
+in the [archived source history](https://github.com/Xerrion/particle-foundry/tree/codex/forgejo-main-archive/.forgejo).
 
 ## Repository settings
 

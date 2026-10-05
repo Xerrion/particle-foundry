@@ -1,9 +1,0 @@
-#!/bin/sh
-set -eu
-
-# Forgejo job containers provide isolation when Chrome runs as root.
-if [ "$(id -u)" = 0 ]; then
-    exec /usr/bin/google-chrome --no-sandbox "$@"
-fi
-
-exec /usr/bin/google-chrome "$@"

@@ -181,7 +181,6 @@ The final `verify` job requires all applicable jobs. See the workflow and merge 
 The workflow installs pinned tools, Rust and Chrome in the job environment.
 Do not configure additional or paid GPU runners without explicit user approval.
 Keep required GPU validation as separate local hardware evidence.
-The retained `.forgejo/ci/` helpers are inactive former tooling. See [.forgejo/README.md](.forgejo/README.md).
 
 ## Documentation and change discipline
 
