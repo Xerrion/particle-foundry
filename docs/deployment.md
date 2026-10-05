@@ -1,16 +1,17 @@
 # Coolify deployment
 
-Deploy the static browser application from the Forgejo `main` branch.
-Optional PR previews use separate applications in a dedicated Coolify environment.
+Deploy the static browser application from GitHub `main` through Coolify's
+GitHub App integration. The intended setup uses native PR previews at
+`sand-pr-<PR>.xerrion.io` and production at `sand.xerrion.io`.
 The [production Dockerfile](../Dockerfile) builds the existing TypeScript sandbox
 and the experimental GPU page. This setup does not promote the GPU engine to the default sandbox.
-The Dockerfile defines the container. Live Coolify settings and a successful deployment require separate checks.
+The Dockerfile defines the container. The GitHub return, native preview setup
+and live deployment checks are pending until recorded with deployment evidence.
 
 ## Build and runtime
 
-The builder uses the same public tool images and digests as the
-[Forgejo tool image](../.forgejo/ci/Dockerfile). It runs `mise run build` from the
-repository root. That task installs dependencies from `web/bun.lock`, generates
+The builder uses digest-pinned public tool images. It runs `mise run build`
+from the repository root. That task installs dependencies from `web/bun.lock`, generates
 the Rust/WASM bindings and material projection, and builds both Vite entrypoints.
 [mise.toml](../mise.toml) remains the task owner.
 
@@ -22,19 +23,19 @@ on port `80`. WASM responses use `application/wasm`. The Docker healthcheck send
 The application needs no environment variables, database or persistent volume.
 The [.dockerignore](../.dockerignore) limits the context to the authored build
 inputs. It excludes credentials, `.env` files, artifacts, caches and build outputs.
-The builder uses public images and does not require Forgejo registry credentials.
+The builder needs no private container registry credential.
 
 ## Coolify settings
 
-Use these settings for the production application:
-
-Create the resource with **Private Repository (with deploy key)**. Select the
-stored `particle-foundry-readonly` key. A Public Git application cannot attach
-its first deploy key through the Coolify v4.3.23 UI.
+Use a Coolify application connected to the GitHub App source. Select the public
+`Xerrion/particle-foundry` repository and the existing deployment server.
+Check that the selected application supports native PR previews before enabling them.
+An existing resource that uses a Forgejo deploy key can require a new resource
+with the GitHub App source.
 
 | Setting | Value |
 | --- | --- |
-| Repository | `git@charles.grayling-bigeye.ts.net:2222/xerrion/particle-foundry.git` |
+| Repository | `https://github.com/Xerrion/particle-foundry` through the GitHub App source |
 | Branch | `main` |
 | Build pack | Dockerfile |
 | Base directory | `/` |
@@ -43,13 +44,13 @@ its first deploy key through the Coolify v4.3.23 UI.
 | Healthcheck | HTTP `GET /` on port `80`, expected status `200` |
 | Healthcheck timing | Interval `30` seconds, timeout `3` seconds, retries `3`, start period `5` seconds |
 | Domain | `https://sand.xerrion.io` |
-| Auto deploy | Manual deployments only; Forgejo CI sends the approved API request |
+| Auto deploy | Enabled for pushes to protected GitHub `main` after setup verification |
 | Application environment | Empty |
 
-Grant Coolify read access to the private Forgejo repository through a dedicated
-deploy key. Store its private key in Coolify. Do not include it in Git or the build context.
-Coolify v4.3.23 accepts the extended SCP-style URL above and extracts SSH port
-`2222`. Its creation form rejects the equivalent `ssh://` clone URL shown by Forgejo.
+Use the GitHub App connection for repository access and webhook events.
+Keep its private key and webhook secret in Coolify.
+Do not copy the former Forgejo deployment token or deploy key into GitHub Actions,
+source files or the build context. The static application needs no runtime secrets.
 
 Coolify terminates HTTPS and forwards requests to container port `80`.
 HTTPS is required for the browser GPU preview. A browser still needs a supported
@@ -57,52 +58,40 @@ WebGPU adapter. The existing TypeScript sandbox remains the default page.
 
 ## Deployment trigger
 
-Automatic production deployment must follow a successful `verify` job for the
-same `main` revision. Keep Coolify's push-based auto-deployment disabled.
-Connect the Forgejo deployment trigger after `verify` succeeds.
-Store its Coolify API credential in a Forgejo Actions secret.
-See the [CI and merge policy](../.forgejo/README.md) for the required checks.
+GitHub protects `main` with a pull request requirement and the `verify` status check.
+Resolve review conversations before squash merging. Coolify's native auto-deploy
+receives the resulting push to `main`. It does not wait for the separate CI run
+after that push. See the [CI and merge policy](../.github/README.md) for the requirements.
+
+Enable the native trigger only after the GitHub App source, build and public
+production URL pass their setup checks. Keep the former Forgejo deployment
+workflow inactive. No mirrored repository or custom API trigger is required.
 
 A container build alone does not run all repository checks. A healthy HTTP
 response also does not establish browser or GPU correctness.
 
 ## PR preview setup
 
-Create an empty `pr-previews` environment in the same Coolify project.
-Select the deployment server and the existing repository read key for preview builds.
-Keep this environment separate from production. Do not copy production environment
-variables, persistent storage, host port mappings or custom Docker options.
+Keep native preview deployments disabled until the baseline deployment works.
+Set the custom preview domain to `sand-pr-{{pr_id}}.xerrion.io` in Coolify v4.3.23.
+Coolify replaces `{{pr_id}}` with the GitHub pull request number.
+DNS and HTTPS must cover the preview addresses before previews are enabled.
 
-Configure the Forgejo preview variables listed in the
-[CI policy](../.forgejo/README.md#optional-pr-previews).
-Use `https://sand-pr-{pr}.xerrion.io` as the domain template.
-The helper replaces `{pr}` with the PR number, such as `sand-pr-16.xerrion.io`.
-DNS and HTTPS must cover those addresses before preview deployment is enabled.
+Preview builds use the root Dockerfile, port `80` and HTTP `GET /` healthcheck.
+Keep preview environment variables empty. Do not copy production secrets,
+persistent storage, host port mappings or custom Docker options into previews.
 
-Coolify v4.3.23 cannot independently pin an API-triggered Git preview to its PR commit.
-The helper therefore creates one separate Dockerfile application per PR.
-It uses the same port and healthcheck as production, with a full PR commit SHA.
-Keep Coolify's native preview and push-based auto-deployment settings disabled.
-Forgejo owns preview creation, updates and removal.
+Use a same-repository PR targeting `main` to check the native lifecycle:
 
-PRs from this repository targeting `main` can receive previews after full CI succeeds.
-PRs from forks do not receive previews on the deployment server.
-Repository writers control eligible branches and their build and test definitions.
-The secret-bearing preview workflow executes control code from `main`.
-It reads PR metadata and CI results as data.
+1. Open the PR and check its preview address and deployed head SHA.
+2. Push a new commit and check that the preview updates to that SHA.
+3. Check that production still serves its expected revision after the preview update.
+4. Close the PR and check that Coolify removes the preview deployment.
+5. Record HTTPS, browser behavior and cleanup results with the tested revisions.
 
-New commits update the same preview application after their checks pass.
-Closing or merging a PR that targets `main` removes its managed preview application.
-Cleanup waits for active deployments to finish and rechecks whether removal still applies.
-It preserves volumes, connected networks and server-wide Docker resources.
-If cleanup fails, use the preview workflow's manual PR-number input to retry.
-Also run that manual reconciliation after retargeting a PR away from `main`.
-Forgejo selects target workflows from the PR's base branch, so the new base may have no cleanup workflow.
-The manual controller removes only the existing managed preview and stops if the PR targets `main` again.
-
-Check the preview address and its deployed SHA separately from the CI result.
-Also check that production still serves its original revision after a preview update.
-The existing experimental GPU limitations apply to previews too.
+Native preview events and GitHub CI results are separate checks. Check `verify`
+before merging. The preview lifecycle still needs live verification.
+The experimental GPU limitations apply to previews too.
 
 ## Check a deployment
 
@@ -120,5 +109,5 @@ docker run --rm -p 127.0.0.1:8080:80 particle-foundry:local
 5. Check the deployed revision and HTTPS certificate in Coolify.
 
 Record browser GPU checks separately. Use the
-[browser evidence requirements](../.forgejo/README.md#browser-evidence) when an
+[browser evidence requirements](../.github/README.md#browser-evidence) when an
 acceptance check requires a real GPU adapter.

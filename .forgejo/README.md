@@ -1,10 +1,14 @@
-# Forgejo CI and merge policy
+# Former Forgejo configuration
 
-The primary repository is
-[xerrion/particle-foundry](https://git.xerrion.io/xerrion/particle-foundry).
-[CI](workflows/ci.yml) uses the same pinned tools and mise tasks as local development.
-The former [GitHub settings](../.github/README.md) are a dated record.
-They do not establish the Forgejo branch settings.
+The primary repository now uses [GitHub CI and merge requirements](../.github/README.md).
+The `.forgejo/ci/` helpers and tool image remain as inactive former tooling.
+The Forgejo workflow definitions were removed from the active checkout.
+They remain in Git history at commit `980cf19`.
+
+The sections below describe the former Forgejo setup and its retained helper
+contracts. Do not enable its deployment or preview variables for the GitHub setup.
+The [current deployment guide](../docs/deployment.md) owns the intended native
+Coolify integration. No mirrored-repository automation is part of the return to GitHub.
 
 ## Runner and tool image
 
