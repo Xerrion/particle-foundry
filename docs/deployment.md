@@ -111,3 +111,5 @@ docker run --rm -p 127.0.0.1:8080:80 particle-foundry:local
 Record browser GPU checks separately. Use the
 [browser evidence requirements](../.github/README.md#browser-evidence) when an
 acceptance check requires a real GPU adapter.
+
+<!-- Temporary native preview lifecycle verification: initial head. -->
