@@ -16,7 +16,9 @@ use wgpu::util::DeviceExt;
 
 const WORKGROUP_SIZE: u32 = 64;
 const RESULT_BYTES: u64 = 8;
-const MAX_CELL_CFL: f64 = 0.5;
+// Shared-face closure adjusts velocities after this measurement. Reserve its
+// bounded four-face adjustment below the unchanged 0.5 transport gate.
+const MAX_CELL_CFL: f64 = 0.5 - crate::transport::CLOSURE_CELL_CFL_HEADROOM;
 /// Three f32 additions build a four-face rate. This multiplier exceeds their
 /// worst-case normal-value rounding loss and includes room for f64 arithmetic.
 const RATE_HEADROOM: f64 = 1.0 + 4.0 * f32::EPSILON as f64;
@@ -437,7 +439,8 @@ mod tests {
             let gpu_choice = measured.select_duration(OUTER_DT_S, nu).unwrap();
             let cpu_dt = cpu_limit(grid, &u, &v, nu);
             assert!(gpu_choice.dt_s as f64 <= cpu_dt);
-            assert!((gpu_choice.dt_s as f64 - cpu_dt).abs() <= cpu_dt * 2e-6);
+            let relative_headroom = crate::transport::CLOSURE_CELL_CFL_HEADROOM / 0.5;
+            assert!((gpu_choice.dt_s as f64 - cpu_dt).abs() <= cpu_dt * (relative_headroom + 2e-6));
         }
 
         let two_cells = Grid::new(2.0, 1.0).unwrap();

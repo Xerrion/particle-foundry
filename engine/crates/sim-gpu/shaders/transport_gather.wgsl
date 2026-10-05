@@ -50,7 +50,12 @@ fn gather_amount(owned: f32, negative_face: f32, positive_face: f32) -> f32 {
         atomicOr(&status[0], DONOR_OVERDRAW);
         return 0.0;
     }
-    let result = (owned - outgoing) + incoming;
+    // Explicit fma boundaries keep a small incoming amount after exhaustion.
+    // Reassociation of a plain subtraction/addition can erase that amount.
+    var result = fma(1.0, incoming, fma(-1.0, outgoing, owned));
+    if outgoing <= 0.5 * owned {
+        result = fma(1.0, owned, fma(-1.0, outgoing, incoming));
+    }
     if !(finite(result) && result >= 0.0) {
         atomicOr(&status[0], INVALID_CELL);
         return 0.0;

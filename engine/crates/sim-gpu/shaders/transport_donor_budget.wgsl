@@ -42,6 +42,20 @@ fn marker_flux(owned_marker: f32, owned_mass: f32, moved_mass: f32) -> f32 {
     return min(owned_marker, owned_marker * moved_fraction);
 }
 
+// Gather adds both outgoing masses before subtracting their shared inventory.
+// Use that same rounded sum for the marker budget, including full exhaustion.
+fn marker_budget(owned_marker: f32, owned_mass: f32,
+                 negative_mass: f32, positive_mass: f32) -> vec2<f32> {
+    let total = marker_flux(owned_marker, owned_mass, negative_mass + positive_mass);
+    let provisional_negative = min(total, marker_flux(owned_marker, owned_mass, negative_mass));
+    let positive = fma(-1.0, provisional_negative, total);
+    // Recompute the first share from the complement so the two f32 faces use
+    // the same total even when their magnitudes differ by many orders.
+    // Explicit fma boundaries retain both rounded complement operations.
+    let negative = fma(-1.0, positive, total);
+    return vec2<f32>(negative, positive);
+}
+
 // Both output-face threads calculate the same split from an immutable ledger.
 fn negative_share(owned: f32, negative: f32, positive: f32) -> f32 {
     let scale = max(negative, positive);
@@ -94,11 +108,9 @@ fn budget_face(@builtin(global_invocation_id) id: vec3<u32>) {
         atomicOr(&status[0], INVALID_CELL);
         return;
     }
-    let liquid_overdraw = negative_liquid > owned_liquid - positive_liquid;
-    let carrier_overdraw = negative_carrier > owned_carrier - positive_carrier;
-    if !liquid_overdraw && !carrier_overdraw {
-        return;
-    }
+    // Match the rounded outgoing sum consumed by gather on both phases.
+    let liquid_overdraw = negative_liquid + positive_liquid > owned_liquid;
+    let carrier_overdraw = negative_carrier + positive_carrier > owned_carrier;
     if liquid_overdraw && carrier_overdraw {
         atomicOr(&status[0], DONOR_OVERDRAW);
         return;
@@ -119,7 +131,7 @@ fn budget_face(@builtin(global_invocation_id) id: vec3<u32>) {
         positive_carrier_mass = max(0.0, positive_volume
                                     - positive_liquid_mass / params.liquid_density)
                                 * params.carrier_density;
-    } else {
+    } else if carrier_overdraw {
         negative_carrier_mass = negative_share(owned_carrier, negative_carrier, positive_carrier);
         positive_carrier_mass = min(positive_carrier, owned_carrier - negative_carrier_mass);
         negative_liquid_mass = max(0.0, negative_volume
@@ -133,17 +145,21 @@ fn budget_face(@builtin(global_invocation_id) id: vec3<u32>) {
          && finite(negative_carrier_mass) && finite(positive_carrier_mass)
          && negative_liquid_mass >= 0.0 && positive_liquid_mass >= 0.0
          && negative_carrier_mass >= 0.0 && positive_carrier_mass >= 0.0)
-       || negative_liquid_mass > owned_liquid - positive_liquid_mass
-       || negative_carrier_mass > owned_carrier - positive_carrier_mass {
+       || negative_liquid_mass + positive_liquid_mass > owned_liquid
+       || negative_carrier_mass + positive_carrier_mass > owned_carrier {
         atomicOr(&status[0], DONOR_OVERDRAW);
         return;
     }
     let liquid_mass = select(positive_liquid_mass, negative_liquid_mass, is_negative);
     let carrier_mass = select(positive_carrier_mass, negative_carrier_mass, is_negative);
+    let liquid_marker = marker_budget(owned_liquid_marker, owned_liquid,
+                                      negative_liquid_mass, positive_liquid_mass);
+    let carrier_marker = marker_budget(owned_carrier_marker, owned_carrier,
+                                       negative_carrier_mass, positive_carrier_mass);
     let sign = select(1.0, -1.0, is_negative);
     corrected[face] = FaceFlux(raw.volume,
                                sign * liquid_mass,
                                sign * carrier_mass,
-                               sign * marker_flux(owned_liquid_marker, owned_liquid, liquid_mass),
-                               sign * marker_flux(owned_carrier_marker, owned_carrier, carrier_mass));
+                               sign * select(liquid_marker.y, liquid_marker.x, is_negative),
+                               sign * select(carrier_marker.y, carrier_marker.x, is_negative));
 }

@@ -13,6 +13,7 @@ let bindings: ReturnType<typeof loadWasm> | undefined;
 
 export interface BrowserGpuSceneSession {
 	backend(): string;
+	adapter_info_json(): string;
 	status_json(): string;
 	render(): boolean;
 	resize(width: number, height: number): void;
@@ -40,6 +41,7 @@ function nonnegativeSafeInteger(value: number, label: string, maximum: number): 
 function checkedBrowserScene(raw: BrowserGpuScene): BrowserGpuSceneSession {
 	return {
 		backend: () => raw.backend(),
+		adapter_info_json: () => raw.adapter_info_json(),
 		status_json: () => raw.status_json(),
 		render: () => raw.render(),
 		resize(width, height) {

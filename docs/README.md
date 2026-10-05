@@ -16,7 +16,8 @@ closed-scene and dam-refinement checks pass locally. E07 adds a limited
 Rust/WGSL GPU stage graph with native and browser qualification. E08 has an
 experimental 480 x 270 browser scene that directly renders committed GPU
 state. Bounded paint, inspection, pause and reset have passed isolated browser
-checks, and a local Chrome run completed 60 sustained ticks. M3 passed local
+checks. A local Chrome run kept the pool exactly at rest for 3,600 ticks and
+qualified a one-cell surface perturbation for 300 more ticks. M3 passed local
 checks; the broader current-sandbox migration remains incomplete.
 E09 has an isolated water/carrier-air CPU reference with saturation, single-phase
 closure and finite gas exchange against a prescribed reservoir. It closes phase

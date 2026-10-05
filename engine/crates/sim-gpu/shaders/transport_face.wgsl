@@ -161,14 +161,31 @@ fn face(id: u32, axis: u32) {
         if donor_y + 1u < params.height { after = donor + params.width; }
     }
     let gradient = phase_fraction(after, alpha) - phase_fraction(before, alpha);
+    var transverse_before = donor;
+    var transverse_after = donor;
+    if axis == 0u {
+        if donor_y > 0u { transverse_before = donor - params.width; }
+        if donor_y + 1u < params.height { transverse_after = donor + params.width; }
+    } else {
+        if donor_x > 0u { transverse_before = donor - 1u; }
+        if donor_x + 1u < params.width { transverse_after = donor + 1u; }
+    }
+    let transverse_gradient = phase_fraction(transverse_after, alpha) - phase_fraction(transverse_before, alpha);
+    // Reconstruct one axis-aligned interface from the dominant gradient.
+    // A tangent sweep crosses both phases in their owned proportions. Using
+    // a separate interface direction for each sweep drains an entire tiny
+    // phase through a tangent face and destabilizes a nearly flat free surface.
+    // Ties select X, so both sweeps use the same reconstruction convention.
+    let normal_sweep = select(abs(gradient) > abs(transverse_gradient),
+                              abs(gradient) >= abs(transverse_gradient), axis == 0u);
     var liquid_swept = 0.0;
     // f32 already rounds unresolved fraction differences to zero. A resolved
-    // gradient must take the same geometric branch as the f64 CPU reference.
+    // gradient uses the CPU reconstruction rule. Rounding can change near ties.
     if alpha == 0.0 {
         liquid_swept = 0.0;
     } else if alpha == 1.0 {
         liquid_swept = swept_volume;
-    } else if abs(gradient) <= 1e-12 {
+    } else if abs(gradient) <= 1e-12 || !normal_sweep {
         liquid_swept = swept_volume * alpha;
     } else if (gradient > 0.0) == (speed > 0.0) {
         liquid_swept = min(swept_volume, liquid_volume);
