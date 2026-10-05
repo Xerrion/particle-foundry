@@ -112,4 +112,4 @@ Record browser GPU checks separately. Use the
 [browser evidence requirements](../.github/README.md#browser-evidence) when an
 acceptance check requires a real GPU adapter.
 
-<!-- Temporary native preview lifecycle verification: initial head. -->
+<!-- Temporary native preview lifecycle verification: updated head. -->
