@@ -95,9 +95,16 @@ Use a same-repository PR targeting `main` to check the native lifecycle:
 Native preview events and GitHub CI results are separate checks. Check `verify`
 before merging. The experimental GPU limitations apply to previews too.
 
-## Dedicated GitHub CI runners
+## Retained Charles runner configuration
 
-The Coolify service `Particle Foundry GitHub runners` on Charles owns two CPU
+The active CI workflow uses GitHub-hosted `ubuntu-latest` for all jobs, including
+same-repository pull requests. After this workflow is adopted on `main` and its
+main-branch check passes, the Charles service is stopped with configuration and
+state volumes retained. Application deployment continues through Coolify and is
+independent of the runner service. The proposed
+generic per-repository runner fleet was not deployed.
+
+The retained Coolify service `Particle Foundry GitHub runners` on Charles owns two CPU
 runner containers for `Xerrion/particle-foundry`. Its resource UUID is
 `1rtp5fpxk7xrvx1tgxmgfajc`, in the same project and environment as the browser
 application. The GitHub runner names are `particle-foundry-charles-1` and
