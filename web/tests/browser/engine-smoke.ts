@@ -93,7 +93,10 @@ function readGpuCheckpointInventory(
 		fields.getBigUint64(52, true) !== BigInt(expectedStateRevision) ||
 		fields.getBigUint64(60, true) !== BigInt(expectedReadbackBytes) ||
 		fields.getBigUint64(68, true) !== BigInt(cells * 2) ||
-		fields.getBigUint64(76, true) !== BigInt(cells * 2)
+		fields.getBigUint64(76, true) !== BigInt(cells * 2) ||
+		fields.getBigUint64(84, true) !== BigInt(cells) ||
+		fields.getBigUint64(92, true) !== BigInt(481 * 270) ||
+		fields.getBigUint64(100, true) !== BigInt(480 * 271)
 	) {
 		throw new Error(
 			`GPU inventory checkpoint at tick ${expectedTick} has an invalid stamp or layout`,
@@ -127,6 +130,55 @@ function readGpuCheckpointInventory(
 		liquidMarker: totals[2],
 		carrierMarker: totals[3],
 	};
+}
+
+function checkGpuRestCheckpoint(initial: Uint8Array, current: Uint8Array, tick: number): void {
+	const cells = 480 * 270;
+	const before = new DataView(initial.buffer, initial.byteOffset, initial.byteLength);
+	const after = new DataView(current.buffer, current.byteOffset, current.byteLength);
+	// Compare authored phase inventories. Derived density can have different rounding.
+	for (let offset = 108; offset < 108 + cells * 16; offset += 4) {
+		if (before.getFloat32(offset, true) !== after.getFloat32(offset, true)) {
+			throw new Error(
+				`Unforced GPU pool changed phase mass or marker at tick ${tick}, field offset ${offset}: ${before.getFloat32(offset, true)} to ${after.getFloat32(offset, true)}`,
+			);
+		}
+	}
+	// The last two fields contain every horizontal and vertical face velocity.
+	for (let offset = 108 + cells * 20; offset < current.byteLength; offset += 4) {
+		if (before.getFloat32(offset, true) !== 0 || after.getFloat32(offset, true) !== 0) {
+			throw new Error(`Unforced GPU pool developed face velocity at tick ${tick}`);
+		}
+	}
+}
+
+function readGpuCheckpointKineticEnergy(checkpoint: Uint8Array): number {
+	const fields = new DataView(checkpoint.buffer, checkpoint.byteOffset, checkpoint.byteLength);
+	const densityStart = 108 + 480 * 270 * 16;
+	const uStart = densityStart + 480 * 270 * 4;
+	const vStart = uStart + 481 * 270 * 4;
+	let energy = 0;
+	const addFace = (negative: number, positive: number, speedOffset: number) => {
+		const density =
+			0.5 *
+			(fields.getFloat32(densityStart + negative * 4, true) +
+				fields.getFloat32(densityStart + positive * 4, true));
+		const speed = fields.getFloat32(speedOffset, true);
+		energy += 0.5 * density * 1e-6 * speed * speed;
+	};
+	for (let y = 0; y < 270; y += 1) {
+		for (let x = 1; x < 480; x += 1) {
+			const cell = y * 480 + x;
+			addFace(cell - 1, cell, uStart + (y * 481 + x) * 4);
+		}
+	}
+	for (let y = 1; y < 270; y += 1) {
+		for (let x = 0; x < 480; x += 1) {
+			const cell = y * 480 + x;
+			addFace(cell - 480, cell, vStart + cell * 4);
+		}
+	}
+	return energy;
 }
 
 function checkGpuAttemptAccounting(report: GpuAttemptAccounting, label: string): void {
@@ -212,11 +264,11 @@ function parseGpuSceneReport(json: string, backend: string): GpuSceneReport {
 		typeof report.scaledResidual !== "number" ||
 		!Number.isFinite(report.scaledResidual) ||
 		report.scaledResidual < 0 ||
-		report.scaledResidual >= 1e-5 ||
+		report.scaledResidual > 1e-5 ||
 		typeof report.scaledDivergence !== "number" ||
 		!Number.isFinite(report.scaledDivergence) ||
 		report.scaledDivergence < 0 ||
-		report.scaledDivergence >= 1e-5 ||
+		report.scaledDivergence > 1e-5 ||
 		typeof report.encodedTimeErrorS !== "number" ||
 		!Number.isFinite(report.encodedTimeErrorS) ||
 		Math.abs(report.encodedTimeErrorS) > 1e-6 ||
@@ -348,7 +400,25 @@ try {
 			paintRevisionAdvanced: boolean;
 			staleProbeRejected: boolean;
 			staleCheckpointRejected: boolean;
+			rest: {
+				initialTick: number;
+				checkpointTicks: number[];
+				unchangedPhaseMassAndMarkers: boolean;
+				maxAbsoluteFaceVelocityMPerS: number;
+			};
+			surfacePerturbation?: {
+				paintedCell: { x: number; y: number; radius: number };
+				completedTicks: number;
+				initialExcessPotentialEnergyJ: number;
+				kineticEnergyLimitJ: number;
+				maxMeasuredKineticEnergyJ: number;
+				kineticEnergySamplesJ: number[];
+				checkpointTicks: number[];
+				maxRelativeInventoryDrift: number;
+				explicitCheckpointReadbackBytes: number;
+			};
 			sustained?: {
+				initialCondition: string;
 				targetTicks: number;
 				completedTicks: number;
 				completedTicksAfter125: number;
@@ -521,6 +591,10 @@ try {
 					throw new Error("Canvas scene reset did not start a clean epoch");
 				}
 				if (!browserScene.render()) throw new Error("Canvas scene did not render after reset");
+				const expectedReadbackBytes = 3_631_800;
+				const restInitialCheckpoint = await browserScene.checkpoint_prototype();
+				readGpuCheckpointInventory(restInitialCheckpoint, 0, 0, expectedReadbackBytes);
+				const restCheckpointTicks = [0];
 				for (const invalid of [0, -1, 1.5, 2 ** 32 + 1, Number.NaN, Number.POSITIVE_INFINITY]) {
 					await rejects(
 						async () => browserScene.advance(invalid),
@@ -559,10 +633,10 @@ try {
 					tick.remainingOuterS !== 0 ||
 					!Number.isFinite(tick.scaledResidual) ||
 					tick.scaledResidual < 0 ||
-					tick.scaledResidual >= 1e-5 ||
+					tick.scaledResidual > 1e-5 ||
 					!Number.isFinite(tick.scaledDivergence) ||
 					tick.scaledDivergence < 0 ||
-					tick.scaledDivergence >= 1e-5 ||
+					tick.scaledDivergence > 1e-5 ||
 					!Number.isSafeInteger(tick.pressureIterations) ||
 					tick.pressureIterations < 0 ||
 					tick.pressureIterations > 512 ||
@@ -598,10 +672,10 @@ try {
 					second.remainingOuterS !== 0 ||
 					!Number.isFinite(second.scaledResidual) ||
 					second.scaledResidual < 0 ||
-					second.scaledResidual >= 1e-5 ||
+					second.scaledResidual > 1e-5 ||
 					!Number.isFinite(second.scaledDivergence) ||
 					second.scaledDivergence < 0 ||
-					second.scaledDivergence >= 1e-5 ||
+					second.scaledDivergence > 1e-5 ||
 					!Number.isSafeInteger(second.pressureIterations) ||
 					second.pressureIterations < 0 ||
 					second.pressureIterations > 512 ||
@@ -618,7 +692,6 @@ try {
 					checkpoint.byteOffset,
 					checkpoint.byteLength,
 				);
-				const expectedReadbackBytes = 3_631_800;
 				if (
 					!(checkpoint instanceof Uint8Array) ||
 					checkpoint.byteLength !== 108 + expectedReadbackBytes ||
@@ -633,6 +706,8 @@ try {
 				) {
 					throw new Error("Explicit GPU checkpoint prototype has an invalid stamp or size");
 				}
+				checkGpuRestCheckpoint(restInitialCheckpoint, checkpoint, 2);
+				restCheckpointTicks.push(2);
 				let sustained: NonNullable<NonNullable<typeof gpu.canvas>["sustained"]> | undefined;
 				if (new URL(location.href).searchParams.has("sustained-gpu")) {
 					const targetTicks = 3_600;
@@ -655,6 +730,7 @@ try {
 						targetTicks,
 					];
 					const started = performance.now();
+					let restCheckpointMs = 0;
 					let completedTicks = 2;
 					let completedTicksAfter125 = 0;
 					let completedTicksAfter366 = 0;
@@ -753,11 +829,11 @@ try {
 								typeof next.scaledResidual !== "number" ||
 								!Number.isFinite(next.scaledResidual) ||
 								next.scaledResidual < 0 ||
-								next.scaledResidual >= 1e-5 ||
+								next.scaledResidual > 1e-5 ||
 								typeof next.scaledDivergence !== "number" ||
 								!Number.isFinite(next.scaledDivergence) ||
 								next.scaledDivergence < 0 ||
-								next.scaledDivergence >= 1e-5 ||
+								next.scaledDivergence > 1e-5 ||
 								typeof next.pressureIterations !== "number" ||
 								!Number.isSafeInteger(next.pressureIterations) ||
 								next.pressureIterations < 0 ||
@@ -804,6 +880,22 @@ try {
 									refinementRetries: next.refinementRetries,
 								});
 							}
+							if (completedTicks === 200 || completedTicks === 300) {
+								const captureStarted = performance.now();
+								const status = JSON.parse(browserScene.status_json()) as {
+									stateRevision: number;
+								};
+								const restCheckpoint = await browserScene.checkpoint_prototype();
+								readGpuCheckpointInventory(
+									restCheckpoint,
+									completedTicks,
+									status.stateRevision,
+									expectedReadbackBytes,
+								);
+								checkGpuRestCheckpoint(restInitialCheckpoint, restCheckpoint, completedTicks);
+								restCheckpointTicks.push(completedTicks);
+								restCheckpointMs += performance.now() - captureStarted;
+							}
 						} else if (
 							next.tick !== completedTicks ||
 							next.remainingOuterS <= 0 ||
@@ -825,7 +917,7 @@ try {
 							`Sustained GPU run did not complete ${targetTicks} ticks over ${targetTicks / 60} simulated seconds`,
 						);
 					}
-					const wallSeconds = (performance.now() - started) / 1_000;
+					const wallSeconds = (performance.now() - started - restCheckpointMs) / 1_000;
 					const finalStatus = JSON.parse(browserScene.status_json()) as {
 						epoch: number;
 						tick: number;
@@ -852,6 +944,8 @@ try {
 						finalStatus.stateRevision,
 						expectedReadbackBytes,
 					);
+					checkGpuRestCheckpoint(restInitialCheckpoint, finalCheckpoint, targetTicks);
+					restCheckpointTicks.push(targetTicks);
 					const relativeDriftLimit = 1e-5;
 					const maxRelativeDrift = Math.max(
 						...(Object.keys(beforeTotals) as (keyof GpuInventoryTotals)[]).map((field) => {
@@ -870,6 +964,7 @@ try {
 					const percentile = (fraction: number) =>
 						advanceMs[Math.ceil(fraction * advanceMs.length) - 1];
 					sustained = {
+						initialCondition: "unforced hydrostatic rest",
 						targetTicks,
 						completedTicks,
 						completedTicksAfter125,
@@ -885,7 +980,7 @@ try {
 						readbackBytes,
 						rejectedReadbackBytes,
 						totalReadbackBytes: readbackBytes + rejectedReadbackBytes,
-						explicitCheckpointReadbackBytes: expectedReadbackBytes * 2,
+						explicitCheckpointReadbackBytes: expectedReadbackBytes * restCheckpointTicks.length,
 						conservation: {
 							scope: "explicit committed checkpoints at ticks 2 and 3600 before paint",
 							beforeTick: 2,
@@ -906,6 +1001,177 @@ try {
 						maxScaledResidualAfterTick366,
 						maxScaledDivergenceAfterTick366,
 						pressureSamples,
+					};
+				}
+				let surfacePerturbation: NonNullable<typeof gpu.canvas>["surfacePerturbation"];
+				if (sustained) {
+					// A one-cell surface bump supplies a known gravitational impulse.
+					// The quiet default must not replace validation of moving water.
+					const beforeBump = JSON.parse(browserScene.status_json()) as {
+						epoch: number;
+						tick: number;
+						acceptedTimeS: number;
+						stateRevision: number;
+					};
+					const painted = JSON.parse(browserScene.paint(240, 241, 0, "water")) as typeof beforeBump;
+					if (
+						painted.epoch !== beforeBump.epoch ||
+						painted.tick !== beforeBump.tick ||
+						painted.acceptedTimeS !== beforeBump.acceptedTimeS ||
+						painted.stateRevision !== beforeBump.stateRevision + 1
+					) {
+						throw new Error("Surface bump did not commit at zero model time");
+					}
+					const initialCheckpoint = await browserScene.checkpoint_prototype();
+					const initialTotals = readGpuCheckpointInventory(
+						initialCheckpoint,
+						3_600,
+						painted.stateRevision,
+						expectedReadbackBytes,
+					);
+					const baseline = new DataView(
+						restInitialCheckpoint.buffer,
+						restInitialCheckpoint.byteOffset,
+						restInitialCheckpoint.byteLength,
+					);
+					const bump = new DataView(
+						initialCheckpoint.buffer,
+						initialCheckpoint.byteOffset,
+						initialCheckpoint.byteLength,
+					);
+					const cells = 480 * 270;
+					const paintedCell = 241 * 480 + 240;
+					for (let slot = 0; slot < cells * 4; slot += 1) {
+						const offset = 108 + slot * 4;
+						const expected =
+							slot % cells === paintedCell
+								? slot === paintedCell
+									? Math.fround(0.001)
+									: 0
+								: baseline.getFloat32(offset, true);
+						if (bump.getFloat32(offset, true) !== expected) {
+							throw new Error(`Surface bump did not paint exactly one cell, field slot ${slot}`);
+						}
+					}
+					if (readGpuCheckpointKineticEnergy(initialCheckpoint) !== 0) {
+						throw new Error("Surface bump changed velocity before model time advanced");
+					}
+					// Spreading the added cell over 478 wet columns lowers its centre
+					// of mass by 0.5 * dx * (1 - 1/478). Keep a twofold numerical buffer.
+					const excessPotentialEnergyJ = (1000 - 1.2) * 1e-6 * 9.80665 * 0.005 * (1 - 1 / 478);
+					const kineticEnergyLimitJ = excessPotentialEnergyJ * 2;
+					const checkpointTicks: number[] = [];
+					const kineticEnergySamplesJ: number[] = [];
+					let completedTicks = 3_600;
+					let lastAcceptedTimeS = 60;
+					let maxMeasuredKineticEnergyJ = 0;
+					let maxRelativeInventoryDrift = 0;
+					for (let calls = 0; completedTicks < 3_900 && calls < 300 * 16; calls += 1) {
+						const next = JSON.parse((await browserScene.advance(8)) as string) as Omit<
+							typeof second,
+							"scaledResidual" | "scaledDivergence" | "pressureIterations"
+						> & {
+							scaledResidual: number | null;
+							scaledDivergence: number | null;
+							pressureIterations: number | null;
+						};
+						checkGpuAttemptAccounting(next, "Surface perturbation GPU advance");
+						if (
+							next.epoch !== 2 ||
+							next.tick < completedTicks ||
+							next.tick > completedTicks + 1 ||
+							typeof next.completedOuterTick !== "boolean" ||
+							!Number.isFinite(next.acceptedTimeS) ||
+							next.acceptedTimeS < lastAcceptedTimeS ||
+							!Number.isFinite(next.remainingOuterS) ||
+							next.remainingOuterS < 0 ||
+							!Number.isSafeInteger(next.acceptedSubsteps) ||
+							next.acceptedSubsteps < 1 ||
+							next.acceptedSubsteps > 8
+						) {
+							throw new Error("Surface perturbation returned invalid committed progress");
+						}
+						lastAcceptedTimeS = next.acceptedTimeS;
+						if (!next.completedOuterTick) {
+							if (
+								next.tick !== completedTicks ||
+								next.remainingOuterS <= 0 ||
+								next.scaledResidual !== null ||
+								next.scaledDivergence !== null ||
+								next.pressureIterations !== null
+							) {
+								throw new Error("Surface perturbation pause reported invalid remaining time");
+							}
+							continue;
+						}
+						completedTicks += 1;
+						if (
+							next.tick !== completedTicks ||
+							Math.abs(next.acceptedTimeS - completedTicks / 60) > 1e-6 ||
+							next.remainingOuterS !== 0 ||
+							typeof next.scaledResidual !== "number" ||
+							!Number.isFinite(next.scaledResidual) ||
+							next.scaledResidual < 0 ||
+							next.scaledResidual > 1e-5 ||
+							typeof next.scaledDivergence !== "number" ||
+							!Number.isFinite(next.scaledDivergence) ||
+							next.scaledDivergence < 0 ||
+							next.scaledDivergence > 1e-5 ||
+							typeof next.pressureIterations !== "number" ||
+							!Number.isSafeInteger(next.pressureIterations) ||
+							next.pressureIterations < 0 ||
+							next.pressureIterations > 512 ||
+							!browserScene.render()
+						) {
+							throw new Error(
+								`Surface perturbation failed a numerical gate at tick ${completedTicks}`,
+							);
+						}
+						if (![3_650, 3_725, 3_800, 3_900].includes(completedTicks)) continue;
+						const status = JSON.parse(browserScene.status_json()) as { stateRevision: number };
+						const capture = await browserScene.checkpoint_prototype();
+						const totals = readGpuCheckpointInventory(
+							capture,
+							completedTicks,
+							status.stateRevision,
+							expectedReadbackBytes,
+						);
+						const energy = readGpuCheckpointKineticEnergy(capture);
+						if (!Number.isFinite(energy) || energy < 0 || energy > kineticEnergyLimitJ) {
+							throw new Error(
+								`Surface perturbation gained excessive kinetic energy at tick ${completedTicks}: ${energy} J, limit ${kineticEnergyLimitJ} J`,
+							);
+						}
+						maxMeasuredKineticEnergyJ = Math.max(maxMeasuredKineticEnergyJ, energy);
+						kineticEnergySamplesJ.push(energy);
+						for (const key of Object.keys(initialTotals) as (keyof GpuInventoryTotals)[]) {
+							maxRelativeInventoryDrift = Math.max(
+								maxRelativeInventoryDrift,
+								Math.abs(totals[key] - initialTotals[key]) / initialTotals[key],
+							);
+						}
+						checkpointTicks.push(completedTicks);
+					}
+					if (
+						completedTicks !== 3_900 ||
+						checkpointTicks.length !== 4 ||
+						maxMeasuredKineticEnergyJ <= 1e-12 ||
+						maxRelativeInventoryDrift > 1e-5
+					) {
+						throw new Error(
+							"Surface perturbation did not complete 300 ticks with conserved inventories",
+						);
+					}
+					surfacePerturbation = {
+						paintedCell: { x: 240, y: 241, radius: 0 },
+						completedTicks: 300,
+						initialExcessPotentialEnergyJ: excessPotentialEnergyJ,
+						kineticEnergyLimitJ,
+						maxMeasuredKineticEnergyJ,
+						kineticEnergySamplesJ,
+						checkpointTicks,
+						maxRelativeInventoryDrift,
+						explicitCheckpointReadbackBytes: expectedReadbackBytes * 5,
 					};
 				}
 				const beforePaint = JSON.parse(browserScene.status_json()) as {
@@ -970,6 +1236,13 @@ try {
 					paintRevisionAdvanced,
 					staleProbeRejected,
 					staleCheckpointRejected,
+					rest: {
+						initialTick: 0,
+						checkpointTicks: restCheckpointTicks,
+						unchangedPhaseMassAndMarkers: true,
+						maxAbsoluteFaceVelocityMPerS: 0,
+					},
+					surfacePerturbation,
 					sustained,
 				};
 			} finally {

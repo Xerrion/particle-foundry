@@ -179,13 +179,22 @@ geometry, aperture, and density revisions; [cache tests](../engine/crates/sim-cp
 compare reused and forced-rebuild solves after input changes. The GPU session
 initializes a wgpu device, validates its ABI and core-grid limit preflight,
 and exposes an experimental coupled scene. Its full-size browser scene has
-passed a local 3,600-tick sustained run on Chrome with a required GPU adapter.
+stayed exactly at rest for 3,600 ticks on Chrome with a required GPU adapter,
+then passed 300 ticks after a one-cell surface perturbation.
 See [E08 evidence](validation/p1-m3-e08.md) for workload and sampling limits.
 
 The CPU session also owns an optional [phase inventory](../engine/crates/sim-cpu/src/transport.rs)
 for one liquid, carrier gas, fixed walls, and phase-associated passive markers.
 Its derived liquid fraction and signed mass/marker face ledger belong to a
-detached, bounded transport candidate. A separate
+detached, bounded transport candidate. The
+[dominant-axis interface reconstruction](../engine/crates/sim-cpu/src/transport.rs)
+uses the larger liquid-fraction gradient as the strip normal, with X selected
+on exact ties. Tangential transfer carries the donor's phase proportions.
+The [GPU face transport](../engine/crates/sim-gpu/shaders/transport_face.wgsl)
+uses the same rule; f32 rounding can select another axis near ties.
+This is an axis-aligned strip approximation, not a general oblique interface
+reconstruction. See [free-surface evidence](validation/p1-m3-e08.md#free-surface-motion-correction-on-5-october-2026)
+for the observed motion failure and its regression scope. A separate
 [shear candidate](../engine/crates/sim-cpu/src/viscosity.rs) applies tangential
 viscous stress to MAC faces and reports mechanical energy diagnostics. Their
 tests cover sealed conservation, periodic marker displacement, wall rejection,

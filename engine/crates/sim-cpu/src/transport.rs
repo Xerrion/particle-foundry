@@ -754,11 +754,23 @@ fn donor_flux(
     }
     let alpha = liquid_volume / donor_volume;
     let neighbor_gradient = phase_gradient(inventory, donor, axis, edges)?;
+    let transverse_axis = match axis {
+        Axis::X => Axis::Y,
+        Axis::Y => Axis::X,
+    };
+    let transverse_gradient = phase_gradient(inventory, donor, transverse_axis, edges)?;
+    // One axis-aligned donor interface follows the dominant phase gradient.
+    // A tangent sweep carries both phases in their owned proportions; a
+    // normal sweep intersects the reconstructed strip. Ties select X.
+    let normal_sweep = match axis {
+        Axis::X => neighbor_gradient.abs() >= transverse_gradient.abs(),
+        Axis::Y => neighbor_gradient.abs() > transverse_gradient.abs(),
+    };
     let liquid_swept_volume = if alpha == 0.0 {
         0.0
     } else if alpha == 1.0 {
         swept_volume_m3
-    } else if neighbor_gradient.abs() <= 1e-12 {
+    } else if neighbor_gradient.abs() <= 1e-12 || !normal_sweep {
         swept_volume_m3 * alpha
     } else {
         // A swept strip touches one end of the donor. Compute its overlap in
@@ -1077,6 +1089,38 @@ mod tests {
             CELL_VOLUME_M3 * 0.25 * CARRIER_RHO,
             1e-21,
         );
+    }
+
+    #[test]
+    fn tangential_sweep_preserves_a_thin_phase_with_a_resolved_lateral_gradient() {
+        for (fractions, tangent, normal) in [
+            (
+                [0.0, 0.0, 0.0, 0.009, 0.01, 0.011, 1.0, 1.0, 1.0],
+                Axis::X,
+                Axis::Y,
+            ),
+            (
+                [0.0, 0.009, 1.0, 0.0, 0.01, 1.0, 0.0, 0.011, 1.0],
+                Axis::Y,
+                Axis::X,
+            ),
+        ] {
+            let state = phase_state(grid(3.0, 3.0), &fractions, vec![false; 9]);
+            let swept = CELL_VOLUME_M3 * 0.1;
+            for positive in [false, true] {
+                let flux =
+                    donor_flux(&state, 4, swept, tangent, positive, EdgeMode::Closed).unwrap();
+                near(flux.liquid_mass_kg, state.liquid_mass_kg[4] * 0.1, 1e-18);
+                near(flux.carrier_mass_kg, state.carrier_mass_kg[4] * 0.1, 1e-21);
+                near(flux.liquid_marker, state.liquid_marker[4] * 0.1, 1e-14);
+                near(flux.carrier_marker, state.carrier_marker[4] * 0.1, 1e-14);
+            }
+            // Normal flow still intersects the liquid layer at the outgoing
+            // face instead of diffusing both phases through every direction.
+            let normal_flux = donor_flux(&state, 4, swept, normal, true, EdgeMode::Closed).unwrap();
+            assert_eq!(normal_flux.liquid_mass_kg, state.liquid_mass_kg[4]);
+            assert_eq!(normal_flux.liquid_marker, state.liquid_marker[4]);
+        }
     }
 
     #[test]

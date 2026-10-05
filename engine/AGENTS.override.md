@@ -6,8 +6,8 @@ f64 CPU fluid reference are implemented. E06 includes owned phase transport,
 compatible momentum, viscous shear and atomic bounded substeps. The running
 application still uses [`web/src/legacy/`](../web/src/legacy/). E07 has a
 locally qualified GPU stage graph. E08 has an opt-in browser scene with
-same-device rendering. A local 3,600-tick sustained browser run passes; scene
-promotion remains open.
+same-device rendering. Local browser evidence covers 3,600 ticks of exact rest
+and 300 additional ticks after a surface perturbation; scene promotion remains open.
 E09 has an isolated water/carrier-air closure and finite gas vent reference in
 `sim-cpu/src/water/`.
 It is separate from fluid stepping. Read [thermodynamics](../docs/thermodynamics.md)

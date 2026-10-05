@@ -16,7 +16,10 @@ const FLOOR_Y: usize = 255;
 
 /// Creates the persistent, single-owner M3 GPU scene used by the browser path.
 pub(crate) fn m3_demo_scene(context: &GpuContext, epoch: u64) -> Result<GpuCoupledScene, String> {
-    let seed = m3_demo_seed(epoch);
+    m3_scene_with_seed(context, m3_demo_seed(epoch))
+}
+
+fn m3_scene_with_seed(context: &GpuContext, seed: GpuSceneSeed) -> Result<GpuCoupledScene, String> {
     GpuCoupledScene::new(
         context,
         seed,
@@ -78,14 +81,8 @@ fn m3_demo_seed(epoch: u64) -> GpuSceneSeed {
         }
     }
 
-    let mut u_velocity_m_s = vec![0.0; grid.u_faces()];
-    let mut v_velocity_m_s = vec![0.0; grid.v_faces()];
-    // A 0.002 m/s divergence-free loop around the interior corner (240, 248).
-    // All four faces remain inside the water and away from the fixed walls.
-    u_velocity_m_s[247 * (WIDTH + 1) + 240] = 0.002;
-    u_velocity_m_s[248 * (WIDTH + 1) + 240] = -0.002;
-    v_velocity_m_s[248 * WIDTH + 239] = -0.002;
-    v_velocity_m_s[248 * WIDTH + 240] = 0.002;
+    let u_velocity_m_s = vec![0.0; grid.u_faces()];
+    let v_velocity_m_s = vec![0.0; grid.v_faces()];
 
     GpuSceneSeed {
         grid,
@@ -143,6 +140,17 @@ mod tests {
         }
     }
 
+    fn m3_stress_seed(epoch: u64) -> GpuSceneSeed {
+        let mut seed = m3_demo_seed(epoch);
+        // Preserve the original 0.002 m/s divergence-free loop around the
+        // interior corner (240, 248). All four faces remain inside the water.
+        seed.u_velocity_m_s[247 * (WIDTH + 1) + 240] = 0.002;
+        seed.u_velocity_m_s[248 * (WIDTH + 1) + 240] = -0.002;
+        seed.v_velocity_m_s[248 * WIDTH + 239] = -0.002;
+        seed.v_velocity_m_s[248 * WIDTH + 240] = 0.002;
+        seed
+    }
+
     #[test]
     fn full_size_pool_seed_prepares_without_gpu() {
         let seed = m3_demo_seed(7);
@@ -169,7 +177,9 @@ mod tests {
         block_on(async {
             let context = GpuContext::new().await.expect("native GPU device");
             assert_eq!(context.backend(), "Metal", "this probe requires Metal");
-            let mut scene = m3_demo_scene(&context, 7).expect("480x270 scene preflight");
+            let reference_seed = m3_stress_seed(7);
+            let mut scene = m3_scene_with_seed(&context, m3_stress_seed(7))
+                .expect("moving 480x270 stress scene preflight");
             assert_eq!(scene.progress().epoch, 7);
             let renderer = SceneRenderer::new(&context.device, wgpu::TextureFormat::Rgba8Unorm)
                 .expect("M3 committed renderer");
@@ -200,8 +210,16 @@ mod tests {
                 read_render_samples(&context, &target)
             };
             const TARGET_TICKS: u32 = 300;
-            let initial_inventory =
-                checkpoint_inventory(&scene.checkpoint_prototype().await.unwrap());
+            let initial_bytes = scene.checkpoint_prototype().await.unwrap();
+            let initial_fields = checkpoint_fields(&initial_bytes);
+            let initial_inventory = checkpoint_inventory(&initial_bytes);
+            report_scene_checkpoint(
+                "MOVING",
+                &reference_seed,
+                &initial_fields,
+                &initial_bytes,
+                0,
+            );
             let mut accepted = 0_u32;
             let mut completed = 0_u32;
             let mut step_elapsed = Duration::ZERO;
@@ -259,9 +277,26 @@ mod tests {
                             (progress.accepted_time_s - f64::from(completed) * OUTER_DT_S).abs()
                                 < 1e-9
                         );
-                        if completed.is_multiple_of(8) || completed == TARGET_TICKS {
-                            let inventory =
-                                checkpoint_inventory(&scene.checkpoint_prototype().await.unwrap());
+                        if completed.is_multiple_of(8)
+                            || [50, 125, 200, TARGET_TICKS].contains(&completed)
+                        {
+                            let bytes = scene.checkpoint_prototype().await.unwrap();
+                            let inventory = checkpoint_inventory(&bytes);
+                            if [50, 125, 200, TARGET_TICKS].contains(&completed) {
+                                let fields = report_scene_checkpoint(
+                                    "MOVING",
+                                    &reference_seed,
+                                    &initial_fields,
+                                    &bytes,
+                                    completed,
+                                );
+                                let initial_energy = checkpoint_kinetic_energy(&initial_fields);
+                                let energy = checkpoint_kinetic_energy(&fields);
+                                assert!(
+                                    energy <= initial_energy * 1.05,
+                                    "unforced moving pool gained kinetic energy at tick {completed}: {energy:e} J from {initial_energy:e} J"
+                                );
+                            }
                             assert_inventory_conserved(initial_inventory, inventory, completed);
                         }
                         if completed == TARGET_TICKS {
@@ -286,6 +321,274 @@ mod tests {
                 step_elapsed.as_secs_f64(),
             );
         });
+    }
+
+    #[test]
+    #[ignore = "requires a native Metal GPU and verifies 300 ticks of a 480x270 rest scene"]
+    fn native_metal_rest_scene_stays_at_rest_for_300_ticks() {
+        block_on(async {
+            let context = GpuContext::new().await.expect("native GPU device");
+            assert_eq!(context.backend(), "Metal", "this regression requires Metal");
+            let reference_seed = m3_demo_seed(7);
+            let mut scene = m3_demo_scene(&context, 7).expect("480x270 rest scene preflight");
+            let initial_bytes = scene.checkpoint_prototype().await.unwrap();
+            let initial_fields = checkpoint_fields(&initial_bytes);
+            let initial_inventory = checkpoint_inventory(&initial_bytes);
+            report_scene_checkpoint("REST", &reference_seed, &initial_fields, &initial_bytes, 0);
+            assert_rest_fields_unchanged(&initial_fields, &initial_fields, 0);
+            const TARGET_TICKS: u32 = 300;
+            let mut completed = 0;
+            let mut accepted = 0;
+            for _ in 0..TARGET_TICKS * 16 {
+                let outcome = scene.advance_outer_tick(8).await;
+                match outcome {
+                    Ok(GpuTickOutcome::Paused {
+                        accepted_substeps, ..
+                    }) => accepted += accepted_substeps,
+                    Ok(GpuTickOutcome::Complete {
+                        accepted_substeps,
+                        last_pressure,
+                        encoded_time_error_s,
+                        ..
+                    }) => {
+                        accepted += accepted_substeps;
+                        completed += 1;
+                        let progress = scene.progress();
+                        assert_eq!(progress.tick, u64::from(completed));
+                        assert_eq!(progress.remaining_outer_s, 0.0);
+                        assert!(
+                            (progress.accepted_time_s - f64::from(completed) * OUTER_DT_S).abs()
+                                < 1e-9
+                        );
+                        assert!(encoded_time_error_s.abs() < 1e-9);
+                        let gate = PressureConfig::default();
+                        assert!(last_pressure.scaled_residual <= gate.scaled_residual_tolerance);
+                        assert!(
+                            last_pressure.scaled_divergence <= gate.scaled_divergence_tolerance
+                        );
+                        if [1, 25, 50, 100, 150, 175, 200, 225, 250, TARGET_TICKS]
+                            .contains(&completed)
+                        {
+                            let bytes = scene.checkpoint_prototype().await.unwrap();
+                            let fields = report_scene_checkpoint(
+                                "REST",
+                                &reference_seed,
+                                &initial_fields,
+                                &bytes,
+                                completed,
+                            );
+                            assert_rest_fields_unchanged(&initial_fields, &fields, completed);
+                            assert_eq!(
+                                initial_inventory,
+                                checkpoint_inventory(&bytes),
+                                "rest inventories changed at tick {completed}"
+                            );
+                            eprintln!(
+                                "M3 REST pressure: tick={completed}, accepted_substeps={accepted}, iterations={}, scaled_residual={:.9e}, scaled_divergence={:.9e}",
+                                last_pressure.iterations,
+                                last_pressure.scaled_residual,
+                                last_pressure.scaled_divergence,
+                            );
+                        }
+                        if completed == TARGET_TICKS {
+                            return;
+                        }
+                    }
+                    Err(error) => {
+                        let bytes = scene.checkpoint_prototype().await.unwrap();
+                        report_scene_checkpoint(
+                            "REST",
+                            &reference_seed,
+                            &initial_fields,
+                            &bytes,
+                            completed,
+                        );
+                        panic!(
+                            "M3 rest scene rejected after {completed} completed ticks and {accepted} accepted substeps: {error}"
+                        );
+                    }
+                }
+            }
+            panic!("M3 rest scene paused after {completed} ticks and {accepted} substeps");
+        });
+    }
+
+    fn assert_rest_fields_unchanged(initial: &[Vec<f32>; 5], actual: &[Vec<f32>; 5], tick: u32) {
+        for (slot, name) in [(0, "phase mass"), (1, "phase marker")] {
+            for (index, (&before, &after)) in initial[slot].iter().zip(&actual[slot]).enumerate() {
+                assert_eq!(
+                    before.to_bits(),
+                    after.to_bits(),
+                    "rest {name} slot {index} changed at tick {tick}: {before:e} to {after:e}"
+                );
+            }
+        }
+        for (slot, axis) in [(3, "X"), (4, "Y")] {
+            for (face, &speed) in actual[slot].iter().enumerate() {
+                assert_eq!(speed, 0.0, "rest {axis} face {face} moved at tick {tick}");
+            }
+        }
+    }
+
+    fn checkpoint_fields(bytes: &[u8]) -> [Vec<f32>; 5] {
+        checkpoint_inventory(bytes);
+        let cells = WIDTH * HEIGHT;
+        let expected_lengths = [
+            cells * 2,
+            cells * 2,
+            cells,
+            (WIDTH + 1) * HEIGHT,
+            WIDTH * (HEIGHT + 1),
+        ];
+        let mut start = 108;
+        let fields = std::array::from_fn(|slot| {
+            let offset = 68 + slot * size_of::<u64>();
+            let length = u64::from_le_bytes(bytes[offset..offset + 8].try_into().unwrap()) as usize;
+            assert_eq!(length, expected_lengths[slot]);
+            let end = start + length * size_of::<f32>();
+            let values = bytes[start..end]
+                .as_chunks::<4>()
+                .0
+                .iter()
+                .map(|value| f32::from_le_bytes(*value))
+                .collect::<Vec<_>>();
+            assert!(values.iter().all(|value| value.is_finite()));
+            start = end;
+            values
+        });
+        assert_eq!(start, bytes.len());
+        fields
+    }
+
+    fn report_scene_checkpoint(
+        label: &str,
+        seed: &GpuSceneSeed,
+        initial: &[Vec<f32>; 5],
+        bytes: &[u8],
+        tick: u32,
+    ) -> [Vec<f32>; 5] {
+        assert_eq!(u64::from_le_bytes(bytes[16..24].try_into().unwrap()), 7);
+        assert_eq!(
+            u64::from_le_bytes(bytes[24..32].try_into().unwrap()),
+            u64::from(tick)
+        );
+        let fields = checkpoint_fields(bytes);
+        let cells = seed.grid.cells();
+        let volume = seed.grid.cell_volume_m3();
+        let mut max_fill_change = [0.0_f64; 2];
+        let mut max_fill_change_cell = [0_usize; 2];
+        let mut squared_fill_change = [0.0_f64; 2];
+        let mut liquid_in_initial_air_kg = 0.0;
+        let mut carrier_in_initial_water_kg = 0.0;
+        let mut potential_energy_change = 0.0;
+        let fluid_cells = seed.fixed_wall.iter().filter(|&&wall| wall == 0).count();
+        for cell in 0..cells {
+            // Measure height from the original free surface. Computing the
+            // mass difference directly avoids subtracting large energies.
+            let height =
+                (WATER_SURFACE_Y as f64 - (cell / WIDTH) as f64 - 0.5) * particle_sim::CELL_WIDTH_M;
+            for phase in 0..2 {
+                let slot = phase * cells + cell;
+                let mass = f64::from(fields[0][slot]);
+                let marker = f64::from(fields[1][slot]);
+                assert!(mass >= 0.0 && marker >= 0.0);
+                assert!(
+                    mass > 0.0 || marker == 0.0,
+                    "orphan phase {phase} at cell {cell}"
+                );
+                let change = (mass - f64::from(initial[0][slot])).abs()
+                    / (seed.phase_density_kg_m3[phase] * volume);
+                potential_energy_change += (mass - f64::from(initial[0][slot])) * 9.80665 * height;
+                squared_fill_change[phase] += change * change;
+                if change > max_fill_change[phase] {
+                    max_fill_change[phase] = change;
+                    max_fill_change_cell[phase] = cell;
+                }
+            }
+            if seed.fixed_wall[cell] == 0 {
+                if initial[0][cell] == 0.0 {
+                    liquid_in_initial_air_kg += f64::from(fields[0][cell]);
+                } else {
+                    carrier_in_initial_water_kg += f64::from(fields[0][cells + cell]);
+                }
+            }
+        }
+        let rms_fill_change = squared_fill_change.map(|sum| (sum / fluid_cells as f64).sqrt());
+        let mut max_column_height_change_cells = 0.0_f64;
+        let mut max_column_height_change_x = 0;
+        for x in BASIN_LEFT_WALL + 1..BASIN_RIGHT_WALL {
+            let change = (0..FLOOR_Y)
+                .map(|y| {
+                    let cell = y * WIDTH + x;
+                    (f64::from(fields[0][cell]) - f64::from(initial[0][cell]))
+                        / (seed.phase_density_kg_m3[0] * volume)
+                })
+                .sum::<f64>()
+                .abs();
+            if change > max_column_height_change_cells {
+                max_column_height_change_cells = change;
+                max_column_height_change_x = x;
+            }
+        }
+        let max_u = fields[3]
+            .iter()
+            .map(|&value| f64::from(value).abs())
+            .fold(0.0_f64, f64::max);
+        let max_v = fields[4]
+            .iter()
+            .map(|&value| f64::from(value).abs())
+            .fold(0.0_f64, f64::max);
+        let energy = checkpoint_kinetic_energy(&fields);
+        let energy_change = energy - checkpoint_kinetic_energy(initial);
+        let mechanical_energy_change = energy_change + potential_energy_change;
+        let inventory = checkpoint_inventory(bytes);
+        let initial_inventory = std::array::from_fn::<_, 4, _>(|slot| {
+            initial[slot / 2][slot % 2 * cells..(slot % 2 + 1) * cells]
+                .iter()
+                .map(|&value| f64::from(value))
+                .sum::<f64>()
+        });
+        let relative_drift = std::array::from_fn::<_, 4, _>(|slot| {
+            (inventory[slot] - initial_inventory[slot]).abs() / initial_inventory[slot]
+        });
+        eprintln!(
+            "M3 {label} tick={tick}: max_phase_fill_change={max_fill_change:?}, max_change_cell={max_fill_change_cell:?}, rms_phase_fill_change={rms_fill_change:?}, liquid_in_initial_air_kg={liquid_in_initial_air_kg:.9e}, carrier_in_initial_water_kg={carrier_in_initial_water_kg:.9e}, max_column_height_change_cells={max_column_height_change_cells:.9e}, max_column_height_change_x={max_column_height_change_x}, max_u_m_s={max_u:.9e}, max_v_m_s={max_v:.9e}, kinetic_energy_j={energy:.9e}, kinetic_energy_change_j={energy_change:.9e}, potential_energy_change_j={potential_energy_change:.9e}, mechanical_energy_change_j={mechanical_energy_change:.9e}, inventory={inventory:?}, relative_inventory_drift={relative_drift:?}"
+        );
+        if let Some(directory) = std::env::var_os("PARTICLE_REST_DIAGNOSTIC_DIR") {
+            let directory = std::path::PathBuf::from(directory);
+            std::fs::create_dir_all(&directory).expect("rest diagnostic artifact directory");
+            std::fs::write(directory.join(format!("checkpoint-{tick}.pfcp")), bytes)
+                .expect("rest diagnostic checkpoint artifact");
+        }
+        fields
+    }
+
+    // Match the CPU reference's MAC kinetic energy: arithmetic face density
+    // and one cell volume for each interior staggered face.
+    fn checkpoint_kinetic_energy(capture: &[Vec<f32>; 5]) -> f64 {
+        let volume = Grid::new(WIDTH as f64, HEIGHT as f64)
+            .unwrap()
+            .cell_volume_m3();
+        let mut energy = 0.0;
+        for y in 0..HEIGHT {
+            for x in 1..WIDTH {
+                let face = y * (WIDTH + 1) + x;
+                let cell = y * WIDTH + x;
+                let density = 0.5 * (f64::from(capture[2][cell - 1]) + f64::from(capture[2][cell]));
+                let speed = f64::from(capture[3][face]);
+                energy += 0.5 * density * volume * speed * speed;
+            }
+        }
+        for y in 1..HEIGHT {
+            for x in 0..WIDTH {
+                let face = y * WIDTH + x;
+                let density =
+                    0.5 * (f64::from(capture[2][face - WIDTH]) + f64::from(capture[2][face]));
+                let speed = f64::from(capture[4][face]);
+                energy += 0.5 * density * volume * speed * speed;
+            }
+        }
+        energy
     }
 
     /// Reads the two phase masses and two passive-marker totals from an explicit
