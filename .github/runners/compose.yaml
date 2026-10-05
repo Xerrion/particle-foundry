@@ -1,0 +1,62 @@
+name: particle-foundry-github-runners
+
+x-runner-environment: &runner-environment
+  RUNNER_URL: https://github.com/Xerrion/particle-foundry
+  RUNNER_LABELS: particle-foundry-ci
+  RUNNER_STATE_DIR: /runner-state
+  RUNNER_WORK_DIR: /home/runner/_work
+
+x-runner: &runner
+  image: particle-foundry-github-runner:2026-10-05
+  platform: linux/amd64
+  init: true
+  user: "1001:1001"
+  restart: unless-stopped
+  stop_grace_period: 2m
+  cpus: 2.0
+  mem_limit: 4g
+  shm_size: 1gb
+  cap_drop:
+    - ALL
+  security_opt:
+    - no-new-privileges:true
+    - seccomp=${RUNNER_SECCOMP_PROFILE:-./seccomp-profile.json}
+
+services:
+  runner-1:
+    <<: *runner
+    container_name: particle-foundry-charles-1
+    hostname: particle-foundry-charles-1
+    environment:
+      <<: *runner-environment
+      RUNNER_NAME: particle-foundry-charles-1
+    volumes:
+      - runner-1-config:/runner-state
+      - runner-1-work:/home/runner/_work
+      - runner-1-cache:/home/runner/cache
+
+  runner-2:
+    <<: *runner
+    container_name: particle-foundry-charles-2
+    hostname: particle-foundry-charles-2
+    environment:
+      <<: *runner-environment
+      RUNNER_NAME: particle-foundry-charles-2
+    volumes:
+      - runner-2-config:/runner-state
+      - runner-2-work:/home/runner/_work
+      - runner-2-cache:/home/runner/cache
+
+volumes:
+  runner-1-config:
+    name: particle-foundry-charles-1-config
+  runner-1-work:
+    name: particle-foundry-charles-1-work
+  runner-1-cache:
+    name: particle-foundry-charles-1-cache
+  runner-2-config:
+    name: particle-foundry-charles-2-config
+  runner-2-work:
+    name: particle-foundry-charles-2-work
+  runner-2-cache:
+    name: particle-foundry-charles-2-cache

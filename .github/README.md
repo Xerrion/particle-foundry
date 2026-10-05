@@ -10,6 +10,9 @@ in the [archived source history](https://github.com/Xerrion/particle-foundry/tre
 Verified against GitHub on 2026-10-05:
 
 - The repository is public.
+- Pull requests from external contributors require approval before workflows run.
+  Same-repository changes use the two dedicated Coolify runners. Fork pull requests
+  retain GitHub-hosted runners.
 - Squash merge is the only allowed merge method, keeping one commit per PR.
 - Squash commits use the PR title and body. Use a conventional PR title such as
   `fix: preserve ambient air movement` and describe the change in the body.
@@ -26,7 +29,8 @@ that `verify` passes and review conversations are resolved before squash merging
 
 CI runs once for each pull request update and once after a push to `main`.
 The documentation check always runs. Changes confined to `docs/` skip the web,
-Rust and browser jobs; every other change runs all three in parallel. The final
+Rust and browser jobs; every other change enables all three. The two dedicated
+runners execute at most two jobs at once. The final
 `verify` job fails if any applicable job fails or is missing. The web, Rust and
 browser jobs use `ci:web`, `ci:rust` and `ci:browser`. `mise run ci` remains
 the complete local check. The Rust test
@@ -41,9 +45,28 @@ preview triggers. Production auto-deploy follows a merge to protected `main`.
 GitHub Actions does not need a copied Coolify API token for this setup.
 See [Coolify deployment](../docs/deployment.md) for configuration and verification.
 
+## Dedicated runners
+
+All six CI jobs for pushes and same-repository pull requests use
+`[self-hosted, linux, x64, particle-foundry-ci]`. Coolify manages two persistent
+containers on Charles, each limited to two CPU cores and 4 GiB of RAM.
+Each runner has separate configuration, workspace and caches. The
+[runner setup](runners/README.md) owns the image, registration and recovery
+commands. Administrator tokens do not enter the runner containers. Initial
+registration uses a one-hour token and removes it before jobs start.
+
+The runner image includes the pinned project tools and Chrome. Jobs run as an
+unprivileged user with the browser sandbox enabled. The containers expose no
+ports and have no host Docker socket. Public fork jobs stay on GitHub-hosted
+runners; the repository also requires approval for all external contributors.
+Keep these routing and approval controls when changing the workflow.
+Review workflow changes before approving external runs. A fork can edit its
+workflow, so the routing expression alone is not an access boundary.
+
 ## Browser evidence
 
-The browser job runs on standard `ubuntu-latest`. Its smoke test passes when no
+The browser job runs on the dedicated CPU runners for our own changes and on
+`ubuntu-latest` for fork pull requests. Its smoke test passes when no
 WebGPU adapter exists, and the report records `gpu.status: unavailable`. A green
 browser job therefore verifies WASM loading and browser fallback behavior, not
 GPU simulation or rendering. Use

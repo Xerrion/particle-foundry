@@ -176,7 +176,9 @@ Add `--sustained-gpu` when the assigned acceptance gate requires the sustained f
 Native GPU success does not validate browser behavior. Default Rust tests omit explicitly ignored hardware fixtures.
 Report hardware-dependent or unrun checks explicitly. Do not report planned migration gates as passed.
 
-GitHub CI uses standard Ubuntu runners and separate docs, web, Rust and browser jobs.
+GitHub CI uses two Coolify-managed Linux runners for same-repository changes;
+fork pull requests use standard Ubuntu runners. Docs, web, Rust and browser jobs
+remain separate. See [.github/runners/README.md](.github/runners/README.md) for setup.
 The final `verify` job requires all applicable jobs. See the workflow and merge policy for path-filter behavior.
 The workflow installs pinned tools, Rust and Chrome in the job environment.
 Do not configure additional or paid GPU runners without explicit user approval.

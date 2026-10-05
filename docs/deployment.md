@@ -95,6 +95,32 @@ Use a same-repository PR targeting `main` to check the native lifecycle:
 Native preview events and GitHub CI results are separate checks. Check `verify`
 before merging. The experimental GPU limitations apply to previews too.
 
+## Dedicated GitHub CI runners
+
+The Coolify service `Particle Foundry GitHub runners` on Charles owns two CPU
+runner containers for `Xerrion/particle-foundry`. Its resource UUID is
+`1rtp5fpxk7xrvx1tgxmgfajc`, in the same project and environment as the browser
+application. The GitHub runner names are `particle-foundry-charles-1` and
+`particle-foundry-charles-2`; Coolify generates its own container names.
+The [runner guide](../.github/runners/README.md) owns the image, resource limits,
+bootstrap, persistent state and maintenance commands. The
+[CI policy](../.github/README.md) owns workflow routing and external approvals.
+
+Runner images are built on Charles from the checked-in Dockerfile. Coolify
+deploys the local image and preserves separate configuration, work and cache
+volumes for each slot. The seccomp profile sits beside the generated Compose
+file in `/data/coolify/services/1rtp5fpxk7xrvx1tgxmgfajc/`.
+Registration tokens enter through a protected temporary file and are removed
+before the listener starts. Coolify environment settings contain no GitHub
+administrator or runner registration token.
+
+The complete `Forgejo on Charles` service was stopped at the user's request
+on 5 October 2026. This includes Forgejo, PostgreSQL, both former runners and
+their Docker services. Coolify retains the resource and its configuration;
+existing data under `/data/forgejo/` and storage volumes remain available.
+The authoritative GitHub repository and its application deployments continue
+independently. Stopping this service does not authorize deletion of its data.
+
 ## Verified setup
 
 Setup checks ran on 2026-10-05. [Migration PR #9](https://github.com/Xerrion/particle-foundry/pull/9)
