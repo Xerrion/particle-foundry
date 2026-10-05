@@ -24,8 +24,8 @@ pub const STATUS_CORRECTION_LIMIT: u32 = 16;
 const WORKGROUP_SIZE: u32 = 64;
 const FACE_FLUX_BYTES: u64 = 5 * size_of::<f32>() as u64;
 // Each face is visited once per round. The shader limits one adjustment to
-// 1e-5 cell widths, so 128 rounds cap total correction at 128e-5 per face.
-const LOCAL_CLOSURE_ROUNDS: usize = 128;
+// 1e-5 cell widths, so 256 rounds cap total correction at 256e-5 per face.
+const LOCAL_CLOSURE_ROUNDS: usize = 256;
 /// The four incident faces can each receive one bounded adjustment per round.
 pub(crate) const CLOSURE_CELL_CFL_HEADROOM: f64 = 4.0 * LOCAL_CLOSURE_ROUNDS as f64 * 1e-5;
 
@@ -953,7 +953,53 @@ mod tests {
             1.2142483e-7,
             8.881784e-16,
         ]);
-        assert_two_outlet_budget(&gpu, &mass, &marker, &provisional, true);
+        assert_two_outlet_budget(&gpu, &mass, &marker, &provisional, true, false);
+        gpu.dispose();
+    }
+
+    #[test]
+    #[ignore = "requires a native Metal GPU"]
+    fn metal_two_outlet_budget_accepts_rounded_sum_after_carrier_limit() {
+        let gpu = block_on(crate::GpuContext::new()).expect("native GPU adapter");
+        assert_eq!(gpu.backend(), "Metal");
+        let owned_carrier = f32::from_bits(0x2499_999a);
+        let measured_negative = f32::from_bits(0x2214_f209);
+        let measured_positive = f32::from_bits(0x2494_f20a);
+        // The sustained failure's corrected ledger consumes exactly the
+        // rounded inventory. The old subtraction guard rejects its smaller
+        // share because the separately rounded remainder is lower.
+        assert_eq!(measured_negative + measured_positive, owned_carrier);
+        assert_eq!((owned_carrier - measured_positive).to_bits(), 0x2214_f200);
+        assert!(measured_negative > owned_carrier - measured_positive);
+        let mass = [
+            0.001_f32,
+            f32::from_bits(0x3a83_1276),
+            0.001,
+            0.0,
+            owned_carrier,
+            0.0,
+        ];
+        let marker = [0.25_f32, 0.25, 0.25, 0.0, 0.125, 0.0];
+        let mut provisional = vec![0.0_f32; 4 * 5];
+        for (face, sign, volume_bits, liquid_bits, carrier_bits) in [
+            (1_usize, -1.0_f32, 0x2dd1_8900, 0x32cc_9fc8, 0x2219_999a),
+            (2_usize, 1.0_f32, 0x3071_4581, 0x356b_9dde, 0x2499_999a),
+        ] {
+            let liquid = f32::from_bits(liquid_bits);
+            let carrier = f32::from_bits(carrier_bits);
+            provisional[face * 5..face * 5 + 5].copy_from_slice(&[
+                sign * f32::from_bits(volume_bits),
+                sign * liquid,
+                sign * carrier,
+                sign * marker[1] * (liquid / mass[1]),
+                sign * marker[4] * (carrier / owned_carrier),
+            ]);
+        }
+        assert!(-provisional[7] + provisional[12] > owned_carrier);
+        // The measured state is between directional sweeps. Its shared-face
+        // budget must pass on either axis; an isolated Y gather must still
+        // reject its unfinished volume closure.
+        assert_two_outlet_budget(&gpu, &mass, &marker, &provisional, true, true);
         gpu.dispose();
     }
 
@@ -964,18 +1010,56 @@ mod tests {
         assert_eq!(gpu.backend(), "Metal");
         let tiny_mass = 1.9347336e-21_f32;
         let tiny_marker = 4.8368337e-19_f32;
-        let mass = [0.001_f32, 0.001, 0.001, 0.0, tiny_mass, 0.0];
-        let marker = [0.25_f32, 0.25, 0.25, 0.0, tiny_marker, 0.0];
-        for (negative, positive, exhausts_carrier) in [
-            (5.804394e-22_f32, 1.3542942e-21_f32, true),
-            (1.1608401e-25_f32, 1.9346175e-21_f32, true),
-            (tiny_mass * 0.25, tiny_mass * 0.5, false),
+        let measured_mass = f32::from_bits(0x2494_cccd);
+        let measured_marker = f32::from_bits(0x2c3c_6a35);
+        for (owned_mass, owned_marker, negative, positive, exhausts_carrier) in [
+            (
+                tiny_mass,
+                tiny_marker,
+                5.804394e-22_f32,
+                1.3542942e-21_f32,
+                true,
+            ),
+            (
+                tiny_mass,
+                tiny_marker,
+                1.1608401e-25_f32,
+                1.9346175e-21_f32,
+                true,
+            ),
+            (
+                tiny_mass,
+                tiny_marker,
+                tiny_mass * 0.25,
+                tiny_mass * 0.5,
+                false,
+            ),
+            // Exact normal carrier amounts from the sustained browser failure.
+            (
+                measured_mass,
+                measured_marker,
+                f32::from_bits(0x2374_2f44),
+                f32::from_bits(0x246c_8dc9),
+                true,
+            ),
+            // Nearby face amounts produce the measured provisional marker
+            // share with host division rounding as well. Both phase sums still
+            // exhaust inventory. Cancelling the recomplement leaves one ULP.
+            (
+                measured_mass,
+                measured_marker,
+                f32::from_bits(0x2374_2f45),
+                f32::from_bits(0x246c_8dc8),
+                true,
+            ),
         ] {
             // These fixtures do not need phase overdraw repair. Independent
             // face marker products can nevertheless leave an orphan marker
             // when gather rounds the two outgoing phase masses to inventory.
-            assert!(negative <= tiny_mass - positive);
-            assert_eq!(negative + positive == tiny_mass, exhausts_carrier);
+            assert!(negative <= owned_mass - positive);
+            assert_eq!(negative + positive == owned_mass, exhausts_carrier);
+            let mass = [0.001_f32, 0.001, 0.001, 0.0, owned_mass, 0.0];
+            let marker = [0.25_f32, 0.25, 0.25, 0.0, owned_marker, 0.0];
             let mut provisional = vec![0.0_f32; 4 * 5];
             for (face, sign, volume, carrier) in [
                 (1_usize, -1.0_f32, 3.0224773e-13_f32, negative),
@@ -987,10 +1071,10 @@ mod tests {
                     sign * liquid,
                     sign * carrier,
                     sign * marker[1] * (liquid / mass[1]),
-                    sign * tiny_marker * (carrier / tiny_mass),
+                    sign * owned_marker * (carrier / owned_mass),
                 ]);
             }
-            assert_two_outlet_budget(&gpu, &mass, &marker, &provisional, exhausts_carrier);
+            assert_two_outlet_budget(&gpu, &mass, &marker, &provisional, exhausts_carrier, false);
         }
         gpu.dispose();
     }
@@ -1104,12 +1188,159 @@ mod tests {
         gpu.dispose();
     }
 
+    #[test]
+    #[ignore = "requires a native Metal GPU"]
+    fn metal_exhausted_gather_retains_small_incoming_phase_and_marker_on_both_axes() {
+        let gpu = block_on(crate::GpuContext::new()).expect("native GPU adapter");
+        assert_eq!(gpu.backend(), "Metal");
+        let owned_phase = f32::from_bits(0x2582_b62b);
+        let owned_marker = f32::from_bits(0x297f_4bc5);
+        let small_phase = f32::from_bits(0x195d_dc65);
+        let small_marker = f32::from_bits(0x1d58_a937);
+        // Adding the incoming amount first loses the phase and changes the
+        // marker to one inventory ULP. Subtraction first retains both inputs.
+        assert_eq!(((owned_phase + small_phase) - owned_phase).to_bits(), 0);
+        assert_eq!(
+            ((owned_marker + small_marker) - owned_marker).to_bits(),
+            0x1d80_0000
+        );
+        for (axis, grid) in [
+            (0_u32, Grid::new(3.0, 1.0).unwrap()),
+            (1_u32, Grid::new(1.0, 3.0).unwrap()),
+        ] {
+            let stage = GpuTransportStage::new(&gpu.device, grid).unwrap();
+            let headers = (0..grid.cells())
+                .flat_map(|_| GpuCellHeader::new(0.0, 0).unwrap().to_le_bytes())
+                .collect::<Vec<_>>();
+            let header_buffer = buffer(&gpu.device, "exhausted gather headers", &headers);
+            let carrier_unit = 1.2_f32 * grid.cell_volume_m3() as f32;
+            let mut params = [0_u8; 32];
+            for (slot, value) in [grid.width(), grid.height(), grid.cells() as u32, axis]
+                .into_iter()
+                .enumerate()
+            {
+                params[slot * 4..slot * 4 + 4].copy_from_slice(&value.to_le_bytes());
+            }
+            for (slot, value) in [1.0_f32 / 60.0, 1000.0, 1.2, grid.cell_volume_m3() as f32]
+                .into_iter()
+                .enumerate()
+            {
+                params[16 + slot * 4..20 + slot * 4].copy_from_slice(&value.to_le_bytes());
+            }
+            let uniform = gpu
+                .device
+                .create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                    label: Some("exhausted gather parameters"),
+                    contents: &params,
+                    usage: wgpu::BufferUsages::UNIFORM,
+                });
+            for (incoming_phase, incoming_marker) in
+                [(small_phase, small_marker), (0.0_f32, 0.0_f32)]
+            {
+                let mass = [
+                    incoming_phase,
+                    owned_phase,
+                    0.0,
+                    carrier_unit,
+                    carrier_unit,
+                    carrier_unit,
+                ];
+                let marker = [incoming_marker, owned_marker, 0.0, 0.0, 0.0, 0.0];
+                let mass_buffer = buffer(&gpu.device, "exhausted gather mass", &f32_bytes(&mass));
+                let marker_buffer =
+                    buffer(&gpu.device, "exhausted gather marker", &f32_bytes(&marker));
+                let mut flux = vec![0.0_f32; 4 * 5];
+                for (face, phase, associated_marker) in [
+                    (1_usize, incoming_phase, incoming_marker),
+                    (2_usize, owned_phase, owned_marker),
+                ] {
+                    flux[face * 5] = phase / 1000.0;
+                    flux[face * 5 + 1] = phase;
+                    flux[face * 5 + 3] = associated_marker;
+                }
+                let flux_buffer = buffer(&gpu.device, "exhausted gather flux", &f32_bytes(&flux));
+                let candidate = GpuTransportCandidate::new(&gpu.device, grid).unwrap();
+                let (pipeline, output_mass, output_marker) = if axis == 0 {
+                    (
+                        &stage.x_gather,
+                        &candidate.after_x_mass_kg,
+                        &candidate.after_x_marker,
+                    )
+                } else {
+                    (&stage.y_gather, &candidate.mass_kg, &candidate.marker)
+                };
+                let bindings = gather_group(
+                    &gpu.device,
+                    pipeline,
+                    &uniform,
+                    &mass_buffer,
+                    &marker_buffer,
+                    &header_buffer,
+                    &flux_buffer,
+                    output_mass,
+                    output_marker,
+                    &candidate.status,
+                );
+                let mut encoder =
+                    gpu.device
+                        .create_command_encoder(&wgpu::CommandEncoderDescriptor {
+                            label: Some("exhausted gather incoming fixture"),
+                        });
+                encoder.clear_buffer(&candidate.status, 0, None);
+                run_pass(&mut encoder, pipeline, &bindings, grid.cells());
+                gpu.queue.submit([encoder.finish()]);
+                let status = read_bytes(&gpu.device, &gpu.queue, &candidate.status);
+                assert_eq!(
+                    u32::from_le_bytes(status.try_into().unwrap()),
+                    0,
+                    "axis {axis}"
+                );
+                let result_mass = read_f32(&gpu.device, &gpu.queue, output_mass);
+                let result_marker = read_f32(&gpu.device, &gpu.queue, output_marker);
+                for (actual, expected) in result_mass[..3]
+                    .iter()
+                    .zip([0.0_f32, incoming_phase, owned_phase])
+                    .chain(
+                        result_marker[..3]
+                            .iter()
+                            .zip([0.0_f32, incoming_marker, owned_marker]),
+                    )
+                {
+                    assert_eq!(actual.to_bits(), expected.to_bits(), "axis {axis}");
+                }
+                assert_eq!(&result_mass[3..], &mass[3..]);
+                assert_eq!(&result_marker[3..], &marker[3..]);
+                assert!(
+                    result_mass
+                        .iter()
+                        .chain(&result_marker)
+                        .all(|value| value.is_finite() && *value >= 0.0)
+                );
+                for (before, after) in [
+                    (&mass[..3], &result_mass[..3]),
+                    (&mass[3..], &result_mass[3..]),
+                    (&marker[..3], &result_marker[..3]),
+                    (&marker[3..], &result_marker[3..]),
+                ] {
+                    let before: f64 = before.iter().map(|value| f64::from(*value)).sum();
+                    let after: f64 = after.iter().map(|value| f64::from(*value)).sum();
+                    assert!(
+                        (after - before).abs() <= before * 4.0 * f64::EPSILON,
+                        "axis {axis}: inventory drifted from {before:e} to {after:e}"
+                    );
+                }
+            }
+        }
+        gpu.dispose();
+    }
+
     fn assert_two_outlet_budget(
         gpu: &crate::GpuContext,
         mass: &[f32; 6],
         marker: &[f32; 6],
         provisional: &[f32],
         exhausts_carrier: bool,
+        intermediate_sweep: bool,
     ) {
         let headers = (0..3)
             .flat_map(|_| GpuCellHeader::new(0.0, 0).unwrap().to_le_bytes())
@@ -1191,13 +1422,12 @@ mod tests {
                 });
             encoder.clear_buffer(&candidate.status, 0, None);
             run_pass(&mut encoder, &stage.budget, &budget_bindings, 4);
-            run_pass(&mut encoder, gather_pipeline, &gather_bindings, 3);
             gpu.queue.submit([encoder.finish()]);
             let status = read_bytes(&gpu.device, &gpu.queue, &candidate.status);
             assert_eq!(
                 u32::from_le_bytes(status.try_into().unwrap()),
                 0,
-                "axis {axis}"
+                "axis {axis}: donor budget"
             );
             let flux = read_f32(&gpu.device, &gpu.queue, corrected);
             let negative_carrier = -flux[5 + 2];
@@ -1232,8 +1462,23 @@ mod tests {
                     "axis {axis}: marker budget"
                 );
             }
+            if intermediate_sweep {
+                assert!(
+                    negative_carrier > mass[4] - positive_carrier,
+                    "axis {axis}: measured fixture must cross the old subtraction guard"
+                );
+            }
             for face in [1, 2] {
                 let offset = face * 5;
+                for phase in 0..2 {
+                    let phase_mass = flux[offset + 1 + phase].abs();
+                    let phase_marker = flux[offset + 3 + phase].abs();
+                    assert!(phase_mass.is_finite() && phase_marker.is_finite());
+                    assert!(
+                        phase_mass > 0.0 || phase_marker == 0.0,
+                        "axis {axis}: face {face} phase {phase} orphan marker"
+                    );
+                }
                 let volume_from_phases =
                     flux[offset + 1].abs() / 1000.0 + flux[offset + 2].abs() / 1.2;
                 assert!(
@@ -1241,6 +1486,24 @@ mod tests {
                     "axis {axis}: face {face} volume changed"
                 );
             }
+            let mut encoder = gpu
+                .device
+                .create_command_encoder(&wgpu::CommandEncoderDescriptor {
+                    label: Some("two-outlet gather fixture"),
+                });
+            run_pass(&mut encoder, gather_pipeline, &gather_bindings, 3);
+            gpu.queue.submit([encoder.finish()]);
+            let status = read_bytes(&gpu.device, &gpu.queue, &candidate.status);
+            let expected_status = if intermediate_sweep && axis == 1 {
+                STATUS_VOLUME_CLOSURE
+            } else {
+                0
+            };
+            assert_eq!(
+                u32::from_le_bytes(status.try_into().unwrap()),
+                expected_status,
+                "axis {axis}: gathered inventory"
+            );
             let result_mass = read_f32(&gpu.device, &gpu.queue, output_mass);
             let result_marker = read_f32(&gpu.device, &gpu.queue, output_marker);
             if exhausts_carrier {
@@ -1255,6 +1518,14 @@ mod tests {
                     .chain(&result_marker)
                     .all(|value| value.is_finite() && *value >= 0.0)
             );
+            for (phase_cell, (phase_mass, phase_marker)) in
+                result_mass.iter().zip(&result_marker).enumerate()
+            {
+                assert!(
+                    *phase_mass > 0.0 || *phase_marker == 0.0,
+                    "axis {axis}: gathered phase slot {phase_cell} orphan marker"
+                );
+            }
             for (slot, (before, after)) in [
                 (&mass[..3], &result_mass[..3]),
                 (&mass[3..], &result_mass[3..]),

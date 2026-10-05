@@ -57,6 +57,78 @@ type GpuAttemptAccounting = {
 	rejectedReadbackBytes: number;
 };
 
+type GpuInventoryTotals = {
+	liquidMassKg: number;
+	carrierMassKg: number;
+	liquidMarker: number;
+	carrierMarker: number;
+};
+
+function readGpuCheckpointInventory(
+	checkpoint: Uint8Array,
+	expectedTick: number,
+	expectedStateRevision: number,
+	expectedReadbackBytes: number,
+): GpuInventoryTotals {
+	const cells = 480 * 270;
+	const componentBytes = cells * 4;
+	const massBytes = componentBytes * 2;
+	if (
+		!(checkpoint instanceof Uint8Array) ||
+		checkpoint.byteLength !== 108 + expectedReadbackBytes
+	) {
+		throw new Error(`GPU inventory checkpoint at tick ${expectedTick} has an invalid size`);
+	}
+	const fields = new DataView(checkpoint.buffer, checkpoint.byteOffset, checkpoint.byteLength);
+	if (
+		String.fromCharCode(...checkpoint.slice(0, 4)) !== "PFCP" ||
+		fields.getUint32(4, true) !== 0 ||
+		fields.getUint32(8, true) !== 480 ||
+		fields.getUint32(12, true) !== 270 ||
+		fields.getBigUint64(16, true) !== 2n ||
+		fields.getBigUint64(24, true) !== BigInt(expectedTick) ||
+		!Number.isFinite(fields.getFloat64(32, true)) ||
+		Math.abs(fields.getFloat64(32, true) - expectedTick / 60) > 1e-6 ||
+		fields.getFloat64(40, true) !== 0 ||
+		fields.getBigUint64(52, true) !== BigInt(expectedStateRevision) ||
+		fields.getBigUint64(60, true) !== BigInt(expectedReadbackBytes) ||
+		fields.getBigUint64(68, true) !== BigInt(cells * 2) ||
+		fields.getBigUint64(76, true) !== BigInt(cells * 2)
+	) {
+		throw new Error(
+			`GPU inventory checkpoint at tick ${expectedTick} has an invalid stamp or layout`,
+		);
+	}
+	const totals = [0, 0, 0, 0];
+	for (let phase = 0; phase < 2; phase += 1) {
+		const massStart = 108 + phase * componentBytes;
+		const markerStart = massStart + massBytes;
+		for (let cell = 0; cell < cells; cell += 1) {
+			const mass = fields.getFloat32(massStart + cell * 4, true);
+			const marker = fields.getFloat32(markerStart + cell * 4, true);
+			if (
+				!Number.isFinite(mass) ||
+				!Number.isFinite(marker) ||
+				mass < 0 ||
+				marker < 0 ||
+				(mass === 0 && marker !== 0)
+			) {
+				throw new Error(
+					`GPU inventory checkpoint at tick ${expectedTick} has invalid phase ${phase} quantities in cell ${cell}`,
+				);
+			}
+			totals[phase] += mass;
+			totals[phase + 2] += marker;
+		}
+	}
+	return {
+		liquidMassKg: totals[0],
+		carrierMassKg: totals[1],
+		liquidMarker: totals[2],
+		carrierMarker: totals[3],
+	};
+}
+
 function checkGpuAttemptAccounting(report: GpuAttemptAccounting, label: string): void {
 	if (
 		[
@@ -191,6 +263,7 @@ async function settleValidationAfterDispose(
 }
 
 let gpuAdapter: GpuAdapterReport | undefined;
+let sustainedGpuFailure: Record<string, unknown> | undefined;
 
 try {
 	const wasm = await fetch(wasmAssetUrl);
@@ -279,6 +352,7 @@ try {
 				targetTicks: number;
 				completedTicks: number;
 				completedTicksAfter125: number;
+				completedTicksAfter366: number;
 				acceptedSubsteps: number;
 				attemptedCandidates: number;
 				refinementRetries: number;
@@ -290,6 +364,16 @@ try {
 				readbackBytes: number;
 				rejectedReadbackBytes: number;
 				totalReadbackBytes: number;
+				explicitCheckpointReadbackBytes: number;
+				conservation: {
+					scope: string;
+					beforeTick: number;
+					afterTick: number;
+					beforeTotals: GpuInventoryTotals;
+					afterTotals: GpuInventoryTotals;
+					relativeDriftLimit: number;
+					maxRelativeDrift: number;
+				};
 				pressureIterationBudget: number;
 				pressureObservationScope: string;
 				attemptSampleScope: string;
@@ -298,6 +382,8 @@ try {
 				maxScaledDivergence: number;
 				maxScaledResidualAfterTick125: number;
 				maxScaledDivergenceAfterTick125: number;
+				maxScaledResidualAfterTick366: number;
+				maxScaledDivergenceAfterTick366: number;
 				pressureSamples: {
 					tick: number;
 					acceptedTimeS: number;
@@ -549,10 +635,29 @@ try {
 				}
 				let sustained: NonNullable<NonNullable<typeof gpu.canvas>["sustained"]> | undefined;
 				if (new URL(location.href).searchParams.has("sustained-gpu")) {
-					const targetTicks = 300;
+					const targetTicks = 3_600;
+					const beforeTotals = readGpuCheckpointInventory(checkpoint, 2, 2, expectedReadbackBytes);
+					const maxAdvanceCalls = targetTicks * 16;
+					const pressureSampleTicks = [
+						125,
+						126,
+						150,
+						200,
+						250,
+						300,
+						366,
+						367,
+						600,
+						1_200,
+						1_800,
+						2_400,
+						3_000,
+						targetTicks,
+					];
 					const started = performance.now();
 					let completedTicks = 2;
 					let completedTicksAfter125 = 0;
+					let completedTicksAfter366 = 0;
 					let acceptedSubsteps = 0;
 					let attemptedCandidates = 0;
 					let refinementRetries = 0;
@@ -564,14 +669,42 @@ try {
 					let maxScaledDivergence = Math.max(tick.scaledDivergence, second.scaledDivergence);
 					let maxScaledResidualAfterTick125 = 0;
 					let maxScaledDivergenceAfterTick125 = 0;
+					let maxScaledResidualAfterTick366 = 0;
+					let maxScaledDivergenceAfterTick366 = 0;
 					const pressureSamples: NonNullable<typeof sustained>["pressureSamples"] = [];
 					const advanceMs: number[] = [];
-					for (let attempt = 0; completedTicks < targetTicks && attempt < 5_000; attempt += 1) {
+					for (
+						let attempt = 0;
+						completedTicks < targetTicks && attempt < maxAdvanceCalls;
+						attempt += 1
+					) {
 						const stepStarted = performance.now();
 						let reply: string;
 						try {
 							reply = (await browserScene.advance(8)) as string;
 						} catch (error) {
+							sustainedGpuFailure = {
+								targetTicks,
+								completedTicks,
+								completedTicksAfter125,
+								completedTicksAfter366,
+								lastReportedAcceptedTimeS: lastAcceptedTimeS,
+								progressObservationScope: "last successful advance reply",
+								pressureObservationScope: "last accepted substep of each completed tick",
+								acceptedSubsteps,
+								attemptedCandidates,
+								refinementRetries,
+								readbackBytes,
+								rejectedReadbackBytes,
+								maxPressureIterations,
+								maxScaledResidual,
+								maxScaledDivergence,
+								maxScaledResidualAfterTick125,
+								maxScaledDivergenceAfterTick125,
+								maxScaledResidualAfterTick366,
+								maxScaledDivergenceAfterTick366,
+								pressureSamples,
+							};
 							throw new Error(
 								`Sustained GPU advance after tick ${completedTicks} and ${lastAcceptedTimeS} s failed: ${String(error)}`,
 							);
@@ -631,7 +764,9 @@ try {
 								next.pressureIterations > 512 ||
 								!browserScene.render()
 							) {
-								throw new Error(`Sustained GPU tick ${completedTicks} failed its gates or render`);
+								throw new Error(
+									`Sustained GPU tick ${completedTicks} failed its gates or render: ${reply}`,
+								);
 							}
 							maxScaledResidual = Math.max(maxScaledResidual, next.scaledResidual);
 							maxScaledDivergence = Math.max(maxScaledDivergence, next.scaledDivergence);
@@ -647,7 +782,18 @@ try {
 									next.scaledDivergence,
 								);
 							}
-							if ([125, 126, 150, 200, 250, targetTicks].includes(completedTicks)) {
+							if (completedTicks > 366) {
+								completedTicksAfter366 += 1;
+								maxScaledResidualAfterTick366 = Math.max(
+									maxScaledResidualAfterTick366,
+									next.scaledResidual,
+								);
+								maxScaledDivergenceAfterTick366 = Math.max(
+									maxScaledDivergenceAfterTick366,
+									next.scaledDivergence,
+								);
+							}
+							if (pressureSampleTicks.includes(completedTicks)) {
 								pressureSamples.push({
 									tick: completedTicks,
 									acceptedTimeS: next.acceptedTimeS,
@@ -671,13 +817,55 @@ try {
 					if (
 						completedTicks !== targetTicks ||
 						completedTicksAfter125 !== targetTicks - 125 ||
+						completedTicksAfter366 !== targetTicks - 366 ||
+						pressureSamples.length !== pressureSampleTicks.length ||
 						Math.abs(lastAcceptedTimeS - targetTicks / 60) > 1e-6
 					) {
 						throw new Error(
-							"Sustained GPU run did not complete 300 ticks over five simulated seconds",
+							`Sustained GPU run did not complete ${targetTicks} ticks over ${targetTicks / 60} simulated seconds`,
 						);
 					}
 					const wallSeconds = (performance.now() - started) / 1_000;
+					const finalStatus = JSON.parse(browserScene.status_json()) as {
+						epoch: number;
+						tick: number;
+						acceptedTimeS: number;
+						remainingOuterS: number;
+						stateRevision: number;
+						busy: boolean;
+					};
+					if (
+						finalStatus.epoch !== 2 ||
+						finalStatus.tick !== targetTicks ||
+						finalStatus.acceptedTimeS !== lastAcceptedTimeS ||
+						finalStatus.remainingOuterS !== 0 ||
+						!Number.isSafeInteger(finalStatus.stateRevision) ||
+						finalStatus.stateRevision < 2 ||
+						finalStatus.busy !== false
+					) {
+						throw new Error("Sustained GPU conservation capture has invalid committed progress");
+					}
+					const finalCheckpoint = await browserScene.checkpoint_prototype();
+					const afterTotals = readGpuCheckpointInventory(
+						finalCheckpoint,
+						targetTicks,
+						finalStatus.stateRevision,
+						expectedReadbackBytes,
+					);
+					const relativeDriftLimit = 1e-5;
+					const maxRelativeDrift = Math.max(
+						...(Object.keys(beforeTotals) as (keyof GpuInventoryTotals)[]).map((field) => {
+							const before = beforeTotals[field];
+							const after = afterTotals[field];
+							if (before === 0) return after === 0 ? 0 : Infinity;
+							return Math.abs(after - before) / before;
+						}),
+					);
+					if (!Number.isFinite(maxRelativeDrift) || maxRelativeDrift > relativeDriftLimit) {
+						throw new Error(
+							`Sustained GPU inventory drift ${maxRelativeDrift} exceeds ${relativeDriftLimit} from tick 2 through ${targetTicks}: ${JSON.stringify({ beforeTotals, afterTotals })}`,
+						);
+					}
 					advanceMs.sort((left, right) => left - right);
 					const percentile = (fraction: number) =>
 						advanceMs[Math.ceil(fraction * advanceMs.length) - 1];
@@ -685,6 +873,7 @@ try {
 						targetTicks,
 						completedTicks,
 						completedTicksAfter125,
+						completedTicksAfter366,
 						acceptedSubsteps,
 						attemptedCandidates,
 						refinementRetries,
@@ -696,6 +885,16 @@ try {
 						readbackBytes,
 						rejectedReadbackBytes,
 						totalReadbackBytes: readbackBytes + rejectedReadbackBytes,
+						explicitCheckpointReadbackBytes: expectedReadbackBytes * 2,
+						conservation: {
+							scope: "explicit committed checkpoints at ticks 2 and 3600 before paint",
+							beforeTick: 2,
+							afterTick: targetTicks,
+							beforeTotals,
+							afterTotals,
+							relativeDriftLimit,
+							maxRelativeDrift,
+						},
 						pressureIterationBudget: 512,
 						pressureObservationScope: "last accepted substep of each completed tick",
 						attemptSampleScope: "completing advance call",
@@ -704,6 +903,8 @@ try {
 						maxScaledDivergence,
 						maxScaledResidualAfterTick125,
 						maxScaledDivergenceAfterTick125,
+						maxScaledResidualAfterTick366,
+						maxScaledDivergenceAfterTick366,
 						pressureSamples,
 					};
 				}
@@ -839,6 +1040,7 @@ try {
 		status: "fail",
 		error: String(error),
 		adapter: gpuAdapter,
+		sustained: sustainedGpuFailure,
 	});
 }
 

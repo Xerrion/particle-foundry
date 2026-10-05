@@ -51,10 +51,15 @@ fn main(@builtin(global_invocation_id) id: vec3<u32>) {
     let carrier_volume = carrier / params.carrier_density_kg_m3;
     let volume = liquid_volume + carrier_volume;
     let derived_density = (liquid + carrier) / params.cell_volume_m3;
+    // Validate tiny owned phases in cell units before density division.
+    // A normal mass can have a physical volume below the f32 normal range.
+    let liquid_fill = (liquid / params.cell_volume_m3) / params.liquid_density_kg_m3;
+    let carrier_fill = (carrier / params.cell_volume_m3) / params.carrier_density_kg_m3;
     if (!finite(liquid_volume) || !finite(carrier_volume) || !finite(volume)
         || !finite(derived_density) || derived_density <= 0.0
-        || (liquid > 0.0 && liquid_volume == 0.0)
-        || (carrier > 0.0 && carrier_volume == 0.0)) {
+        || !finite(liquid_fill) || !finite(carrier_fill)
+        || (liquid > 0.0 && liquid_fill == 0.0)
+        || (carrier > 0.0 && carrier_fill == 0.0)) {
         density_kg_m3[cell] = 0.0;
         atomicOr(&status[0], INVALID_CELL);
         return;

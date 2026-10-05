@@ -411,6 +411,45 @@ mod tests {
         }
         assert_eq!(density[3], 2.5);
 
+        // These normal masses produced subnormal physical volumes in the
+        // sustained browser scene. Cell-unit validation must retain them.
+        let tiny_liquid = [f32::from_bits(79_576_152), f32::from_bits(79_576_312)];
+        for value in tiny_liquid {
+            assert!(value.is_normal());
+            assert!((value / 1000.0).is_subnormal());
+            assert!(((value / volume as f32) / 1000.0).is_normal());
+        }
+        let tiny_mass = [
+            tiny_liquid[0],
+            tiny_liquid[1],
+            0.0,
+            0.0,
+            1.2e-6,
+            1.2e-6,
+            1.2e-6,
+            0.0,
+        ];
+        let (status, tiny_density) =
+            run_fixture(&gpu, &deriver, &candidate, &tiny_mass, &wall, [1000.0, 1.2]);
+        assert_eq!(status, 0, "normal trace phases remain valid");
+        for value in tiny_density {
+            assert!((value - 1.2).abs() <= 3.0 * f32::EPSILON);
+        }
+        let mut tiny_carrier = tiny_mass;
+        tiny_carrier[2] = 1e-3;
+        tiny_carrier[6] = f32::MIN_POSITIVE;
+        assert!((tiny_carrier[6] / 1.2).is_subnormal());
+        let (status, tiny_density) = run_fixture(
+            &gpu,
+            &deriver,
+            &candidate,
+            &tiny_carrier,
+            &wall,
+            [1000.0, 1.2],
+        );
+        assert_eq!(status, 0, "normal trace carrier remains valid");
+        assert!((tiny_density[2] - 1000.0).abs() <= 3.0 * f32::EPSILON * 1000.0);
+
         let mut nonclosed = mass.clone();
         nonclosed[4] *= 1.01;
         let (status, _) = run_fixture(&gpu, &deriver, &candidate, &nonclosed, &wall, phase_density);

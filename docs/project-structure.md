@@ -179,7 +179,7 @@ geometry, aperture, and density revisions; [cache tests](../engine/crates/sim-cp
 compare reused and forced-rebuild solves after input changes. The GPU session
 initializes a wgpu device, validates its ABI and core-grid limit preflight,
 and exposes an experimental coupled scene. Its full-size browser scene has
-passed a local 300-tick sustained run on Chrome with a required GPU adapter.
+passed a local 3,600-tick sustained run on Chrome with a required GPU adapter.
 See [E08 evidence](validation/p1-m3-e08.md) for workload and sampling limits.
 
 The CPU session also owns an optional [phase inventory](../engine/crates/sim-cpu/src/transport.rs)

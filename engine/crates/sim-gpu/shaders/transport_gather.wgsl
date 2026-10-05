@@ -50,9 +50,9 @@ fn gather_amount(owned: f32, negative_face: f32, positive_face: f32) -> f32 {
         atomicOr(&status[0], DONOR_OVERDRAW);
         return 0.0;
     }
-    // Combine small opposing flows before adding them to the inventory. Near
-    // exhaustion, subtract first so a small surviving amount remains resolved.
-    var result = (owned - outgoing) + incoming;
+    // Explicit fma boundaries keep a small incoming amount after exhaustion.
+    // Reassociation of a plain subtraction/addition can erase that amount.
+    var result = fma(1.0, incoming, fma(-1.0, outgoing, owned));
     if outgoing <= 0.5 * owned {
         result = fma(1.0, owned, fma(-1.0, outgoing, incoming));
     }

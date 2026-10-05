@@ -111,7 +111,7 @@ try {
 			throw new Error(`Browser exited before reporting (exit ${code}); see ${output}`);
 		}),
 		new Promise<never>((_, reject) => {
-			const timeoutMs = sustainedGpu ? 180_000 : 30_000;
+			const timeoutMs = sustainedGpu ? 600_000 : 30_000;
 			timeout = setTimeout(
 				() =>
 					reject(

@@ -26,6 +26,7 @@ struct CellHeader {
 const CORRECTION_LIMIT: u32 = 16u;
 const CELL_WIDTH_M: f32 = 0.01;
 const MAX_CORRECTION_CFL: f32 = 1e-5;
+const PAIR_RELAXATION: f32 = 1.75;
 
 fn finite(value: f32) -> bool {
     return value == value && value <= 3.402823e38 && value >= -3.402823e38;
@@ -69,9 +70,10 @@ fn pair(id: u32, axis: u32, parity: u32) {
     }
     let negative = residual[negative_cell];
     let positive = residual[positive_cell];
-    // A parity pass owns disjoint pairs. Half the difference equalizes them
-    // while preserving their sum and the local residual bounds.
-    let delta = 0.5 * (negative - positive);
+    // Disjoint pairs preserve their sum and local bounds in exact arithmetic.
+    // Relaxation redistributes residuals between the ordered parity passes.
+    // The face correction cap below still bounds every physical transfer.
+    let delta = (0.5 * PAIR_RELAXATION) * (negative - positive);
     if delta == 0.0 {
         return;
     }
@@ -89,7 +91,11 @@ fn pair(id: u32, axis: u32, parity: u32) {
         atomicOr(&status[0], CORRECTION_LIMIT);
         return;
     }
-    let actual = ((corrected - previous) * params.dt_s / CELL_WIDTH_M) * open;
+    // Measure the same separately rounded face fluxes used by transport.
+    // Scaling the velocity difference tracks a different f32 correction.
+    let previous_flux = (previous * params.dt_s / CELL_WIDTH_M) * open;
+    let corrected_flux = (corrected * params.dt_s / CELL_WIDTH_M) * open;
+    let actual = fma(1.0, corrected_flux, -previous_flux);
     if axis == 0u {
         u_velocity[id] = corrected;
     } else {

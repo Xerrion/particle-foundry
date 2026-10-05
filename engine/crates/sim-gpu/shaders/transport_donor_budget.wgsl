@@ -48,10 +48,11 @@ fn marker_budget(owned_marker: f32, owned_mass: f32,
                  negative_mass: f32, positive_mass: f32) -> vec2<f32> {
     let total = marker_flux(owned_marker, owned_mass, negative_mass + positive_mass);
     let provisional_negative = min(total, marker_flux(owned_marker, owned_mass, negative_mass));
-    let positive = total - provisional_negative;
+    let positive = fma(-1.0, provisional_negative, total);
     // Recompute the first share from the complement so the two f32 faces use
     // the same total even when their magnitudes differ by many orders.
-    let negative = total - positive;
+    // Explicit fma boundaries retain both rounded complement operations.
+    let negative = fma(-1.0, positive, total);
     return vec2<f32>(negative, positive);
 }
 
@@ -107,8 +108,9 @@ fn budget_face(@builtin(global_invocation_id) id: vec3<u32>) {
         atomicOr(&status[0], INVALID_CELL);
         return;
     }
-    let liquid_overdraw = negative_liquid > owned_liquid - positive_liquid;
-    let carrier_overdraw = negative_carrier > owned_carrier - positive_carrier;
+    // Match the rounded outgoing sum consumed by gather on both phases.
+    let liquid_overdraw = negative_liquid + positive_liquid > owned_liquid;
+    let carrier_overdraw = negative_carrier + positive_carrier > owned_carrier;
     if liquid_overdraw && carrier_overdraw {
         atomicOr(&status[0], DONOR_OVERDRAW);
         return;
@@ -143,8 +145,8 @@ fn budget_face(@builtin(global_invocation_id) id: vec3<u32>) {
          && finite(negative_carrier_mass) && finite(positive_carrier_mass)
          && negative_liquid_mass >= 0.0 && positive_liquid_mass >= 0.0
          && negative_carrier_mass >= 0.0 && positive_carrier_mass >= 0.0)
-       || negative_liquid_mass > owned_liquid - positive_liquid_mass
-       || negative_carrier_mass > owned_carrier - positive_carrier_mass {
+       || negative_liquid_mass + positive_liquid_mass > owned_liquid
+       || negative_carrier_mass + positive_carrier_mass > owned_carrier {
         atomicOr(&status[0], DONOR_OVERDRAW);
         return;
     }
