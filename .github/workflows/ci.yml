@@ -5,15 +5,27 @@ on:
     branches: [main]
   pull_request:
 
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  MISE_YES: "1"
+
 jobs:
   changes:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     outputs:
       code: ${{ steps.scope.outputs.code }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           fetch-depth: 0
+          persist-credentials: false
       - name: Detect code changes
         id: scope
         env:
@@ -39,46 +51,58 @@ jobs:
 
   docs:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
       - uses: jdx/mise-action@5228313ee0372e111a38da051671ca30fc5a96db # v3
+        with:
+          version: 2026.9.13
       - run: mise run docs:check
 
   web:
     needs: changes
     if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
       - uses: jdx/mise-action@5228313ee0372e111a38da051671ca30fc5a96db # v3
-      - run: mise run lint
-      - run: mise run typecheck:catalogue
-      - run: mise run test
+        with:
+          version: 2026.9.13
+      - run: mise run ci:web
 
   rust:
     needs: changes
     if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
       - uses: jdx/mise-action@5228313ee0372e111a38da051671ca30fc5a96db # v3
-      - run: mise run rust:fmt
-      - run: mise run rust:clippy
-      - run: mise run rust:test
+        with:
+          version: 2026.9.13
+      - run: mise run ci:rust
 
   browser:
     name: Browser WASM smoke (GPU optional)
     needs: changes
     if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
       - uses: jdx/mise-action@5228313ee0372e111a38da051671ca30fc5a96db # v3
-      - run: mise run build
-      - run: mise run typecheck
-      - run: mise run test:browser
-      - run: mise run check:wasm
-      - run: mise run check:catalogue
+        with:
+          version: 2026.9.13
+      - run: mise run ci:browser
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         if: always()
         with:
@@ -90,6 +114,7 @@ jobs:
     if: always()
     needs: [changes, docs, web, rust, browser]
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - name: Require applicable checks
         env:
@@ -102,12 +127,16 @@ jobs:
         run: |
           test "$CHANGES_RESULT" = success
           test "$DOCS_RESULT" = success
-          if test "$CODE_CHANGED" = true; then
-            test "$WEB_RESULT" = success
-            test "$RUST_RESULT" = success
-            test "$BROWSER_RESULT" = success
-          else
-            test "$WEB_RESULT" = skipped
-            test "$RUST_RESULT" = skipped
-            test "$BROWSER_RESULT" = skipped
-          fi
+          case "$CODE_CHANGED" in
+            true)
+              test "$WEB_RESULT" = success
+              test "$RUST_RESULT" = success
+              test "$BROWSER_RESULT" = success
+              ;;
+            false)
+              test "$WEB_RESULT" = skipped
+              test "$RUST_RESULT" = skipped
+              test "$BROWSER_RESULT" = skipped
+              ;;
+            *) exit 1 ;;
+          esac

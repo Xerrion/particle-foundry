@@ -1,12 +1,13 @@
 # Project structure
 
-**Current layout: 30 September 2026.** TypeScript lives in `web/`. `engine/` contains
+**Current layout: 5 October 2026.** TypeScript lives in `web/`. `engine/` contains
 the E01 Rust/WASM bootstrap, E02 portable contracts and the experimental E07/E08
 GPU scene, with
 [scoped engine guidance](../engine/AGENTS.override.md). The running application
 still uses the existing TypeScript backend. E03 supplies an experimental host
 contract; local E08 sustained browser validation passes. E09 has an isolated
-saturated-water CPU reference. E04 circuits and E10-E14 remain planned.
+saturated and single-phase water CPU reference. E04 circuits and E10-E14 remain
+planned.
 Start with [the knowledge map](README.md).
 
 ## Current checkout
@@ -16,7 +17,8 @@ particle-foundry/
   AGENTS.md                         Project development rules
   README.md                         Quick start and navigation
   mise.toml                         Root tool versions and task orchestration
-  .github/workflows/                CI uses the same mise tasks
+  .github/workflows/                GitHub CI uses the same mise tasks
+  .forgejo/ci/                       Inactive helpers from the former Forgejo setup
   web/
     index.html                      Live legacy Vite browser entry
     gpu.html                        Opt-in experimental GPU preview entry

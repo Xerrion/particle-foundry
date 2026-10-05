@@ -58,7 +58,8 @@ Keep dependent edits sequential and review the combined diff before delivery.
 - Work on feature branches. Preserve unrelated tracked and untracked changes.
   Use small, atomic commits with conventional prefixes such as `feat:`, `fix:`, `docs:` and `refactor:`.
   NEVER commit a change that knowingly breaks existing tests.
-- Use `gh` for GitHub operations. Follow the [merge policy](.github/README.md).
+- Use `gh` for operations on the primary GitHub repository.
+  Follow the [CI and merge policy](.github/README.md).
   Create commits and draft PRs when the assigned task includes delivery.
   Passing checks do not authorize a merge or deployment.
 
@@ -93,7 +94,7 @@ Use the work manifests and live Linear project for status. Keep test results in 
 | `web/` configuration | Bun package/lockfile, Vite, TypeScript, Biome and browser HTML |
 | `engine/` | Rust workspace, portable contracts and experimental GPU scene; see `engine/AGENTS.override.md` |
 | `docs/README.md` | Knowledge map by question and topic; `docs/START_HERE.md` is the engine migration brief |
-| `mise.toml`, `.github/workflows/` | Root toolchain/task orchestration and CI |
+| `mise.toml`, `.github/workflows/` | Root toolchain/task orchestration and GitHub CI |
 
 ## Architecture boundaries
 
@@ -175,10 +176,12 @@ Add `--sustained-gpu` when the assigned acceptance gate requires the sustained f
 Native GPU success does not validate browser behavior. Default Rust tests omit explicitly ignored hardware fixtures.
 Report hardware-dependent or unrun checks explicitly. Do not report planned migration gates as passed.
 
-GitHub CI uses standard hosted runners and separate docs, web, Rust and browser jobs.
+GitHub CI uses standard Ubuntu runners and separate docs, web, Rust and browser jobs.
 The final `verify` job requires all applicable jobs. See the workflow and merge policy for path-filter behavior.
-Do not configure paid or larger GPU runners without explicit user approval.
+The workflow installs pinned tools, Rust and Chrome in the job environment.
+Do not configure additional or paid GPU runners without explicit user approval.
 Keep required GPU validation as separate local hardware evidence.
+The retained `.forgejo/ci/` helpers are inactive former tooling. See [.forgejo/README.md](.forgejo/README.md).
 
 ## Documentation and change discipline
 

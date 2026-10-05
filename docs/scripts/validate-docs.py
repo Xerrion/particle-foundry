@@ -303,6 +303,7 @@ def main() -> int:
         docs = sorted([
             *ROOT.rglob("*.md"), *ROOT.rglob("*.html"),
             PROJECT_ROOT / "README.md", PROJECT_ROOT / "AGENTS.md",
+            PROJECT_ROOT / ".forgejo/README.md",
             PROJECT_ROOT / "engine/AGENTS.override.md",
         ])
         anchor_cache: dict[Path,set[str]] = {}

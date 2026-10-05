@@ -18,8 +18,9 @@ experimental 480 x 270 browser scene that directly renders committed GPU
 state. Bounded paint, inspection, pause and reset have passed isolated browser
 checks, and a local Chrome run completed 60 sustained ticks. M3 passed local
 checks; the broader current-sandbox migration remains incomplete.
-E09 now has an isolated saturated-water CPU reference. It closes phase amounts
-from mass, internal energy and actual volume. [Thermodynamics](thermodynamics.md)
+E09 has an isolated water/carrier-air CPU reference with saturation, single-phase
+closure and finite gas exchange against a prescribed reservoir. It closes phase
+amounts from component masses, internal energy and actual volume. [Thermodynamics](thermodynamics.md)
 owns its bounded domain; [E09 evidence](validation/p1-m4-e09.md) records its limits.
 The live sandbox still uses TypeScript. See
 [E05 validation](validation/p1-m2-e05.md) and
@@ -34,6 +35,8 @@ A plan or reference entry is not evidence of implementation.
 | Question | Start here | Read further when needed |
 | --- | --- | --- |
 | Where does behavior belong? | [Project structure](project-structure.md) | [Existing controls and sandbox](legacy-sandbox.md) |
+| How does CI run and what must pass before merging? | [GitHub CI and merge policy](../.github/README.md) | [mise tasks](../mise.toml) |
+| How does Coolify deploy the browser application? | [Coolify deployment](deployment.md) | [GitHub CI and merge policy](../.github/README.md) |
 | How does the simulation behave? | [Physical model](model.md) | [Combustion](combustion.md), [elements](elements.md) and the relevant source/tests |
 | Why was this architecture chosen? | [ADR-001](architecture/adr-001-rust-wasm-wgpu.md) | [Engine boundary](architecture/engine-boundary.md), [matter model](architecture/matter-model.md) |
 | What should an assigned migration item deliver? | [Active work](remaining-work.md) | Its controlling plan, dependencies and acceptance gates below |
@@ -66,7 +69,7 @@ evidence. Generated HTML is a view of its canonical Markdown, not a second sourc
 - [Project structure](project-structure.md): current module ownership, browser/engine boundary and proposed Rust placement.
 - [Existing sandbox](legacy-sandbox.md): controls, tools, materials and current TypeScript implementation.
 - [Physical model](model.md): units, state ownership, conservation, solver limitations and explicitly planned model changes.
-- [Thermodynamics](thermodynamics.md): isolated E09 water closure, IF97 source, generated table, source heat and unsupported domains.
+- [Thermodynamics](thermodynamics.md): isolated E09 water/carrier-air closure, IF97 tables, source heat, finite gas ventilation and unsupported domains.
 - [Combustion](combustion.md): ignition, generic fuels, explicit oxidation, tick ordering, known defects and regression coverage.
 - [Elements](elements.md): eight documented legacy elemental models and a separately labelled future roster. The [roster manifest](data/element-roadmap.json) and [schema](data/element-roadmap.schema.json) are planning data, not runtime properties.
 

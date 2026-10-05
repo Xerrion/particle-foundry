@@ -1,8 +1,13 @@
-# GitHub merge policy
+# GitHub CI and merge policy
+
+The primary repository is
+[Xerrion/particle-foundry](https://github.com/Xerrion/particle-foundry).
+GitHub Actions runs the pinned mise tasks. The retained
+[Forgejo tooling](../.forgejo/README.md) is inactive former configuration.
 
 ## Repository settings
 
-Verified against GitHub on 2026-09-30:
+Verified against GitHub on 2026-10-05:
 
 - The repository is public.
 - Squash merge is the only allowed merge method, keeping one commit per PR.
@@ -14,7 +19,7 @@ Verified against GitHub on 2026-09-30:
   requires a pull request, resolved review threads, linear history and the
   `verify` status check. It blocks branch deletion and force pushes.
 
-## Current limitations and CI coverage
+## Checks and merge requirements
 
 The ruleset requires no approving review, and auto-merge is disabled. Confirm
 that `verify` passes and review conversations are resolved before squash merging.
@@ -22,10 +27,21 @@ that `verify` passes and review conversations are resolved before squash merging
 CI runs once for each pull request update and once after a push to `main`.
 The documentation check always runs. Changes confined to `docs/` skip the web,
 Rust and browser jobs; every other change runs all three in parallel. The final
-`verify` job fails if any applicable job fails or is missing. `mise run ci` remains
-the complete local check. Splitting jobs gives earlier results. The Rust test
+`verify` job fails if any applicable job fails or is missing. The web, Rust and
+browser jobs use `ci:web`, `ci:rust` and `ci:browser`. `mise run ci` remains
+the complete local check. The Rust test
 profile optimizes the long numerical refinement fixture while keeping debug
 assertions and overflow checks; a cold runner must still compile its test binaries.
+
+Use a feature branch and a conventional PR title. Review the complete change.
+Passing checks do not authorize a merge or deployment.
+
+Coolify's GitHub App integration owns the intended production and native PR
+preview triggers. Production auto-deploy follows a merge to protected `main`.
+GitHub Actions does not need a copied Coolify API token for this setup.
+See [Coolify deployment](../docs/deployment.md) for configuration and verification.
+
+## Browser evidence
 
 The browser job runs on standard `ubuntu-latest`. Its smoke test passes when no
 WebGPU adapter exists, and the report records `gpu.status: unavailable`. A green

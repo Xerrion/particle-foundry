@@ -1,9 +1,28 @@
-//! Isolated E09 pure-water saturation reference. Conserved mass, internal energy
+//! Isolated E09 water and carrier-air thermodynamic reference. Conserved masses, internal energy
 //! and available volume determine phase amounts. This is not a fluid stage.
-//! No GPU, air mixture, legacy conversion or fire property support is implied.
+//! No GPU, legacy conversion or fire property support is implied.
 
 mod if97;
+mod mixture;
+mod single_phase;
 mod table;
+mod vent;
+
+pub use mixture::{
+    AIR_GAS_CONSTANT_J_KG_K, AIR_HEAT_CAPACITY_J_KG_K, AIR_REFERENCE_TEMPERATURE_K,
+    MAX_MIXTURE_PRESSURE_PA, MIXTURE_PROPERTY_VERSION, MixtureEquilibrium, MixtureInventory,
+    MixtureVessel, close_mixture,
+};
+
+pub use vent::{
+    MAX_VENT_GAS_FRACTION, MAX_VENT_RELATIVE_PRESSURE_DIFFERENCE, VentError, VentExchange,
+    VentReservoir, VentStep,
+};
+
+pub use single_phase::{
+    MAX_PRESSURE_PA, MIN_TEMPERATURE_K, SINGLE_PHASE_PROPERTY_VERSION, WaterPhase, WaterProperties,
+    WaterTable,
+};
 
 pub use table::{
     MAX_TEMPERATURE_K, MIN_PRESSURE_PA, SaturationProperties, SaturationTable,
@@ -15,13 +34,15 @@ pub use table::{
 pub enum WaterError {
     /// An input or a derived specific quantity is not finite.
     NonFiniteInput,
-    /// Mass and available volume must both be positive.
+    /// Component masses must be nonnegative; total mass and volume must be positive.
     NonPositiveInventory,
     /// A property lookup temperature is outside the bounded table.
     TemperatureOutsideTable,
-    /// No liquid/vapor equilibrium fits the inventory within this table.
+    /// A pressure query is outside 10 kPa to 20 MPa.
+    PressureOutsideTable,
+    /// No equilibrium fits the inventory within the selected property domain.
     UnsupportedEquilibrium,
-    /// The bounded nonlinear solve did not meet its energy tolerance.
+    /// The bounded nonlinear solve did not meet its residual tolerance.
     IterationLimit,
 }
 
@@ -69,7 +90,7 @@ impl WaterInventory {
 pub struct WaterEquilibrium {
     /// Common temperature, in K.
     pub temperature_k: f64,
-    /// Saturation pressure p0, in Pa. This is not mechanical projection pressure.
+    /// Chamber pressure p0, in Pa. This is not mechanical projection pressure.
     pub pressure_pa: f64,
     /// Vapor mass divided by total water mass, between zero and one.
     pub vapor_mass_fraction: f64,
@@ -83,16 +104,24 @@ pub struct WaterEquilibrium {
     pub vapor_volume_m3: f64,
     /// Signed reconstructed energy minus conserved input, in J.
     pub energy_residual_j: f64,
-    /// Number of energy bisections. Feasible-volume bracketing uses at most 64 more.
+    /// Number of energy bisections in the accepted temperature bracket.
     pub iterations: u32,
 }
 
-/// Solves equilibrium from conserved inputs within the saturated two-phase domain.
-///
-/// Saturated endpoints are supported. Compressed liquid, superheated vapor and
-/// states outside the table return `UnsupportedEquilibrium`. Each solve uses at
-/// most 64 volume bisections and 64 energy bisections. No input changes on error.
+/// Solves saturated or stable single-phase water from conserved inputs.
+/// Unsupported candidates leave the input unchanged. Saturation has priority at
+/// phase endpoints. Each single-phase temperature interval uses at most 64 bisections.
 pub fn close_water(
+    table: &WaterTable,
+    inventory: WaterInventory,
+) -> Result<WaterEquilibrium, WaterError> {
+    match close_saturated_water(table.saturation(), inventory) {
+        Err(WaterError::UnsupportedEquilibrium) => table.close_single_phase(inventory),
+        result => result,
+    }
+}
+
+fn close_saturated_water(
     table: &SaturationTable,
     inventory: WaterInventory,
 ) -> Result<WaterEquilibrium, WaterError> {
@@ -177,7 +206,7 @@ pub struct WaterVessel {
 
 impl WaterVessel {
     /// Validates and closes an isolated pure-water vessel.
-    pub fn new(table: &SaturationTable, inventory: WaterInventory) -> Result<Self, WaterError> {
+    pub fn new(table: &WaterTable, inventory: WaterInventory) -> Result<Self, WaterError> {
         let equilibrium = close_water(table, inventory)?;
         Ok(Self {
             inventory,
@@ -196,9 +225,9 @@ impl WaterVessel {
     }
 
     /// Applies signed external heat in J to a rigid vessel. Returns the actual
-    /// representable energy change for the source ledger. Unsupported candidates leave both inventory and observations
-    /// unchanged. The caller owns the source ledger and any retry policy.
-    pub fn apply_heat(&mut self, table: &SaturationTable, heat_j: f64) -> Result<f64, WaterError> {
+    /// representable energy change for the source ledger. Unsupported candidates
+    /// leave both inventory and observations unchanged. The caller owns the source ledger and any retry policy.
+    pub fn apply_heat(&mut self, table: &WaterTable, heat_j: f64) -> Result<f64, WaterError> {
         if !heat_j.is_finite() {
             return Err(WaterError::NonFiniteInput);
         }

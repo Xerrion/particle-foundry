@@ -52,9 +52,10 @@ build og typekontrol genererer bindings i ignoreret `web/generated/wasm/`.
 | `mise run docs:render` | Generér GPU-planens HTML fra Markdown. |
 | `mise run ci` | Kør TypeScript/Rust-checks, tests, WASM-build/freshness, browser-smoke og docs. |
 
-GitHub Actions kører `mise run ci` ved push og pull requests med samme versioner og
-kommandoer som lokalt. `mise tasks` viser alle opgaver. Opgaverne installerer selv
-deres afhængigheder; ekstra argumenter sendes videre, f.eks.
+GitHub Actions kører de samme checks ved push til `main` og pull requests.
+Se [CI og mergekrav](.github/README.md). `mise run ci` kører alle checks lokalt
+med samme versioner og kommandoer. `mise tasks` viser alle opgaver.
+Opgaverne installerer selv deres afhængigheder; ekstra argumenter sendes videre, f.eks.
 `mise run dev --host 127.0.0.1`.
 
 Browser-smoke bruger Chrome; `CHROME_BIN` kan vælge en anden executable. Kør
@@ -76,6 +77,11 @@ Start i [projektets vidensbase](docs/README.md). Se
 [betjening og eksisterende implementering](docs/legacy-sandbox.md),
 [projektstrukturen](docs/project-structure.md) og
 [Rust-motorens placering](docs/project-structure.md#rust-workspace).
+
+GitHub er projektets primære repository. Coolify bygger fortsat appen på den
+eksisterende server. [Deployguiden](docs/deployment.md) beskriver opsætningen med
+GitHub App, automatisk deploy fra beskyttet `main` og native PR-previews.
+Live opsætning og browserkontrol skal verificeres særskilt.
 
 Den kørende motor er samlet i `web/src/legacy/`. Browserens kontroller bruger
 `web/src/engine-client/`. E01-bootstrap og E02-kontrakter er implementeret.
