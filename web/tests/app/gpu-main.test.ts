@@ -32,6 +32,7 @@ function status(): string {
 
 const scene: BrowserGpuSceneSession = {
 	backend: () => "BrowserWebGpu",
+	adapter_info_json: () => "{}",
 	status_json: status,
 	render: () => {
 		renderCalls++;

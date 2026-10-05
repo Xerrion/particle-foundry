@@ -18,6 +18,7 @@ mod browser_scene {
         owner: Option<GpuBrowserScene>,
         latest: GpuBrowserProgress,
         backend: String,
+        adapter_info_json: String,
         disposed: bool,
         reset_pending: bool,
     }
@@ -45,6 +46,15 @@ mod browser_scene {
                 return Err(JsValue::from_str("GPU browser scene disposed"));
             }
             Ok(state.backend.clone())
+        }
+
+        /// Returns identity reported by the adapter that owns this scene.
+        pub fn adapter_info_json(&self) -> Result<String, JsValue> {
+            let state = self.state.borrow();
+            if state.disposed {
+                return Err(JsValue::from_str("GPU browser scene disposed"));
+            }
+            Ok(state.adapter_info_json.clone())
         }
 
         /// Renders only the latest committed generation. A busy owner leaves
@@ -281,11 +291,28 @@ mod browser_scene {
             .map_err(|error| JsValue::from_str(&error))?;
         let latest = owner.progress();
         let backend = owner.backend();
+        let info = owner.adapter_info();
+        let identity = js_sys::Object::new();
+        for (key, value) in [
+            ("name", JsValue::from_str(&info.name)),
+            ("vendor", JsValue::from_f64(f64::from(info.vendor))),
+            ("device", JsValue::from_f64(f64::from(info.device))),
+            ("backend", JsValue::from_str(&backend)),
+            (
+                "deviceType",
+                JsValue::from_str(&format!("{:?}", info.device_type)),
+            ),
+            ("driver", JsValue::from_str(&info.driver)),
+        ] {
+            js_sys::Reflect::set(&identity, &JsValue::from_str(key), &value)?;
+        }
+        let adapter_info_json = String::from(js_sys::JSON::stringify(&identity)?);
         Ok(BrowserGpuScene {
             state: Rc::new(RefCell::new(State {
                 owner: Some(owner),
                 latest,
                 backend,
+                adapter_info_json,
                 disposed: false,
                 reset_pending: false,
             })),
@@ -335,7 +362,7 @@ mod browser_scene {
             value.map_or_else(|| "null".to_owned(), |value| value.to_string())
         }
         format!(
-            "{{\"acceptedSubsteps\":{},\"completedOuterTick\":{},\"epoch\":{},\"tick\":{},\"acceptedTimeS\":{},\"remainingOuterS\":{},\"committedGeneration\":{},\"stateRevision\":{},\"scaledResidual\":{},\"scaledDivergence\":{},\"pressureIterations\":{},\"encodedTimeErrorS\":{},\"readbackBytes\":{}}}",
+            "{{\"acceptedSubsteps\":{},\"completedOuterTick\":{},\"epoch\":{},\"tick\":{},\"acceptedTimeS\":{},\"remainingOuterS\":{},\"committedGeneration\":{},\"stateRevision\":{},\"scaledResidual\":{},\"scaledDivergence\":{},\"pressureIterations\":{},\"encodedTimeErrorS\":{},\"readbackBytes\":{},\"attemptedCandidates\":{},\"refinementRetries\":{},\"rejectedReadbackBytes\":{}}}",
             advance.accepted_substeps,
             advance.completed_outer_tick,
             advance.progress.epoch,
@@ -349,6 +376,9 @@ mod browser_scene {
             optional(advance.pressure_iterations),
             optional(advance.encoded_time_error_s),
             advance.readback_bytes,
+            advance.attempted_candidates,
+            advance.refinement_retries,
+            advance.rejected_readback_bytes,
         )
     }
 

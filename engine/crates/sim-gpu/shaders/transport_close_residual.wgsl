@@ -50,8 +50,8 @@ fn cell_residual(@builtin(global_invocation_id) global_id: vec3<u32>) {
     }
     let liquid_volume = masses[cell] / params.liquid_density;
     let carrier_volume = masses[params.cells + cell] / params.carrier_density;
-    let fill = (liquid_volume + carrier_volume) / params.cell_volume;
-    if !(finite(fill) && fill > 0.0) {
+    let volume = liquid_volume + carrier_volume;
+    if !(finite(volume) && volume > 0.0) {
         atomicOr(&status[0], INVALID_CELL);
         return;
     }
@@ -64,7 +64,7 @@ fn cell_residual(@builtin(global_invocation_id) global_id: vec3<u32>) {
                    + raw_flux(v_velocity[top_face + params.width],
                               v_aperture[top_face + params.width])
                    - raw_flux(v_velocity[top_face], v_aperture[top_face]);
-    let source_error = fill - 1.0;
+    let source_error = (volume - params.cell_volume) / params.cell_volume;
     let excess_source_error = select(0.0, source_error - sign(source_error)
                                      * PACKED_SOURCE_DEADBAND,
                                      abs(source_error) > PACKED_SOURCE_DEADBAND);

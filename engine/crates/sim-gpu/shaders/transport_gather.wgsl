@@ -50,7 +50,12 @@ fn gather_amount(owned: f32, negative_face: f32, positive_face: f32) -> f32 {
         atomicOr(&status[0], DONOR_OVERDRAW);
         return 0.0;
     }
-    let result = (owned - outgoing) + incoming;
+    // Combine small opposing flows before adding them to the inventory. Near
+    // exhaustion, subtract first so a small surviving amount remains resolved.
+    var result = (owned - outgoing) + incoming;
+    if outgoing <= 0.5 * owned {
+        result = fma(1.0, owned, fma(-1.0, outgoing, incoming));
+    }
     if !(finite(result) && result >= 0.0) {
         atomicOr(&status[0], INVALID_CELL);
         return 0.0;

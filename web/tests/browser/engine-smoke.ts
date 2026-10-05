@@ -40,6 +40,62 @@ type GpuSceneReport = {
 	rejectionKeptCommittedState: boolean;
 };
 
+type GpuAdapterReport = {
+	name: string;
+	vendor: number;
+	device: number;
+	backend: string;
+	deviceType: string;
+	driver: string;
+};
+
+type GpuAttemptAccounting = {
+	acceptedSubsteps: number;
+	attemptedCandidates: number;
+	refinementRetries: number;
+	readbackBytes: number;
+	rejectedReadbackBytes: number;
+};
+
+function checkGpuAttemptAccounting(report: GpuAttemptAccounting, label: string): void {
+	if (
+		[
+			report.acceptedSubsteps,
+			report.attemptedCandidates,
+			report.refinementRetries,
+			report.readbackBytes,
+			report.rejectedReadbackBytes,
+		].some((value) => !Number.isSafeInteger(value) || value < 0) ||
+		report.acceptedSubsteps < 1 ||
+		report.acceptedSubsteps > 8 ||
+		report.attemptedCandidates < report.acceptedSubsteps ||
+		report.attemptedCandidates > report.acceptedSubsteps * 5 ||
+		report.refinementRetries !== report.attemptedCandidates - report.acceptedSubsteps ||
+		report.readbackBytes < report.acceptedSubsteps * 92 ||
+		(report.refinementRetries === 0 && report.rejectedReadbackBytes !== 0) ||
+		report.rejectedReadbackBytes < report.refinementRetries * 20
+	) {
+		throw new Error(`${label} has invalid candidate or readback accounting`);
+	}
+}
+
+function parseGpuAdapterReport(json: string): GpuAdapterReport {
+	const value: unknown = JSON.parse(json);
+	if (!value || typeof value !== "object") throw new Error("GPU adapter report is not an object");
+	const report = value as Partial<GpuAdapterReport>;
+	if (
+		[report.name, report.backend, report.deviceType, report.driver].some(
+			(field) => typeof field !== "string",
+		) ||
+		[report.vendor, report.device].some(
+			(field) => typeof field !== "number" || !Number.isSafeInteger(field) || field < 0,
+		)
+	) {
+		throw new Error("GPU adapter report has invalid identity fields");
+	}
+	return report as GpuAdapterReport;
+}
+
 function parseGpuAbiReport(json: string, backend: string): GpuAbiReport {
 	const value: unknown = JSON.parse(json);
 	if (!value || typeof value !== "object") throw new Error("GPU ABI report is not an object");
@@ -134,6 +190,8 @@ async function settleValidationAfterDispose(
 	}
 }
 
+let gpuAdapter: GpuAdapterReport | undefined;
+
 try {
 	const wasm = await fetch(wasmAssetUrl);
 	const mime = wasm.headers.get("content-type")?.split(";")[0];
@@ -191,6 +249,7 @@ try {
 	let gpu: {
 		status: "pass" | "unavailable";
 		backend?: string;
+		adapter?: GpuAdapterReport;
 		abi?: GpuAbiReport;
 		scene?: GpuSceneReport;
 		disposeDuringValidation?: "completed" | "rejected";
@@ -210,18 +269,44 @@ try {
 			probedCells: number;
 			checkpointBytes: number;
 			readbackBytesFirstTwo: number;
+			attemptedCandidatesFirstTwo: number;
+			refinementRetriesFirstTwo: number;
+			rejectedReadbackBytesFirstTwo: number;
 			paintRevisionAdvanced: boolean;
 			staleProbeRejected: boolean;
 			staleCheckpointRejected: boolean;
 			sustained?: {
+				targetTicks: number;
 				completedTicks: number;
+				completedTicksAfter125: number;
 				acceptedSubsteps: number;
+				attemptedCandidates: number;
+				refinementRetries: number;
 				simulatedSeconds: number;
 				wallSeconds: number;
 				simulatedSecondsPerWallSecond: number;
 				p50AdvanceMs: number;
 				p95AdvanceMs: number;
 				readbackBytes: number;
+				rejectedReadbackBytes: number;
+				totalReadbackBytes: number;
+				pressureIterationBudget: number;
+				pressureObservationScope: string;
+				attemptSampleScope: string;
+				maxPressureIterations: number;
+				maxScaledResidual: number;
+				maxScaledDivergence: number;
+				maxScaledResidualAfterTick125: number;
+				maxScaledDivergenceAfterTick125: number;
+				pressureSamples: {
+					tick: number;
+					acceptedTimeS: number;
+					scaledResidual: number;
+					scaledDivergence: number;
+					pressureIterations: number;
+					attemptedCandidates: number;
+					refinementRetries: number;
+				}[];
 			};
 		};
 		error?: string;
@@ -282,6 +367,7 @@ try {
 				if (browserScene.backend() !== backend) {
 					throw new Error("Canvas scene selected the wrong browser GPU backend");
 				}
+				gpuAdapter = parseGpuAdapterReport(browserScene.adapter_info_json());
 				const initial = JSON.parse(browserScene.status_json()) as {
 					epoch: number;
 					tick: number;
@@ -363,17 +449,19 @@ try {
 						`adapter GPU height ${invalid}`,
 					);
 				}
-				const tick = JSON.parse((await browserScene.advance(8)) as string) as {
+				const tick = JSON.parse(
+					(await browserScene.advance(8)) as string,
+				) as GpuAttemptAccounting & {
 					completedOuterTick: boolean;
-					acceptedSubsteps: number;
 					epoch: number;
 					tick: number;
 					acceptedTimeS: number;
 					remainingOuterS: number;
-					readbackBytes: number;
 					scaledResidual: number;
 					scaledDivergence: number;
+					pressureIterations: number;
 				};
+				checkGpuAttemptAccounting(tick, "Canvas first GPU tick");
 				if (
 					!tick.completedOuterTick ||
 					!Number.isSafeInteger(tick.acceptedSubsteps) ||
@@ -384,9 +472,14 @@ try {
 					Math.abs(tick.acceptedTimeS - 1 / 60) > 1e-6 ||
 					tick.remainingOuterS !== 0 ||
 					!Number.isFinite(tick.scaledResidual) ||
+					tick.scaledResidual < 0 ||
 					tick.scaledResidual >= 1e-5 ||
 					!Number.isFinite(tick.scaledDivergence) ||
+					tick.scaledDivergence < 0 ||
 					tick.scaledDivergence >= 1e-5 ||
+					!Number.isSafeInteger(tick.pressureIterations) ||
+					tick.pressureIterations < 0 ||
+					tick.pressureIterations > 512 ||
 					!Number.isSafeInteger(tick.readbackBytes) ||
 					tick.readbackBytes < 92
 				) {
@@ -409,6 +502,7 @@ try {
 				if (!browserScene.render())
 					throw new Error("Canvas scene did not render its accepted tick");
 				const second = JSON.parse((await browserScene.advance(8)) as string) as typeof tick;
+				checkGpuAttemptAccounting(second, "Canvas second GPU tick");
 				if (
 					!second.completedOuterTick ||
 					second.acceptedSubsteps < 1 ||
@@ -417,9 +511,14 @@ try {
 					Math.abs(second.acceptedTimeS - 2 / 60) > 1e-6 ||
 					second.remainingOuterS !== 0 ||
 					!Number.isFinite(second.scaledResidual) ||
+					second.scaledResidual < 0 ||
 					second.scaledResidual >= 1e-5 ||
 					!Number.isFinite(second.scaledDivergence) ||
+					second.scaledDivergence < 0 ||
 					second.scaledDivergence >= 1e-5 ||
+					!Number.isSafeInteger(second.pressureIterations) ||
+					second.pressureIterations < 0 ||
+					second.pressureIterations > 512 ||
 					!Number.isSafeInteger(second.readbackBytes) ||
 					second.readbackBytes < 92
 				) {
@@ -450,13 +549,24 @@ try {
 				}
 				let sustained: NonNullable<NonNullable<typeof gpu.canvas>["sustained"]> | undefined;
 				if (new URL(location.href).searchParams.has("sustained-gpu")) {
+					const targetTicks = 300;
 					const started = performance.now();
 					let completedTicks = 2;
+					let completedTicksAfter125 = 0;
 					let acceptedSubsteps = 0;
+					let attemptedCandidates = 0;
+					let refinementRetries = 0;
 					let readbackBytes = 0;
+					let rejectedReadbackBytes = 0;
+					let maxPressureIterations = Math.max(tick.pressureIterations, second.pressureIterations);
 					let lastAcceptedTimeS = second.acceptedTimeS;
+					let maxScaledResidual = Math.max(tick.scaledResidual, second.scaledResidual);
+					let maxScaledDivergence = Math.max(tick.scaledDivergence, second.scaledDivergence);
+					let maxScaledResidualAfterTick125 = 0;
+					let maxScaledDivergenceAfterTick125 = 0;
+					const pressureSamples: NonNullable<typeof sustained>["pressureSamples"] = [];
 					const advanceMs: number[] = [];
-					for (let attempt = 0; completedTicks < 60 && attempt < 1_000; attempt += 1) {
+					for (let attempt = 0; completedTicks < targetTicks && attempt < 5_000; attempt += 1) {
 						const stepStarted = performance.now();
 						let reply: string;
 						try {
@@ -466,56 +576,135 @@ try {
 								`Sustained GPU advance after tick ${completedTicks} and ${lastAcceptedTimeS} s failed: ${String(error)}`,
 							);
 						}
-						const next = JSON.parse(reply) as typeof tick;
+						const next = JSON.parse(reply) as Omit<
+							typeof tick,
+							"scaledResidual" | "scaledDivergence" | "pressureIterations"
+						> & {
+							scaledResidual: number | null;
+							scaledDivergence: number | null;
+							pressureIterations: number | null;
+						};
+						checkGpuAttemptAccounting(next, `Sustained GPU advance after tick ${completedTicks}`);
 						advanceMs.push(performance.now() - stepStarted);
 						if (
 							next.epoch !== 2 ||
 							next.tick < completedTicks ||
 							next.tick > completedTicks + 1 ||
+							typeof next.completedOuterTick !== "boolean" ||
+							!Number.isFinite(next.acceptedTimeS) ||
 							next.acceptedTimeS < lastAcceptedTimeS ||
+							!Number.isFinite(next.remainingOuterS) ||
+							next.remainingOuterS < 0 ||
 							!Number.isSafeInteger(next.acceptedSubsteps) ||
 							next.acceptedSubsteps < 1 ||
 							next.acceptedSubsteps > 8 ||
 							!Number.isSafeInteger(next.readbackBytes) ||
 							next.readbackBytes < next.acceptedSubsteps * 92
 						) {
-							throw new Error("Sustained GPU advance returned invalid committed progress");
+							throw new Error(
+								`Sustained GPU advance after tick ${completedTicks} returned invalid committed progress: ${reply}`,
+							);
 						}
 						acceptedSubsteps += next.acceptedSubsteps;
+						attemptedCandidates += next.attemptedCandidates;
+						refinementRetries += next.refinementRetries;
 						readbackBytes += next.readbackBytes;
+						rejectedReadbackBytes += next.rejectedReadbackBytes;
 						lastAcceptedTimeS = next.acceptedTimeS;
 						if (next.completedOuterTick) {
 							completedTicks += 1;
 							if (
 								next.tick !== completedTicks ||
+								Math.abs(next.acceptedTimeS - completedTicks / 60) > 1e-6 ||
+								next.remainingOuterS !== 0 ||
+								typeof next.scaledResidual !== "number" ||
 								!Number.isFinite(next.scaledResidual) ||
+								next.scaledResidual < 0 ||
 								next.scaledResidual >= 1e-5 ||
+								typeof next.scaledDivergence !== "number" ||
 								!Number.isFinite(next.scaledDivergence) ||
+								next.scaledDivergence < 0 ||
 								next.scaledDivergence >= 1e-5 ||
+								typeof next.pressureIterations !== "number" ||
+								!Number.isSafeInteger(next.pressureIterations) ||
+								next.pressureIterations < 0 ||
+								next.pressureIterations > 512 ||
 								!browserScene.render()
 							) {
 								throw new Error(`Sustained GPU tick ${completedTicks} failed its gates or render`);
 							}
-						} else if (next.tick !== completedTicks || next.remainingOuterS <= 0) {
+							maxScaledResidual = Math.max(maxScaledResidual, next.scaledResidual);
+							maxScaledDivergence = Math.max(maxScaledDivergence, next.scaledDivergence);
+							maxPressureIterations = Math.max(maxPressureIterations, next.pressureIterations);
+							if (completedTicks > 125) {
+								completedTicksAfter125 += 1;
+								maxScaledResidualAfterTick125 = Math.max(
+									maxScaledResidualAfterTick125,
+									next.scaledResidual,
+								);
+								maxScaledDivergenceAfterTick125 = Math.max(
+									maxScaledDivergenceAfterTick125,
+									next.scaledDivergence,
+								);
+							}
+							if ([125, 126, 150, 200, 250, targetTicks].includes(completedTicks)) {
+								pressureSamples.push({
+									tick: completedTicks,
+									acceptedTimeS: next.acceptedTimeS,
+									scaledResidual: next.scaledResidual,
+									scaledDivergence: next.scaledDivergence,
+									pressureIterations: next.pressureIterations,
+									attemptedCandidates: next.attemptedCandidates,
+									refinementRetries: next.refinementRetries,
+								});
+							}
+						} else if (
+							next.tick !== completedTicks ||
+							next.remainingOuterS <= 0 ||
+							next.scaledResidual !== null ||
+							next.scaledDivergence !== null ||
+							next.pressureIterations !== null
+						) {
 							throw new Error("Sustained GPU pause reported invalid remaining time");
 						}
 					}
-					if (completedTicks !== 60 || Math.abs(lastAcceptedTimeS - 1) > 1e-6) {
-						throw new Error("Sustained GPU run did not complete one simulated second");
+					if (
+						completedTicks !== targetTicks ||
+						completedTicksAfter125 !== targetTicks - 125 ||
+						Math.abs(lastAcceptedTimeS - targetTicks / 60) > 1e-6
+					) {
+						throw new Error(
+							"Sustained GPU run did not complete 300 ticks over five simulated seconds",
+						);
 					}
 					const wallSeconds = (performance.now() - started) / 1_000;
 					advanceMs.sort((left, right) => left - right);
 					const percentile = (fraction: number) =>
 						advanceMs[Math.ceil(fraction * advanceMs.length) - 1];
 					sustained = {
+						targetTicks,
 						completedTicks,
+						completedTicksAfter125,
 						acceptedSubsteps,
+						attemptedCandidates,
+						refinementRetries,
 						simulatedSeconds: lastAcceptedTimeS - second.acceptedTimeS,
 						wallSeconds,
 						simulatedSecondsPerWallSecond: (lastAcceptedTimeS - second.acceptedTimeS) / wallSeconds,
 						p50AdvanceMs: percentile(0.5),
 						p95AdvanceMs: percentile(0.95),
 						readbackBytes,
+						rejectedReadbackBytes,
+						totalReadbackBytes: readbackBytes + rejectedReadbackBytes,
+						pressureIterationBudget: 512,
+						pressureObservationScope: "last accepted substep of each completed tick",
+						attemptSampleScope: "completing advance call",
+						maxPressureIterations,
+						maxScaledResidual,
+						maxScaledDivergence,
+						maxScaledResidualAfterTick125,
+						maxScaledDivergenceAfterTick125,
+						pressureSamples,
 					};
 				}
 				const beforePaint = JSON.parse(browserScene.status_json()) as {
@@ -574,6 +763,9 @@ try {
 					probedCells: 3,
 					checkpointBytes: checkpoint.byteLength,
 					readbackBytesFirstTwo: tick.readbackBytes + second.readbackBytes,
+					attemptedCandidatesFirstTwo: tick.attemptedCandidates + second.attemptedCandidates,
+					refinementRetriesFirstTwo: tick.refinementRetries + second.refinementRetries,
+					rejectedReadbackBytesFirstTwo: tick.rejectedReadbackBytes + second.rejectedReadbackBytes,
 					paintRevisionAdvanced,
 					staleProbeRejected,
 					staleCheckpointRejected,
@@ -607,6 +799,7 @@ try {
 			gpu = {
 				status: "pass",
 				backend,
+				adapter: gpuAdapter,
 				abi,
 				scene,
 				disposeDuringValidation,
@@ -642,7 +835,11 @@ try {
 		secureContext: isSecureContext,
 	});
 } catch (error) {
-	result.textContent = JSON.stringify({ status: "fail", error: String(error) });
+	result.textContent = JSON.stringify({
+		status: "fail",
+		error: String(error),
+		adapter: gpuAdapter,
+	});
 }
 
 const reportToken = new URL(location.href).searchParams.get("report-token");

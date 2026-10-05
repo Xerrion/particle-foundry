@@ -44,7 +44,13 @@ pub struct GpuBrowserAdvance {
     pub pressure_iterations: Option<u32>,
     /// Difference between accepted nominal time and encoded shader time.
     pub encoded_time_error_s: Option<f64>,
-    /// Compact GPU-to-host completion bytes mapped by this advance call.
+    /// Candidate attempts, including rejected refinement attempts.
+    pub attempted_candidates: u32,
+    /// Rejected candidates followed by a smaller duration attempt.
+    pub refinement_retries: u32,
+    /// Compact completion bytes copied by rejected attempts.
+    pub rejected_readback_bytes: u64,
+    /// Compact completion bytes copied by accepted candidates and CFL selection.
     pub readback_bytes: u64,
 }
 
@@ -85,6 +91,11 @@ impl GpuBrowserScene {
     /// Returns the selected adapter backend for diagnostics.
     pub fn backend(&self) -> String {
         self.surface.context().backend()
+    }
+
+    /// Returns the adapter that owns this scene and its canvas.
+    pub fn adapter_info(&self) -> &wgpu::AdapterInfo {
+        &self.surface.context().adapter
     }
 
     /// Returns accepted progress without mapping scene fields to JavaScript.
@@ -170,6 +181,9 @@ impl GpuBrowserScene {
                 last_pressure,
                 encoded_time_error_s,
                 readback_bytes,
+                attempted_candidates,
+                refinement_retries,
+                rejected_readback_bytes,
             } => GpuBrowserAdvance {
                 accepted_substeps,
                 completed_outer_tick: true,
@@ -179,11 +193,17 @@ impl GpuBrowserScene {
                 pressure_iterations: Some(last_pressure.iterations),
                 encoded_time_error_s: Some(encoded_time_error_s),
                 readback_bytes,
+                attempted_candidates,
+                refinement_retries,
+                rejected_readback_bytes,
             },
             GpuTickOutcome::Paused {
                 accepted_substeps,
                 remaining_s,
                 readback_bytes,
+                attempted_candidates,
+                refinement_retries,
+                rejected_readback_bytes,
             } => {
                 debug_assert_eq!(remaining_s, progress.remaining_outer_s);
                 GpuBrowserAdvance {
@@ -195,6 +215,9 @@ impl GpuBrowserScene {
                     pressure_iterations: None,
                     encoded_time_error_s: None,
                     readback_bytes,
+                    attempted_candidates,
+                    refinement_retries,
+                    rejected_readback_bytes,
                 }
             }
         })

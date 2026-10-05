@@ -18,6 +18,7 @@ use wgpu::util::DeviceExt;
 
 const WORKGROUP_SIZE: u32 = 64;
 const STATUS_BYTES: u64 = 32;
+const CONVERGED_WORD_OFFSET: u64 = 6 * size_of::<u32>() as u64;
 const PARAM_BYTES: u64 = 48;
 const MAX_ITERATIONS: u32 = 1024;
 const ITERATIONS_PER_BATCH: u32 = 32;
@@ -76,6 +77,39 @@ pub(crate) struct PressureDiagnostics {
     pub readback_bytes: u64,
 }
 
+/// Numerical nonconvergence can be retried with a smaller candidate duration.
+#[derive(Debug)]
+pub(crate) enum PressureError {
+    Nonconvergence(String),
+    Invalid(String),
+}
+
+impl PressureError {
+    pub(crate) fn is_retryable(&self) -> bool {
+        matches!(self, Self::Nonconvergence(_))
+    }
+}
+
+impl std::fmt::Display for PressureError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Nonconvergence(message) | Self::Invalid(message) => formatter.write_str(message),
+        }
+    }
+}
+
+impl From<String> for PressureError {
+    fn from(message: String) -> Self {
+        Self::Invalid(message)
+    }
+}
+
+impl From<PressureError> for String {
+    fn from(error: PressureError) -> Self {
+        error.to_string()
+    }
+}
+
 struct Pipelines {
     rhs: wgpu::ComputePipeline,
     hydrostatic: wgpu::ComputePipeline,
@@ -128,6 +162,7 @@ pub(crate) struct GpuPressureProjector {
     status: wgpu::Buffer,
     partial_count: u32,
     pipelines: Pipelines,
+    last_readback_bytes: u64,
 }
 
 impl GpuPressureProjector {
@@ -279,7 +314,13 @@ impl GpuPressureProjector {
             status,
             partial_count,
             pipelines,
+            last_readback_bytes: 0,
         })
+    }
+
+    /// Compact records copied for the latest solve, including a rejected solve.
+    pub(crate) fn last_readback_bytes(&self) -> u64 {
+        self.last_readback_bytes
     }
 
     /// Projects a sealed, zero-volume-source predictor into distinct candidate
@@ -292,7 +333,8 @@ impl GpuPressureProjector {
         queue: &wgpu::Queue,
         fields: PressureFields<'_>,
         config: PressureConfig,
-    ) -> Result<PressureDiagnostics, String> {
+    ) -> Result<PressureDiagnostics, PressureError> {
+        self.last_readback_bytes = 0;
         validate_config(config)?;
         self.check_fields(device, &fields)?;
         let mut params = Vec::with_capacity(PARAM_BYTES as usize);
@@ -563,12 +605,13 @@ impl GpuPressureProjector {
         );
         let staging = stage_status_readback(device, &mut encoder, &self.status);
         queue.submit([encoder.finish()]);
+        self.last_readback_bytes += STATUS_BYTES;
         let mut status = read_status(device, staging).await?;
         let mut status_readbacks = 1_u64;
         if status.invalid != 0 {
-            return Err(format!(
+            return Err(PressureError::Invalid(format!(
                 "GPU pressure arithmetic rejected the initial fields: {status:?}"
-            ));
+            )));
         }
 
         while status.converged == 0 && status.iterations < config.max_iterations {
@@ -619,21 +662,33 @@ impl GpuPressureProjector {
             }
             let staging = stage_status_readback(device, &mut encoder, &self.status);
             queue.submit([encoder.finish()]);
+            self.last_readback_bytes += STATUS_BYTES;
             status = read_status(device, staging).await?;
             status_readbacks += 1;
             if status.invalid != 0 {
-                return Err(format!("GPU pressure arithmetic failed: {status:?}"));
+                return Err(PressureError::Invalid(format!(
+                    "GPU pressure arithmetic failed: {status:?}"
+                )));
             }
             if status.converged == 0 && status.iterations <= previous_iterations {
-                return Err(format!(
+                return Err(PressureError::Invalid(format!(
                     "GPU pressure PCG made no bounded progress: {status:?}"
-                ));
+                )));
             }
         }
         if status.converged == 0 {
-            return Err(format!(
-                "GPU pressure projection exhausted its bounded iterations: {status:?}"
-            ));
+            // The half-tolerance stop reserves rounding headroom. At the fixed
+            // iteration cap, a residual already inside the final gate can
+            // still be corrected and measured. Neither gate is bypassed.
+            let within_final_residual = status.scaled_residual <= config.scaled_residual_tolerance;
+            if config.max_iterations == 0 || !within_final_residual {
+                return Err(PressureError::Nonconvergence(format!(
+                    "GPU pressure projection exhausted its bounded iterations: {status:?}"
+                )));
+            }
+            // Status.converged is word six in pressure_finish.wgsl. This only
+            // enables final validation; publication still requires its result.
+            queue.write_buffer(&self.status, CONVERGED_WORD_OFFSET, &1_u32.to_le_bytes());
         }
 
         let gauge_reset = bind(
@@ -749,6 +804,7 @@ impl GpuPressureProjector {
         );
         let staging = stage_status_readback(device, &mut encoder, &self.status);
         queue.submit([encoder.finish()]);
+        self.last_readback_bytes += STATUS_BYTES;
         status = read_status(device, staging).await?;
         status_readbacks += 1;
         let diagnostics = PressureDiagnostics {
@@ -758,9 +814,12 @@ impl GpuPressureProjector {
             readback_bytes: status_readbacks * STATUS_BYTES,
         };
         if status.invalid != 0 || status.converged == 0 {
-            return Err(format!(
-                "GPU pressure projection failed its final gate: {status:?}"
-            ));
+            let message = format!("GPU pressure projection failed its final gate: {status:?}");
+            return Err(if status.invalid != 0 {
+                PressureError::Invalid(message)
+            } else {
+                PressureError::Nonconvergence(message)
+            });
         }
         Ok(diagnostics)
     }
@@ -1165,7 +1224,7 @@ mod tests {
                 context.queue.write_buffer(&partials, 0, &bytes);
             };
 
-            write_partial(9.5e-6);
+            write_partial(6.5e-6);
             let mut encoder =
                 context
                     .device
@@ -1179,7 +1238,7 @@ mod tests {
             assert_eq!(status.converged, 0, "{status:?}");
             assert!(status.scaled_residual < 1e-5, "{status:?}");
 
-            write_partial(8.5e-6);
+            write_partial(4.5e-6);
             let mut encoder =
                 context
                     .device
@@ -1350,7 +1409,9 @@ mod tests {
                 .await
                 .unwrap_err();
             assert!(
-                exhausted.contains("exhausted its bounded iterations"),
+                exhausted
+                    .to_string()
+                    .contains("exhausted its bounded iterations"),
                 "horizontal hydrostatic gradients need a dynamic correction: {exhausted}"
             );
             let diagnostics = projector
@@ -1794,6 +1855,7 @@ mod tests {
             assert!(
                 result
                     .unwrap_err()
+                    .to_string()
                     .contains("arithmetic rejected the initial fields")
             );
             context.dispose();

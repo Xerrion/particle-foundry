@@ -199,7 +199,7 @@ mod tests {
                     .expect("render committed generation");
                 read_render_samples(&context, &target)
             };
-            const TARGET_TICKS: u32 = 60;
+            const TARGET_TICKS: u32 = 300;
             let initial_inventory =
                 checkpoint_inventory(&scene.checkpoint_prototype().await.unwrap());
             let mut accepted = 0_u32;

@@ -19,18 +19,25 @@ use crate::{
     GpuContext,
     cfl::{GpuCflSelection, GpuCflStage},
     checkpoint::{self, CheckpointSource, CheckpointStamp},
-    density::{GpuDensityDeriver, GpuDerivedDensityCandidate},
+    density::{self, GpuDensityDeriver, GpuDerivedDensityCandidate},
     gravity::{GpuGravityCandidate, GpuGravityInput, GpuGravityStage, GpuGravityStep},
-    momentum::{GpuMomentumCandidate, GpuMomentumInput, GpuMomentumStage},
-    pressure::{GpuPressureProjector, PressureConfig, PressureDiagnostics, PressureFields},
+    momentum::{self, GpuMomentumCandidate, GpuMomentumInput, GpuMomentumStage},
+    pressure::{
+        GpuPressureProjector, PressureConfig, PressureDiagnostics, PressureError, PressureFields,
+    },
     probe::{GpuCellProbe, ProbeSample, ProbeSource, ProbeStamp},
     render::{RenderScene, RenderViewport, SceneRenderer},
-    transport::{GpuTransportCandidate, GpuTransportInput, GpuTransportStage, GpuTransportStep},
+    transport::{
+        self, GpuTransportCandidate, GpuTransportInput, GpuTransportStage, GpuTransportStep,
+    },
     viscosity::{GpuViscosityCandidate, GpuViscosityInput, GpuViscosityStage, GpuViscosityStep},
 };
 
 const STAGE_COUNT: usize = 5;
 const STAGE_STATUS_BYTES: u64 = (STAGE_COUNT * size_of::<u32>()) as u64;
+// A candidate can make one initial attempt and at most four smaller attempts.
+// Rejected attempts never consume the accepted-substep budget or model time.
+const MAX_CANDIDATE_REFINEMENTS: u32 = 4;
 // density_derive.wgsl accepts this relative deficit in cell volume closure.
 // A valid nearly pure carrier cell can therefore have density below the
 // nominal carrier phase density after f32 transport.
@@ -46,16 +53,24 @@ fn conservative_minimum_density(phase_density_kg_m3: [f32; 2]) -> f32 {
 pub(crate) enum GpuTickOutcome {
     Complete {
         accepted_substeps: u32,
+        attempted_candidates: u32,
+        refinement_retries: u32,
         last_pressure: PressureDiagnostics,
         /// Compact GPU-to-host completion bytes for accepted substeps.
         readback_bytes: u64,
+        /// Additional compact completion bytes from rejected candidates.
+        /// The CFL observation is shared with the accepted candidate.
+        rejected_readback_bytes: u64,
         /// Difference between nominal accepted time and summed f32 shader dt.
         encoded_time_error_s: f64,
     },
     Paused {
         accepted_substeps: u32,
+        attempted_candidates: u32,
+        refinement_retries: u32,
         remaining_s: f64,
         readback_bytes: u64,
+        rejected_readback_bytes: u64,
     },
 }
 
@@ -233,6 +248,8 @@ pub(crate) struct GpuCoupledScene {
     encoded_time_s: f64,
     #[cfg(test)]
     test_fault: Option<TestFaultPoint>,
+    #[cfg(test)]
+    test_numerical_rejections: u32,
 }
 
 #[cfg(test)]
@@ -240,6 +257,51 @@ pub(crate) struct GpuCoupledScene {
 enum TestFaultPoint {
     Stage(usize),
     Pressure,
+}
+
+/// Numerical gates can request a smaller detached attempt. Invalid inputs,
+/// arithmetic failures, mapping failures and injected faults stop immediately.
+#[derive(Debug)]
+enum CandidateRejection {
+    Numerical {
+        message: String,
+        readback_bytes: u64,
+    },
+    Terminal(String),
+}
+
+impl From<String> for CandidateRejection {
+    fn from(message: String) -> Self {
+        Self::Terminal(message)
+    }
+}
+
+impl From<&str> for CandidateRejection {
+    fn from(message: &str) -> Self {
+        Self::Terminal(message.into())
+    }
+}
+
+fn stage_rejection(slot: usize, name: &str, status: u32) -> CandidateRejection {
+    let retryable_bits = match slot {
+        0 => {
+            transport::STATUS_DONOR_OVERDRAW
+                | transport::STATUS_VOLUME_CLOSURE
+                | transport::STATUS_CORRECTION_LIMIT
+        }
+        1 => momentum::STATUS_DONOR_OVERDRAW,
+        2 => density::STATUS_VOLUME_CLOSURE,
+        _ => 0,
+    };
+    let message = format!("GPU {name} candidate rejected with status {status}");
+    if status != 0 && status & !retryable_bits == 0 {
+        CandidateRejection::Numerical {
+            message,
+            readback_bytes: STAGE_STATUS_BYTES,
+        }
+    } else {
+        CandidateRejection::Terminal(message)
+    }
 }
 
 impl GpuCoupledScene {
@@ -455,11 +517,14 @@ impl GpuCoupledScene {
             encoded_time_s,
             #[cfg(test)]
             test_fault: None,
+            #[cfg(test)]
+            test_numerical_rejections: 0,
         })
     }
 
-    /// Runs up to `max_substeps` detached candidates. A budget pause retains
-    /// the accepted substeps and the remaining portion of the requested tick.
+    /// Accepts up to `max_substeps` detached candidates. Each candidate permits
+    /// at most four smaller retries for numerical rejection. A budget pause
+    /// retains accepted substeps and the remaining portion of the tick.
     pub(crate) async fn advance_outer_tick(
         &mut self,
         max_substeps: u32,
@@ -476,6 +541,9 @@ impl GpuCoupledScene {
             self.remaining_outer_s
         };
         let mut readback_bytes = 0_u64;
+        let mut rejected_readback_bytes = 0_u64;
+        let mut attempted_candidates = 0_u32;
+        let mut refinement_retries = 0_u32;
         for accepted_substeps in 0..max_substeps {
             let measurement = self
                 .cfl
@@ -492,31 +560,63 @@ impl GpuCoupledScene {
             } else {
                 f64::from(self.max_viscosity_pa_s) / f64::from(minimum_density)
             };
-            let selected = measurement.select_duration(remaining_outer_s, max_nu)?;
-            let (nominal_dt_s, encoded_dt_s) = select_clock_durations(
+            let mut selected = measurement.select_duration(remaining_outer_s, max_nu)?;
+            let (mut nominal_dt_s, mut encoded_dt_s) = select_clock_durations(
                 remaining_outer_s,
                 selected,
                 self.scene.accepted_time_s - self.encoded_time_s,
             )?;
-            let next_remaining_s = remaining_outer_s - nominal_dt_s;
-            if next_remaining_s < 0.0 {
-                return Err("GPU scene selected more than remaining outer time".into());
-            }
-            let next_encoded_time = self.encoded_time_s + f64::from(encoded_dt_s);
-            if !next_encoded_time.is_finite() || next_encoded_time <= self.encoded_time_s {
-                return Err("GPU encoded time cannot advance".into());
-            }
-            let mut pressure_config = self.pressure_config;
-            pressure_config.dt_s = encoded_dt_s;
-            pressure_config.gravity_m_s2 = self.gravity_m_s2;
-            let pressure = self
-                .advance_candidate(
-                    encoded_dt_s,
-                    nominal_dt_s,
-                    self.gravity_m_s2,
-                    pressure_config,
-                )
-                .await?;
+            let mut candidate_refinements = 0_u32;
+            let (pressure, next_remaining_s, next_encoded_time) = loop {
+                let next_remaining_s = remaining_outer_s - nominal_dt_s;
+                if next_remaining_s < 0.0 {
+                    return Err("GPU scene selected more than remaining outer time".into());
+                }
+                let next_encoded_time = self.encoded_time_s + f64::from(encoded_dt_s);
+                if !next_encoded_time.is_finite() || next_encoded_time <= self.encoded_time_s {
+                    return Err("GPU encoded time cannot advance".into());
+                }
+                attempted_candidates = attempted_candidates
+                    .checked_add(1)
+                    .ok_or("GPU candidate attempt counter exhausted")?;
+                let mut pressure_config = self.pressure_config;
+                pressure_config.dt_s = encoded_dt_s;
+                pressure_config.gravity_m_s2 = self.gravity_m_s2;
+                match self
+                    .advance_candidate(
+                        encoded_dt_s,
+                        nominal_dt_s,
+                        self.gravity_m_s2,
+                        pressure_config,
+                    )
+                    .await
+                {
+                    Ok(pressure) => break (pressure, next_remaining_s, next_encoded_time),
+                    Err(CandidateRejection::Terminal(message)) => return Err(message),
+                    Err(CandidateRejection::Numerical {
+                        message,
+                        readback_bytes: rejected_bytes,
+                    }) => {
+                        rejected_readback_bytes += rejected_bytes;
+                        if candidate_refinements == MAX_CANDIDATE_REFINEMENTS {
+                            return Err(format!(
+                                "GPU candidate refinement exhausted after {} attempts at dt {encoded_dt_s}: {message}",
+                                candidate_refinements + 1,
+                            ));
+                        }
+                        selected = refined_selection(selected, nominal_dt_s)?;
+                        (nominal_dt_s, encoded_dt_s) = select_clock_durations(
+                            remaining_outer_s,
+                            selected,
+                            self.scene.accepted_time_s - self.encoded_time_s,
+                        )?;
+                        candidate_refinements += 1;
+                        refinement_retries = refinement_retries
+                            .checked_add(1)
+                            .ok_or("GPU refinement counter exhausted")?;
+                    }
+                }
+            };
             // Each accepted candidate maps an 8-byte CFL result, a 20-byte
             // stage status and the pressure solver's counted 32-byte records.
             readback_bytes += 8 + STAGE_STATUS_BYTES + pressure.readback_bytes;
@@ -527,16 +627,22 @@ impl GpuCoupledScene {
                 self.scene.tick += 1;
                 return Ok(GpuTickOutcome::Complete {
                     accepted_substeps: accepted_substeps + 1,
+                    attempted_candidates,
+                    refinement_retries,
                     last_pressure: pressure,
                     readback_bytes,
+                    rejected_readback_bytes,
                     encoded_time_error_s: self.scene.accepted_time_s - self.encoded_time_s,
                 });
             }
         }
         Ok(GpuTickOutcome::Paused {
             accepted_substeps: max_substeps,
+            attempted_candidates,
+            refinement_retries,
             remaining_s: remaining_outer_s,
             readback_bytes,
+            rejected_readback_bytes,
         })
     }
 
@@ -548,7 +654,7 @@ impl GpuCoupledScene {
         nominal_dt_s: f64,
         gravity_m_s2: f32,
         pressure_config: PressureConfig,
-    ) -> Result<PressureDiagnostics, String> {
+    ) -> Result<PressureDiagnostics, CandidateRejection> {
         let next_time = self.scene.accepted_time_s + nominal_dt_s;
         if !next_time.is_finite() || next_time <= self.scene.accepted_time_s {
             return Err("GPU accepted time cannot advance".into());
@@ -690,13 +796,11 @@ impl GpuCoupledScene {
             .enumerate()
         {
             if status != 0 {
-                return Err(format!(
-                    "GPU {name} candidate rejected with status {status}"
-                ));
+                return Err(stage_rejection(slot, name, status));
             }
             #[cfg(test)]
             if self.test_fault == Some(TestFaultPoint::Stage(slot)) {
-                return Err(format!("injected GPU candidate failure after {name}"));
+                return Err(format!("injected GPU candidate failure after {name}").into());
             }
             #[cfg(not(test))]
             let _ = slot;
@@ -718,10 +822,30 @@ impl GpuCoupledScene {
                 },
                 pressure_config,
             )
-            .await?;
+            .await
+            .map_err(|error: PressureError| {
+                // A zero solve budget is an explicit failure fixture. Do not
+                // turn it into success by reducing the pressure forcing.
+                if error.is_retryable() && pressure_config.max_iterations != 0 {
+                    CandidateRejection::Numerical {
+                        message: error.to_string(),
+                        readback_bytes: STAGE_STATUS_BYTES + self.pressure.last_readback_bytes(),
+                    }
+                } else {
+                    CandidateRejection::Terminal(error.to_string())
+                }
+            })?;
         #[cfg(test)]
         if self.test_fault == Some(TestFaultPoint::Pressure) {
             return Err("injected GPU candidate failure after pressure".into());
+        }
+        #[cfg(test)]
+        if self.test_numerical_rejections > 0 {
+            self.test_numerical_rejections -= 1;
+            return Err(CandidateRejection::Numerical {
+                message: "test numerical gate rejected candidate".into(),
+                readback_bytes: STAGE_STATUS_BYTES + pressure.readback_bytes,
+            });
         }
         let mut commit = device.create_command_encoder(&wgpu::CommandEncoderDescriptor {
             label: Some("accepted GPU inventory copy"),
@@ -739,6 +863,27 @@ impl GpuCoupledScene {
         self.scene.state_revision = next_revision;
         Ok(pressure)
     }
+}
+
+/// Halve the rejected nominal duration without exceeding either stability
+/// limit. Clock selection still owns the nominal and encoded time balance.
+fn refined_selection(
+    selected: GpuCflSelection,
+    rejected_nominal_dt_s: f64,
+) -> Result<GpuCflSelection, String> {
+    let cap_s = rejected_nominal_dt_s * 0.5;
+    let mut dt_s = cap_s as f32;
+    if f64::from(dt_s) > cap_s {
+        dt_s = f32::from_bits(dt_s.to_bits() - 1);
+    }
+    if !dt_s.is_finite() || dt_s <= 0.0 || f64::from(dt_s) > cap_s {
+        return Err("GPU refined candidate duration cannot be represented".into());
+    }
+    Ok(GpuCflSelection {
+        dt_s,
+        max_cfl_dt_s: Some(selected.max_cfl_dt_s.unwrap_or(f64::INFINITY).min(cap_s)),
+        max_diffusion_dt_s: selected.max_diffusion_dt_s,
+    })
 }
 
 /// The host clock keeps the nominal f64 outer duration. WGSL receives f32 dt.
@@ -1144,6 +1289,85 @@ mod tests {
         assert!((OUTER_DT_S - f64::from(first_encoded) - f64::from(final_encoded)).abs() < 1e-9);
     }
 
+    #[test]
+    fn numerical_refinement_halves_duration_and_retains_clock_balance() {
+        let initial = GpuCflSelection {
+            dt_s: OUTER_DT_S as f32,
+            max_cfl_dt_s: None,
+            max_diffusion_dt_s: Some(0.1),
+        };
+        let mut accepted_time = 0.0_f64;
+        let mut encoded_time = 0.0_f64;
+        for tick in 1..=1_000 {
+            let mut selection = initial;
+            let mut nominal = OUTER_DT_S;
+            let mut encoded = initial.dt_s;
+            for _ in 0..MAX_CANDIDATE_REFINEMENTS {
+                selection = refined_selection(selection, nominal).unwrap();
+                let (next_nominal, next_encoded) =
+                    select_clock_durations(OUTER_DT_S, selection, accepted_time - encoded_time)
+                        .unwrap();
+                assert!(next_nominal <= nominal * 0.5);
+                assert!(next_encoded <= encoded * 0.5);
+                assert_eq!(selection.max_diffusion_dt_s, Some(0.1));
+                nominal = next_nominal;
+                encoded = next_encoded;
+            }
+            accepted_time += nominal;
+            encoded_time += f64::from(encoded);
+            let remaining = OUTER_DT_S - nominal;
+            let final_selection = GpuCflSelection {
+                dt_s: remaining as f32,
+                ..initial
+            };
+            let (final_nominal, final_encoded) =
+                select_clock_durations(remaining, final_selection, accepted_time - encoded_time)
+                    .unwrap();
+            accepted_time += final_nominal;
+            encoded_time += f64::from(final_encoded);
+            assert!((accepted_time - f64::from(tick) * OUTER_DT_S).abs() <= 1e-10);
+            assert!((accepted_time - encoded_time).abs() < 1e-9);
+        }
+        for invalid_duration in [0.0, -1.0, f64::NAN, f64::INFINITY, f64::MIN_POSITIVE] {
+            assert!(refined_selection(initial, invalid_duration).is_err());
+        }
+    }
+
+    #[test]
+    fn stage_refinement_excludes_invalid_fields_and_arithmetic() {
+        for (slot, status) in [
+            (0, transport::STATUS_DONOR_OVERDRAW),
+            (0, transport::STATUS_VOLUME_CLOSURE),
+            (0, transport::STATUS_CORRECTION_LIMIT),
+            (1, momentum::STATUS_DONOR_OVERDRAW),
+            (2, density::STATUS_VOLUME_CLOSURE),
+        ] {
+            assert!(matches!(
+                stage_rejection(slot, "fixture", status),
+                CandidateRejection::Numerical { .. }
+            ));
+        }
+        for (slot, status) in [
+            (0, transport::STATUS_INVALID_FACE),
+            (0, transport::STATUS_INVALID_CELL),
+            (
+                0,
+                transport::STATUS_VOLUME_CLOSURE | transport::STATUS_INVALID_CELL,
+            ),
+            (0, 1 << 31),
+            (1, momentum::STATUS_INVALID_LEDGER),
+            (1, momentum::STATUS_EMPTY_OPEN_FACE),
+            (2, density::STATUS_INVALID_CELL),
+            (3, crate::viscosity::STATUS_NONFINITE_RESULT),
+            (4, crate::gravity::STATUS_NONFINITE_RESULT),
+        ] {
+            assert!(matches!(
+                stage_rejection(slot, "fixture", status),
+                CandidateRejection::Terminal(_)
+            ));
+        }
+    }
+
     struct Notify(std::thread::Thread);
 
     impl Wake for Notify {
@@ -1203,6 +1427,120 @@ mod tests {
             assert_eq!(scene.scene.committed_index, 1 - before_index);
             assert_eq!(scene.scene.tick, 8);
             assert!((scene.scene.accepted_time_s - before_time - OUTER_DT_S).abs() < 1e-15);
+        });
+    }
+
+    #[test]
+    #[ignore = "requires a native GPU compute adapter"]
+    fn numerical_retry_counts_attempts_and_respects_accepted_substep_budget() {
+        block_on(async {
+            let context = GpuContext::new().await.unwrap();
+            let mut scene = GpuCoupledScene::new(
+                &context,
+                uniform_air_seed(),
+                GpuScenePhysics {
+                    cell_dynamic_viscosity_pa_s: Some(vec![0.001; 4]),
+                    gravity_m_s2: 0.0,
+                    pressure: PressureConfig::default(),
+                },
+            )
+            .unwrap();
+            let before = scene.progress();
+            let committed_before = read_fixture_committed_state(&scene.scene).await.unwrap();
+            scene.test_numerical_rejections = 1;
+            let GpuTickOutcome::Paused {
+                accepted_substeps,
+                attempted_candidates,
+                refinement_retries,
+                remaining_s,
+                readback_bytes,
+                rejected_readback_bytes,
+            } = scene.advance_outer_tick(1).await.unwrap()
+            else {
+                panic!("one accepted refined step must pause with remaining time");
+            };
+            assert_eq!(accepted_substeps, 1);
+            assert_eq!(attempted_candidates, 2);
+            assert_eq!(refinement_retries, 1);
+            assert!(rejected_readback_bytes >= STAGE_STATUS_BYTES + 32);
+            assert_eq!(readback_bytes, rejected_readback_bytes + 8);
+            assert_eq!(scene.scene.tick, before.tick);
+            assert_eq!(scene.scene.state_revision, before.state_revision + 1);
+            assert_eq!(scene.scene.committed_index, 1 - before.committed_generation);
+            assert!(remaining_s >= OUTER_DT_S * 0.5);
+            assert!(
+                (remaining_s + scene.scene.accepted_time_s - before.accepted_time_s - OUTER_DT_S)
+                    .abs()
+                    < 1e-15
+            );
+            assert_eq!(
+                read_fixture_committed_state(&scene.scene).await.unwrap(),
+                committed_before
+            );
+            let GpuTickOutcome::Complete {
+                accepted_substeps,
+                attempted_candidates,
+                refinement_retries,
+                rejected_readback_bytes,
+                encoded_time_error_s,
+                ..
+            } = scene.advance_outer_tick(1).await.unwrap()
+            else {
+                panic!("the remaining zero-force step must complete the outer tick");
+            };
+            assert_eq!(accepted_substeps, 1);
+            assert_eq!(attempted_candidates, 1);
+            assert_eq!(refinement_retries, 0);
+            assert_eq!(rejected_readback_bytes, 0);
+            assert_eq!(scene.scene.tick, before.tick + 1);
+            assert_eq!(scene.remaining_outer_s, 0.0);
+            assert!(
+                (scene.scene.accepted_time_s - before.accepted_time_s - OUTER_DT_S).abs() < 1e-15
+            );
+            assert!(encoded_time_error_s.abs() < 1e-9);
+        });
+    }
+
+    #[test]
+    #[ignore = "requires a native GPU compute adapter"]
+    fn numerical_refinement_exhaustion_preserves_committed_fields_and_time() {
+        block_on(async {
+            let context = GpuContext::new().await.unwrap();
+            let mut scene = GpuCoupledScene::new(
+                &context,
+                uniform_air_seed(),
+                GpuScenePhysics {
+                    cell_dynamic_viscosity_pa_s: None,
+                    gravity_m_s2: 0.0,
+                    pressure: PressureConfig::default(),
+                },
+            )
+            .unwrap();
+            let before = scene.progress();
+            let encoded_before = scene.encoded_time_s;
+            let committed_before = read_fixture_committed_state(&scene.scene).await.unwrap();
+            scene.test_numerical_rejections = MAX_CANDIDATE_REFINEMENTS + 1;
+            let error = scene.advance_outer_tick(1).await.unwrap_err();
+            assert!(
+                error.contains("refinement exhausted after 5 attempts"),
+                "{error}"
+            );
+            assert_eq!(scene.test_numerical_rejections, 0);
+            assert_eq!(scene.progress(), before);
+            assert_eq!(scene.encoded_time_s, encoded_before);
+            assert_eq!(
+                read_fixture_committed_state(&scene.scene).await.unwrap(),
+                committed_before
+            );
+            assert!(matches!(
+                scene.advance_outer_tick(1).await.unwrap(),
+                GpuTickOutcome::Complete {
+                    accepted_substeps: 1,
+                    attempted_candidates: 1,
+                    refinement_retries: 0,
+                    ..
+                }
+            ));
         });
     }
 

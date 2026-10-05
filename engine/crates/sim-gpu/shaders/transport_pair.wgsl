@@ -69,11 +69,20 @@ fn pair(id: u32, axis: u32, parity: u32) {
     }
     let negative = residual[negative_cell];
     let positive = residual[positive_cell];
-    let delta = 0.25 * (negative - positive);
+    // A parity pass owns disjoint pairs. Half the difference equalizes them
+    // while preserving their sum and the local residual bounds.
+    let delta = 0.5 * (negative - positive);
     if delta == 0.0 {
         return;
     }
-    let correction_cfl = delta / open;
+    let requested_cfl = delta / open;
+    if !finite(requested_cfl) {
+        atomicOr(&status[0], CORRECTION_LIMIT);
+        return;
+    }
+    // A large pair imbalance can use several bounded rounds. Limit this
+    // conservative transfer rather than reject a finite requested correction.
+    let correction_cfl = clamp(requested_cfl, -MAX_CORRECTION_CFL, MAX_CORRECTION_CFL);
     let corrected = previous + correction_cfl * CELL_WIDTH_M / params.dt_s;
     if !(finite(corrected) && finite(correction_cfl)
          && abs(correction_cfl) <= MAX_CORRECTION_CFL) {
