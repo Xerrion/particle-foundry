@@ -21,6 +21,7 @@ RUN apt-get update \
         libncursesw6 libreadline8t64 libsqlite3-0 libtcl8.6 libtk8.6 libuuid1 \
         tar xz-utils zlib1g zstd \
     && curl --fail --location --retry 3 \
+        --proto '=https' --proto-redir '=https' --tlsv1.2 \
         https://dl.google.com/linux/chrome/deb/pool/main/g/google-chrome-stable/google-chrome-stable_154.0.8037.97-1_amd64.deb \
         --output /tmp/google-chrome.deb \
     && printf '%s  %s\n' \

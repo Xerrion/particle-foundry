@@ -121,6 +121,23 @@ existing data under `/data/forgejo/` and storage volumes remain available.
 The authoritative GitHub repository and its application deployments continue
 independently. Stopping this service does not authorize deletion of its data.
 
+### Runner verification
+
+The first [runner CI run](https://github.com/Xerrion/particle-foundry/actions/runs/37379127856)
+passed all six jobs at signed source `5edc9ee`. GitHub assigned `docs`, `rust`
+and `verify` to `particle-foundry-charles-1`, and `changes`, `web` and `browser`
+to `particle-foundry-charles-2`. The initial docs and changes jobs
+started at the same time. This establishes actual two-slot execution, beyond
+registration alone. Both runner IDs remained unchanged after individual
+container recreation, with no new registration token. The runtime checks
+confirmed UID 1001, CPU/memory/shared-memory limits, dropped capabilities,
+no published ports and no Docker socket. Chrome's sandbox probe passed.
+
+The ordinary browser artifact reported GPU unavailability and passed its
+WASM and fallback checks. This CPU-runner result does not replace the
+separate required-GPU evidence. The subsequent image correction restricts
+Chrome download redirects to HTTPS and retains the same checked package hash.
+
 ## Verified setup
 
 Setup checks ran on 2026-10-05. [Migration PR #9](https://github.com/Xerrion/particle-foundry/pull/9)

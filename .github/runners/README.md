@@ -7,8 +7,9 @@ Workflow routing belongs in [ci.yml](../workflows/ci.yml).
 
 Each slot has a two-CPU limit, a 4 GiB memory limit, 1 GiB shared memory, an init
 process and its own configuration, work and cache volumes. The combined limits
-leave capacity for the other services on Charles. Actual CI duration and peak
-memory still need validation on this host.
+leave capacity for the other services on Charles. The first
+[full CI run](https://github.com/Xerrion/particle-foundry/actions/runs/37379127856)
+passed all six jobs on these two runners. Peak memory was not recorded.
 
 The containers run as UID/GID `1001:1001`, drop all capabilities and enable
 `no-new-privileges`. They have no host Docker socket, host network, published
@@ -28,7 +29,8 @@ installed during the image build.
 Chrome is `154.0.8037.97-1`, downloaded from Google's official Debian package
 URL. The build verifies SHA256
 `a4edbe95e9b01db6c9b97d7a1323121eda18362b5620df06abac1b59bee80053`
-before installation. Chrome runs with its sandbox enabled. CI uses headless
+before installation. Initial requests and redirects are restricted to HTTPS.
+Chrome runs with its sandbox enabled. CI uses headless
 Chrome and localhost ports `4174` and `4175`; it needs no Xvfb or public port.
 
 [seccomp-profile.json](seccomp-profile.json) comes from
