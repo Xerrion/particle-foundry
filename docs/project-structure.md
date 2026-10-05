@@ -18,7 +18,6 @@ particle-foundry/
   README.md                         Quick start and navigation
   mise.toml                         Root tool versions and task orchestration
   .github/workflows/                GitHub CI uses the same mise tasks
-  .forgejo/ci/                       Inactive helpers from the former Forgejo setup
   web/
     index.html                      Live legacy Vite browser entry
     gpu.html                        Opt-in experimental GPU preview entry
