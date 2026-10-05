@@ -2,7 +2,7 @@
 
 **Revision:** 3 October 2026. **Active release:** P1 only. E00-E03 and
 E05-E08 have recorded local validation. E09 is in progress with an isolated
-[water and carrier-air reference](thermodynamics.md). E04 and E10-E14 remain planned.
+[water, carrier-air and finite-vent reference](thermodynamics.md). E04 and E10-E14 remain planned.
 
 E05 supplies a sealed Rust f64 pressure reference. E06 adds conservative phase
 and marker transport, compatible momentum, viscous shear and atomic bounded

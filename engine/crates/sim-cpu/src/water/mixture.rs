@@ -460,6 +460,30 @@ impl MixtureVessel {
         self.equilibrium
     }
 
+    /// Applies one finite gas exchange at rigid volume, with upstream enthalpy.
+    /// Conductance and duration must be finite and nonnegative. Active flow requires
+    /// a gas phase, a relative pressure difference at most 0.1, and at most one
+    /// percent of chamber gas mass. Liquid never enters the donor stream.
+    /// Active chamber and reservoir pressure must remain at or below 1 MPa.
+    /// Zero conductance, zero duration, and equal pressure leave all state unchanged.
+    /// Rejected candidates leave both inventory and observations unchanged.
+    /// The caller owns the source ledger and any smaller-step retry policy.
+    pub fn apply_vent(
+        &mut self,
+        table: &WaterTable,
+        reservoir: &super::VentReservoir,
+        step: super::VentStep,
+    ) -> Result<super::VentExchange, super::VentError> {
+        let Some(prepared) =
+            super::vent::prepare_vent(table, self.inventory, self.equilibrium, reservoir, step)?
+        else {
+            return Ok(super::VentExchange::default());
+        };
+        self.inventory = prepared.inventory;
+        self.equilibrium = prepared.equilibrium;
+        Ok(prepared.exchange)
+    }
+
     /// Applies external heat at fixed mass and rigid volume. The return value is
     /// the representable energy change for the caller's source ledger.
     pub fn apply_heat(&mut self, table: &WaterTable, heat_j: f64) -> Result<f64, WaterError> {

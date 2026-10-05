@@ -8,7 +8,7 @@ application still uses [`web/src/legacy/`](../web/src/legacy/). E07 has a
 locally qualified GPU stage graph. E08 has an opt-in browser scene with
 same-device rendering. A local 60-tick sustained browser run passes; scene
 promotion remains open.
-E09 has an isolated saturated and single-phase water reference in
+E09 has an isolated water/carrier-air closure and finite gas vent reference in
 `sim-cpu/src/water/`.
 It is separate from fluid stepping. Read [thermodynamics](../docs/thermodynamics.md)
 for its IF97 source, bounded domain and remaining M4 gates.

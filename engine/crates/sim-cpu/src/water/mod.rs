@@ -6,11 +6,17 @@ mod if97;
 mod mixture;
 mod single_phase;
 mod table;
+mod vent;
 
 pub use mixture::{
     AIR_GAS_CONSTANT_J_KG_K, AIR_HEAT_CAPACITY_J_KG_K, AIR_REFERENCE_TEMPERATURE_K,
     MAX_MIXTURE_PRESSURE_PA, MIXTURE_PROPERTY_VERSION, MixtureEquilibrium, MixtureInventory,
     MixtureVessel, close_mixture,
+};
+
+pub use vent::{
+    MAX_VENT_GAS_FRACTION, MAX_VENT_RELATIVE_PRESSURE_DIFFERENCE, VentError, VentExchange,
+    VentReservoir, VentStep,
 };
 
 pub use single_phase::{
