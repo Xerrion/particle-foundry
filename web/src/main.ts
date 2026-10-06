@@ -1,3 +1,5 @@
+import "./observability/init";
+
 import { bindControls } from "./app/controls";
 import { requiredElement } from "./app/dom";
 import { createSimulationClock } from "./app/simulation-clock";

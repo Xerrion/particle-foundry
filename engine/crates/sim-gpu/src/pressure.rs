@@ -113,6 +113,7 @@ impl From<PressureError> for String {
 struct Pipelines {
     rhs: wgpu::ComputePipeline,
     hydrostatic: wgpu::ComputePipeline,
+    hydrostatic_reference: wgpu::ComputePipeline,
     init_preconditioner: wgpu::ComputePipeline,
     init_preconditioner_from_guess: wgpu::ComputePipeline,
     apply_search: wgpu::ComputePipeline,
@@ -151,6 +152,8 @@ pub(crate) struct GpuPressureProjector {
     rhs: wgpu::Buffer,
     hydrostatic_base: wgpu::Buffer,
     pressure: wgpu::Buffer,
+    accepted_guess: wgpu::Buffer,
+    has_accepted_guess: bool,
     residual: wgpu::Buffer,
     preconditioned: wgpu::Buffer,
     search: wgpu::Buffer,
@@ -191,9 +194,11 @@ impl GpuPressureProjector {
             return Err("GPU pressure projection exceeds effective adapter limits".into());
         }
         let cell_bytes = u64::from(cells) * size_of::<f32>() as u64;
+        let hydrostatic_bytes = cell_bytes + u64::from(grid.height()) * size_of::<f32>() as u64;
         let partial_bytes = u64::from(partial_count) * 16;
         for (name, bytes) in [
             ("pressure cell scratch", cell_bytes),
+            ("pressure hydrostatic reference", hydrostatic_bytes),
             ("pressure residual reduction", partial_bytes),
             ("pressure completion", STATUS_BYTES),
         ] {
@@ -206,13 +211,21 @@ impl GpuPressureProjector {
             device.create_buffer(&wgpu::BufferDescriptor {
                 label: Some(label),
                 size: cell_bytes,
-                usage: wgpu::BufferUsages::STORAGE,
+                usage: wgpu::BufferUsages::STORAGE
+                    | wgpu::BufferUsages::COPY_SRC
+                    | wgpu::BufferUsages::COPY_DST,
                 mapped_at_creation: false,
             })
         };
         let rhs = scratch("pressure rhs");
-        let hydrostatic_base = scratch("pressure hydrostatic base");
+        let hydrostatic_base = device.create_buffer(&wgpu::BufferDescriptor {
+            label: Some("pressure hydrostatic base and face reference"),
+            size: hydrostatic_bytes,
+            usage: wgpu::BufferUsages::STORAGE,
+            mapped_at_creation: false,
+        });
         let pressure = scratch("pressure dynamic correction");
+        let accepted_guess = scratch("accepted pressure starting guess");
         let residual = scratch("pressure recursive residual");
         let preconditioned = scratch("pressure preconditioned residual");
         let search = scratch("pressure search direction");
@@ -272,6 +285,7 @@ impl GpuPressureProjector {
         let pipelines = Pipelines {
             rhs: pipeline(device, &rhs_shader, "main"),
             hydrostatic: pipeline(device, &hydrostatic_shader, "main"),
+            hydrostatic_reference: pipeline(device, &hydrostatic_shader, "reference"),
             init_preconditioner: pipeline(device, &pcg_shader, "init_preconditioner"),
             init_preconditioner_from_guess: pipeline(
                 device,
@@ -303,6 +317,8 @@ impl GpuPressureProjector {
             rhs,
             hydrostatic_base,
             pressure,
+            accepted_guess,
+            has_accepted_guess: false,
             residual,
             preconditioned,
             search,
@@ -321,6 +337,19 @@ impl GpuPressureProjector {
     /// Compact records copied for the latest solve, including a rejected solve.
     pub(crate) fn last_readback_bytes(&self) -> u64 {
         self.last_readback_bytes
+    }
+
+    /// Promotes the numerical guess with the caller's accepted scene commit.
+    /// Rejected candidates cannot change this cache or poison a later retry.
+    pub(crate) fn encode_accepted_guess(&mut self, encoder: &mut wgpu::CommandEncoder) {
+        encoder.copy_buffer_to_buffer(
+            &self.pressure,
+            0,
+            &self.accepted_guess,
+            0,
+            self.pressure.size(),
+        );
+        self.has_accepted_guess = true;
     }
 
     /// Projects a sealed, zero-volume-source predictor into distinct candidate
@@ -352,7 +381,11 @@ impl GpuPressureProjector {
             config.scaled_residual_tolerance,
             config.scaled_divergence_tolerance,
             config.gravity_m_s2,
-            0.0,
+            if self.has_accepted_guess && config.max_iterations > 0 {
+                1.0
+            } else {
+                0.0
+            },
             0.0,
             0.0,
         ] {
@@ -385,6 +418,17 @@ impl GpuPressureProjector {
                 &self.pipelines.hydrostatic,
                 &[
                     (0, &uniform),
+                    (2, fields.aperture_v),
+                    (3, &self.hydrostatic_base),
+                ],
+            )
+        });
+        let hydrostatic_reference_bind = (config.gravity_m_s2 != 0.0).then(|| {
+            bind(
+                device,
+                &self.pipelines.hydrostatic_reference,
+                &[
+                    (0, &uniform),
                     (1, fields.density),
                     (2, fields.aperture_v),
                     (3, &self.hydrostatic_base),
@@ -407,9 +451,9 @@ impl GpuPressureProjector {
                     (3, fields.aperture_v),
                     (4, &self.rhs),
                     (12, &self.hydrostatic_base),
+                    (5, &self.pressure),
                     (6, &self.residual),
                     (7, &self.preconditioned),
-                    (8, &self.search),
                 ],
             )
         } else {
@@ -419,10 +463,12 @@ impl GpuPressureProjector {
                 &[
                     (0, &uniform),
                     (1, fields.density),
+                    (2, fields.aperture_u),
+                    (3, fields.aperture_v),
                     (4, &self.rhs),
+                    (5, &self.pressure),
                     (6, &self.residual),
                     (7, &self.preconditioned),
-                    (8, &self.search),
                 ],
             )
         };
@@ -553,6 +599,7 @@ impl GpuPressureProjector {
                 (5, fields.predictor_v),
                 (6, &self.pressure),
                 (8, fields.corrected_v),
+                (9, &self.hydrostatic_base),
             ],
         );
         let divergence = bind(
@@ -571,6 +618,15 @@ impl GpuPressureProjector {
         let mut encoder = device.create_command_encoder(&wgpu::CommandEncoderDescriptor {
             label: Some("pressure PCG initialization"),
         });
+        if self.has_accepted_guess && config.max_iterations > 0 {
+            encoder.copy_buffer_to_buffer(
+                &self.accepted_guess,
+                0,
+                &self.pressure,
+                0,
+                self.pressure.size(),
+            );
+        }
         dispatch(
             &mut encoder,
             &self.pipelines.rhs,
@@ -578,6 +634,14 @@ impl GpuPressureProjector {
             self.partial_count,
         );
         if let Some(hydrostatic_bind) = &hydrostatic_bind {
+            dispatch(
+                &mut encoder,
+                &self.pipelines.hydrostatic_reference,
+                hydrostatic_reference_bind
+                    .as_ref()
+                    .expect("gravity reference binding"),
+                self.grid.height().div_ceil(WORKGROUP_SIZE),
+            );
             dispatch(
                 &mut encoder,
                 &self.pipelines.hydrostatic,
@@ -591,6 +655,7 @@ impl GpuPressureProjector {
             &init_preconditioner,
             self.partial_count,
         );
+        encoder.copy_buffer_to_buffer(&self.preconditioned, 0, &self.search, 0, self.search.size());
         dispatch(
             &mut encoder,
             &self.pipelines.reduce_initial,
@@ -1036,6 +1101,7 @@ async fn wait_for_map(device: &wgpu::Device, staging: &wgpu::Buffer) -> Result<(
 
 #[cfg(test)]
 mod tests {
+    mod warm_start;
     use std::{
         future::Future,
         sync::Arc,

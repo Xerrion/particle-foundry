@@ -14,6 +14,9 @@ const BASIN_RIM_Y: usize = 220;
 const WATER_SURFACE_Y: usize = 242;
 const FLOOR_Y: usize = 255;
 
+#[cfg(test)]
+mod interactive_tests;
+
 /// Creates the persistent, single-owner M3 GPU scene used by the browser path.
 pub(crate) fn m3_demo_scene(context: &GpuContext, epoch: u64) -> Result<GpuCoupledScene, String> {
     m3_scene_with_seed(context, m3_demo_seed(epoch))

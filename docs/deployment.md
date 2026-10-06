@@ -21,7 +21,27 @@ Only `web/dist/` enters the final Nginx image. The
 on port `80`. WASM responses use `application/wasm`. The Docker healthcheck sends
 `GET /` every 30 seconds and requires a successful response. Missing paths return `404`.
 
-The application needs no environment variables, database or persistent volume.
+The application needs no required environment variables, database or persistent volume.
+Optional [GlitchTip reporting](error-reporting.md) uses public ingestion DSNs and
+release metadata at build time. The Dockerfile accepts `VITE_GLITCHTIP_WEB_DSN`,
+`VITE_GLITCHTIP_SIM_DSN`, `VITE_GLITCHTIP_RELEASE`, `VITE_GLITCHTIP_ENVIRONMENT`, and
+`VITE_GLITCHTIP_REVISION`
+as build arguments. Configure them as build variables in Coolify when reporting is required.
+Changing a running container's environment does not change the compiled browser configuration.
+Set the revision to the full commit SHA for links from error frames to exact source lines.
+Docker excludes Git metadata. An omitted revision retains the Rust panic file, line and column,
+but omits its commit link. Uploaded source maps resolve browser frames by debug ID.
+Keep source-map upload tokens out of Docker and Coolify. Upload the exact archived build
+artifacts from a trusted local or CI environment as described in the reporting guide.
+
+The Docker builder retains private source maps. The final Nginx image contains only the
+public build. To export the maps, select the `reporting-artifacts` Docker build target
+and use local output at `web/reporting-artifacts/`. Use the same source context and public
+build arguments as the runtime image. Then run `mise run glitchtip:upload` in a trusted
+environment with the [private upload configuration](error-reporting.md#upload-private-source-maps).
+Preserve this export with its matching runtime image. A separate rebuild does not establish
+that its artifacts match a Coolify deployment. Their debug IDs must match the served
+JavaScript; arbitrary rebuilt maps cannot resolve an existing deployment's frames.
 The [.dockerignore](../.dockerignore) limits the context to the authored build
 inputs. It excludes credentials, `.env` files, artifacts, caches and build outputs.
 The builder needs no private container registry credential.
@@ -81,7 +101,8 @@ Coolify replaces `{{pr_id}}` with the GitHub pull request number.
 The tested preview address passed public HTTPS checks.
 
 Preview builds use the root Dockerfile, port `80` and HTTP `GET /` healthcheck.
-Keep preview environment variables empty. Do not copy production secrets,
+Leave preview reporting DSNs empty or use separate verification projects.
+Do not copy production secrets,
 persistent storage, host port mappings or custom Docker options into previews.
 
 Use a same-repository PR targeting `main` to check the native lifecycle:
