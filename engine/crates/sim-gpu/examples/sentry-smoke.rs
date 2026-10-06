@@ -5,8 +5,7 @@ mod support;
 use std::time::Duration;
 
 fn main() -> Result<(), &'static str> {
-    let guard =
-        support::initialize_reporting()?.ok_or("Set SENTRY_SIM_DSN before verification")?;
+    let guard = support::initialize_reporting()?.ok_or("Set SENTRY_SIM_DSN before verification")?;
     if !guard.is_enabled() {
         return Err("Native error reporting is disabled");
     }
