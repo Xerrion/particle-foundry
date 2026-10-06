@@ -10,6 +10,13 @@ is a smaller result within it. A milestone is complete only when its tests and
 evidence pass. The [current sandbox scope](plans/rust-wasm-migration/current-sandbox-scope.md)
 holds the detailed checklist of what must work before the switch is complete.
 
+**Priority decision (6 October 2026):** Real-time interaction takes priority in
+the experimental GPU scene. The user accepts a modest loss of numerical
+precision to reach it. The next task is to compare cheaper pressure and
+transport settings against the same interactive workload. Work is paused until
+the user resumes. See the [performance decision](plans/fluid-gpu-redesign/plan.md#interactive-performance-priority-on-6-october-2026)
+for the target, measurement rules and remaining correctness requirements.
+
 **Where things stand (30 September 2026):** The browser sandbox still runs on
 the existing TypeScript engine. The Rust/WebAssembly foundation and browser
 contract exist. The small Rust CPU fluid reference has passed its local tests.

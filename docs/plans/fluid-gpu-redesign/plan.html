@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="source-sha256" content="ba2987b713fd7c28ebd23ce266a61b6b73d45721dd06e5fc45c75174f8551974">
+<meta name="source-sha256" content="42bfc61b9bb5a086269ebe4c1199d57a7e8c5bcb73cf9c48bf842bb362bda1a7">
 <meta name="description" content="Particle Foundry P1 implementation plan: Rust reference, WASM delivery, wgpu/WGSL execution, and future-ready composition.">
 <title>Fluid and GPU redesign | Particle Foundry</title>
 <style>
@@ -261,6 +261,30 @@ u_next = u* - dt (1/rho_face) G π
 <p>FIRE-W07 requires FIRE-M7 (FIRE-A01-FIRE-A14), including network/component persistence, failure injection, replay, derived-visual independence and measured transfers for every promoted fire scene. Include closed-O2, vented burning, ignition-only, water-suppression and persistent-smoke coverage where claimed. Historical characterization is not a substitute for corrected hardware/reference evidence.</p>
 <p>Expose passing subsets experimentally during development. The default switch requires every current-sandbox scope row; no current capability may be left legacy-only or relabelled optional to pass M7. Retain reversible legacy access until rollout is proven. Remove legacy branches only after their full required feature matrix is covered. Update <code>docs/model.md</code>, <code>README.md</code>, <code>docs/elements.md</code>, and benchmark documentation to the implemented contracts and measured limits.</p>
 <p><strong>Exit / GPU-M7:</strong> every required current-sandbox row has recorded numerical, browser interaction, performance and recovery evidence on declared targets; FIRE-M7 passes for required combustion scenarios. Unrun/failed checks or missing current features keep P1 incomplete. Future expansion remains deferred after this gate.</p>
+<h3 id="interactive-performance-priority-on-6-october-2026">Interactive performance priority on 6 October 2026</h3>
+<p>The user prioritizes real-time interaction and accepts modest reductions in
+numerical precision. For the current experimental GPU work, preserving existing
+solve precision is subordinate to that measured gameplay target. Shorter
+pressure solves, fewer closure rounds and bounded numerical approximations are
+authorized candidates. Their settings and resulting errors must be measured and
+documented. Existing thresholds may change for the interactive configuration.
+Historical reference checks retain their original meaning and recorded results.</p>
+<p>The immediate target is at least one accepted model second per wall second for
+the fixed 480 x 270 Water radius-4 workload at <code>(240,100)</code>. Use the same scene,
+adapter, warm-up and measurement procedure before and after each candidate.
+Track visible response and numerical error alongside accepted simulation speed.
+Finite values, nonnegative component amounts, explicit mass accounting and
+atomic rejection remain required. Do not obtain apparent speed by skipping
+accepted-time accounting or publishing an invalid candidate.</p>
+<p>The <a href="../../validation/p1-m3-e08.md#compute-pass-batching-checkpoint-on-6-october-2026">batching evidence</a>
+records the current performance gap. The next checkpoint should measure
+materially cheaper pressure and transport configurations, including their
+combined effect. Removing a duplicated residual calculation is a candidate,
+not a sufficient substitute for the real-time target.</p>
+<p>Work is paused at the user's request after this decision is recorded. Resume
+implementation only when the user returns and authorizes continuation. No
+lower-precision configuration was implemented or qualified by this decision.
+XER-63 remains In Progress. Feature coverage and M7 promotion remain open.</p>
 <h2 id="4-acceptance-matrix">4. Acceptance matrix</h2>
 <p>The following are proposed starting gates, not measurements. Freeze fixture scales and thresholds in M0/M2 before optimization. Any later tolerance change needs a numerical rationale, including grid/time refinement, rather than matching the latest output.</p>
 <div class="table-scroll"><table>
