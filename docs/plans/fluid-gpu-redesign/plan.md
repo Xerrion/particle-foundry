@@ -245,6 +245,43 @@ Expose passing subsets experimentally during development. The default switch req
 
 **Exit / GPU-M7:** every required current-sandbox row has recorded numerical, browser interaction, performance and recovery evidence on declared targets; FIRE-M7 passes for required combustion scenarios. Unrun/failed checks or missing current features keep P1 incomplete. Future expansion remains deferred after this gate.
 
+### Interactive performance priority on 6 October 2026
+
+[XER-64](https://linear.app/xerrion/issue/XER-64/run-the-experimental-gpu-scene-in-real-time)
+owns interactive real-time optimization, its precision tradeoff and PR #17.
+[XER-63](https://linear.app/xerrion/issue/XER-63/fix-gpu-pressure-nonconvergence-during-sustained-browser-scene)
+owns the pressure-stop stability defect and its remaining production verification.
+[XER-38](https://linear.app/xerrion/issue/XER-38/validate-current-sandbox-coverage-and-default-gpu-rollout)
+owns final whole-sandbox coverage, device validation and default promotion.
+These outcomes are linked but have separate completion criteria.
+
+The user prioritizes real-time interaction and accepts modest reductions in
+numerical precision. For the current experimental GPU work, preserving existing
+solve precision is subordinate to that measured gameplay target. Shorter
+pressure solves, fewer closure rounds and bounded numerical approximations are
+authorized candidates. Their settings and resulting errors must be measured and
+documented. Existing thresholds may change for the interactive configuration.
+Historical reference checks retain their original meaning and recorded results.
+
+The immediate target is at least one accepted model second per wall second for
+the fixed 480 x 270 Water radius-4 workload at `(240,100)`. Use the same scene,
+adapter, warm-up and measurement procedure before and after each candidate.
+Track visible response and numerical error alongside accepted simulation speed.
+Finite values, nonnegative component amounts, explicit mass accounting and
+atomic rejection remain required. Do not obtain apparent speed by skipping
+accepted-time accounting or publishing an invalid candidate.
+
+The [batching evidence](../../validation/p1-m3-e08.md#compute-pass-batching-checkpoint-on-6-october-2026)
+records the current performance gap. The next checkpoint should measure
+materially cheaper pressure and transport configurations, including their
+combined effect. Removing a duplicated residual calculation is a candidate,
+not a sufficient substitute for the real-time target.
+
+Work is paused at the user's request after this decision is recorded. Resume
+implementation only when the user returns and authorizes continuation. No
+lower-precision configuration was implemented or qualified by this decision.
+XER-64 remains In Progress. Feature coverage and M7 promotion remain open.
+
 ## 4. Acceptance matrix
 
 The following are proposed starting gates, not measurements. Freeze fixture scales and thresholds in M0/M2 before optimization. Any later tolerance change needs a numerical rationale, including grid/time refinement, rather than matching the latest output.

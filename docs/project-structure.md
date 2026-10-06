@@ -195,10 +195,23 @@ The [GPU face transport](../engine/crates/sim-gpu/shaders/transport_face.wgsl)
 uses the same rule; f32 rounding can select another axis near ties.
 This is an axis-aligned strip approximation, not a general oblique interface
 reconstruction. See [free-surface evidence](validation/p1-m3-e08.md#free-surface-motion-correction-on-5-october-2026)
-for the observed motion failure and its regression scope. A separate
+for the observed motion failure and its regression scope.
+
+The GPU [pressure owner](../engine/crates/sim-gpu/src/pressure.rs) separates
+pipeline setup, bindings, solve encoding and compact readback under `pressure/`.
+Its [solve encoder](../engine/crates/sim-gpu/src/pressure/solve.rs) groups sequential
+dispatches within each bounded PCG batch. The GPU
+[transport owner](../engine/crates/sim-gpu/src/transport.rs) separates candidate
+buffers, bindings and [encoding](../engine/crates/sim-gpu/src/transport/encoding.rs)
+under `transport/`. One compute pass retains all ordered closure and X/Y
+transport dispatches. Both stages keep their shader arithmetic, finite budgets,
+validation and publication boundaries. Their native fixtures live in the
+corresponding `tests/` modules.
+
+A separate
 [shear candidate](../engine/crates/sim-cpu/src/viscosity.rs) applies tangential
-viscous stress to MAC faces and reports mechanical energy diagnostics. Their
-tests cover sealed conservation, periodic marker displacement, wall rejection,
+viscous stress to MAC faces and reports mechanical energy diagnostics. The CPU
+transport and shear tests cover sealed conservation, periodic marker displacement, wall rejection,
 and a periodic shear oracle. [Compatible momentum](../engine/crates/sim-cpu/src/momentum.rs)
 uses the same phase face ledger, and the [coupled CPU step](../engine/crates/sim-cpu/src/coupled.rs)
 stages transport, momentum, optional shear, gravity, and pressure before it

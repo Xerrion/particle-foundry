@@ -12,6 +12,16 @@ see [baseline](validation/p1-m0.md), [bootstrap](validation/p1-m1.md),
 
 ## Current active queue: P1 only
 
+**GPU follow-up ownership, 6 October 2026:**
+[XER-63](https://linear.app/xerrion/issue/XER-63/fix-gpu-pressure-nonconvergence-during-sustained-browser-scene)
+retains the pressure-stop defect and remaining production verification.
+[XER-64](https://linear.app/xerrion/issue/XER-64/run-the-experimental-gpu-scene-in-real-time)
+owns the current experimental scene's real-time optimization and PR #17.
+[XER-38](https://linear.app/xerrion/issue/XER-38/validate-current-sandbox-coverage-and-default-gpu-rollout)
+retains final full-sandbox coverage and default promotion. Performance has
+priority when work resumes, with the [accepted precision tradeoff](plans/fluid-gpu-redesign/plan.md#interactive-performance-priority-on-6-october-2026).
+Implementation remains paused until the user authorizes continuation.
+
 Complete the [current-sandbox checklist](plans/rust-wasm-migration/current-sandbox-scope.md)
 before the default GPU switch. Its current materials, interactions and controls
 are mandatory, including the eight existing elemental models. New features and
