@@ -2,11 +2,17 @@
 //! and available volume determine phase amounts. This is not a fluid stage.
 //! No GPU, legacy conversion or fire property support is implied.
 
+mod conduction;
 mod if97;
 mod mixture;
 mod single_phase;
 mod table;
 mod vent;
+
+pub use conduction::{
+    ConductionError, ConductionExchange, ConductionStep, MAX_CONDUCTION_RELATIVE_ENERGY_ROUNDOFF,
+    conduct_heat,
+};
 
 pub use mixture::{
     AIR_GAS_CONSTANT_J_KG_K, AIR_HEAT_CAPACITY_J_KG_K, AIR_REFERENCE_TEMPERATURE_K,
