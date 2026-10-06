@@ -1,7 +1,8 @@
 # Rust water and carrier-air thermodynamics
 
 E09 has an isolated Rust f64 reference for saturated and stable single-phase
-pure-water vessels, a bounded air/steam mixture approximation and finite gas ventilation.
+pure-water vessels, a bounded air/steam mixture approximation, finite gas
+ventilation and conduction between two finite vessels.
 [`water`](../engine/crates/sim-cpu/src/water/mod.rs) owns this reference.
 It does not advance the M3 fluid scene or the default legacy sandbox.
 [E09 evidence](validation/p1-m4-e09.md) records the checks and remaining gates.
@@ -260,6 +261,48 @@ Zero conductance, zero duration and equal pressure preserve state exactly.
 Opening a vent therefore does not assign atmospheric pressure to the interior.
 Repeated accepted steps relax its pressure through finite mass and energy flux.
 
+## Conduction between finite rigid vessels
+
+[`conduction.rs`](../engine/crates/sim-cpu/src/water/conduction.rs) owns
+`conduct_heat`, `ConductionStep`, `ConductionExchange` and `ConductionError`.
+The operator connects two `MixtureVessel` owners through a caller-supplied
+thermal conductance G in W/K for a duration in seconds.
+It exchanges internal energy without moving water, air or available volume.
+Geometry and material conductivity determine G outside this operator.
+No simulation clock, fluid stage or external heat source is advanced.
+
+The explicit step uses the initial equilibrium temperatures:
+
+```text
+Q_into_first = G * (T_second - T_first) * duration
+U_first_candidate = U_first + Q_into_first
+U_second_candidate = U_second - Q_into_first
+```
+
+Both new inventories must close before either owner changes.
+The complete transaction rejects if either closure fails or the temperatures
+reverse their initial order beyond closure uncertainty.
+The reversal check permits `1e-10 * max(T_first_candidate, T_second_candidate)` K
+at the endpoint. It never clamps either temperature or the requested heat.
+The caller selects a smaller duration after rejection if appropriate.
+
+The exchange receipt records requested heat into the first vessel, both actual
+energy changes and their signed sum as arithmetic roundoff, all in J.
+Each actual energy change must match its requested signed heat within
+`1e-10 * abs(Q_into_first)`. Their sum must satisfy the same bound.
+This guard uses transferred heat as its scale, so large stored energies cannot
+hide a spurious source. Closure energy residuals remain separate observations.
+The caller records the roundoff explicitly without adding compensating heat.
+
+Negative or nonfinite inputs, nonfinite arithmetic, active-transfer underflow,
+unchanged energy on either side, excessive representation error, unsupported
+candidates and temperature crossing reject both owners without partial edits.
+Zero conductance, zero duration and equal observed temperatures preserve both
+complete owners exactly. Inputs are checked before these controls.
+The existing mixture domains apply, including pure-water compressed-liquid
+states above the carrier-air pressure limit when air mass is exactly zero.
+No vent gas-fraction or active-flow pressure guard applies to conduction.
+
 ## Unsupported states and remaining work
 
 Invalid finite-value, mass, volume and temperature inputs return typed errors.
@@ -272,7 +315,8 @@ The solver never clamps temperature, energy or phase amounts into the table.
 Ice, reactive carrier species, hot fire/water mixtures and elemental phase families remain
 outside this reference. It does not satisfy CUR-07 or CUR-09.
 It does not establish FIRE-A03, FIRE-A12 or FIRE-PRECONDITIONS.
-The next E09 deliverable is transport/conduction coupling.
+The next E09 work integrates conservative thermal transport and conduction
+with the fluid reference. The isolated pair operator does not supply that coupling.
 Chamber topology, broader current-material domains and GPU parity follow under
 the [M4 contract](plans/fluid-gpu-redesign/plan.md#thermodynamics-and-chamber-closure).
 All remain required before M4 or E09 can be validated.
@@ -303,12 +347,18 @@ they are not a proof over every possible inventory.
 inflow/outflow, gas composition, upstream enthalpy, source accounting, controls,
 time refinement, mass scales and atomic rejection. These checks qualify the
 isolated reference. They do not validate browser or GPU vent behavior.
+[`water_conduction.rs`](../engine/crates/sim-cpu/tests/water_conduction.rs)
+checks two finite heat capacities, exact controls, signed energy receipts,
+analytic time refinement, inventory scales, evaporation/condensation and atomic
+rejection. It also checks compressed liquid above 1 MPa and transfers that
+cannot change both stored energies accurately. These CPU checks do not execute
+browser or GPU conduction.
 
 Run focused checks from `engine/`:
 
 ```sh
 cargo test --locked -p particle-sim-cpu water:: -- --nocapture
-cargo test --locked -p particle-sim-cpu --test water_vessel --test water_single_phase --test water_mixture --test water_vent
+cargo test --locked -p particle-sim-cpu --test water_vessel --test water_single_phase --test water_mixture --test water_vent --test water_conduction
 ```
 
 Run `mise run ci` from the repository root before delivering engine changes.
