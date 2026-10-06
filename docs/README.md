@@ -36,7 +36,7 @@ A plan or reference entry is not evidence of implementation.
 | Question | Start here | Read further when needed |
 | --- | --- | --- |
 | Where does behavior belong? | [Project structure](project-structure.md) | [Existing controls and sandbox](legacy-sandbox.md) |
-| How are browser errors and Rust panics reported? | [GlitchTip reporting](error-reporting.md) | [Deployment configuration](deployment.md) |
+| How are browser errors and Rust panics reported? | [Sentry reporting](error-reporting.md) | [Deployment configuration](deployment.md) |
 | How does CI run and what must pass before merging? | [GitHub CI and merge policy](../.github/README.md) | [mise tasks](../mise.toml) |
 | How does Coolify deploy the browser application? | [Coolify deployment](deployment.md) | [GitHub CI and merge policy](../.github/README.md) |
 | How does the simulation behave? | [Physical model](model.md) | [Combustion](combustion.md), [elements](elements.md) and the relevant source/tests |

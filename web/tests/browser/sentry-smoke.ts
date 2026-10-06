@@ -5,14 +5,14 @@ import { initializeErrorReporting } from "../../src/observability/reporting";
 const remoteReplies: { status: number; path: string; eventId?: string }[] = [];
 const reporting = initializeErrorReporting({
 	webDsn: __PF_VERIFY_LIVE__
-		? import.meta.env.VITE_GLITCHTIP_WEB_DSN
+		? import.meta.env.VITE_SENTRY_WEB_DSN
 		: `http://public@${location.host}/1`,
 	simDsn: __PF_VERIFY_LIVE__
-		? import.meta.env.VITE_GLITCHTIP_SIM_DSN
+		? import.meta.env.VITE_SENTRY_SIM_DSN
 		: `http://public@${location.host}/2`,
 	release: "particle-foundry-reporting-smoke",
 	environment: "verification",
-	revision: import.meta.env.VITE_GLITCHTIP_REVISION,
+	revision: import.meta.env.VITE_SENTRY_REVISION,
 	transport: (options) =>
 		makeFetchTransport(options, async (input, init) => {
 			const response = await fetch(input, init);

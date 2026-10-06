@@ -124,7 +124,7 @@ test("invalid SDK keys disable reporting without logging the configured DSN", as
 		});
 		expect(reporter.capture(new Error("invalid configuration"), "web")).toBeUndefined();
 		expect(await reporter.flush(1_000)).toBe(true);
-		expect(warning).toHaveBeenCalledWith("GlitchTip reporting disabled for an invalid DSN.");
+		expect(warning).toHaveBeenCalledWith("Sentry reporting disabled for an invalid DSN.");
 		expect(sdkError).not.toHaveBeenCalled();
 		expect(events).toHaveLength(0);
 	} finally {
