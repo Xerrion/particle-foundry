@@ -91,7 +91,7 @@ async function listFiles(directory: string): Promise<string[]> {
 		if (entry.isDirectory()) files.push(...(await listFiles(file)));
 		else if (entry.isFile()) files.push(file);
 	}
-	return files.sort();
+	return files.sort((left, right) => left.localeCompare(right, "en"));
 }
 
 function contains(parent: string, child: string): boolean {
