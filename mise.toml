@@ -28,7 +28,7 @@ dir = "{{config_root}}/web"
 depends = ["install", "build:wasm", "build:catalogue"]
 run = ["vite build", "bun --no-env-file scripts/prepare-reporting.ts"]
 
-[tasks."glitchtip:upload"]
+[tasks."sentry:upload"]
 description = "Upload the exact private source map artifacts from the prepared build"
 dir = "{{config_root}}/web"
 depends = ["install"]
@@ -173,7 +173,7 @@ run = "bun scripts/build-wasm.ts"
 description = "Build separate Rust/WASM bindings with a deliberate reporting panic"
 dir = "{{config_root}}/web"
 depends = ["install", "rust:bindings-tool"]
-run = "bun scripts/build-wasm.ts --glitchtip-smoke"
+run = "bun scripts/build-wasm.ts --sentry-smoke"
 
 [tasks."check:wasm"]
 description = "Check generated WASM assets byte-for-byte against a fresh generation"
@@ -193,11 +193,11 @@ dir = "{{config_root}}/web"
 depends = ["install", "build:wasm:reporting"]
 run = "bun scripts/test-reporting.ts"
 
-[tasks."glitchtip:smoke:native"]
+[tasks."sentry:smoke:native"]
 description = "Send one opt-in native Rust verification error"
 dir = "{{config_root}}/engine"
 depends = ["rust:toolchain"]
-run = "cargo run --locked -p particle-sim-gpu --example glitchtip-smoke"
+run = "cargo run --locked -p particle-sim-gpu --example sentry-smoke"
 
 [tasks."validate:baseline"]
 description = "Capture fresh legacy characterization, controls and timing evidence"
