@@ -1,14 +1,33 @@
-import { getCurrentScope } from "@sentry/browser";
+import { getCurrentScope, makeFetchTransport } from "@sentry/browser";
 import { verifyRustReportingPanic } from "../../src/engine-client/reporting-smoke";
 import { initializeErrorReporting } from "../../src/observability/reporting";
 
+const remoteReplies: { status: number; path: string; eventId?: string }[] = [];
 const reporting = initializeErrorReporting({
-	webDsn: `http://public@${location.host}/1`,
-	simDsn: `http://public@${location.host}/2`,
+	webDsn: __PF_VERIFY_LIVE__
+		? import.meta.env.VITE_GLITCHTIP_WEB_DSN
+		: `http://public@${location.host}/1`,
+	simDsn: __PF_VERIFY_LIVE__
+		? import.meta.env.VITE_GLITCHTIP_SIM_DSN
+		: `http://public@${location.host}/2`,
 	release: "particle-foundry-reporting-smoke",
 	environment: "verification",
 	baseUrl: import.meta.env.BASE_URL,
 	revision: __PF_BUILD_REVISION__,
+	transport: (options) =>
+		makeFetchTransport(options, async (input, init) => {
+			const response = await fetch(input, init);
+			const body = await response
+				.clone()
+				.json()
+				.catch(() => ({}));
+			remoteReplies.push({
+				status: response.status,
+				path: new URL(String(input)).pathname,
+				eventId: body.id,
+			});
+			return response;
+		}),
 });
 
 async function verify(): Promise<Record<string, unknown>> {
@@ -71,6 +90,7 @@ try {
 	report = { status: "fail", errorType: error instanceof Error ? error.name : "UnknownError" };
 }
 document.querySelector("#result")?.replaceChildren(JSON.stringify(report, null, 2));
+report.remoteReplies = remoteReplies;
 await fetch("/report", {
 	method: "POST",
 	headers: { "Content-Type": "application/json" },

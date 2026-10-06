@@ -3,6 +3,7 @@ import { defineConfig } from "vite";
 import { reportingSourceAssets } from "./scripts/reporting-source-assets.ts";
 
 export default defineConfig(({ mode }) => ({
+	define: { __PF_VERIFY_LIVE__: false },
 	base: ["engine-smoke", "glitchtip-smoke"].includes(mode) ? `/${mode}/` : "/",
 	plugins: [reportingSourceAssets(resolve(import.meta.dirname, ".."))],
 	resolve: {
