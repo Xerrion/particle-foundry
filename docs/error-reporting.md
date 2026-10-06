@@ -10,7 +10,7 @@ reporting before their startup code.
 1. Copy [web/.env.example](../web/.env.example) to `web/.env.local`.
 2. Set `VITE_GLITCHTIP_WEB_DSN` to the `particle-foundry-web` ingestion DSN.
 3. Set `VITE_GLITCHTIP_SIM_DSN` to the `particle-foundry-sim` ingestion DSN.
-4. Set `VITE_GLITCHTIP_RELEASE` and `VITE_GLITCHTIP_ENVIRONMENT` when required.
+4. Set release, environment, and `VITE_GLITCHTIP_REVISION` when required.
 5. Run `mise run dev` or build a new deployment.
 
 Vite embeds these public values in the browser bundle at build time. A browser
@@ -19,8 +19,41 @@ Keep local configuration files out of Git. Missing DSNs disable only their proje
 An invalid browser DSN produces a warning without printing its value.
 
 [Deployment](deployment.md#build-and-runtime) owns Docker and Coolify settings.
-The Dockerfile accepts the same four values as build arguments. Use a source
+The Dockerfile accepts the same five values as build arguments. Use a source
 revision or release identifier consistently across both projects.
+
+## Debuggable source frames
+
+Vite emits JavaScript source maps with the original TypeScript content. The
+[`source enricher`](../web/src/observability/source-context.ts) resolves minified
+positions in the browser before sending an event. It includes the authored file,
+line, column, and up to five surrounding source lines. Dependencies and generated
+bindings do not contribute source snippets. Maps load only on the error path.
+
+Rust panics carry the structured `PanicHookInfo` file, line, and column. The
+[`origin annotator`](../web/src/observability/rust-origin.ts) adds this location as
+an application frame before optional network work. The
+[`source assets plugin`](../web/scripts/reporting-source-assets.ts) emits bounded
+JSON assets for public Rust source files. The browser reads only the requested
+file to add its code context. This identifies the panic origin. It does not
+reconstruct source locations for the complete Rust call stack.
+
+Clean local and CI builds record the full Git revision and provide immutable
+GitHub source links. Relevant local edits add `-dirty`, which suppresses those
+links. Docker builds need the full `VITE_GLITCHTIP_REVISION` because their context
+excludes Git metadata. An unknown revision preserves file, line, and code context.
+
+[`Source resolution`](../web/src/observability/source-resolution.ts) has a
+three-second deadline, including the optional module load. A timeout or missing
+asset preserves the error and Rust origin. Late work uses an isolated copy.
+Source requests omit credentials and referrers and stay within the application's
+origin and base path. Failed maps retry on a later error. Reporter shutdown
+allows five seconds for pending diagnostics and event delivery.
+
+GlitchTip 6 requires uploaded bundles for its server-side JavaScript mapping.
+Client resolution also works for local verification, where GlitchTip cannot
+reach the browser's localhost assets. Existing stored events retain their old
+frames. Verify fresh events after changing diagnostic data.
 
 ## Browser and WASM ownership
 
@@ -47,7 +80,8 @@ The panic hook preserves the previous Rust hook for local diagnostics.
 The pinned browser SDK uses explicit error integrations. Session tracking,
 replay, tracing, profiling, console capture, logs, and metrics are disabled.
 The SDK excludes user information, cookies, HTTP headers and bodies, URL query
-parameters, stack variables, and source context lines. The final error filter
+parameters, and stack variables. Only authored public source snippets enter the
+explicit diagnostic frames. The final error filter
 removes user, request, breadcrumb, and extra fields.
 
 Error messages and stack traces remain part of the report. Do not put credentials
@@ -80,12 +114,16 @@ claiming live ingestion.
 
 [`reporting.test.ts`](../web/tests/observability/reporting.test.ts) checks disabled
 reporting, project routing, removal of identity and request data, panic deduplication,
-and listener cleanup. The dedicated browser reporting smoke uses synthetic local
+and listener cleanup. [Source tests](../web/tests/observability/source-context.test.ts)
+check mapped positions, code context, retry, missing assets, and cross-origin
+rejection. [Deadline tests](../web/tests/observability/source-resolution.test.ts)
+check delivery during stalled loads and shutdown. The dedicated browser reporting smoke uses synthetic local
 projects and a separate WASM build. Its `glitchtip-smoke` Cargo feature exposes a
 deliberate verification panic. Normal production builds omit that function.
 
 Run `mise run test:reporting` for the real browser error and WASM panic check.
-The local receiver must accept exactly one event for each project. It rejects
+The local receiver must accept exactly one event for each project, with its exact
+TypeScript or Rust source frame and code context. It rejects
 session, log, metric, and other envelope types. `mise run ci` includes this check.
 Local receiver acceptance establishes SDK delivery and routing. It does not
 establish acceptance by a deployed GlitchTip server.

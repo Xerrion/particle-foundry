@@ -7,6 +7,8 @@ const reporting = initializeErrorReporting({
 	simDsn: `http://public@${location.host}/2`,
 	release: "particle-foundry-reporting-smoke",
 	environment: "verification",
+	baseUrl: import.meta.env.BASE_URL,
+	revision: __PF_BUILD_REVISION__,
 });
 
 async function verify(): Promise<Record<string, unknown>> {

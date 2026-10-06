@@ -24,9 +24,12 @@ on port `80`. WASM responses use `application/wasm`. The Docker healthcheck send
 The application needs no required environment variables, database or persistent volume.
 Optional [GlitchTip reporting](error-reporting.md) uses public ingestion DSNs and
 release metadata at build time. The Dockerfile accepts `VITE_GLITCHTIP_WEB_DSN`,
-`VITE_GLITCHTIP_SIM_DSN`, `VITE_GLITCHTIP_RELEASE`, and `VITE_GLITCHTIP_ENVIRONMENT`
+`VITE_GLITCHTIP_SIM_DSN`, `VITE_GLITCHTIP_RELEASE`, `VITE_GLITCHTIP_ENVIRONMENT`, and
+`VITE_GLITCHTIP_REVISION`
 as build arguments. Configure them as build variables in Coolify when reporting is required.
 Changing a running container's environment does not change the compiled browser configuration.
+Set the revision to the full commit SHA for links from error frames to exact source lines.
+Docker excludes Git metadata, so an omitted revision produces source context without commit links.
 The [.dockerignore](../.dockerignore) limits the context to the authored build
 inputs. It excludes credentials, `.env` files, artifacts, caches and build outputs.
 The builder needs no private container registry credential.

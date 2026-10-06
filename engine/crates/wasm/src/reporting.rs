@@ -8,6 +8,21 @@ pub fn start() {
         if let Some(window) = web_sys::window() {
             let error = js_sys::Error::new(&info.to_string());
             error.set_name("RustPanic");
+            if let Some(location) = info.location() {
+                let rust_location = js_sys::Object::new();
+                for (key, value) in [
+                    ("file", JsValue::from_str(location.file())),
+                    ("line", JsValue::from(location.line())),
+                    ("column", JsValue::from(location.column())),
+                ] {
+                    let _ = js_sys::Reflect::set(&rust_location, &JsValue::from_str(key), &value);
+                }
+                let _ = js_sys::Reflect::set(
+                    error.as_ref(),
+                    &JsValue::from_str("rustLocation"),
+                    rust_location.as_ref(),
+                );
+            }
             let options = web_sys::CustomEventInit::new();
             options.set_detail(error.as_ref());
             if let Ok(event) = web_sys::CustomEvent::new_with_event_init_dict(

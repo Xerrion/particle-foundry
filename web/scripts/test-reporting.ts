@@ -17,7 +17,12 @@ const binary =
 		: "/usr/bin/google-chrome");
 const expectedRelease = "particle-foundry-reporting-smoke";
 const expectedEnvironment = "verification";
-const events: { project: "web" | "sim"; exceptionType: string }[] = [];
+const events: {
+	project: "web" | "sim";
+	exceptionType: string;
+	sourceFile: string;
+	line: number;
+}[] = [];
 const failures: string[] = [];
 const eventIds = new Set<string>();
 const reportToken = crypto.randomUUID();
@@ -73,6 +78,30 @@ function recordEnvelope(body: string, project: "web" | "sim"): void {
 		if (project === "web") {
 			requireCondition(exception.mechanism?.handled === false, "Browser error was not unhandled");
 		}
+		const sourceFile =
+			project === "web"
+				? "web/tests/browser/glitchtip-smoke.ts"
+				: "engine/crates/wasm/src/reporting.rs";
+		const sourceFrame = exception.stacktrace?.frames?.find(
+			(frame: Record<string, unknown>) =>
+				frame.filename === sourceFile &&
+				frame.in_app === true &&
+				typeof frame.context_line === "string" &&
+				frame.context_line.includes(project === "web" ? "throw new Error" : "panic!("),
+		);
+		requireCondition(
+			sourceFrame?.lineno > 0 && sourceFrame?.colno > 0,
+			"Missing actionable source location and code context",
+		);
+		if (/^[a-f0-9]{40}$/.test(event.tags?.build_revision ?? "")) {
+			requireCondition(
+				typeof sourceFrame.source_link === "string" &&
+					sourceFrame.source_link.includes(
+						`/blob/${event.tags.build_revision}/${sourceFile}#L${sourceFrame.lineno}`,
+					),
+				"Missing exact revision source link",
+			);
+		}
 		requireCondition(
 			!["reporting-fixture-user", "reporting-fixture-extra", "reporting-fixture-query"].some(
 				(value) => JSON.stringify(event).includes(value),
@@ -80,7 +109,7 @@ function recordEnvelope(body: string, project: "web" | "sim"): void {
 			"Event retained synthetic private data",
 		);
 		eventIds.add(event.event_id);
-		events.push({ project, exceptionType: exception.type });
+		events.push({ project, exceptionType: exception.type, sourceFile, line: sourceFrame.lineno });
 	}
 }
 

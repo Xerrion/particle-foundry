@@ -10,6 +10,8 @@ import {
 	Scope,
 	setCurrentClient,
 } from "@sentry/browser";
+import { annotateRustOrigin } from "./rust-origin";
+import { resolveSourceContext } from "./source-resolution";
 
 export interface ReportingConfiguration {
 	webDsn?: string;
@@ -17,6 +19,8 @@ export interface ReportingConfiguration {
 	release?: string;
 	environment?: string;
 	transport?: BrowserOptions["transport"];
+	baseUrl?: string;
+	revision?: string;
 }
 
 export interface ErrorReporting {
@@ -51,6 +55,9 @@ export function initializeErrorReporting(config: ReportingConfiguration): ErrorR
 	const reportedTraps = new WeakSet<WebAssembly.RuntimeError>();
 	const scopes = new Map<"web" | "sim", Scope>();
 	const clients: BrowserClient[] = [];
+	let sourceEnricher:
+		| Promise<ReturnType<typeof import("./source-context")["createSourceEnricher"]>>
+		| undefined;
 	function isReportedTrap(error: unknown): boolean {
 		if (!(error instanceof WebAssembly.RuntimeError)) return false;
 		if (reportedTraps.has(error)) return true;
@@ -92,9 +99,17 @@ export function initializeErrorReporting(config: ReportingConfiguration): ErrorR
 				stackFrameVariables: false,
 				frameContextLines: 0,
 			},
-			beforeSend(event, hint) {
+			async beforeSend(event, hint) {
 				if (isReportedTrap(hint.originalException)) return null;
+				annotateRustOrigin(event, hint.originalException, config.revision);
+				event = await resolveSourceContext(event, hint.originalException, () => {
+					sourceEnricher ??= import("./source-context").then(({ createSourceEnricher }) =>
+						createSourceEnricher({ baseUrl: config.baseUrl, revision: config.revision }),
+					);
+					return sourceEnricher;
+				});
 				event.tags = { ...event.tags, project: `particle-foundry-${project}` };
+				if (config.revision) event.tags.build_revision = config.revision;
 				delete event.user;
 				delete event.request;
 				delete event.breadcrumbs;
@@ -143,7 +158,7 @@ export function initializeErrorReporting(config: ReportingConfiguration): ErrorR
 		},
 		async close() {
 			if (scopes.has("sim")) window.removeEventListener("particle-foundry:rust-panic", onPanic);
-			await Promise.all(clients.map((client) => client.close(2_000)));
+			await Promise.all(clients.map((client) => client.close(5_000)));
 		},
 	};
 

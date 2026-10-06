@@ -1,8 +1,10 @@
 import { resolve } from "node:path";
 import { defineConfig } from "vite";
+import { reportingSourceAssets } from "./scripts/reporting-source-assets.ts";
 
 export default defineConfig(({ mode }) => ({
 	base: ["engine-smoke", "glitchtip-smoke"].includes(mode) ? `/${mode}/` : "/",
+	plugins: [reportingSourceAssets(resolve(import.meta.dirname, ".."))],
 	resolve: {
 		alias:
 			mode === "glitchtip-smoke"
@@ -18,6 +20,7 @@ export default defineConfig(({ mode }) => ({
 				: [],
 	},
 	build: {
+		sourcemap: true,
 		outDir: "dist",
 		emptyOutDir: true,
 		rollupOptions:
