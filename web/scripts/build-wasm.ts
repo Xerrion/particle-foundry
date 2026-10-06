@@ -4,19 +4,19 @@ import { join, resolve } from "node:path";
 
 const engine = resolve(import.meta.dir, "../../engine");
 const check = process.argv[2] === "--check";
-const reportingSmoke = process.argv[2] === "--glitchtip-smoke";
+const reportingSmoke = process.argv[2] === "--sentry-smoke";
 if (process.argv.length > 3 || (process.argv[2] && !check && !reportingSmoke)) {
-	throw new Error("Usage: build-wasm.ts [--check | --glitchtip-smoke]");
+	throw new Error("Usage: build-wasm.ts [--check | --sentry-smoke]");
 }
 const generated = resolve(
 	import.meta.dir,
-	reportingSmoke ? "../generated/wasm-glitchtip-smoke" : "../generated/wasm",
+	reportingSmoke ? "../generated/wasm-sentry-smoke" : "../generated/wasm",
 );
 // Feature builds must not replace the artifact while normal bindings are generated in parallel.
 const target = resolve(
 	engine,
 	process.env.CARGO_TARGET_DIR ?? "target",
-	reportingSmoke ? "glitchtip-smoke" : ".",
+	reportingSmoke ? "sentry-smoke" : ".",
 );
 
 // Keep the CLI and Cargo library paired. A mismatched global installation is an error.
@@ -36,7 +36,7 @@ const build = Bun.spawn(
 		"--target",
 		"wasm32-unknown-unknown",
 		"--release",
-		...(reportingSmoke ? ["--features", "glitchtip-smoke"] : []),
+		...(reportingSmoke ? ["--features", "sentry-smoke"] : []),
 	],
 	{
 		cwd: engine,

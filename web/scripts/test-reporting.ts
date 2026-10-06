@@ -84,7 +84,7 @@ function recordEnvelope(body: string, project: "web" | "sim"): void {
 		}
 		const sourceFile =
 			project === "web"
-				? "web/tests/browser/glitchtip-smoke.ts"
+				? "web/tests/browser/sentry-smoke.ts"
 				: "engine/crates/wasm/src/reporting.rs";
 		let sourceLine: number;
 		if (project === "web") {
@@ -112,7 +112,7 @@ function recordEnvelope(body: string, project: "web" | "sim"): void {
 				column: frame.colno - 1,
 			});
 			requireCondition(
-				original.source?.endsWith("tests/browser/glitchtip-smoke.ts") && original.line,
+				original.source?.endsWith("tests/browser/sentry-smoke.ts") && original.line,
 				"Incorrect original browser source",
 			);
 			const sourceIndex = map.sources.indexOf(original.source);
@@ -168,7 +168,7 @@ const build = Bun.spawn(
 		join(web, "node_modules/vite/bin/vite.js"),
 		"build",
 		"--mode",
-		"glitchtip-smoke",
+		"sentry-smoke",
 		"--outDir",
 		site,
 	],
@@ -179,7 +179,7 @@ const build = Bun.spawn(
 	},
 );
 if ((await build.exited) !== 0) throw new Error(`Reporting fixture build failed. See ${output}`);
-await prepareReportingBuild(site, archive, { VITE_GLITCHTIP_RELEASE: expectedRelease });
+await prepareReportingBuild(site, archive, { VITE_SENTRY_RELEASE: expectedRelease });
 const maps = await readdir(join(archive, "files", "assets"));
 const privateMap = maps.find((file) => file.endsWith(".js.map"));
 if (!privateMap) throw new Error("Reporting fixture has no private source maps");
@@ -214,11 +214,8 @@ const receiver = Bun.serve({
 			finish(payload.report);
 			return new Response("ok");
 		}
-		if (request.method === "GET" && url.pathname.startsWith("/glitchtip-smoke/")) {
-			const path = resolve(
-				site,
-				decodeURIComponent(url.pathname.slice("/glitchtip-smoke/".length)),
-			);
+		if (request.method === "GET" && url.pathname.startsWith("/sentry-smoke/")) {
+			const path = resolve(site, decodeURIComponent(url.pathname.slice("/sentry-smoke/".length)));
 			if (!path.startsWith(`${site}/`)) return new Response("Invalid asset path", { status: 400 });
 			const file = Bun.file(path);
 			return (await file.exists())
@@ -229,9 +226,9 @@ const receiver = Bun.serve({
 		return new Response("Unknown fixture route", { status: 404 });
 	},
 });
-const mapResponse = await fetch(new URL(`/glitchtip-smoke/assets/${privateMap}`, receiver.url));
+const mapResponse = await fetch(new URL(`/sentry-smoke/assets/${privateMap}`, receiver.url));
 requireCondition(mapResponse.status === 404, "Source map was publicly served");
-const url = new URL("/glitchtip-smoke/tests/browser/glitchtip-smoke.html", receiver.url);
+const url = new URL("/sentry-smoke/tests/browser/sentry-smoke.html", receiver.url);
 url.searchParams.set("report-token", reportToken);
 url.searchParams.set("fixture", "reporting-fixture-query");
 const profile = await mkdtemp(join(tmpdir(), "particle-foundry-reporting-"));

@@ -38,7 +38,7 @@ pub fn start() {
 
 /// Causes a deliberate panic in a separate reporting verification build.
 /// Normal WASM builds do not expose this function.
-#[cfg(feature = "glitchtip-smoke")]
+#[cfg(feature = "sentry-smoke")]
 #[wasm_bindgen]
 pub fn verify_reporting_panic() {
     panic!("Particle Foundry Rust WASM reporting verification");

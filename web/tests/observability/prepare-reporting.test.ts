@@ -65,7 +65,7 @@ const uploadEnvironment = {
 test("injects final JavaScript and archives matching maps with original source context", async () => {
 	const build = await fixture();
 	const result = await prepareReportingBuild(build.site, build.archive, {
-		VITE_GLITCHTIP_RELEASE: "particle-foundry@fixture",
+		VITE_SENTRY_RELEASE: "particle-foundry@fixture",
 	});
 	expect(result).toEqual({
 		archivedScripts: 1,
@@ -108,7 +108,7 @@ test("rejects an archive inside the public site before SDK execution", async () 
 test("upload-only retries preserve exact artifacts and use the archived release for both projects", async () => {
 	const build = await fixture();
 	await prepareReportingBuild(build.site, build.archive, {
-		VITE_GLITCHTIP_RELEASE: "original-release",
+		VITE_SENTRY_RELEASE: "original-release",
 	});
 	const originalScript = await readFile(build.script, "utf8");
 	const originalMap = await readFile(`${build.archivedScript}.map`, "utf8");
@@ -139,7 +139,7 @@ test("upload-only retries preserve exact artifacts and use the archived release 
 				build.archive,
 				{
 					...uploadEnvironment,
-					VITE_GLITCHTIP_RELEASE: "different-later-release",
+					VITE_SENTRY_RELEASE: "different-later-release",
 				},
 				createClient,
 			),
@@ -189,7 +189,7 @@ test("a configured preparation upload failure stops the build and retains exact 
 			build.archive,
 			{
 				...uploadEnvironment,
-				VITE_GLITCHTIP_RELEASE: "failed-upload-release",
+				VITE_SENTRY_RELEASE: "failed-upload-release",
 			},
 			createClient,
 		),
@@ -320,7 +320,7 @@ function bundleEntries(bundle: Buffer): Map<string, Buffer> {
 test("the real SDK uploads unchanged files with matching debug-ID bundle headers", async () => {
 	const build = await fixture();
 	await prepareReportingBuild(build.site, build.archive, {
-		VITE_GLITCHTIP_RELEASE: "real-sdk-release",
+		VITE_SENTRY_RELEASE: "real-sdk-release",
 	});
 	const script = await readFile(build.archivedScript);
 	const map = await readFile(`${build.archivedScript}.map`);
@@ -375,7 +375,7 @@ test("the real SDK uploads unchanged files with matching debug-ID bundle headers
 				SENTRY_URL: base,
 				SENTRY_ORG: "sdk-fixture",
 				SENTRY_SIM_PROJECT: undefined,
-				VITE_GLITCHTIP_RELEASE: "wrong-release",
+				VITE_SENTRY_RELEASE: "wrong-release",
 			}),
 		).toBe(1);
 		expect(bundles).toHaveLength(1);

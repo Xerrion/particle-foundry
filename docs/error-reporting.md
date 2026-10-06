@@ -1,6 +1,6 @@
-# GlitchTip error reporting
+# Sentry error reporting
 
-Browser errors and Rust panics use separate GlitchTip projects. Reporting is
+Browser errors and Rust panics use separate Sentry projects. Reporting is
 optional. Empty DSNs leave the sandbox running without a reporting client.
 The default TypeScript sandbox and experimental GPU preview both initialize
 reporting before their startup code.
@@ -8,9 +8,9 @@ reporting before their startup code.
 ## Configure the browser
 
 1. Copy [web/.env.example](../web/.env.example) to `web/.env.local`.
-2. Set `VITE_GLITCHTIP_WEB_DSN` to the `particle-foundry-web` ingestion DSN.
-3. Set `VITE_GLITCHTIP_SIM_DSN` to the `particle-foundry-sim` ingestion DSN.
-4. Set release, environment, and `VITE_GLITCHTIP_REVISION` when required.
+2. Set `VITE_SENTRY_WEB_DSN` to the `particle-foundry-web` ingestion DSN.
+3. Set `VITE_SENTRY_SIM_DSN` to the `particle-foundry-sim` ingestion DSN.
+4. Set release, environment, and `VITE_SENTRY_REVISION` when required.
 5. Run `mise run dev` or build a new deployment.
 
 Vite embeds these public values in the browser bundle at build time. A browser
@@ -31,9 +31,9 @@ It archives those exact files under ignored `web/reporting-artifacts/`, outside
 `web/dist/`, then removes maps from the public build.
 
 The browser sends generated stack frames and their debug IDs. After a private
-artifact upload, GlitchTip resolves matching frames to original TypeScript files,
+artifact upload, Sentry resolves matching frames to original TypeScript files,
 lines, functions and code context. The browser does not fetch or decode maps.
-This follows the [GlitchTip source-map workflow](https://glitchtip.com/documentation/error-tracking/#source-maps).
+This follows the [Sentry source-map workflow](https://docs.sentry.io/platforms/javascript/sourcemaps/).
 
 Rust panics carry the structured `PanicHookInfo` file, line, and column. The
 [`origin annotator`](../web/src/observability/rust-origin.ts) adds this location as
@@ -41,7 +41,7 @@ an application frame. It identifies the panic origin without code context.
 The build publishes no Rust source JSON assets. Uploaded JavaScript maps do not
 reconstruct the complete Rust or WASM call stack.
 
-Set `VITE_GLITCHTIP_REVISION` to the full 40-character Git commit SHA to add an
+Set `VITE_SENTRY_REVISION` to the full 40-character Git commit SHA to add an
 immutable `source_link` to the Rust origin frame. Use it only when the build's
 source matches that commit. An omitted or invalid revision retains the Rust file,
 line and column, but omits the link. Docker does not include Git metadata.
@@ -56,18 +56,18 @@ arguments, Coolify settings or committed files.
 | Variable | Purpose |
 | --- | --- |
 | `SENTRY_AUTH_TOKEN` | Private upload token |
-| `SENTRY_URL` | GlitchTip instance URL, such as `https://err.xerrion.io` |
+| `SENTRY_URL` | Sentry instance URL, such as `https://sentry.io` |
 | `SENTRY_ORG` | Organization slug, such as `xerrion` |
 | `SENTRY_PROJECT` | Web project slug, such as `particle-foundry-web` |
 | `SENTRY_SIM_PROJECT` | Optional sim project slug, such as `particle-foundry-sim` |
 
 Run these steps from the repository root in a trusted local or CI environment:
 
-1. Set the public browser configuration, including `VITE_GLITCHTIP_RELEASE`.
+1. Set the public browser configuration, including `VITE_SENTRY_RELEASE`.
 2. Run `mise run build` to prepare the public build and private artifact archive.
-3. Supply the private upload variables, then run `mise run glitchtip:upload`.
+3. Supply the private upload variables, then run `mise run sentry:upload`.
 4. Deploy the matching `web/dist/` build through the authorized deployment process.
-5. Trigger a fresh error and check its original source frame in GlitchTip.
+5. Trigger a fresh error and check its original source frame in Sentry.
 
 The upload task reads the release recorded in the archive. It reuses exact
 injected artifacts without rebuilding or rewriting public JavaScript. A retry
@@ -109,12 +109,12 @@ The pinned browser SDK uses explicit error integrations. Session tracking,
 replay, tracing, profiling, console capture, logs, and metrics are disabled.
 The SDK excludes user information, cookies, HTTP headers and bodies, URL query
 parameters, and stack variables. Reports retain error messages, stack frames and
-debug IDs. GlitchTip can add source context from the private uploaded maps.
+debug IDs. Sentry can add source context from the private uploaded maps.
 The final error filter
 removes user, request, breadcrumb, and extra fields.
 
 Error messages and stack traces remain part of the report. Do not put credentials
-or personal information in application errors. GlitchTip can still observe the
+or personal information in application errors. Sentry can still observe the
 network source address of an ingestion request.
 
 ## Native Rust diagnostics
@@ -124,19 +124,19 @@ The native
 initializes `sentry` before selecting a GPU device. Its guard remains alive until
 the example exits. The portable simulation crates do not initialize reporting.
 
-Set `GLITCHTIP_SIM_DSN`, `GLITCHTIP_RELEASE`, and `GLITCHTIP_ENVIRONMENT` in the
+Set `SENTRY_SIM_DSN`, `SENTRY_RELEASE`, and `SENTRY_ENVIRONMENT` in the
 process environment. Missing configuration disables reporting in `device-smoke`.
 Invalid configuration produces a generic message without the DSN.
 
 To send a controlled native verification error from the repository root:
 
 ```sh
-mise run glitchtip:smoke:native
+mise run sentry:smoke:native
 ```
 
 This example requires a DSN and prints the captured event ID. Queue flushing
 establishes that the native transport completed its queue processing. The SDK
-does not expose the server's HTTP result. Check the event in GlitchTip before
+does not expose the server's HTTP result. Check the event in Sentry before
 claiming live ingestion.
 
 ## Verification
@@ -145,7 +145,7 @@ claiming live ingestion.
 reporting, project routing, removal of identity and request data, panic deduplication,
 and listener cleanup. The dedicated
 [`browser smoke`](../web/scripts/test-reporting.ts) uses synthetic local projects
-and a separate WASM build. Its `glitchtip-smoke` Cargo feature exposes a deliberate
+and a separate WASM build. Its `sentry-smoke` Cargo feature exposes a deliberate
 verification panic. Normal production builds omit that function.
 
 Run `mise run test:reporting` for the real browser error and WASM panic check.
@@ -156,13 +156,22 @@ routing, privacy filtering and unavailable public map URLs.
 
 The receiver rejects session, log, metric and other envelope types.
 `mise run ci` includes this check. Local acceptance establishes SDK delivery and
-artifact matching. It does not establish upload success or acceptance by GlitchTip.
+artifact matching. It does not establish upload success or acceptance by Sentry.
 After upload, inspect a fresh event from the matching compiled application.
-Confirm its original file, line, function and source context in GlitchTip.
+Confirm its original file, line, function and source context in Sentry.
 
-The [GlitchTip browser guide](https://glitchtip.com/sdkdocs/javascript/) uses
+The [Sentry browser guide](https://docs.sentry.io/platforms/javascript/) uses
 `@sentry/browser`. The
 [Sentry JavaScript migration guide](https://github.com/getsentry/sentry-javascript/blob/11.4.0/MIGRATION.md)
 owns the version 11 `dataCollection` options. The
 [Rust SDK](https://github.com/getsentry/sentry-rust/tree/0.49.3) owns native transport
 and panic integration behavior.
+
+## Migration from GlitchTip
+
+Replace all GLITCHTIP environment variable names with SENTRY names.
+Use the Sentry project ingestion DSN for each enabled client. Old variables
+no longer enable reporting. The supplied Rust project DSN belongs in
+`VITE_SENTRY_SIM_DSN` for WASM and `SENTRY_SIM_DSN` for native examples.
+Set `SENTRY_URL=https://sentry.io` for private source-map uploads.
+The SDK remains pinned to Rust 0.49.3. Personal data collection stays disabled.
