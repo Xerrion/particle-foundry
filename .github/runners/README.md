@@ -1,5 +1,11 @@
 # Particle Foundry runners on Charles
 
+This is the retained configuration for the former Charles CI service.
+The [active workflow](../workflows/ci.yml) uses GitHub-hosted `ubuntu-latest`
+for every job. After hosted CI is adopted on `main` and verified, keep this
+service stopped; retain its configuration and volumes for recovery. This guide does not authorize
+re-enabling it. No generic per-repository fleet was deployed.
+
 This image supports the existing Linux CI tasks with two persistent slots:
 `particle-foundry-charles-1` and `particle-foundry-charles-2`. Both register only
 with `Xerrion/particle-foundry` and use the label `particle-foundry-ci`.

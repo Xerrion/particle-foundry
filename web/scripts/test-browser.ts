@@ -95,7 +95,9 @@ try {
 		[
 			binary,
 			"--headless=new",
-			"--enable-gpu",
+			// Only the explicit hardware gate forces GPU rendering. On headless
+			// Linux, that path can require X11 and stall ordinary CPU/WASM smoke.
+			...(requireGpu ? ["--enable-gpu"] : []),
 			`--user-data-dir=${profile}`,
 			"--no-first-run",
 			"--no-default-browser-check",
