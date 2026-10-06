@@ -62,6 +62,18 @@ fn v(@builtin(global_invocation_id) id: vec3<u32>) {
     let bottom = top + params.width;
     let inverse_density = 1.0 / (0.5 * density[top] + 0.5 * density[bottom]);
     let dynamic_gradient = (pressure[bottom] - pressure[top]) / params.dx_m;
-    corrected_v[face] = predictor_v[face] - params.dt_s * params.gravity_m_s2
-        - params.dt_s * inverse_density * dynamic_gradient;
+    let face_density = 0.5 * density[top] + 0.5 * density[bottom];
+    if (params.gravity_m_s2 == 0.0 || hydrostatic_base[params.cells + y] == face_density) {
+        // Keep the original operation order for exact hydrostatic cancellation.
+        // A backend may fuse the subtraction with the multiplication. Recognize
+        // the exact stored gravity predictor before that can leave a roundoff force.
+        let gravity_step = params.dt_s * params.gravity_m_s2;
+        let after_base = select(predictor_v[face] - gravity_step, 0.0, predictor_v[face] == gravity_step);
+        corrected_v[face] = after_base
+            - params.dt_s * inverse_density * dynamic_gradient;
+    } else {
+        let base_acceleration = params.gravity_m_s2 * (hydrostatic_base[params.cells + y] / face_density);
+        corrected_v[face] = predictor_v[face] - params.dt_s * base_acceleration
+            - params.dt_s * inverse_density * dynamic_gradient;
+    }
 }
