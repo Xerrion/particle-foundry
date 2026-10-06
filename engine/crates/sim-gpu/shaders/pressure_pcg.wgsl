@@ -110,7 +110,7 @@ fn apply_dynamic_at(cell: u32, x: u32, y: u32) -> f32 {
 }
 
 // The base field is stored separately from the small dynamic correction.
-// Its vertical face difference is computed from density, because subtracting
+// Its vertical face difference uses the row reference density, because subtracting
 // two large f32 pressure values would discard the low pressure correction.
 fn apply_hydrostatic_at(cell: u32, x: u32, y: u32) -> f32 {
     var result = 0.0;
@@ -126,11 +126,19 @@ fn apply_hydrostatic_at(cell: u32, x: u32, y: u32) -> f32 {
     }
     if (y > 0u) {
         let face = y * params.width + x;
-        result += aperture_v[face] * params.gravity_m_s2 / params.dx_m;
+        if (params.gravity_m_s2 != 0.0) {
+            let face_density = 0.5 * density[cell - params.width] + 0.5 * density[cell];
+            result += aperture_v[face] * params.gravity_m_s2 / params.dx_m
+                * (hydrostatic_base[params.cells + y] / face_density);
+        }
     }
     if (y + 1u < params.height) {
         let face = (y + 1u) * params.width + x;
-        result -= aperture_v[face] * params.gravity_m_s2 / params.dx_m;
+        if (params.gravity_m_s2 != 0.0) {
+            let face_density = 0.5 * density[cell] + 0.5 * density[cell + params.width];
+            result -= aperture_v[face] * params.gravity_m_s2 / params.dx_m
+                * (hydrostatic_base[params.cells + y + 1u] / face_density);
+        }
     }
     return result;
 }
@@ -173,10 +181,9 @@ fn init_preconditioner(@builtin(global_invocation_id) id: vec3<u32>) {
     if (cell >= params.cells) {
         return;
     }
-    let r = rhs[cell];
+    let r = rhs[cell] - apply_dynamic_at(cell, cell % params.width, cell / params.width);
     residual[cell] = r;
     preconditioned[cell] = r * density[cell] * params.dx_m * params.dx_m * 0.25;
-    search[cell] = preconditioned[cell];
 }
 
 @compute @workgroup_size(64)
@@ -185,10 +192,10 @@ fn init_preconditioner_from_guess(@builtin(global_invocation_id) id: vec3<u32>) 
     if (cell >= params.cells) {
         return;
     }
-    let r = rhs[cell] - apply_hydrostatic_at(cell, cell % params.width, cell / params.width);
+    let r = rhs[cell] - apply_hydrostatic_at(cell, cell % params.width, cell / params.width)
+        - apply_dynamic_at(cell, cell % params.width, cell / params.width);
     residual[cell] = r;
     preconditioned[cell] = r * density[cell] * params.dx_m * params.dx_m * 0.25;
-    search[cell] = preconditioned[cell];
 }
 
 @compute @workgroup_size(64)

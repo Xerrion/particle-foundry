@@ -5,6 +5,7 @@ import {
 	initializeEngine,
 	wasmAssetUrl,
 } from "../../src/engine-client/wasm";
+import { type InteractiveGpuReport, qualifyInteractiveGpu } from "./gpu-interactive";
 
 const result = document.querySelector("#result");
 if (!result) throw new Error("Smoke-test result element is missing");
@@ -69,6 +70,7 @@ function readGpuCheckpointInventory(
 	expectedTick: number,
 	expectedStateRevision: number,
 	expectedReadbackBytes: number,
+	expectedEpoch = 2,
 ): GpuInventoryTotals {
 	const cells = 480 * 270;
 	const componentBytes = cells * 4;
@@ -85,7 +87,7 @@ function readGpuCheckpointInventory(
 		fields.getUint32(4, true) !== 0 ||
 		fields.getUint32(8, true) !== 480 ||
 		fields.getUint32(12, true) !== 270 ||
-		fields.getBigUint64(16, true) !== 2n ||
+		fields.getBigUint64(16, true) !== BigInt(expectedEpoch) ||
 		fields.getBigUint64(24, true) !== BigInt(expectedTick) ||
 		!Number.isFinite(fields.getFloat64(32, true)) ||
 		Math.abs(fields.getFloat64(32, true) - expectedTick / 60) > 1e-6 ||
@@ -430,6 +432,7 @@ try {
 			paintRevisionAdvanced: boolean;
 			staleProbeRejected: boolean;
 			staleCheckpointRejected: boolean;
+			defaultBrushInteraction?: InteractiveGpuReport;
 			rest: {
 				initialTick: number;
 				checkpointTicks: number[];
@@ -1182,6 +1185,21 @@ try {
 						explicitCheckpointReadbackBytes: expectedReadbackBytes * 5,
 					};
 				}
+				const defaultBrushInteraction = sustained
+					? await qualifyInteractiveGpu(browserScene, canvas, {
+							inventory: (capture, stamp) =>
+								readGpuCheckpointInventory(
+									capture,
+									stamp.tick,
+									stamp.stateRevision,
+									expectedReadbackBytes,
+									stamp.epoch,
+								),
+							kineticEnergy: readGpuCheckpointKineticEnergy,
+							attemptAccounting: checkGpuAttemptAccounting,
+							pressureGates: checkGpuPressureGates,
+						})
+					: undefined;
 				const beforePaint = JSON.parse(browserScene.status_json()) as {
 					epoch: number;
 					tick: number;
@@ -1244,6 +1262,7 @@ try {
 					paintRevisionAdvanced,
 					staleProbeRejected,
 					staleCheckpointRejected,
+					defaultBrushInteraction,
 					rest: {
 						initialTick: 0,
 						checkpointTicks: restCheckpointTicks,
