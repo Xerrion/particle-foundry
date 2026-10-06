@@ -66,12 +66,18 @@ async function verify(): Promise<Record<string, unknown>> {
 	}
 	const flushCompleted = await reporting.flush(5_000);
 	await reporting.close();
+	const deliveryAccepted =
+		!__PF_VERIFY_LIVE__ ||
+		(remoteReplies.length === 2 &&
+			remoteReplies.every((reply) => reply.status === 200) &&
+			new Set(remoteReplies.map((reply) => reply.path)).size === 2);
 	const passed =
 		browserErrorObserved &&
 		rustPanicObserved &&
 		wasmTrapObserved &&
 		wasmTrapDeduplicated &&
-		flushCompleted;
+		flushCompleted &&
+		deliveryAccepted;
 	return {
 		status: passed ? "pass" : "fail",
 		browserErrorObserved,
@@ -79,6 +85,7 @@ async function verify(): Promise<Record<string, unknown>> {
 		wasmTrapObserved,
 		wasmTrapDeduplicated,
 		flushCompleted,
+		deliveryAccepted,
 	};
 }
 
