@@ -857,6 +857,7 @@ impl GpuCoupledScene {
         ] {
             commit.copy_buffer_to_buffer(source, 0, target, 0, target.size());
         }
+        self.pressure.encode_accepted_guess(&mut commit);
         queue.submit([commit.finish()]);
         self.scene.committed_index = 1 - self.scene.committed_index;
         self.scene.accepted_time_s = next_time;

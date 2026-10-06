@@ -8,7 +8,7 @@ struct Params {
     residual_tolerance: f32,
     divergence_tolerance: f32,
     gravity_m_s2: f32,
-    padding0: f32,
+    reuse_dynamic_guess: f32,
     padding1: f32,
     padding2: f32,
 }
@@ -41,6 +41,10 @@ fn main(@builtin(global_invocation_id) id: vec3<u32>) {
         - aperture_v[top] * predictor_v[top]
     ) / params.dx_m;
     rhs[cell] = -divergence / params.dt_s;
-    pressure[cell] = 0.0;
+    // Reuse only a numerical starting guess. The new RHS and both final gates
+    // determine acceptance. Zero-budget probes retain their cold-start contract.
+    if (params.reuse_dynamic_guess == 0.0) {
+        pressure[cell] = 0.0;
+    }
     hydrostatic_base[cell] = 0.0;
 }
