@@ -1,4 +1,7 @@
+import "./observability/init";
+
 import { type BrowserGpuSceneSession, initializeBrowserGpuScene } from "./engine-client/wasm";
+import { errorReporting } from "./observability/init";
 
 interface SceneStatus {
 	epoch: number;
@@ -81,6 +84,7 @@ function errorMessage(error: unknown): string {
 }
 
 function showError(context: string, error: unknown): void {
+	errorReporting.capture(error, "sim", context);
 	failed = true;
 	running = false;
 	const detail = errorMessage(error).trim();

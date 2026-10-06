@@ -21,7 +21,12 @@ Only `web/dist/` enters the final Nginx image. The
 on port `80`. WASM responses use `application/wasm`. The Docker healthcheck sends
 `GET /` every 30 seconds and requires a successful response. Missing paths return `404`.
 
-The application needs no environment variables, database or persistent volume.
+The application needs no required environment variables, database or persistent volume.
+Optional [GlitchTip reporting](error-reporting.md) uses public ingestion DSNs and
+release metadata at build time. The Dockerfile accepts `VITE_GLITCHTIP_WEB_DSN`,
+`VITE_GLITCHTIP_SIM_DSN`, `VITE_GLITCHTIP_RELEASE`, and `VITE_GLITCHTIP_ENVIRONMENT`
+as build arguments. Configure them as build variables in Coolify when reporting is required.
+Changing a running container's environment does not change the compiled browser configuration.
 The [.dockerignore](../.dockerignore) limits the context to the authored build
 inputs. It excludes credentials, `.env` files, artifacts, caches and build outputs.
 The builder needs no private container registry credential.
@@ -81,7 +86,8 @@ Coolify replaces `{{pr_id}}` with the GitHub pull request number.
 The tested preview address passed public HTTPS checks.
 
 Preview builds use the root Dockerfile, port `80` and HTTP `GET /` healthcheck.
-Keep preview environment variables empty. Do not copy production secrets,
+Leave preview reporting DSNs empty or use separate verification projects.
+Do not copy production secrets,
 persistent storage, host port mappings or custom Docker options into previews.
 
 Use a same-repository PR targeting `main` to check the native lifecycle:

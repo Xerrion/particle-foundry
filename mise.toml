@@ -90,7 +90,7 @@ run = "python docs/scripts/render-plan.py"
 
 [tasks.ci]
 description = "Run all continuous integration checks"
-depends = ["lint", "check", "build", "docs:check", "rust:fmt", "rust:test", "rust:clippy", "test:browser"]
+depends = ["lint", "check", "build", "docs:check", "rust:fmt", "rust:test", "rust:clippy", "test:browser", "test:reporting"]
 run = ["mise run check:wasm", "mise run check:catalogue"]
 
 [tasks."ci:web"]
@@ -103,7 +103,7 @@ depends = ["rust:fmt", "rust:clippy", "rust:test"]
 
 [tasks."ci:browser"]
 description = "Build and check browser assets with one shared WASM generation"
-depends = ["build", "typecheck", "test:browser"]
+depends = ["build", "typecheck", "test:browser", "test:reporting"]
 run = ["mise run check:wasm", "mise run check:catalogue"]
 
 [tasks."build:catalogue"]
@@ -163,6 +163,12 @@ dir = "{{config_root}}/web"
 depends = ["install", "rust:bindings-tool"]
 run = "bun scripts/build-wasm.ts"
 
+[tasks."build:wasm:reporting"]
+description = "Build separate Rust/WASM bindings with a deliberate reporting panic"
+dir = "{{config_root}}/web"
+depends = ["install", "rust:bindings-tool"]
+run = "bun scripts/build-wasm.ts --glitchtip-smoke"
+
 [tasks."check:wasm"]
 description = "Check generated WASM assets byte-for-byte against a fresh generation"
 dir = "{{config_root}}/web"
@@ -174,6 +180,18 @@ description = "Run production-bundled WASM lifecycle and optional WebGPU smoke"
 dir = "{{config_root}}/web"
 depends = ["install", "build:wasm"]
 run = "bun scripts/test-browser.ts"
+
+[tasks."test:reporting"]
+description = "Verify browser errors and Rust/WASM panics with local event receivers"
+dir = "{{config_root}}/web"
+depends = ["install", "build:wasm:reporting"]
+run = "bun scripts/test-reporting.ts"
+
+[tasks."glitchtip:smoke:native"]
+description = "Send one opt-in native Rust verification error"
+dir = "{{config_root}}/engine"
+depends = ["rust:toolchain"]
+run = "cargo run --locked -p particle-sim-gpu --example glitchtip-smoke"
 
 [tasks."validate:baseline"]
 description = "Capture fresh legacy characterization, controls and timing evidence"

@@ -38,6 +38,10 @@ RUN mise link bun@1.3.12 /opt/bun \
 
 WORKDIR /app
 COPY . .
+ARG VITE_GLITCHTIP_WEB_DSN
+ARG VITE_GLITCHTIP_SIM_DSN
+ARG VITE_GLITCHTIP_RELEASE
+ARG VITE_GLITCHTIP_ENVIRONMENT=production
 RUN mise trust /app/mise.toml \
     && mise run build
 

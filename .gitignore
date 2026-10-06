@@ -6,6 +6,8 @@ engine/target/
 web/generated/
 *.log
 .env
+.env.*
+!.env.example
 
 # Local logs, profiles, screenshots, archives and verification snapshots.
 artifacts/
