@@ -7,6 +7,5 @@ export const errorReporting = initializeErrorReporting({
 	simDsn: env?.VITE_GLITCHTIP_SIM_DSN,
 	release: env?.VITE_GLITCHTIP_RELEASE,
 	environment: env?.VITE_GLITCHTIP_ENVIRONMENT ?? env?.MODE,
-	baseUrl: env?.BASE_URL,
-	revision: typeof __PF_BUILD_REVISION__ === "string" ? __PF_BUILD_REVISION__ : undefined,
+	revision: env?.VITE_GLITCHTIP_REVISION,
 });

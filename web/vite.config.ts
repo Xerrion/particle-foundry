@@ -1,11 +1,9 @@
-import { resolve } from "node:path";
+import { dirname, relative, resolve, sep } from "node:path";
 import { defineConfig } from "vite";
-import { reportingSourceAssets } from "./scripts/reporting-source-assets.ts";
 
 export default defineConfig(({ mode }) => ({
 	define: { __PF_VERIFY_LIVE__: false },
 	base: ["engine-smoke", "glitchtip-smoke"].includes(mode) ? `/${mode}/` : "/",
-	plugins: [reportingSourceAssets(resolve(import.meta.dirname, ".."))],
 	resolve: {
 		alias:
 			mode === "glitchtip-smoke"
@@ -24,11 +22,19 @@ export default defineConfig(({ mode }) => ({
 		sourcemap: true,
 		outDir: "dist",
 		emptyOutDir: true,
-		rollupOptions:
-			mode === "engine-smoke"
-				? { input: "tests/browser/engine-smoke.html" }
-				: mode === "glitchtip-smoke"
-					? { input: "tests/browser/glitchtip-smoke.html" }
-					: { input: ["index.html", "gpu.html"] },
+		rollupOptions: {
+			output: {
+				sourcemapPathTransform: (source, mapPath) =>
+					relative(resolve(import.meta.dirname, ".."), resolve(dirname(mapPath), source))
+						.split(sep)
+						.join("/"),
+			},
+			input:
+				mode === "engine-smoke"
+					? "tests/browser/engine-smoke.html"
+					: mode === "glitchtip-smoke"
+						? "tests/browser/glitchtip-smoke.html"
+						: ["index.html", "gpu.html"],
+		},
 	},
 }));

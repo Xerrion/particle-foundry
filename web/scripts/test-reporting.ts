@@ -1,7 +1,10 @@
-import { mkdtemp, rm } from "node:fs/promises";
+import { readFileSync } from "node:fs";
+import { mkdtemp, readdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { join, resolve } from "node:path";
+import { basename, join, resolve } from "node:path";
+import { SourceMapConsumer } from "source-map-js";
 import { createEvidenceDirectory } from "./evidence-output";
+import { prepareReportingBuild } from "./prepare-reporting";
 
 const root = resolve(import.meta.dir, "../..");
 const web = join(root, "web");
@@ -10,6 +13,7 @@ if (process.argv.length > 3) {
 }
 const output = await createEvidenceDirectory(root, process.argv[2], "reporting");
 const site = join(output, "site");
+const archive = join(output, "private-maps");
 const binary =
 	process.env.CHROME_BIN ??
 	(process.platform === "darwin"
@@ -82,25 +86,70 @@ function recordEnvelope(body: string, project: "web" | "sim"): void {
 			project === "web"
 				? "web/tests/browser/glitchtip-smoke.ts"
 				: "engine/crates/wasm/src/reporting.rs";
-		const sourceFrame = exception.stacktrace?.frames?.find(
-			(frame: Record<string, unknown>) =>
-				frame.filename === sourceFile &&
-				frame.in_app === true &&
-				typeof frame.context_line === "string" &&
-				frame.context_line.includes(project === "web" ? "throw new Error" : "panic!("),
-		);
-		requireCondition(
-			sourceFrame?.lineno > 0 && sourceFrame?.colno > 0,
-			"Missing actionable source location and code context",
-		);
-		if (/^[a-f0-9]{40}$/.test(event.tags?.build_revision ?? "")) {
+		let sourceLine: number;
+		if (project === "web") {
+			const frame = exception.stacktrace?.frames?.at(-1);
 			requireCondition(
-				typeof sourceFrame.source_link === "string" &&
-					sourceFrame.source_link.includes(
-						`/blob/${event.tags.build_revision}/${sourceFile}#L${sourceFrame.lineno}`,
-					),
-				"Missing exact revision source link",
+				frame?.filename && frame.lineno > 0 && frame.colno > 0,
+				"Missing generated browser frame",
 			);
+			const codeFile = new URL(frame.filename).pathname;
+			const map = JSON.parse(
+				readFileSync(join(archive, "files", "assets", `${basename(codeFile)}.map`), "utf8"),
+			);
+			requireCondition(
+				event.debug_meta?.images?.some(
+					(image: Record<string, unknown>) =>
+						image.type === "sourcemap" &&
+						image.debug_id === map.debug_id &&
+						typeof image.code_file === "string" &&
+						new URL(image.code_file).pathname === codeFile,
+				),
+				"Missing matching source map debug ID",
+			);
+			const original = new SourceMapConsumer(map).originalPositionFor({
+				line: frame.lineno,
+				column: frame.colno - 1,
+			});
+			requireCondition(
+				original.source?.endsWith("tests/browser/glitchtip-smoke.ts") && original.line,
+				"Incorrect original browser source",
+			);
+			const sourceIndex = map.sources.indexOf(original.source);
+			const source = map.sourcesContent[sourceIndex];
+			requireCondition(
+				typeof source === "string" &&
+					source
+						.split("\n")
+						[original.line - 1]?.includes(
+							'throw new Error("Particle Foundry browser reporting verification")',
+						),
+				"Incorrect browser throw line or source context",
+			);
+			sourceLine = original.line;
+		} else {
+			const frame = exception.stacktrace?.frames?.find(
+				(value: Record<string, unknown>) =>
+					value.filename === sourceFile && value.platform === "rust",
+			);
+			requireCondition(
+				frame?.lineno > 0 && frame.colno > 0 && frame.in_app === true,
+				"Missing Rust panic source location",
+			);
+			const source = readFileSync(join(root, sourceFile), "utf8");
+			requireCondition(
+				source.split("\n")[frame.lineno - 1]?.includes("panic!("),
+				"Incorrect Rust panic origin",
+			);
+			if (/^[a-f0-9]{40}$/.test(event.tags?.build_revision ?? "")) {
+				requireCondition(
+					frame.source_link?.includes(
+						`/blob/${event.tags.build_revision}/${sourceFile}#L${frame.lineno}`,
+					),
+					"Missing exact revision source link",
+				);
+			}
+			sourceLine = frame.lineno;
 		}
 		requireCondition(
 			!["reporting-fixture-user", "reporting-fixture-extra", "reporting-fixture-query"].some(
@@ -109,7 +158,7 @@ function recordEnvelope(body: string, project: "web" | "sim"): void {
 			"Event retained synthetic private data",
 		);
 		eventIds.add(event.event_id);
-		events.push({ project, exceptionType: exception.type, sourceFile, line: sourceFrame.lineno });
+		events.push({ project, exceptionType: exception.type, sourceFile, line: sourceLine });
 	}
 }
 
@@ -130,6 +179,10 @@ const build = Bun.spawn(
 	},
 );
 if ((await build.exited) !== 0) throw new Error(`Reporting fixture build failed. See ${output}`);
+await prepareReportingBuild(site, archive, { VITE_GLITCHTIP_RELEASE: expectedRelease });
+const maps = await readdir(join(archive, "files", "assets"));
+const privateMap = maps.find((file) => file.endsWith(".js.map"));
+if (!privateMap) throw new Error("Reporting fixture has no private source maps");
 
 const receiver = Bun.serve({
 	hostname: "127.0.0.1",
@@ -176,6 +229,8 @@ const receiver = Bun.serve({
 		return new Response("Unknown fixture route", { status: 404 });
 	},
 });
+const mapResponse = await fetch(new URL(`/glitchtip-smoke/assets/${privateMap}`, receiver.url));
+requireCondition(mapResponse.status === 404, "Source map was publicly served");
 const url = new URL("/glitchtip-smoke/tests/browser/glitchtip-smoke.html", receiver.url);
 url.searchParams.set("report-token", reportToken);
 url.searchParams.set("fixture", "reporting-fixture-query");

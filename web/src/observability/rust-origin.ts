@@ -16,7 +16,7 @@ export function attachSourceLink(frame: SourceFrame, file: string, revision?: st
 	frame.source_link = `https://github.com/Xerrion/particle-foundry/blob/${revision}/${path}#L${frame.lineno}`;
 }
 
-/** Preserves the panic origin even when optional diagnostic assets cannot load. */
+/** Adds the source location provided by the Rust panic hook. */
 export function annotateRustOrigin(
 	event: ErrorEvent,
 	error: unknown,

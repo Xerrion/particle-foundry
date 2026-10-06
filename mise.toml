@@ -26,7 +26,13 @@ run = "vite"
 description = "Build the production application"
 dir = "{{config_root}}/web"
 depends = ["install", "build:wasm", "build:catalogue"]
-run = "vite build"
+run = ["vite build", "bun --no-env-file scripts/prepare-reporting.ts"]
+
+[tasks."glitchtip:upload"]
+description = "Upload the exact private source map artifacts from the prepared build"
+dir = "{{config_root}}/web"
+depends = ["install"]
+run = "bun scripts/prepare-reporting.ts upload"
 
 [tasks.preview]
 description = "Serve the production build locally"

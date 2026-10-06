@@ -11,7 +11,6 @@ import {
 	setCurrentClient,
 } from "@sentry/browser";
 import { annotateRustOrigin } from "./rust-origin";
-import { resolveSourceContext } from "./source-resolution";
 
 export interface ReportingConfiguration {
 	webDsn?: string;
@@ -19,7 +18,6 @@ export interface ReportingConfiguration {
 	release?: string;
 	environment?: string;
 	transport?: BrowserOptions["transport"];
-	baseUrl?: string;
 	revision?: string;
 }
 
@@ -55,9 +53,6 @@ export function initializeErrorReporting(config: ReportingConfiguration): ErrorR
 	const reportedTraps = new WeakSet<WebAssembly.RuntimeError>();
 	const scopes = new Map<"web" | "sim", Scope>();
 	const clients: BrowserClient[] = [];
-	let sourceEnricher:
-		| Promise<ReturnType<typeof import("./source-context")["createSourceEnricher"]>>
-		| undefined;
 	function isReportedTrap(error: unknown): boolean {
 		if (!(error instanceof WebAssembly.RuntimeError)) return false;
 		if (reportedTraps.has(error)) return true;
@@ -99,15 +94,9 @@ export function initializeErrorReporting(config: ReportingConfiguration): ErrorR
 				stackFrameVariables: false,
 				frameContextLines: 0,
 			},
-			async beforeSend(event, hint) {
+			beforeSend(event, hint) {
 				if (isReportedTrap(hint.originalException)) return null;
 				annotateRustOrigin(event, hint.originalException, config.revision);
-				event = await resolveSourceContext(event, hint.originalException, () => {
-					sourceEnricher ??= import("./source-context").then(({ createSourceEnricher }) =>
-						createSourceEnricher({ baseUrl: config.baseUrl, revision: config.revision }),
-					);
-					return sourceEnricher;
-				});
 				event.tags = { ...event.tags, project: `particle-foundry-${project}` };
 				if (config.revision) event.tags.build_revision = config.revision;
 				delete event.user;

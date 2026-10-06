@@ -24,36 +24,64 @@ revision or release identifier consistently across both projects.
 
 ## Debuggable source frames
 
-Vite emits JavaScript source maps with the original TypeScript content. The
-[`source enricher`](../web/src/observability/source-context.ts) resolves minified
-positions in the browser before sending an event. It includes the authored file,
-line, column, and up to five surrounding source lines. Dependencies and generated
-bindings do not contribute source snippets. Maps load only on the error path.
+Vite emits JavaScript source maps with the original TypeScript content.
+[`prepare-reporting.ts`](../web/scripts/prepare-reporting.ts) uses the pinned
+`sentry@0.45.0` build package to inject matching debug IDs into JavaScript and maps.
+It archives those exact files under ignored `web/reporting-artifacts/`, outside
+`web/dist/`, then removes maps from the public build.
+
+The browser sends generated stack frames and their debug IDs. After a private
+artifact upload, GlitchTip resolves matching frames to original TypeScript files,
+lines, functions and code context. The browser does not fetch or decode maps.
+This follows the [GlitchTip source-map workflow](https://glitchtip.com/documentation/error-tracking/#source-maps).
 
 Rust panics carry the structured `PanicHookInfo` file, line, and column. The
 [`origin annotator`](../web/src/observability/rust-origin.ts) adds this location as
-an application frame before optional network work. The
-[`source assets plugin`](../web/scripts/reporting-source-assets.ts) emits bounded
-JSON assets for public Rust source files. The browser reads only the requested
-file to add its code context. This identifies the panic origin. It does not
-reconstruct source locations for the complete Rust call stack.
+an application frame. It identifies the panic origin without code context.
+The build publishes no Rust source JSON assets. Uploaded JavaScript maps do not
+reconstruct the complete Rust or WASM call stack.
 
-Clean local and CI builds record the full Git revision and provide immutable
-GitHub source links. Relevant local edits add `-dirty`, which suppresses those
-links. Docker builds need the full `VITE_GLITCHTIP_REVISION` because their context
-excludes Git metadata. An unknown revision preserves file, line, and code context.
+Set `VITE_GLITCHTIP_REVISION` to the full 40-character Git commit SHA to add an
+immutable `source_link` to the Rust origin frame. Use it only when the build's
+source matches that commit. An omitted or invalid revision retains the Rust file,
+line and column, but omits the link. Docker does not include Git metadata.
 
-[`Source resolution`](../web/src/observability/source-resolution.ts) has a
-three-second deadline, including the optional module load. A timeout or missing
-asset preserves the error and Rust origin. Late work uses an isolated copy.
-Source requests omit credentials and referrers and stay within the application's
-origin and base path. Failed maps retry on a later error. Reporter shutdown
-allows five seconds for pending diagnostics and event delivery.
+## Upload private source maps
 
-GlitchTip 6 requires uploaded bundles for its server-side JavaScript mapping.
-Client resolution also works for local verification, where GlitchTip cannot
-reach the browser's localhost assets. Existing stored events retain their old
-frames. Verify fresh events after changing diagnostic data.
+A DSN permits event ingestion. Source-map uploads require a separate API token
+with upload access to the configured projects. Keep the token in a secret manager
+or protected process environment. Never put it in browser variables, Docker build
+arguments, Coolify settings or committed files.
+
+| Variable | Purpose |
+| --- | --- |
+| `SENTRY_AUTH_TOKEN` | Private upload token |
+| `SENTRY_URL` | GlitchTip instance URL, such as `https://err.xerrion.io` |
+| `SENTRY_ORG` | Organization slug, such as `xerrion` |
+| `SENTRY_PROJECT` | Web project slug, such as `particle-foundry-web` |
+| `SENTRY_SIM_PROJECT` | Optional sim project slug, such as `particle-foundry-sim` |
+
+Run these steps from the repository root in a trusted local or CI environment:
+
+1. Set the public browser configuration, including `VITE_GLITCHTIP_RELEASE`.
+2. Run `mise run build` to prepare the public build and private artifact archive.
+3. Supply the private upload variables, then run `mise run glitchtip:upload`.
+4. Deploy the matching `web/dist/` build through the authorized deployment process.
+5. Trigger a fresh error and check its original source frame in GlitchTip.
+
+The upload task reads the release recorded in the archive. It reuses exact
+injected artifacts without rebuilding or rewriting public JavaScript. A retry
+uses the same archive and debug IDs. Preserve the archive until upload and live
+verification finish. Upload maps to both projects when both receive browser frames.
+
+The token policy follows the xerrion-io reference. Its Coolify 4.3.23 review found
+encoded build environment values retained in deployment logs. The relevant
+[deployment code](https://github.com/coollabsio/coolify/blob/v4.3.23/app/Jobs/ApplicationDeploymentJob.php)
+and [command logging code](https://github.com/coollabsio/coolify/blob/v4.3.23/app/Traits/ExecuteRemoteCommand.php)
+support this limitation for the reviewed version.
+
+Existing stored events retain their old frames. Validate fresh events after
+uploading maps; do not expect an upload to repair earlier events retroactively.
 
 ## Browser and WASM ownership
 
@@ -80,8 +108,9 @@ The panic hook preserves the previous Rust hook for local diagnostics.
 The pinned browser SDK uses explicit error integrations. Session tracking,
 replay, tracing, profiling, console capture, logs, and metrics are disabled.
 The SDK excludes user information, cookies, HTTP headers and bodies, URL query
-parameters, and stack variables. Only authored public source snippets enter the
-explicit diagnostic frames. The final error filter
+parameters, and stack variables. Reports retain error messages, stack frames and
+debug IDs. GlitchTip can add source context from the private uploaded maps.
+The final error filter
 removes user, request, breadcrumb, and extra fields.
 
 Error messages and stack traces remain part of the report. Do not put credentials
@@ -114,19 +143,22 @@ claiming live ingestion.
 
 [`reporting.test.ts`](../web/tests/observability/reporting.test.ts) checks disabled
 reporting, project routing, removal of identity and request data, panic deduplication,
-and listener cleanup. [Source tests](../web/tests/observability/source-context.test.ts)
-check mapped positions, code context, retry, missing assets, and cross-origin
-rejection. [Deadline tests](../web/tests/observability/source-resolution.test.ts)
-check delivery during stalled loads and shutdown. The dedicated browser reporting smoke uses synthetic local
-projects and a separate WASM build. Its `glitchtip-smoke` Cargo feature exposes a
-deliberate verification panic. Normal production builds omit that function.
+and listener cleanup. The dedicated
+[`browser smoke`](../web/scripts/test-reporting.ts) uses synthetic local projects
+and a separate WASM build. Its `glitchtip-smoke` Cargo feature exposes a deliberate
+verification panic. Normal production builds omit that function.
 
 Run `mise run test:reporting` for the real browser error and WASM panic check.
-The local receiver must accept exactly one event for each project, with its exact
-TypeScript or Rust source frame and code context. It rejects
-session, log, metric, and other envelope types. `mise run ci` includes this check.
-Local receiver acceptance establishes SDK delivery and routing. It does not
-establish acceptance by a deployed GlitchTip server.
+The local receiver must accept exactly one event for each project. The check
+matches generated browser frames and debug IDs against the private map's original
+TypeScript throw location and context. It also checks the Rust origin, project
+routing, privacy filtering and unavailable public map URLs.
+
+The receiver rejects session, log, metric and other envelope types.
+`mise run ci` includes this check. Local acceptance establishes SDK delivery and
+artifact matching. It does not establish upload success or acceptance by GlitchTip.
+After upload, inspect a fresh event from the matching compiled application.
+Confirm its original file, line, function and source context in GlitchTip.
 
 The [GlitchTip browser guide](https://glitchtip.com/sdkdocs/javascript/) uses
 `@sentry/browser`. The

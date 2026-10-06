@@ -29,7 +29,19 @@ release metadata at build time. The Dockerfile accepts `VITE_GLITCHTIP_WEB_DSN`,
 as build arguments. Configure them as build variables in Coolify when reporting is required.
 Changing a running container's environment does not change the compiled browser configuration.
 Set the revision to the full commit SHA for links from error frames to exact source lines.
-Docker excludes Git metadata, so an omitted revision produces source context without commit links.
+Docker excludes Git metadata. An omitted revision retains the Rust panic file, line and column,
+but omits its commit link. Uploaded source maps resolve browser frames by debug ID.
+Keep source-map upload tokens out of Docker and Coolify. Upload the exact archived build
+artifacts from a trusted local or CI environment as described in the reporting guide.
+
+The Docker builder retains private source maps. The final Nginx image contains only the
+public build. To export the maps, select the `reporting-artifacts` Docker build target
+and use local output at `web/reporting-artifacts/`. Use the same source context and public
+build arguments as the runtime image. Then run `mise run glitchtip:upload` in a trusted
+environment with the [private upload configuration](error-reporting.md#upload-private-source-maps).
+Preserve this export with its matching runtime image. A separate rebuild does not establish
+that its artifacts match a Coolify deployment. Their debug IDs must match the served
+JavaScript; arbitrary rebuilt maps cannot resolve an existing deployment's frames.
 The [.dockerignore](../.dockerignore) limits the context to the authored build
 inputs. It excludes credentials, `.env` files, artifacts, caches and build outputs.
 The builder needs no private container registry credential.

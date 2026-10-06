@@ -12,8 +12,7 @@ const reporting = initializeErrorReporting({
 		: `http://public@${location.host}/2`,
 	release: "particle-foundry-reporting-smoke",
 	environment: "verification",
-	baseUrl: import.meta.env.BASE_URL,
-	revision: __PF_BUILD_REVISION__,
+	revision: import.meta.env.VITE_GLITCHTIP_REVISION,
 	transport: (options) =>
 		makeFetchTransport(options, async (input, init) => {
 			const response = await fetch(input, init);

@@ -46,6 +46,9 @@ ARG VITE_GLITCHTIP_ENVIRONMENT=production
 RUN mise trust /app/mise.toml \
     && mise run build
 
+FROM scratch AS reporting-artifacts
+COPY --from=build /app/web/reporting-artifacts/ /
+
 FROM nginx:1.28.1-alpine@sha256:52e3ada4d978443601f286cc2f9e7b95c82aa3ad5a78ce9c6b94ce00258e68cc AS runtime
 
 RUN rm -rf /usr/share/nginx/html/*
