@@ -1,5 +1,7 @@
 //! Explicit native adapter test. Failure is not converted to a skipped success.
 
+mod support;
+
 use std::{
     future::Future,
     sync::Arc,
@@ -15,6 +17,10 @@ impl Wake for Notify {
 }
 
 fn main() {
+    let _reporting = support::initialize_reporting().unwrap_or_else(|error| {
+        eprintln!("Native error reporting disabled: {error}");
+        None
+    });
     let waker: Waker = Arc::new(Notify(std::thread::current())).into();
     let mut context = Context::from_waker(&waker);
     let mut future = Box::pin(async {
