@@ -247,6 +247,14 @@ Expose passing subsets experimentally during development. The default switch req
 
 ### Interactive performance priority on 6 October 2026
 
+[XER-64](https://linear.app/xerrion/issue/XER-64/run-the-experimental-gpu-scene-in-real-time)
+owns interactive real-time optimization, its precision tradeoff and PR #17.
+[XER-63](https://linear.app/xerrion/issue/XER-63/fix-gpu-pressure-nonconvergence-during-sustained-browser-scene)
+owns the pressure-stop stability defect and its remaining production verification.
+[XER-38](https://linear.app/xerrion/issue/XER-38/validate-current-sandbox-coverage-and-default-gpu-rollout)
+owns final whole-sandbox coverage, device validation and default promotion.
+These outcomes are linked but have separate completion criteria.
+
 The user prioritizes real-time interaction and accepts modest reductions in
 numerical precision. For the current experimental GPU work, preserving existing
 solve precision is subordinate to that measured gameplay target. Shorter
@@ -272,7 +280,7 @@ not a sufficient substitute for the real-time target.
 Work is paused at the user's request after this decision is recorded. Resume
 implementation only when the user returns and authorizes continuation. No
 lower-precision configuration was implemented or qualified by this decision.
-XER-63 remains In Progress. Feature coverage and M7 promotion remain open.
+XER-64 remains In Progress. Feature coverage and M7 promotion remain open.
 
 ## 4. Acceptance matrix
 

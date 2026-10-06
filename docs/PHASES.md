@@ -12,8 +12,9 @@ holds the detailed checklist of what must work before the switch is complete.
 
 **Priority decision (6 October 2026):** Real-time interaction takes priority in
 the experimental GPU scene. The user accepts a modest loss of numerical
-precision to reach it. The next task is to compare cheaper pressure and
-transport settings against the same interactive workload. Work is paused until
+precision to reach it. [XER-64](https://linear.app/xerrion/issue/XER-64/run-the-experimental-gpu-scene-in-real-time)
+owns this work. The next task is to compare cheaper pressure and transport
+settings against the same interactive workload. Work is paused until
 the user resumes. See the [performance decision](plans/fluid-gpu-redesign/plan.md#interactive-performance-priority-on-6-october-2026)
 for the target, measurement rules and remaining correctness requirements.
 
