@@ -6,53 +6,49 @@ import { build } from "vite";
 import { productionReportingEnvironment } from "../../scripts/prepare-reporting";
 
 const roots: string[] = [];
-const originalRelease = process.env.VITE_GLITCHTIP_RELEASE;
+const originalRelease = process.env.VITE_SENTRY_RELEASE;
 afterEach(async () => {
-	if (originalRelease === undefined) delete process.env.VITE_GLITCHTIP_RELEASE;
-	else process.env.VITE_GLITCHTIP_RELEASE = originalRelease;
+	if (originalRelease === undefined) delete process.env.VITE_SENTRY_RELEASE;
+	else process.env.VITE_SENTRY_RELEASE = originalRelease;
 	await Promise.all(roots.splice(0).map((root) => rm(root, { recursive: true, force: true })));
 });
 
 async function fixture(): Promise<string> {
 	const root = await mkdtemp(join(tmpdir(), "particle-reporting-env-"));
 	roots.push(root);
-	delete process.env.VITE_GLITCHTIP_RELEASE;
+	delete process.env.VITE_SENTRY_RELEASE;
 	for (const [file, release] of [
 		[".env", "base-release"],
 		[".env.local", "local-release"],
 		[".env.production", "production-release"],
 		[".env.production.local", "production-local-release"],
 	])
-		await writeFile(join(root, file), `VITE_GLITCHTIP_RELEASE=${release}\n`);
+		await writeFile(join(root, file), `VITE_SENTRY_RELEASE=${release}\n`);
 	return root;
 }
 
 test("production preparation uses Vite mode-file precedence", async () => {
 	const root = await fixture();
-	expect(productionReportingEnvironment(root).VITE_GLITCHTIP_RELEASE).toBe(
-		"production-local-release",
-	);
+	expect(productionReportingEnvironment(root).VITE_SENTRY_RELEASE).toBe("production-local-release");
 	await rm(join(root, ".env.production.local"));
-	expect(productionReportingEnvironment(root).VITE_GLITCHTIP_RELEASE).toBe("production-release");
+	expect(productionReportingEnvironment(root).VITE_SENTRY_RELEASE).toBe("production-release");
 	await rm(join(root, ".env.production"));
-	expect(productionReportingEnvironment(root).VITE_GLITCHTIP_RELEASE).toBe("local-release");
+	expect(productionReportingEnvironment(root).VITE_SENTRY_RELEASE).toBe("local-release");
 	await rm(join(root, ".env.local"));
-	expect(productionReportingEnvironment(root).VITE_GLITCHTIP_RELEASE).toBe("base-release");
-	process.env.VITE_GLITCHTIP_RELEASE = "explicit-process-release";
-	expect(productionReportingEnvironment(root).VITE_GLITCHTIP_RELEASE).toBe(
-		"explicit-process-release",
-	);
+	expect(productionReportingEnvironment(root).VITE_SENTRY_RELEASE).toBe("base-release");
+	process.env.VITE_SENTRY_RELEASE = "explicit-process-release";
+	expect(productionReportingEnvironment(root).VITE_SENTRY_RELEASE).toBe("explicit-process-release");
 });
 
 test.each([undefined, "explicit-process-release"])(
 	"the CLI archives the release compiled by the production Vite build with process override %j",
 	async (processRelease) => {
 		const root = await fixture();
-		if (processRelease) process.env.VITE_GLITCHTIP_RELEASE = processRelease;
+		if (processRelease) process.env.VITE_SENTRY_RELEASE = processRelease;
 		await mkdir(join(root, "src"));
 		await writeFile(
 			join(root, "src/entry.ts"),
-			"export const compiledRelease = import.meta.env.VITE_GLITCHTIP_RELEASE;\n",
+			"export const compiledRelease = import.meta.env.VITE_SENTRY_RELEASE;\n",
 		);
 		await build({
 			root,
@@ -65,7 +61,7 @@ test.each([undefined, "explicit-process-release"])(
 			},
 		});
 		const environment: NodeJS.ProcessEnv = { ...process.env, SENTRY_AUTH_TOKEN: undefined };
-		if (!processRelease) delete environment.VITE_GLITCHTIP_RELEASE;
+		if (!processRelease) delete environment.VITE_SENTRY_RELEASE;
 		const child = Bun.spawn(
 			[
 				process.execPath,

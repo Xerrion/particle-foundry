@@ -22,10 +22,10 @@ on port `80`. WASM responses use `application/wasm`. The Docker healthcheck send
 `GET /` every 30 seconds and requires a successful response. Missing paths return `404`.
 
 The application needs no required environment variables, database or persistent volume.
-Optional [GlitchTip reporting](error-reporting.md) uses public ingestion DSNs and
-release metadata at build time. The Dockerfile accepts `VITE_GLITCHTIP_WEB_DSN`,
-`VITE_GLITCHTIP_SIM_DSN`, `VITE_GLITCHTIP_RELEASE`, `VITE_GLITCHTIP_ENVIRONMENT`, and
-`VITE_GLITCHTIP_REVISION`
+Optional [Sentry reporting](error-reporting.md) uses public ingestion DSNs and
+release metadata at build time. The Dockerfile accepts `VITE_SENTRY_WEB_DSN`,
+`VITE_SENTRY_SIM_DSN`, `VITE_SENTRY_RELEASE`, `VITE_SENTRY_ENVIRONMENT`, and
+`VITE_SENTRY_REVISION`
 as build arguments. Configure them as build variables in Coolify when reporting is required.
 Changing a running container's environment does not change the compiled browser configuration.
 Set the revision to the full commit SHA for links from error frames to exact source lines.
@@ -37,7 +37,7 @@ artifacts from a trusted local or CI environment as described in the reporting g
 The Docker builder retains private source maps. The final Nginx image contains only the
 public build. To export the maps, select the `reporting-artifacts` Docker build target
 and use local output at `web/reporting-artifacts/`. Use the same source context and public
-build arguments as the runtime image. Then run `mise run glitchtip:upload` in a trusted
+build arguments as the runtime image. Then run `mise run sentry:upload` in a trusted
 environment with the [private upload configuration](error-reporting.md#upload-private-source-maps).
 Preserve this export with its matching runtime image. A separate rebuild does not establish
 that its artifacts match a Coolify deployment. Their debug IDs must match the served

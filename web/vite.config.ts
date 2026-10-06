@@ -3,16 +3,16 @@ import { defineConfig } from "vite";
 
 export default defineConfig(({ mode }) => ({
 	define: { __PF_VERIFY_LIVE__: false },
-	base: ["engine-smoke", "glitchtip-smoke"].includes(mode) ? `/${mode}/` : "/",
+	base: ["engine-smoke", "sentry-smoke"].includes(mode) ? `/${mode}/` : "/",
 	resolve: {
 		alias:
-			mode === "glitchtip-smoke"
+			mode === "sentry-smoke"
 				? [
 						{
 							find: "../../generated/wasm/particle_wasm",
 							replacement: resolve(
 								import.meta.dirname,
-								"generated/wasm-glitchtip-smoke/particle_wasm.js",
+								"generated/wasm-sentry-smoke/particle_wasm.js",
 							),
 						},
 					]
@@ -32,8 +32,8 @@ export default defineConfig(({ mode }) => ({
 			input:
 				mode === "engine-smoke"
 					? "tests/browser/engine-smoke.html"
-					: mode === "glitchtip-smoke"
-						? "tests/browser/glitchtip-smoke.html"
+					: mode === "sentry-smoke"
+						? "tests/browser/sentry-smoke.html"
 						: ["index.html", "gpu.html"],
 		},
 	},

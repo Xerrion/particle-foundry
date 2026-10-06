@@ -5,13 +5,12 @@ mod support;
 use std::time::Duration;
 
 fn main() -> Result<(), &'static str> {
-    let guard =
-        support::initialize_reporting()?.ok_or("Set GLITCHTIP_SIM_DSN before verification")?;
+    let guard = support::initialize_reporting()?.ok_or("Set SENTRY_SIM_DSN before verification")?;
     if !guard.is_enabled() {
         return Err("Native error reporting is disabled");
     }
     let event_id = sentry::capture_message(
-        "Particle Foundry native GlitchTip verification",
+        "Particle Foundry native Sentry verification",
         sentry::Level::Error,
     );
     if event_id.is_nil() {
@@ -21,6 +20,6 @@ fn main() -> Result<(), &'static str> {
         return Err("The native reporting queue did not drain within 10 seconds");
     }
     println!("Native verification event captured: {event_id}");
-    println!("Transport queue drained. Check GlitchTip for event ingestion.");
+    println!("Transport queue drained. Check Sentry for event ingestion.");
     Ok(())
 }

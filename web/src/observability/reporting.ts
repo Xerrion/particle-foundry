@@ -43,7 +43,7 @@ function configuredDsn(value: string | undefined): string | undefined {
 	} catch {
 		// A configuration failure must not stop the sandbox or expose its DSN.
 	}
-	console.warn("GlitchTip reporting disabled for an invalid DSN.");
+	console.warn("Sentry reporting disabled for an invalid DSN.");
 	return undefined;
 }
 

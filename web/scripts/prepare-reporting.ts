@@ -227,7 +227,7 @@ export async function prepareReportingBuild(
 		}
 		const manifest: ArtifactManifest = {
 			version: 1,
-			release: environment.VITE_GLITCHTIP_RELEASE?.trim() || undefined,
+			release: environment.VITE_SENTRY_RELEASE?.trim() || undefined,
 			files: await hashes(join(staging, "files")),
 		};
 		await writeFile(join(staging, "manifest.json"), JSON.stringify(manifest, null, 2));
@@ -248,7 +248,7 @@ export async function prepareReportingBuild(
 		archivedScripts,
 		archivedMaps,
 		uploadedProjects,
-		release: environment.VITE_GLITCHTIP_RELEASE?.trim() || undefined,
+		release: environment.VITE_SENTRY_RELEASE?.trim() || undefined,
 	};
 }
 
