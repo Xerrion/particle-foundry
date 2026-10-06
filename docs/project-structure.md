@@ -28,6 +28,7 @@ particle-foundry/
       main.ts                       Live browser startup and frame loop
       gpu-main.ts                   Experimental GPU controls and loop
       app/                          DOM, controls, viewport, pointer mapping, clock
+      observability/                Optional browser and Rust panic error reporting
       engine-client/index.ts        Public browser access to the legacy backend
       engine-client/session.ts      Bounded experimental command/probe contract
       engine-client/canvas.ts       Context ownership before acquisition
