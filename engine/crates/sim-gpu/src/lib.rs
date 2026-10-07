@@ -38,8 +38,7 @@ impl GpuContext {
     /// Requests baseline compute support. Never substitutes WebGL or a different model.
     pub async fn new() -> Result<Self, String> {
         let instance = wgpu::Instance::default();
-        let adapter = instance
-            .request_adapter(&wgpu::RequestAdapterOptions::default())
+        let adapter = request_adapter(&instance, None)
             .await
             .map_err(|error| format!("WebGPU/native compute adapter unavailable: {error}"))?;
         let info = adapter.get_info();
@@ -74,4 +73,24 @@ impl GpuContext {
     pub fn dispose(self) {
         drop(self);
     }
+}
+
+/// Prefer the device intended for sustained compute and canvas rendering.
+pub(crate) async fn request_adapter(
+    instance: &wgpu::Instance,
+    surface: Option<&wgpu::Surface<'_>>,
+) -> Result<wgpu::Adapter, wgpu::RequestAdapterError> {
+    let options = wgpu::RequestAdapterOptions {
+        power_preference: wgpu::PowerPreference::HighPerformance,
+        compatible_surface: surface,
+        ..Default::default()
+    };
+    let result = instance.request_adapter(&options).await;
+    // Headless browser GPU startup can return null on the first request.
+    // Retry once before reporting unavailable; never create a fallback scene.
+    #[cfg(target_arch = "wasm32")]
+    if result.is_err() {
+        return instance.request_adapter(&options).await;
+    }
+    result
 }

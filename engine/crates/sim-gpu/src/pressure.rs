@@ -116,6 +116,7 @@ struct Pipelines {
     reduce_initial: wgpu::ComputePipeline,
     reduce_denominator: wgpu::ComputePipeline,
     reduce_updated: wgpu::ComputePipeline,
+    reduce_cached: wgpu::ComputePipeline,
     finish_initial: wgpu::ComputePipeline,
     finish_alpha: wgpu::ComputePipeline,
     finish_beta: wgpu::ComputePipeline,
