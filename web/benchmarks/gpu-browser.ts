@@ -204,6 +204,10 @@ async function benchmark(canvas: HTMLCanvasElement) {
 		gpu.requestAdapter = originalRequest;
 	}
 	try {
+		const selectedAdapter = adapterRequests.at(-1)?.info;
+		if (selectedAdapter?.isFallbackAdapter !== false) {
+			throw new Error("GPU benchmark requires an identified hardware adapter");
+		}
 		const warmup = await measure(scene, 10);
 		const runs = [];
 		for (let run = 0; run < 3; run += 1) runs.push(await measure(scene, 60));
