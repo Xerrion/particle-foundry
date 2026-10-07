@@ -16,8 +16,11 @@ precision to reach it. [XER-64](https://linear.app/xerrion/issue/XER-64/run-the-
 owns this work. The [7 October comparison](validation/p1-m3-e08.md#rtx-pressure-and-transport-comparison-on-7-october-2026)
 found faster trial settings, but they missed the selected accuracy limit and
 the real-time target. The retained change reuses a pressure calculation without
-changing its results on the measured device. The next task is to measure the
-remaining GPU and browser costs before choosing a larger solver change.
+changing its results on the measured device. The
+[continued scheduling comparison](validation/p1-m3-e08.md#browser-completion-batch-comparison-on-7-october-2026)
+reduces browser completion waits. Repeated runs take 22.0% less time and keep
+identical final fields. Real time remains unmet. The next task is to reduce the
+GPU work in pressure or transport while keeping the required accuracy limits.
 The user resumed this work after the existing PRs were merged. See the [performance decision](plans/fluid-gpu-redesign/plan.md#interactive-performance-priority-on-6-october-2026)
 for the target, measurement rules and remaining correctness requirements.
 

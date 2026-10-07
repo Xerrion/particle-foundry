@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="source-sha256" content="912e3ff391350935803cdea563fb8eeab05191f340135c8eb8b2a93e648e691c">
+<meta name="source-sha256" content="9e0cdcfbaf39de67d445bc133b364f191ef1a8261a63dba591ef49606261eae5">
 <meta name="description" content="Particle Foundry P1 implementation plan: Rust reference, WASM delivery, wgpu/WGSL execution, and future-ready composition.">
 <title>Fluid and GPU redesign | Particle Foundry</title>
 <style>
@@ -328,6 +328,29 @@ The next bounded action measures GPU execution and host-encoding costs before
 selecting a materially cheaper pressure solve or transport correction. The
 comparison budgets above remain explicit; no failed limit was relaxed to
 qualify a candidate.</p>
+<h3 id="browser-completion-batches-on-7-october-2026">Browser completion batches on 7 October 2026</h3>
+<p>The real-time outcome remains at least one accepted model second per wall
+second at 480 x 270, with rendering and the fixed Water-brush fixture.
+Finite values, nonnegative inventory, mass accounting, accurate accepted time
+and atomic rejection remain required. A faster clock or a failed accuracy gate
+cannot establish this outcome.</p>
+<p>The <a href="../../validation/p1-m3-e08.md#browser-completion-batch-comparison-on-7-october-2026">continued cost comparison</a>
+measures WebGPU method costs and mapping lifetimes separately. Pressure
+completion waits include GPU execution and browser delivery. They are not
+exclusive CPU costs. Fewer completion boundaries are therefore a candidate
+mechanism; a larger batch can also waste work after convergence.</p>
+<p>Compare 32, 64, 128 and 256 iterations per submitted pressure batch with the
+same solver arithmetic, 512-iteration cap, pressure gates and transport rounds.
+Require identical final fields for this scheduling change on the measured RTX
+fixture, then run the sustained browser gates. Select the faster repeated
+candidate rather than the largest batch. Retain 32 iterations in native builds
+until a separate native hardware comparison supports a change. The selected
+browser batch is recorded by <code>bench:gpu</code>.</p>
+<p>This changes completion scheduling, not the accepted numerical profile.
+Reconsider the batch when measured throughput regresses on a required browser
+adapter. A stronger pressure solve or transport correction remains a separate
+bounded experiment because completion scheduling alone does not remove the
+measured GPU execution cost.</p>
 <h2 id="4-acceptance-matrix">4. Acceptance matrix</h2>
 <p>The following are proposed starting gates, not measurements. Freeze fixture scales and thresholds in M0/M2 before optimization. Any later tolerance change needs a numerical rationale, including grid/time refinement, rather than matching the latest output.</p>
 <div class="table-scroll"><table>

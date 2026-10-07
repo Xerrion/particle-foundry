@@ -322,6 +322,34 @@ selecting a materially cheaper pressure solve or transport correction. The
 comparison budgets above remain explicit; no failed limit was relaxed to
 qualify a candidate.
 
+### Browser completion batches on 7 October 2026
+
+The real-time outcome remains at least one accepted model second per wall
+second at 480 x 270, with rendering and the fixed Water-brush fixture.
+Finite values, nonnegative inventory, mass accounting, accurate accepted time
+and atomic rejection remain required. A faster clock or a failed accuracy gate
+cannot establish this outcome.
+
+The [continued cost comparison](../../validation/p1-m3-e08.md#browser-completion-batch-comparison-on-7-october-2026)
+measures WebGPU method costs and mapping lifetimes separately. Pressure
+completion waits include GPU execution and browser delivery. They are not
+exclusive CPU costs. Fewer completion boundaries are therefore a candidate
+mechanism; a larger batch can also waste work after convergence.
+
+Compare 32, 64, 128 and 256 iterations per submitted pressure batch with the
+same solver arithmetic, 512-iteration cap, pressure gates and transport rounds.
+Require identical final fields for this scheduling change on the measured RTX
+fixture, then run the sustained browser gates. Select the faster repeated
+candidate rather than the largest batch. Retain 32 iterations in native builds
+until a separate native hardware comparison supports a change. The selected
+browser batch is recorded by `bench:gpu`.
+
+This changes completion scheduling, not the accepted numerical profile.
+Reconsider the batch when measured throughput regresses on a required browser
+adapter. A stronger pressure solve or transport correction remains a separate
+bounded experiment because completion scheduling alone does not remove the
+measured GPU execution cost.
+
 ## 4. Acceptance matrix
 
 The following are proposed starting gates, not measurements. Freeze fixture scales and thresholds in M0/M2 before optimization. Any later tolerance change needs a numerical rationale, including grid/time refinement, rather than matching the latest output.
