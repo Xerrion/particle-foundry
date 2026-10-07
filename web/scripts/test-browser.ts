@@ -11,12 +11,14 @@ const web = resolve(root, "web");
 const output = await createEvidenceDirectory(root, process.argv[2], "browser");
 const requireGpu = process.argv[3] === "--require-gpu";
 const sustainedGpu = process.argv[4] === "--sustained-gpu";
+const benchmarkGpu = process.argv[4] === "--benchmark-gpu";
 if (
-	process.argv.length > (sustainedGpu ? 5 : requireGpu ? 4 : 3) ||
-	(sustainedGpu && !requireGpu)
+	process.argv.length > (sustainedGpu || benchmarkGpu ? 5 : requireGpu ? 4 : 3) ||
+	((sustainedGpu || benchmarkGpu) && !requireGpu) ||
+	(process.argv[4] !== undefined && !sustainedGpu && !benchmarkGpu)
 ) {
 	throw new Error(
-		"Usage: test-browser.ts [new-evidence-directory] [--require-gpu] [--sustained-gpu]",
+		"Usage: test-browser.ts [new-evidence-directory] [--require-gpu] [--sustained-gpu | --benchmark-gpu]",
 	);
 }
 const binary =
@@ -24,7 +26,8 @@ const binary =
 	(process.platform === "darwin"
 		? "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
 		: "/usr/bin/google-chrome");
-const url = new URL("http://127.0.0.1:4174/engine-smoke/tests/browser/engine-smoke.html");
+const fixture = benchmarkGpu ? "benchmarks/gpu.html" : "tests/browser/engine-smoke.html";
+const url = new URL(`http://127.0.0.1:4174/engine-smoke/${fixture}`);
 if (requireGpu) url.searchParams.set("require-gpu", "");
 if (sustainedGpu) url.searchParams.set("sustained-gpu", "");
 let finish: (report: Record<string, unknown>) => void;
@@ -113,7 +116,7 @@ try {
 			throw new Error(`Browser exited before reporting (exit ${code}); see ${output}`);
 		}),
 		new Promise<never>((_, reject) => {
-			const timeoutMs = sustainedGpu ? 600_000 : 30_000;
+			const timeoutMs = sustainedGpu || benchmarkGpu ? 600_000 : 30_000;
 			timeout = setTimeout(
 				() =>
 					reject(

@@ -47,6 +47,7 @@ build og typekontrol genererer bindings i ignoreret `web/generated/wasm/`.
 | `mise run test:browser` | Test WASM-livscyklus og tilgængelig WebGPU i en isoleret browser. |
 | `mise run build` | Byg produktionsudgaven i `web/dist/`. |
 | `mise run bench` | Mål 240 × 135-belastninger og 480 × 270-startscenen mod 60 Hz-budgettet. |
+| `mise run bench:gpu artifacts/validation/browser/<new-run>` | Mål GPU-scenen med Water-penslen i tre korte kørsler og en 300-ticks kørsel. Kræver WebGPU. |
 | `mise run preview` | Byg og servér produktionsudgaven lokalt. |
 | `mise run docs:check` | Kontrollér dokumentation, links og historisk evidens. |
 | `mise run docs:render` | Generér GPU-planens HTML fra Markdown. |

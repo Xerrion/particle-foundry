@@ -12,6 +12,7 @@ pub(super) struct PressureBindings {
     pub(super) reduce_initial: wgpu::BindGroup,
     pub(super) reduce_denominator: wgpu::BindGroup,
     pub(super) reduce_updated: wgpu::BindGroup,
+    pub(super) reduce_cached: wgpu::BindGroup,
     pub(super) finish_initial: wgpu::BindGroup,
     pub(super) finish_alpha: wgpu::BindGroup,
     pub(super) finish_beta: wgpu::BindGroup,
@@ -177,6 +178,16 @@ impl GpuPressureProjector {
                 (10, &self.partials),
             ],
         );
+        let reduce_cached = bind(
+            device,
+            &self.pipelines.reduce_cached,
+            &[
+                (0, uniform),
+                (1, fields.density),
+                (6, &self.residual),
+                (10, &self.partials),
+            ],
+        );
         let reduce_updated = bind(
             device,
             &self.pipelines.reduce_updated,
@@ -305,6 +316,7 @@ impl GpuPressureProjector {
             reduce_initial,
             reduce_denominator,
             reduce_updated,
+            reduce_cached,
             finish_initial,
             finish_alpha,
             finish_beta,

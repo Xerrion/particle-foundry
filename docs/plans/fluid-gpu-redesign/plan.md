@@ -277,10 +277,50 @@ materially cheaper pressure and transport configurations, including their
 combined effect. Removing a duplicated residual calculation is a candidate,
 not a sufficient substitute for the real-time target.
 
-Work is paused at the user's request after this decision is recorded. Resume
-implementation only when the user returns and authorizes continuation. No
-lower-precision configuration was implemented or qualified by this decision.
-XER-64 remains In Progress. Feature coverage and M7 promotion remain open.
+The user resumed implementation on 7 October 2026 after the Sentry repair and
+the merge of PRs #18, #14 and #17. The resumed comparison measures cheaper
+pressure and transport settings on the same workload. The reference profile
+remains distinguishable from each interactive candidate. XER-64 remains
+In Progress. Feature coverage and M7 promotion remain open.
+
+### Candidate error budgets on 7 October 2026
+
+Before qualification, the initial interactive candidate uses at most 256 PCG
+iterations and `1e-4` scaled residual and divergence limits. A transport-only
+candidate uses 32 closure rounds with the reference pressure limits. The
+combined candidate uses both changes. The `1e-5` cell-volume closure gate,
+the 0.5 transport CFL gate, donor budgets, finite-value checks and nonnegative
+inventory checks remain required. Fewer rounds cannot bypass a failed gate.
+The independent final pressure residual and face divergence are still checked.
+
+Measure inventories and field differences against the reference GPU profile
+at equal accepted model time. The reference has 512 PCG iterations, `1e-5`
+pressure gates and 256 closure rounds. These are comparison budgets for this
+limited scene, not changes to the M3 reference or full-sandbox promotion gates:
+
+1. Relative liquid, carrier and marker inventory drift must stay within `1e-5`.
+2. Mean absolute liquid volume-fraction difference must stay within `1e-3`
+   across nonwall cells after one accepted model second.
+3. Liquid centroid displacement from the reference must stay within one cell
+   after one accepted model second.
+4. Face-velocity RMS difference must stay below 1% of the brush's
+   gravity-derived speed scale, `sqrt(2 * 9.80665 * 1.42)` m/s.
+5. Exact hydrostatic rest, visible Water response, accepted-time accounting,
+   reset, stale-reply rejection and candidate isolation must still pass.
+
+The available machine has an RTX 5070 Ti. Establish a new before/after baseline
+on this adapter and keep the historical Apple results separate. Three timed
+runs and a 300-tick Water-brush run must meet the real-time target before
+claiming XER-64's performance outcome.
+
+The [executed comparison](../../validation/p1-m3-e08.md#rtx-pressure-and-transport-comparison-on-7-october-2026)
+rejects those trial settings: they miss the velocity comparison limit and
+remain slower than real time. Retained residual reuse preserves the reference
+settings and produces byte-identical fields on the measured RTX adapter.
+The next bounded action measures GPU execution and host-encoding costs before
+selecting a materially cheaper pressure solve or transport correction. The
+comparison budgets above remain explicit; no failed limit was relaxed to
+qualify a candidate.
 
 ## 4. Acceptance matrix
 

@@ -270,6 +270,26 @@ fn reduce_denominator(
 }
 
 @compute @workgroup_size(64)
+fn reduce_cached(
+    @builtin(global_invocation_id) id: vec3<u32>,
+    @builtin(local_invocation_index) lane: u32,
+    @builtin(workgroup_id) group: vec3<u32>,
+) {
+    let cell = id.x;
+    var dot = 0.0;
+    var maximum = 0.0;
+    if (cell < params.cells) {
+        // update_preconditioner just recomputed this true stencil residual.
+        // The final acceptance dispatch still recomputes it independently.
+        let r = residual[cell];
+        let z = r * density[cell] * params.dx_m * params.dx_m * 0.25;
+        dot = r * z;
+        maximum = abs(r);
+    }
+    reduce_partial(lane, group.x, dot, maximum);
+}
+
+@compute @workgroup_size(64)
 fn reduce_updated(
     @builtin(global_invocation_id) id: vec3<u32>,
     @builtin(local_invocation_index) lane: u32,

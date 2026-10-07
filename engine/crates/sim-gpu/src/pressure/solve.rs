@@ -178,8 +178,8 @@ impl GpuPressureProjector {
                     );
                     dispatch(
                         &mut pass,
-                        &self.pipelines.reduce_updated,
-                        &bindings.reduce_updated,
+                        &self.pipelines.reduce_cached,
+                        &bindings.reduce_cached,
                         self.partial_count,
                     );
                     dispatch(

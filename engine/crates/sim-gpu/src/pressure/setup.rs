@@ -131,6 +131,7 @@ impl GpuPressureProjector {
             reduce_initial: pipeline(device, &pcg_shader, "reduce_initial"),
             reduce_denominator: pipeline(device, &pcg_shader, "reduce_denominator"),
             reduce_updated: pipeline(device, &pcg_shader, "reduce_updated"),
+            reduce_cached: pipeline(device, &pcg_shader, "reduce_cached"),
             finish_initial: pipeline(device, &finish_shader, "initial"),
             finish_alpha: pipeline(device, &finish_shader, "alpha"),
             finish_beta: pipeline(device, &finish_shader, "beta"),

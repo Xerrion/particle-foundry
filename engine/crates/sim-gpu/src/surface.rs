@@ -35,11 +35,7 @@ impl GpuSurface {
         let surface = instance
             .create_surface(wgpu::SurfaceTarget::Canvas(canvas))
             .map_err(|error| format!("GPU canvas surface creation failed: {error}"))?;
-        let adapter = instance
-            .request_adapter(&wgpu::RequestAdapterOptions {
-                compatible_surface: Some(&surface),
-                ..Default::default()
-            })
+        let adapter = crate::request_adapter(&instance, Some(&surface))
             .await
             .map_err(|error| format!("Compatible WebGPU canvas adapter unavailable: {error}"))?;
         let capabilities = surface.get_capabilities(&adapter);

@@ -13,9 +13,12 @@ holds the detailed checklist of what must work before the switch is complete.
 **Priority decision (6 October 2026):** Real-time interaction takes priority in
 the experimental GPU scene. The user accepts a modest loss of numerical
 precision to reach it. [XER-64](https://linear.app/xerrion/issue/XER-64/run-the-experimental-gpu-scene-in-real-time)
-owns this work. The next task is to compare cheaper pressure and transport
-settings against the same interactive workload. Work is paused until
-the user resumes. See the [performance decision](plans/fluid-gpu-redesign/plan.md#interactive-performance-priority-on-6-october-2026)
+owns this work. The [7 October comparison](validation/p1-m3-e08.md#rtx-pressure-and-transport-comparison-on-7-october-2026)
+found faster trial settings, but they missed the selected accuracy limit and
+the real-time target. The retained change reuses a pressure calculation without
+changing its results on the measured device. The next task is to measure the
+remaining GPU and browser costs before choosing a larger solver change.
+The user resumed this work after the existing PRs were merged. See the [performance decision](plans/fluid-gpu-redesign/plan.md#interactive-performance-priority-on-6-october-2026)
 for the target, measurement rules and remaining correctness requirements.
 
 **Where things stand (30 September 2026):** The browser sandbox still runs on
