@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="source-sha256" content="9a844716baa38ac52a54f67cb3077002aa93d7f4f24e144b8d8428489ebe403e">
+<meta name="source-sha256" content="912e3ff391350935803cdea563fb8eeab05191f340135c8eb8b2a93e648e691c">
 <meta name="description" content="Particle Foundry P1 implementation plan: Rust reference, WASM delivery, wgpu/WGSL execution, and future-ready composition.">
 <title>Fluid and GPU redesign | Particle Foundry</title>
 <style>
@@ -288,10 +288,46 @@ records the current performance gap. The next checkpoint should measure
 materially cheaper pressure and transport configurations, including their
 combined effect. Removing a duplicated residual calculation is a candidate,
 not a sufficient substitute for the real-time target.</p>
-<p>Work is paused at the user's request after this decision is recorded. Resume
-implementation only when the user returns and authorizes continuation. No
-lower-precision configuration was implemented or qualified by this decision.
-XER-64 remains In Progress. Feature coverage and M7 promotion remain open.</p>
+<p>The user resumed implementation on 7 October 2026 after the Sentry repair and
+the merge of PRs #18, #14 and #17. The resumed comparison measures cheaper
+pressure and transport settings on the same workload. The reference profile
+remains distinguishable from each interactive candidate. XER-64 remains
+In Progress. Feature coverage and M7 promotion remain open.</p>
+<h3 id="candidate-error-budgets-on-7-october-2026">Candidate error budgets on 7 October 2026</h3>
+<p>Before qualification, the initial interactive candidate uses at most 256 PCG
+iterations and <code>1e-4</code> scaled residual and divergence limits. A transport-only
+candidate uses 32 closure rounds with the reference pressure limits. The
+combined candidate uses both changes. The <code>1e-5</code> cell-volume closure gate,
+the 0.5 transport CFL gate, donor budgets, finite-value checks and nonnegative
+inventory checks remain required. Fewer rounds cannot bypass a failed gate.
+The independent final pressure residual and face divergence are still checked.</p>
+<p>Measure inventories and field differences against the reference GPU profile
+at equal accepted model time. The reference has 512 PCG iterations, <code>1e-5</code>
+pressure gates and 256 closure rounds. These are comparison budgets for this
+limited scene, not changes to the M3 reference or full-sandbox promotion gates:</p>
+<ol>
+<li>Relative liquid, carrier and marker inventory drift must stay within <code>1e-5</code>.</li>
+<li>Mean absolute liquid volume-fraction difference must stay within <code>1e-3</code>
+across nonwall cells after one accepted model second.</li>
+<li>Liquid centroid displacement from the reference must stay within one cell
+after one accepted model second.</li>
+<li>Face-velocity RMS difference must stay below 1% of the brush's
+gravity-derived speed scale, <code>sqrt(2 * 9.80665 * 1.42)</code> m/s.</li>
+<li>Exact hydrostatic rest, visible Water response, accepted-time accounting,
+reset, stale-reply rejection and candidate isolation must still pass.</li>
+</ol>
+<p>The available machine has an RTX 5070 Ti. Establish a new before/after baseline
+on this adapter and keep the historical Apple results separate. Three timed
+runs and a 300-tick Water-brush run must meet the real-time target before
+claiming XER-64's performance outcome.</p>
+<p>The <a href="../../validation/p1-m3-e08.md#rtx-pressure-and-transport-comparison-on-7-october-2026">executed comparison</a>
+rejects those trial settings: they miss the velocity comparison limit and
+remain slower than real time. Retained residual reuse preserves the reference
+settings and produces byte-identical fields on the measured RTX adapter.
+The next bounded action measures GPU execution and host-encoding costs before
+selecting a materially cheaper pressure solve or transport correction. The
+comparison budgets above remain explicit; no failed limit was relaxed to
+qualify a candidate.</p>
 <h2 id="4-acceptance-matrix">4. Acceptance matrix</h2>
 <p>The following are proposed starting gates, not measurements. Freeze fixture scales and thresholds in M0/M2 before optimization. Any later tolerance change needs a numerical rationale, including grid/time refinement, rather than matching the latest output.</p>
 <div class="table-scroll"><table>
