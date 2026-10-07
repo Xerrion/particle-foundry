@@ -31,7 +31,7 @@ export default defineConfig(({ mode }) => ({
 			},
 			input:
 				mode === "engine-smoke"
-					? "tests/browser/engine-smoke.html"
+					? ["tests/browser/engine-smoke.html", "benchmarks/gpu.html"]
 					: mode === "sentry-smoke"
 						? "tests/browser/sentry-smoke.html"
 						: ["index.html", "gpu.html"],
