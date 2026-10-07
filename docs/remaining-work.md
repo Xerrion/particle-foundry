@@ -23,8 +23,11 @@ priority, with the [accepted precision tradeoff](plans/fluid-gpu-redesign/plan.m
 The user resumed implementation on 7 October 2026 after the existing PRs merged.
 The [measured pressure/transport comparison](validation/p1-m3-e08.md#rtx-pressure-and-transport-comparison-on-7-october-2026)
 retains only true-residual reuse. The larger trial changes failed the selected
-accuracy limit and the real-time target. Next, measure GPU execution and browser
-encoding costs before selecting another solver or transport change.
+accuracy limit and the real-time target. The
+[completion-batch comparison](validation/p1-m3-e08.md#browser-completion-batch-comparison-on-7-october-2026)
+then measures browser costs and reduces completion waits with identical fields.
+Repeated duration improves by 22.0%; real time remains unmet. Next, compare a
+pressure or transport method that reduces GPU work within the required limits.
 
 Complete the [current-sandbox checklist](plans/rust-wasm-migration/current-sandbox-scope.md)
 before the default GPU switch. Its current materials, interactions and controls

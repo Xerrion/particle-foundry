@@ -140,7 +140,7 @@ impl GpuPressureProjector {
             });
             {
                 // wgpu tracks buffer dependencies per dispatch within a pass.
-                // Keep the PCG sequence and its 32-iteration readback boundary.
+                // Keep the PCG sequence and map once per bounded batch.
                 let mut pass = encoder.begin_compute_pass(&wgpu::ComputePassDescriptor {
                     label: Some("bounded pressure PCG stages"),
                     timestamp_writes: None,

@@ -234,7 +234,12 @@ async function benchmark(canvas: HTMLCanvasElement) {
 				runs.every((run) => run.modelSecondsPerWallSecond >= 1) &&
 				sustainedRun.modelSecondsPerWallSecond >= 1,
 			fixture: { width: 480, height: 270, brush: { x: 240, y: 100, radius: 4, material: "water" } },
-			quality: { pressureIterations: 512, pressureTolerance: 1e-5, closureRounds: 256 },
+			quality: {
+				pressureIterations: 512,
+				pressureBatchIterations: 64,
+				pressureTolerance: 1e-5,
+				closureRounds: 256,
+			},
 			measurement:
 				"10-tick warm-up; fresh scene per run; render per advance; final queue probe included; checkpoints excluded",
 			pressureObservationScope: "last accepted substep of each completed tick",

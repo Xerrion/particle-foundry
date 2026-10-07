@@ -14,6 +14,12 @@ const STATUS_BYTES: u64 = 32;
 const CONVERGED_WORD_OFFSET: u64 = 6 * size_of::<u32>() as u64;
 const PARAM_BYTES: u64 = 48;
 const MAX_ITERATIONS: u32 = 1024;
+// Browser mapping boundaries are costly. The measured 64-iteration batch
+// balances fewer completion waits against work padded past convergence.
+// Retain the native batch until the native hardware comparison is repeated.
+#[cfg(target_arch = "wasm32")]
+const ITERATIONS_PER_BATCH: u32 = 64;
+#[cfg(not(target_arch = "wasm32"))]
 const ITERATIONS_PER_BATCH: u32 = 32;
 
 /// GPU fields supplied by the stage graph. Every field is a distinct buffer.
