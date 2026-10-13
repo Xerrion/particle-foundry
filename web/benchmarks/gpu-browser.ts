@@ -81,6 +81,15 @@ function inventory(bytes: Uint8Array, expected: Advance) {
 	return { totals, maxRelativeVolumeError, maxAbsoluteVelocityMPerS };
 }
 
+async function checkedFields(bytes: Uint8Array, expected: Advance) {
+	const checked = inventory(bytes, expected);
+	const digest = await crypto.subtle.digest("SHA-256", bytes.slice(108));
+	const fieldSha256 = Array.from(new Uint8Array(digest), (byte) =>
+		byte.toString(16).padStart(2, "0"),
+	).join("");
+	return { ...checked, fieldSha256 };
+}
+
 async function measure(scene: BrowserGpuSceneSession, ticks: number) {
 	scene.reset();
 	const painted = JSON.parse(scene.paint(240, 100, 4, "water")) as Advance;
@@ -88,7 +97,7 @@ async function measure(scene: BrowserGpuSceneSession, ticks: number) {
 		throw new Error("GPU benchmark brush did not commit at zero model time");
 	}
 	if (!scene.render()) throw new Error("GPU benchmark cannot render the painted scene");
-	const before = inventory(await scene.checkpoint_prototype(), painted);
+	const before = await checkedFields(await scene.checkpoint_prototype(), painted);
 	const run = {
 		completedTicks: 0,
 		acceptedTimeS: 0,
@@ -157,7 +166,7 @@ async function measure(scene: BrowserGpuSceneSession, ticks: number) {
 	if (run.completedTicks !== ticks || Math.abs(run.acceptedTimeS - ticks / 60) > 1e-6) {
 		throw new Error("GPU benchmark did not complete the requested model time");
 	}
-	const after = inventory(await scene.checkpoint_prototype(), last);
+	const after = await checkedFields(await scene.checkpoint_prototype(), last);
 	const relativeInventoryDrift = after.totals.map(
 		(total, field) =>
 			Math.abs(total - before.totals[field]) / Math.max(before.totals[field], 1e-12),
@@ -216,9 +225,11 @@ async function benchmark(canvas: HTMLCanvasElement) {
 		).GPUComputePassEncoder?.prototype;
 		if (!prototype) throw new Error("GPU benchmark dispatch tracing is unavailable");
 		const dispatches: Record<string, number> = {};
+		const workgroups: Record<string, number> = {};
 		const originalDispatch = prototype.dispatchWorkgroups;
 		prototype.dispatchWorkgroups = function (x, y, z) {
 			dispatches[this.label] = (dispatches[this.label] ?? 0) + 1;
+			workgroups[this.label] = (workgroups[this.label] ?? 0) + x * (y ?? 1) * (z ?? 1);
 			originalDispatch.call(this, x, y, z);
 		};
 		let tracedRun: Awaited<ReturnType<typeof measure>>;
@@ -242,6 +253,7 @@ async function benchmark(canvas: HTMLCanvasElement) {
 				pressureSmoothingSweeps: 2,
 				pressureTolerance: 1e-5,
 				closureRounds: 256,
+				closurePairScheduling: "packed interior parity faces",
 			},
 			measurement:
 				"10-tick warm-up; fresh scene per run; render per advance; final queue probe included; checkpoints excluded",
@@ -254,6 +266,7 @@ async function benchmark(canvas: HTMLCanvasElement) {
 			trace: {
 				measurement: "separate instrumented run; duration is excluded from targetMet",
 				dispatches,
+				workgroups,
 				run: tracedRun,
 			},
 			userAgent: navigator.userAgent,

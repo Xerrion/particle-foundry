@@ -381,6 +381,27 @@ The [coarse pressure evidence](../../validation/p1-m3-e08.md#component-aware-coa
 records comparisons, numerical differences and qualification limits.
 Real-time performance and full-sandbox promotion remain open.
 
+### Packed transport-pair scheduling on 13 October 2026
+
+The [transport encoder](../../../engine/crates/sim-gpu/src/transport/encoding.rs)
+dispatches only the interior faces owned by each parity pass. Dense ordinals in
+the [pair shader](../../../engine/crates/sim-gpu/shaders/transport_pair.wgsl)
+map to even or odd U faces, then even or odd V faces, in the existing order.
+Each pass still owns disjoint cell pairs. Empty axes return before division;
+single-row, single-column and odd-sized grids retain their boundary behavior.
+
+All 256 rounds, correction caps, source accounting and arithmetic expressions
+remain. Pressure configuration and the final volume, inventory and rejection
+gates are unchanged. This changes invocation placement without changing the
+transport method. The [E08 comparison](../../validation/p1-m3-e08.md#packed-transport-pair-comparison-on-13-october-2026)
+records identical complete field hashes at one and five model seconds.
+
+The browser benchmark records workgroup totals separately from dispatch totals.
+It validates and hashes explicit checkpoint fields outside the timed interval.
+Neither workgroup counts nor inclusive queue waits establish exclusive GPU
+shader durations. Required hardware qualification remains separate from the
+throughput runs and ordinary hosted browser smoke.
+
 ## 4. Acceptance matrix
 
 The following are proposed starting gates, not measurements. Freeze fixture scales and thresholds in M0/M2 before optimization. Any later tolerance change needs a numerical rationale, including grid/time refinement, rather than matching the latest output.

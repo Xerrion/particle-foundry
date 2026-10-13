@@ -34,22 +34,17 @@ fn finite(value: f32) -> bool {
 
 // Each parity pass owns disjoint cell pairs. The shared-face adjustment
 // diffuses local volume residuals without changing their component total.
-fn pair(id: u32, axis: u32, parity: u32) {
-    let face_count = select((params.width + 1u) * params.height,
-                            params.width * (params.height + 1u), axis == 1u);
-    if id >= face_count {
+fn pair(ordinal: u32, axis: u32, parity: u32) {
+    // Dense ordinals cover only this parity's interior faces. Empty axes
+    // return before division, including single-row and single-column grids.
+    let stride = select((params.width - 1u + parity) / 2u, params.width, axis == 1u);
+    let rows = select(params.height, (params.height - 1u + parity) / 2u, axis == 1u);
+    if ordinal >= stride * rows {
         return;
     }
-    let stride = select(params.width + 1u, params.width, axis == 1u);
-    let x = id % stride;
-    let y = id / stride;
-    if axis == 0u {
-        if x == 0u || x == params.width || x % 2u != parity {
-            return;
-        }
-    } else if y == 0u || y == params.height || y % 2u != parity {
-        return;
-    }
+    let x = select(2u * (ordinal % stride) + 2u - parity, ordinal % stride, axis == 1u);
+    let y = select(ordinal / stride, 2u * (ordinal / stride) + 2u - parity, axis == 1u);
+    let id = select(y * (params.width + 1u) + x, y * params.width + x, axis == 1u);
     let negative_cell = select((y - 1u) * params.width + x,
                                y * params.width + x - 1u, axis == 0u);
     let positive_cell = y * params.width + x;

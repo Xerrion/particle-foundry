@@ -3,6 +3,7 @@ mod closure;
 mod donor_budget;
 mod gather;
 mod gradient;
+mod odd_grid;
 mod thin_phase;
 mod trace_flux;
 mod vortex;

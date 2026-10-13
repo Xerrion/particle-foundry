@@ -204,13 +204,18 @@ impl GpuTransportStage {
         });
         dispatch(&mut pass, &self.residual, &residual, self.grid.cells());
         pass.set_pipeline(&self.pair);
+        let width = self.grid.width() as usize;
+        let height = self.grid.height() as usize;
+        // Match the shader's dense interior-face ordinals in U-even, U-odd,
+        // V-even, V-odd order. Each pass still owns disjoint cell pairs.
+        let pair_entries = [
+            (width - 1) / 2 * height,
+            width / 2 * height,
+            width * ((height - 1) / 2),
+            width * (height / 2),
+        ];
         for _ in 0..LOCAL_CLOSURE_ROUNDS {
-            for (group, entries) in pair_groups.iter().zip([
-                self.grid.u_faces(),
-                self.grid.u_faces(),
-                self.grid.v_faces(),
-                self.grid.v_faces(),
-            ]) {
+            for (group, entries) in pair_groups.iter().zip(pair_entries) {
                 pass.set_bind_group(0, group, &[]);
                 pass.dispatch_workgroups((entries as u32).div_ceil(WORKGROUP_SIZE), 1, 1);
             }
