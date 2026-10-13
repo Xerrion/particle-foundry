@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="source-sha256" content="089154b11f1e5fbb5fc562378074eb347461ebe6b69a559cdc627fc7c442ed89">
+<meta name="source-sha256" content="e6e5b944f3751fffd262066fd224ec98b057e4c00f48d50fa6b8869fe5aa481f">
 <meta name="description" content="Particle Foundry P1 implementation plan: Rust reference, WASM delivery, wgpu/WGSL execution, and future-ready composition.">
 <title>Fluid and GPU redesign | Particle Foundry</title>
 <style>
@@ -361,7 +361,7 @@ corrected-face divergence still determine acceptance.</p>
 <p>One fixed symmetric V-cycle applies two weighted Jacobi sweeps before and
 after the coarse correction, with damping <code>2/3</code>. Coefficients rebuild from
 current density on every pressure projection. Scratch starts at zero on each
-application, so rejected attempts cannot create a variable numerical owner.
+application, keeping the preconditioner fixed within each solve.
 The final closed-component constant mode has a zero correction.</p>
 <p>Dynamic pressure and its accepted guess store separate large and small f32
 terms. Explicit <code>fma</code> expressions retain small updates on the tested Metal

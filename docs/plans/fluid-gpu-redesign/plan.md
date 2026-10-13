@@ -362,7 +362,7 @@ corrected-face divergence still determine acceptance.
 One fixed symmetric V-cycle applies two weighted Jacobi sweeps before and
 after the coarse correction, with damping `2/3`. Coefficients rebuild from
 current density on every pressure projection. Scratch starts at zero on each
-application, so rejected attempts cannot create a variable numerical owner.
+application, keeping the preconditioner fixed within each solve.
 The final closed-component constant mode has a zero correction.
 
 Dynamic pressure and its accepted guess store separate large and small f32
