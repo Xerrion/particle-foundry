@@ -37,10 +37,14 @@ address long-range pressure error while keeping the existing accuracy limits.
 The [coarse pressure checkpoint](validation/p1-m3-e08.md#component-aware-coarse-pressure-on-13-october-2026)
 then passes native, equal-time accuracy and required sustained browser checks
 with a component-aware V-cycle and compensated pressure accumulation.
-Final candidate duration is about fourteen wall seconds per model second on
-the Apple adapter. The next bounded comparison should measure remaining
-pressure, transport and host costs under this profile. Real time remains
-unmet; local delivery evidence stays separate from the merged reference.
+PR [#23](https://github.com/Xerrion/particle-foundry/pull/23) is merged with
+passing main CI and public GPU UI checks; see the owning evidence for limits.
+The [packed transport comparison](validation/p1-m3-e08.md#packed-transport-pair-comparison-on-13-october-2026)
+then reduces dispatched workgroups with identical complete field hashes.
+Its paired browser duration falls by 12.63%, from 15.7259 to 13.7391 wall
+seconds per model second. Dispatch counts remain fixed. The next bounded
+action is to assess remaining closure-dispatch and host preparation costs.
+Real time remains unmet; this local candidate is separate from merged main.
 
 Complete the [current-sandbox checklist](plans/rust-wasm-migration/current-sandbox-scope.md)
 before the default GPU switch. Its current materials, interactions and controls
