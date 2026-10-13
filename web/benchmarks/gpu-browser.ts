@@ -186,6 +186,10 @@ async function measure(scene: BrowserGpuSceneSession, ticks: number) {
 	};
 }
 
+type BufferDevice = {
+	createBuffer(descriptor: GPUBufferDescriptor): GPUBuffer;
+};
+
 async function benchmark(canvas: HTMLCanvasElement) {
 	const gpu = navigator.gpu;
 	if (!gpu) throw new Error("GPU benchmark requires WebGPU");
@@ -224,6 +228,20 @@ async function benchmark(canvas: HTMLCanvasElement) {
 			globalThis as typeof globalThis & { GPUComputePassEncoder?: { prototype: ComputePass } }
 		).GPUComputePassEncoder?.prototype;
 		if (!prototype) throw new Error("GPU benchmark dispatch tracing is unavailable");
+		const devicePrototype = (
+			globalThis as typeof globalThis & { GPUDevice?: { prototype: BufferDevice } }
+		).GPUDevice?.prototype;
+		if (!devicePrototype) throw new Error("GPU benchmark buffer tracing is unavailable");
+		const bufferAllocations: Record<string, { count: number; bytes: number }> = {};
+		const originalBuffer = devicePrototype.createBuffer;
+		devicePrototype.createBuffer = function (descriptor) {
+			const label = descriptor.label ?? "unlabelled";
+			const totals = bufferAllocations[label] ?? { count: 0, bytes: 0 };
+			bufferAllocations[label] = totals;
+			totals.count += 1;
+			totals.bytes += Number(descriptor.size);
+			return originalBuffer.call(this, descriptor);
+		};
 		const dispatches: Record<string, number> = {};
 		const workgroups: Record<string, number> = {};
 		const originalDispatch = prototype.dispatchWorkgroups;
@@ -237,6 +255,7 @@ async function benchmark(canvas: HTMLCanvasElement) {
 			tracedRun = await measure(scene, 60);
 		} finally {
 			prototype.dispatchWorkgroups = originalDispatch;
+			devicePrototype.createBuffer = originalBuffer;
 		}
 		const sustainedRun = await measure(scene, 300);
 		return {
@@ -254,6 +273,7 @@ async function benchmark(canvas: HTMLCanvasElement) {
 				pressureTolerance: 1e-5,
 				closureRounds: 256,
 				closurePairScheduling: "packed interior parity faces",
+				transportParameters: "seven immutable buffers per encode",
 			},
 			measurement:
 				"10-tick warm-up; fresh scene per run; render per advance; final queue probe included; checkpoints excluded",
@@ -267,6 +287,9 @@ async function benchmark(canvas: HTMLCanvasElement) {
 				measurement: "separate instrumented run; duration is excluded from targetMet",
 				dispatches,
 				workgroups,
+				bufferAllocations,
+				allocationScope:
+					"API createBuffer calls and requested bytes; cumulative, not peak resident memory",
 				run: tracedRun,
 			},
 			userAgent: navigator.userAgent,
