@@ -26,8 +26,14 @@ retains only true-residual reuse. The larger trial changes failed the selected
 accuracy limit and the real-time target. The
 [completion-batch comparison](validation/p1-m3-e08.md#browser-completion-batch-comparison-on-7-october-2026)
 then measures browser costs and reduces completion waits with identical fields.
+PR [#21](https://github.com/Xerrion/particle-foundry/pull/21) is merged with
+passing main CI; see [merged delivery](validation/p1-m3-e08.md#merged-delivery).
 Repeated duration improves by 22.0%; real time remains unmet. Next, compare a
 pressure or transport method that reduces GPU work within the required limits.
+The [13 October block-pressure screening](validation/p1-m3-e08.md#local-block-pressure-screening-on-13-october-2026)
+rejects a local polynomial preconditioner after repeatable native full-grid
+nonconvergence. The original solver is retained. The next comparison should
+address long-range pressure error while keeping the existing accuracy limits.
 
 Complete the [current-sandbox checklist](plans/rust-wasm-migration/current-sandbox-scope.md)
 before the default GPU switch. Its current materials, interactions and controls
