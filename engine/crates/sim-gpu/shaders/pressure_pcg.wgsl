@@ -84,29 +84,46 @@ fn apply_search_at(cell: u32, x: u32, y: u32) -> f32 {
 }
 
 
-fn apply_dynamic_at(cell: u32, x: u32, y: u32) -> f32 {
+fn apply_dynamic_at(cell: u32, x: u32, y: u32, offset: u32) -> f32 {
     var result = 0.0;
     if (x > 0u) {
         let face = y * (params.width + 1u) + x;
         result += edge_weight(aperture_u[face], cell - 1u, cell)
-            * (pressure[cell] - pressure[cell - 1u]);
+            * (pressure[cell + offset] - pressure[cell - 1u + offset]);
     }
     if (x + 1u < params.width) {
         let face = y * (params.width + 1u) + x + 1u;
         result += edge_weight(aperture_u[face], cell, cell + 1u)
-            * (pressure[cell] - pressure[cell + 1u]);
+            * (pressure[cell + offset] - pressure[cell + 1u + offset]);
     }
     if (y > 0u) {
         let face = y * params.width + x;
         result += edge_weight(aperture_v[face], cell - params.width, cell)
-            * (pressure[cell] - pressure[cell - params.width]);
+            * (pressure[cell + offset] - pressure[cell - params.width + offset]);
     }
     if (y + 1u < params.height) {
         let face = (y + 1u) * params.width + x;
         result += edge_weight(aperture_v[face], cell, cell + params.width)
-            * (pressure[cell] - pressure[cell + params.width]);
+            * (pressure[cell + offset] - pressure[cell + params.width + offset]);
     }
     return result;
+}
+
+// Keep the small residual contribution separate from the large correction.
+// Adding the two pressures before applying the stencil would lose that part.
+fn dynamic_residual(cell: u32, x: u32, y: u32, base: f32) -> f32 {
+    var r = rhs[cell] - base - apply_dynamic_at(cell, x, y, 0u);
+    if (params.padding2 != 0.0) {
+        r -= apply_dynamic_at(cell, x, y, params.cells);
+    }
+    return r;
+}
+
+fn two_sum(a: f32, b: f32) -> vec2<f32> {
+    let large = select(b, a, abs(a) >= abs(b));
+    let small = select(a, b, abs(a) >= abs(b));
+    let sum = large + small;
+    return vec2<f32>(sum, fma(1.0, small, fma(-1.0, sum, large)));
 }
 
 // The base field is stored separately from the small dynamic correction.
@@ -181,7 +198,7 @@ fn init_preconditioner(@builtin(global_invocation_id) id: vec3<u32>) {
     if (cell >= params.cells) {
         return;
     }
-    let r = rhs[cell] - apply_dynamic_at(cell, cell % params.width, cell / params.width);
+    let r = dynamic_residual(cell, cell % params.width, cell / params.width, 0.0);
     residual[cell] = r;
     preconditioned[cell] = r * density[cell] * params.dx_m * params.dx_m * 0.25;
 }
@@ -192,8 +209,8 @@ fn init_preconditioner_from_guess(@builtin(global_invocation_id) id: vec3<u32>) 
     if (cell >= params.cells) {
         return;
     }
-    let r = rhs[cell] - apply_hydrostatic_at(cell, cell % params.width, cell / params.width)
-        - apply_dynamic_at(cell, cell % params.width, cell / params.width);
+    let r = dynamic_residual(cell, cell % params.width, cell / params.width,
+        apply_hydrostatic_at(cell, cell % params.width, cell / params.width));
     residual[cell] = r;
     preconditioned[cell] = r * density[cell] * params.dx_m * params.dx_m * 0.25;
 }
@@ -212,7 +229,15 @@ fn apply_search(@builtin(global_invocation_id) id: vec3<u32>) {
 fn update_solution(@builtin(global_invocation_id) id: vec3<u32>) {
     let cell = id.x;
     if (cell < params.cells && status.invalid == 0u && status.converged == 0u) {
-        pressure[cell] += status.alpha * search[cell];
+        let correction = status.alpha * search[cell];
+        if (params.padding2 == 0.0) {
+            pressure[cell] += correction;
+        } else {
+            let sum = two_sum(pressure[cell], correction);
+            let normalized = two_sum(sum.x, pressure[cell + params.cells] + sum.y);
+            pressure[cell] = normalized.x;
+            pressure[cell + params.cells] = normalized.y;
+        }
         residual[cell] -= status.alpha * applied_search[cell];
     }
 }
@@ -225,8 +250,7 @@ fn update_preconditioner(@builtin(global_invocation_id) id: vec3<u32>) {
     }
     let x = cell % params.width;
     let y = cell / params.width;
-    let true_residual = rhs[cell] - apply_hydrostatic_at(cell, x, y)
-        - apply_dynamic_at(cell, x, y);
+    let true_residual = dynamic_residual(cell, x, y, apply_hydrostatic_at(cell, x, y));
     residual[cell] = true_residual;
     preconditioned[cell] = residual[cell] * density[cell] * params.dx_m * params.dx_m * 0.25;
 }
@@ -282,7 +306,7 @@ fn reduce_cached(
         // update_preconditioner just recomputed this true stencil residual.
         // The final acceptance dispatch still recomputes it independently.
         let r = residual[cell];
-        let z = r * density[cell] * params.dx_m * params.dx_m * 0.25;
+        let z = preconditioned[cell];
         dot = r * z;
         maximum = abs(r);
     }
@@ -303,9 +327,7 @@ fn reduce_updated(
         let y = cell / params.width;
         let z = residual[cell] * density[cell] * params.dx_m * params.dx_m * 0.25;
         dot = residual[cell] * z;
-        maximum = abs(
-            rhs[cell] - apply_hydrostatic_at(cell, x, y) - apply_dynamic_at(cell, x, y)
-        );
+        maximum = abs(dynamic_residual(cell, x, y, apply_hydrostatic_at(cell, x, y)));
     }
     reduce_partial(lane, group.x, dot, maximum);
 }

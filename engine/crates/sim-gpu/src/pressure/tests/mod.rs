@@ -1,3 +1,5 @@
+mod coarse;
+mod compensated;
 mod components;
 mod gravity;
 mod headroom;

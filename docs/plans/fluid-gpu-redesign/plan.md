@@ -350,6 +350,37 @@ adapter. A stronger pressure solve or transport correction remains a separate
 bounded experiment because completion scheduling alone does not remove the
 measured GPU execution cost.
 
+### Component-aware coarse pressure on 13 October 2026
+
+The selected local candidate retains fine-grid PCG and replaces point scaling
+with a resident Galerkin hierarchy. Each 2 x 2 aggregate selects one active
+closed-component root. Other components retain fine smoothing. Restriction
+sums residuals, and prolongation uses the same component support. Coarse
+edges derive from existing fine apertures. The original fine stencil and
+corrected-face divergence still determine acceptance.
+
+One fixed symmetric V-cycle applies two weighted Jacobi sweeps before and
+after the coarse correction, with damping `2/3`. Coefficients rebuild from
+current density on every pressure projection. Scratch starts at zero on each
+application, keeping the preconditioner fixed within each solve.
+The final closed-component constant mode has a zero correction.
+
+Dynamic pressure and its accepted guess store separate large and small f32
+terms. Explicit `fma` expressions retain small updates on the tested Metal
+and browser path. Residuals and face corrections evaluate both terms.
+[WGSL permits reassociation](https://gpuweb.github.io/gpuweb/wgsl/#reassociation-and-fusion),
+so this representation needs device checks and is not a portable f64 claim.
+
+The coarse profile maps completion after eight PCG iterations. The 512-iteration
+cap, `1e-5` pressure gates, 256 transport closure rounds, volume/CFL gates,
+finite and nonnegative quantities, accepted time and atomic publication remain.
+Reference and compensated-point controls remain separate private test profiles.
+No normal-frame full-field JavaScript transfer or second physical world is added.
+
+The [coarse pressure evidence](../../validation/p1-m3-e08.md#component-aware-coarse-pressure-on-13-october-2026)
+records comparisons, numerical differences and qualification limits.
+Real-time performance and full-sandbox promotion remain open.
+
 ## 4. Acceptance matrix
 
 The following are proposed starting gates, not measurements. Freeze fixture scales and thresholds in M0/M2 before optimization. Any later tolerance change needs a numerical rationale, including grid/time refinement, rather than matching the latest output.

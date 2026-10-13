@@ -30,6 +30,7 @@ impl GpuPressureProjector {
         let partial_bytes = u64::from(partial_count) * 16;
         for (name, bytes) in [
             ("pressure cell scratch", cell_bytes),
+            ("pressure compensated scratch", cell_bytes * 2),
             ("pressure hydrostatic reference", hydrostatic_bytes),
             ("pressure residual reduction", partial_bytes),
             ("pressure completion", STATUS_BYTES),
@@ -56,8 +57,18 @@ impl GpuPressureProjector {
             usage: wgpu::BufferUsages::STORAGE,
             mapped_at_creation: false,
         });
-        let pressure = scratch("pressure dynamic correction");
-        let accepted_guess = scratch("accepted pressure starting guess");
+        let pressure_scratch = |label| {
+            device.create_buffer(&wgpu::BufferDescriptor {
+                label: Some(label),
+                size: cell_bytes * 2,
+                usage: wgpu::BufferUsages::STORAGE
+                    | wgpu::BufferUsages::COPY_SRC
+                    | wgpu::BufferUsages::COPY_DST,
+                mapped_at_creation: false,
+            })
+        };
+        let pressure = pressure_scratch("pressure large and small dynamic correction");
+        let accepted_guess = pressure_scratch("accepted compensated pressure starting guess");
         let residual = scratch("pressure recursive residual");
         let preconditioned = scratch("pressure preconditioned residual");
         let search = scratch("pressure search direction");
@@ -164,6 +175,7 @@ impl GpuPressureProjector {
             partial_count,
             pipelines,
             last_readback_bytes: 0,
+            coarse: None,
         })
     }
 }

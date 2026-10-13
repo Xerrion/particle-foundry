@@ -16,6 +16,15 @@ impl GpuPressureProjector {
         self.last_readback_bytes = 0;
         validate_config(config)?;
         self.check_fields(device, &fields)?;
+        if config.method == PressureMethod::Coarse && self.coarse.is_none() {
+            self.coarse = Some(coarse::CoarsePressure::new(
+                device,
+                self.grid,
+                &self.status,
+                &self.residual,
+                &self.preconditioned,
+            )?);
+        }
         let mut params = Vec::with_capacity(PARAM_BYTES as usize);
         for word in [
             self.grid.width(),
@@ -37,7 +46,7 @@ impl GpuPressureProjector {
                 0.0
             },
             0.0,
-            0.0,
+            config.method as u32 as f32,
         ] {
             params.extend_from_slice(&word.to_le_bytes());
         }
@@ -49,6 +58,10 @@ impl GpuPressureProjector {
         queue.write_buffer(&self.status, 0, &[0; STATUS_BYTES as usize]);
 
         let bindings = self.bindings(device, fields, &uniform, config);
+        let coarse = (config.method == PressureMethod::Coarse).then(|| {
+            let owner = self.coarse.as_ref().expect("coarse pressure owner");
+            (owner, owner.bind_fields(device, fields, &uniform))
+        });
         let init_pipeline = if bindings.hydrostatic_bind.is_some() {
             &self.pipelines.init_preconditioner_from_guess
         } else {
@@ -101,6 +114,10 @@ impl GpuPressureProjector {
                 &bindings.init_preconditioner,
                 self.partial_count,
             );
+            if let Some((owner, fields)) = &coarse {
+                owner.prepare(&mut pass, fields);
+                owner.apply(&mut pass);
+            }
         }
         encoder.copy_buffer_to_buffer(&self.preconditioned, 0, &self.search, 0, self.search.size());
         {
@@ -134,7 +151,12 @@ impl GpuPressureProjector {
 
         while status.converged == 0 && status.iterations < config.max_iterations {
             let previous_iterations = status.iterations;
-            let batch = (config.max_iterations - status.iterations).min(ITERATIONS_PER_BATCH);
+            let batch_iterations = if coarse.is_some() {
+                8
+            } else {
+                ITERATIONS_PER_BATCH
+            };
+            let batch = (config.max_iterations - status.iterations).min(batch_iterations);
             let mut encoder = device.create_command_encoder(&wgpu::CommandEncoderDescriptor {
                 label: Some("bounded pressure PCG batch"),
             });
@@ -176,6 +198,9 @@ impl GpuPressureProjector {
                         &bindings.update_preconditioner,
                         self.partial_count,
                     );
+                    if let Some((owner, _)) = &coarse {
+                        owner.apply(&mut pass);
+                    }
                     dispatch(
                         &mut pass,
                         &self.pipelines.reduce_cached,

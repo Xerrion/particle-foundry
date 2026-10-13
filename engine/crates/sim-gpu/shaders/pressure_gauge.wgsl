@@ -73,6 +73,14 @@ fn mean(@builtin(global_invocation_id) id: vec3<u32>) {
 fn center(@builtin(global_invocation_id) id: vec3<u32>) {
     let cell = id.x;
     if (cell < params.cells) {
-        pressure[cell] -= component_mean[root_cell[cell]];
+        let mean = component_mean[root_cell[cell]];
+        let previous = pressure[cell];
+        let centered = previous - mean;
+        if (params.padding2 != 0.0) {
+            let large = select(-mean, previous, abs(previous) >= abs(mean));
+            let small = select(previous, -mean, abs(previous) >= abs(mean));
+            pressure[cell + params.cells] += fma(1.0, small, fma(-1.0, centered, large));
+        }
+        pressure[cell] = centered;
     }
 }

@@ -34,6 +34,13 @@ The [13 October block-pressure screening](validation/p1-m3-e08.md#local-block-pr
 rejects a local polynomial preconditioner after repeatable native full-grid
 nonconvergence. The original solver is retained. The next comparison should
 address long-range pressure error while keeping the existing accuracy limits.
+The [coarse pressure checkpoint](validation/p1-m3-e08.md#component-aware-coarse-pressure-on-13-october-2026)
+then passes native, equal-time accuracy and required sustained browser checks
+with a component-aware V-cycle and compensated pressure accumulation.
+Final candidate duration is about fourteen wall seconds per model second on
+the Apple adapter. The next bounded comparison should measure remaining
+pressure, transport and host costs under this profile. Real time remains
+unmet; local delivery evidence stays separate from the merged reference.
 
 Complete the [current-sandbox checklist](plans/rust-wasm-migration/current-sandbox-scope.md)
 before the default GPU switch. Its current materials, interactions and controls

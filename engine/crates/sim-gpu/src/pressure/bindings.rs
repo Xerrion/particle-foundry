@@ -183,8 +183,8 @@ impl GpuPressureProjector {
             &self.pipelines.reduce_cached,
             &[
                 (0, uniform),
-                (1, fields.density),
                 (6, &self.residual),
+                (7, &self.preconditioned),
                 (10, &self.partials),
             ],
         );

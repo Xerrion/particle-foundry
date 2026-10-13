@@ -21,6 +21,9 @@ changing its results on the measured device. The
 reduces browser completion waits. Repeated runs take 22.0% less time and keep
 identical final fields. Real time remains unmet. The next task is to reduce the
 GPU work in pressure or transport while keeping the required accuracy limits.
+The [13 October coarse pressure comparison](validation/p1-m3-e08.md#component-aware-coarse-pressure-on-13-october-2026)
+passes the existing accuracy limits and takes about fourteen wall seconds
+per model second on the measured Apple adapter. Real time remains unmet.
 The user resumed this work after the existing PRs were merged. See the [performance decision](plans/fluid-gpu-redesign/plan.md#interactive-performance-priority-on-6-october-2026)
 for the target, measurement rules and remaining correctness requirements.
 

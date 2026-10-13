@@ -236,7 +236,10 @@ async function benchmark(canvas: HTMLCanvasElement) {
 			fixture: { width: 480, height: 270, brush: { x: 240, y: 100, radius: 4, material: "water" } },
 			quality: {
 				pressureIterations: 512,
-				pressureBatchIterations: 64,
+				pressureBatchIterations: 8,
+				pressureMethod: "component-aware Galerkin V-cycle",
+				pressureAccumulation: "large and small f32 terms with explicit fma",
+				pressureSmoothingSweeps: 2,
 				pressureTolerance: 1e-5,
 				closureRounds: 256,
 			},

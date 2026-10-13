@@ -44,6 +44,7 @@ pub(crate) struct PressureFields<'a> {
 /// Fixed GPU iteration budget and frozen f32 acceptance gates.
 #[derive(Clone, Copy, Debug)]
 pub(crate) struct PressureConfig {
+    pub method: PressureMethod,
     pub dt_s: f32,
     /// Uniform acceleration already applied to the vertical predictor.
     pub gravity_m_s2: f32,
@@ -54,9 +55,19 @@ pub(crate) struct PressureConfig {
     pub scaled_divergence_tolerance: f32,
 }
 
+/// The reference and the bounded precision/coarse comparison profiles.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[repr(u32)]
+pub(crate) enum PressureMethod {
+    Reference = 0,
+    Compensated = 1,
+    Coarse = 2,
+}
+
 impl Default for PressureConfig {
     fn default() -> Self {
         Self {
+            method: PressureMethod::Coarse,
             dt_s: 1.0 / 60.0,
             gravity_m_s2: 0.0,
             max_iterations: 512,
@@ -166,9 +177,11 @@ pub(crate) struct GpuPressureProjector {
     partial_count: u32,
     pipelines: Pipelines,
     last_readback_bytes: u64,
+    coarse: Option<coarse::CoarsePressure>,
 }
 
 mod bindings;
+mod coarse;
 mod readback;
 mod setup;
 mod solve;

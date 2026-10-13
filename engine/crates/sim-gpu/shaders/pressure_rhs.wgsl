@@ -45,6 +45,9 @@ fn main(@builtin(global_invocation_id) id: vec3<u32>) {
     // determine acceptance. Zero-budget probes retain their cold-start contract.
     if (params.reuse_dynamic_guess == 0.0) {
         pressure[cell] = 0.0;
+        if (params.padding2 != 0.0) {
+            pressure[cell + params.cells] = 0.0;
+        }
     }
     hydrostatic_base[cell] = 0.0;
 }
