@@ -40,7 +40,10 @@ fn u(@builtin(global_invocation_id) id: vec3<u32>) {
     let right = left + 1u;
     let inverse_density = 1.0 / (0.5 * density[left] + 0.5 * density[right]);
     let base_gradient = (hydrostatic_base[right] - hydrostatic_base[left]) / params.dx_m;
-    let dynamic_gradient = (pressure[right] - pressure[left]) / params.dx_m;
+    var dynamic_gradient = (pressure[right] - pressure[left]) / params.dx_m;
+    if (params.padding2 != 0.0) {
+        dynamic_gradient += (pressure[right + params.cells] - pressure[left + params.cells]) / params.dx_m;
+    }
     corrected_u[face] = predictor_u[face]
         - params.dt_s * inverse_density * base_gradient
         - params.dt_s * inverse_density * dynamic_gradient;
@@ -61,7 +64,10 @@ fn v(@builtin(global_invocation_id) id: vec3<u32>) {
     let top = (y - 1u) * params.width + face % params.width;
     let bottom = top + params.width;
     let inverse_density = 1.0 / (0.5 * density[top] + 0.5 * density[bottom]);
-    let dynamic_gradient = (pressure[bottom] - pressure[top]) / params.dx_m;
+    var dynamic_gradient = (pressure[bottom] - pressure[top]) / params.dx_m;
+    if (params.padding2 != 0.0) {
+        dynamic_gradient += (pressure[bottom + params.cells] - pressure[top + params.cells]) / params.dx_m;
+    }
     let face_density = 0.5 * density[top] + 0.5 * density[bottom];
     if (params.gravity_m_s2 == 0.0 || hydrostatic_base[params.cells + y] == face_density) {
         // Keep the original operation order for exact hydrostatic cancellation.
