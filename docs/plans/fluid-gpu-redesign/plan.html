@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="source-sha256" content="50a9d38dbf82d1b64b61ededde6294aea8ccd7199d3ba06e9f2ce48d1fbe3136">
+<meta name="source-sha256" content="2e0f810fd3fc3873c721e726269e144cd209ee14c76dd4cfffdbe6410e834dfa">
 <meta name="description" content="Particle Foundry P1 implementation plan: Rust reference, WASM delivery, wgpu/WGSL execution, and future-ready composition.">
 <title>Fluid and GPU redesign | Particle Foundry</title>
 <style>
@@ -256,7 +256,7 @@ u_next = u* - dt (1/rho_face) G π
 <h3 id="m7-----promotion-recovery-and-retirement">M7  -  Promotion, recovery, and retirement</h3>
 <p><strong>Dependency:</strong> all implementation, feature and numerical gates for every required row of the current-sandbox scope, including M6 and E04 circuits.</p>
 <p>Run numerical and browser suites, sustained benchmarks, and device-loss tests on intended integrated and discrete GPUs. Record browser/adapter/driver, grid, scene seed, warm-up, samples, substeps, solver residuals, dispatches, memory, reduction/readback bytes, and physical time advanced. Track p50/p95 end-to-end frame time, input-to-command-application latency, and simulated-seconds per wall-second. Optional GPU timestamps supplement host measurements; support is not required for correctness.</p>
-<p>Proposed product gate: 480×270 at 1×, p95 displayed frame interval ≤33.3 ms and at least 1.0 simulated second per wall-second on the agreed baseline device. These are targets to validate, not predicted results. Include painting, worst-case sand pools, boiling/venting, disconnected cavities, and dense circuits; a fast ambient frame is insufficient.</p>
+<p>Product target, clarified by the user on 13 October 2026: 480×270 at 1×, 60 displayed frames per second during normal interaction and at least 1.0 accepted simulated second per wall-second on the agreed baseline device. The nominal frame budget is 16.7 ms; record p50/p95 frame intervals, long frames and input latency separately. These are targets to validate, not measured results. Include painting, worst-case sand pools, boiling/venting, disconnected cavities, and dense circuits; a fast ambient frame is insufficient.</p>
 <p>On GPU loss, stop accepting new tick commits, cancel pending readbacks and preserve the last valid committed checkpoint plus command log. The newest device state may be unavailable. Recover only through a compatible validated Rust CPU or restored wgpu backend, with an explicit checkpoint rollback notice, or restart with a clear notice. Replay restores commands, not a promise of bit-identical cross-device trajectories. Never hot-swap partially evolved GPU fields into the legacy parcel engine. Keep backend selection and versioned snapshots reversible through the experimental period.</p>
 <p>FIRE-W07 requires FIRE-M7 (FIRE-A01-FIRE-A14), including network/component persistence, failure injection, replay, derived-visual independence and measured transfers for every promoted fire scene. Include closed-O2, vented burning, ignition-only, water-suppression and persistent-smoke coverage where claimed. Historical characterization is not a substitute for corrected hardware/reference evidence.</p>
 <p>Expose passing subsets experimentally during development. The default switch requires every current-sandbox scope row; no current capability may be left legacy-only or relabelled optional to pass M7. Retain reversible legacy access until rollout is proven. Remove legacy branches only after their full required feature matrix is covered. Update <code>docs/model.md</code>, <code>README.md</code>, <code>docs/elements.md</code>, and benchmark documentation to the implemented contracts and measured limits.</p>
@@ -293,6 +293,20 @@ the merge of PRs #18, #14 and #17. The resumed comparison measures cheaper
 pressure and transport settings on the same workload. The reference profile
 remains distinguishable from each interactive candidate. XER-64 remains
 In Progress. Feature coverage and M7 promotion remain open.</p>
+<h3 id="final-gameplay-target-clarified-on-13-october-2026">Final gameplay target clarified on 13 October 2026</h3>
+<p>The user sets the final goal at 60 FPS with simulation time following real time
+and behavior close to real life within the falling-sand model. Qualify visible
+frame pacing, brush response and accepted-time throughput together during
+normal interaction. A throughput benchmark alone does not establish displayed
+FPS or input responsiveness. Record the browser, adapter, scene, render cadence,
+p50/p95 frame intervals, stalls, input latency and accepted model time.</p>
+<p>Physical credibility remains part of acceptance. Compare fluid motion and the
+required material interactions with their controlling references and regression
+gates. Preserve finite values, nonnegative amounts, source and conservation
+accounting, volume bounds and atomic rejection. Document any approximation and
+its measured errors before claiming a quality/performance tradeoff. The current
+limited GPU scene does not establish full-sandbox physics coverage or promotion.
+XER-64 owns this performance target; XER-38 retains complete-scene qualification.</p>
 <h3 id="candidate-error-budgets-on-7-october-2026">Candidate error budgets on 7 October 2026</h3>
 <p>Before qualification, the initial interactive candidate uses at most 256 PCG
 iterations and <code>1e-4</code> scaled residual and divergence limits. A transport-only
@@ -393,6 +407,26 @@ It validates and hashes explicit checkpoint fields outside the timed interval.
 Neither workgroup counts nor inclusive queue waits establish exclusive GPU
 shader durations. Required hardware qualification remains separate from the
 throughput runs and ordinary hosted browser smoke.</p>
+<h3 id="exact-fixed-point-scheduling-rejected-on-13-october-2026">Exact fixed-point scheduling rejected on 13 October 2026</h3>
+<p>A temporary resident stop flag monitors bit changes over complete ordered
+transport rounds every 16 rounds, keeping the 256-round cap. The native rest
+fixtures stop early with identical complete candidate bytes. Nonuniform
+fixtures still reach the cap. A paired hardware browser series keeps identical
+fields and accounting but takes 70.03% longer than merged PR #24.
+The indirect schedule is removed. This does not change the current transport
+method or authorize relaxed acceptance gates. The
+<a href="../../validation/p1-m3-e08.md#rejected-exact-transport-fixed-point-comparison-on-13-october-2026">E08 rejected comparison</a>
+records the protocol, screening, measurements and unrun qualification.</p>
+<h3 id="allocation-comparison-on-13-october-2026">Allocation comparison on 13 October 2026</h3>
+<p>Packing the seven immutable transport parameter records into one aligned
+allocation preserves complete fields and work counts, but fails to improve
+repeated browser duration. That temporary engine change is removed. The
+<a href="../../../web/benchmarks/gpu-browser.ts">browser benchmark</a> retains buffer
+allocation counts and requested bytes in its separate trace. Measurements are
+cumulative API requests, not live memory or exclusive allocation/GPU durations.
+The <a href="../../validation/p1-m3-e08.md#transport-parameter-and-allocation-comparison-on-13-october-2026">E08 allocation comparison</a>
+records results and the proposed investigation of repeated large scratch
+allocations. Throughput remains distinct from visible FPS and input latency.</p>
 <h2 id="4-acceptance-matrix">4. Acceptance matrix</h2>
 <p>The following are proposed starting gates, not measurements. Freeze fixture scales and thresholds in M0/M2 before optimization. Any later tolerance change needs a numerical rationale, including grid/time refinement, rather than matching the latest output.</p>
 <div class="table-scroll"><table>
