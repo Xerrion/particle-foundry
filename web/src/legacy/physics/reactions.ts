@@ -6,12 +6,14 @@ import {
 	HYDROGEN,
 	LIQUID_SULFUR,
 	materialsById,
+	OIL,
 	PLANT,
 	plantGrowthProfile,
 	SMOKE,
 	SULFUR,
 	SULFUR_VAPOR,
 	WATER,
+	WOOD,
 } from "../../materials";
 import { isGas } from "../../materials/queries";
 import { CELL_VOLUME_M3 } from "../simulation/physical-scale";
@@ -158,18 +160,22 @@ export function createReactions(world: World) {
 	}
 
 	function releaseChemicalEnergy(index: number, thermalUnits: number): boolean {
+		// The legacy fresh-air reservoir also carries away excess product heat.
+		// Otherwise the tiny gas parcels cannot cool Wood/Oil quickly enough
+		// to spend their finite fuel at the calibrated gameplay rate.
+		const ventProductHeat = (grid[index] === WOOD || grid[index] === OIL) && hasFreshAir(index);
 		const maximumProductEnergy = energyAtTemperature(
 			SMOKE,
 			combustionProfile.maximumProductTemperatureC,
 			world.pressurePa[index] || undefined,
 			world.massKg[index],
 		);
-		const thermalRoom = maximumProductEnergy - energy[index];
-		if (thermalRoom <= 1e-12) return true;
+		const thermalRoom = Math.max(0, maximumProductEnergy - energy[index]);
+		if (thermalRoom <= 1e-12 && !ventProductHeat) return true;
 		const requestedKj = Math.min(
 			thermalUnits / 1000,
 			world.chemicalEnergyKj[index],
-			thermalRoom / 1000,
+			ventProductHeat ? Number.POSITIVE_INFINITY : thermalRoom / 1000,
 		);
 		// Approximate oxygen per kJ (not per J). The former factor was 1000x
 		// too large, so an ordinary interior flame could never burn its fuel.
@@ -178,6 +184,8 @@ export function createReactions(world: World) {
 		if (chemicalKj <= 1e-12) return false;
 		world.chemicalEnergyKj[index] = Math.max(0, world.chemicalEnergyKj[index] - chemicalKj);
 		energy[index] += chemicalKj * 1000;
+		const productHeatOutflow = ventProductHeat ? Math.max(0, chemicalKj * 1000 - thermalRoom) : 0;
+		if (productHeatOutflow > 0) world.addExternalEnergy(index, -productHeatOutflow);
 		return true;
 	}
 
