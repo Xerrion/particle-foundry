@@ -1,12 +1,20 @@
 # Active work and delivered-history boundary
 
 **Status date:** 14 October 2026. **Selected work track:** performance and
-interaction follow-up on P1/M3/E08 under XER-64. The water-line correction is
-merged. The selected fresh RTX baseline and required sustained browser GPU
-qualification are complete locally after reboot; [the measured evidence](validation/p1-m3-e08.md#rtx-qualification-and-baseline-after-reboot-on-14-october-2026)
+interaction follow-up on P1/M3/E08 under XER-64. XER-80 is the selected pressure
+convergence and GPU completion profiling task. Its tools pass independent review,
+full local CI and required RTX browser GPU checks. The delivery is on a feature
+branch awaiting review and merge; see [profiling evidence](validation/p1-m3-e08.md#pressure-convergence-and-completion-profiling-on-14-october-2026).
+No new solver or transport optimization is selected. The water-line correction
+is merged.
+The fresh RTX baseline and required sustained browser GPU qualification are
+complete locally after reboot. Their documentation is merged in
+[PR #30](https://github.com/Xerrion/particle-foundry/pull/30) at main
+`f47e2eb7f8a2e5128b5bba09b420c31560a4c092`.
+[The measured evidence](validation/p1-m3-e08.md#rtx-qualification-and-baseline-after-reboot-on-14-october-2026)
 records the Linux/NVIDIA launch requirements, numerical checks and unmet
-real-time target. No further optimization has been started. See [the short Danish
-status](STATUS.md) for the current P/M/E and next selected action.
+real-time target. See [the short Danish status](STATUS.md) for the current P/M/E
+and next selected action.
 
 The next migration item remains P1/M4/E09, with an isolated
 [pure-water reference](thermodynamics.md).
@@ -25,6 +33,31 @@ with 60 displayed FPS, simulation in real time, responsive painting and physical
 credible behavior. The [shared gameplay target](plans/fluid-gpu-redesign/plan.md#final-gameplay-target-clarified-on-13-october-2026)
 owns those acceptance rules. XER-64 advances the limited scene; XER-38/E14
 qualifies the full current-sandbox outcome before default promotion.
+
+### XER-64 work split on 14 October 2026
+
+[XER-64](https://linear.app/xerrion/issue/XER-64/run-the-experimental-gpu-scene-in-real-time)
+retains the limited-scene outcome and acceptance checks. Its description contains
+the task. Progress, measurements and delivery evidence are recorded in comments.
+The work is split into 19 direct sub-issues:
+
+- XER-81 through XER-95 are Done. They record 15 completed units from PR #17
+  through PR #30, including retained changes, rejected comparisons, tooling and
+  RTX qualification. Their comments retain the actual delivery dates and evidence.
+- [XER-80](https://linear.app/xerrion/issue/XER-80/profile-pressure-convergence-and-gpu-completion-timing)
+  is In Review. It owns pressure convergence diagnostics, host and GPU timing,
+  browser tracing and a measured recommendation for the next bounded comparison.
+- XER-96 through XER-98 are Backlog. They cover displayed-frame and interaction
+  measurements, the next measured optimization, and final limited-scene
+  qualification of real time and 60 displayed FPS. XER-97 depends on XER-80.
+  XER-98 depends on XER-96 and XER-97.
+
+The completed RTX baseline averages 19.12 wall seconds per model second across
+three short runs. The longer run advances five model seconds in 49.94 wall
+seconds. Preview pacing averages 6.68 render submissions per second. These
+measurements do not qualify displayed FPS or active-input latency.
+The backlog items await selection. XER-63 retains the pressure
+stability defect, and XER-38 retains full-sandbox promotion.
 
 **GPU follow-up ownership, 6 October 2026:**
 [XER-63](https://linear.app/xerrion/issue/XER-63/fix-gpu-pressure-nonconvergence-during-sustained-browser-scene)
@@ -80,9 +113,10 @@ is merged in [PR #28](https://github.com/Xerrion/particle-foundry/pull/28) at
 `8c963f8`. Continuous GPU brush strokes remove the repeated input scallops
 while preserving the simulation equations and limits. The measured pacing change
 is within variation, so no simulation speedup is established.
-Pressure convergence and completion synchronization remain a proposed later
-investigation. Frustum culling has lower priority for the current full-grid
-renderer. Real time remains unmet.
+Pressure convergence and completion synchronization are now selected in
+[XER-80](https://linear.app/xerrion/issue/XER-80/profile-pressure-convergence-and-gpu-completion-timing).
+Frustum culling has lower priority for the current full-grid renderer.
+Real time remains unmet.
 PR [#26](https://github.com/Xerrion/particle-foundry/pull/26) is merged at main
 `360d514` with all six post-merge CI jobs passing. It aligns the gameplay target;
 the activity tools and evidence are merged in

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="source-sha256" content="d6df9196d9558f21e1390656dcc947e526296a80c70b5dc24ee208c65576f7e2">
+<meta name="source-sha256" content="4d61f685373f1f725cc8e97d0e818f9909d8813dda68b4fe28b09907025815e7">
 <meta name="description" content="Particle Foundry P1 implementation plan: Rust reference, WASM delivery, wgpu/WGSL execution, and future-ready composition.">
 <title>Fluid and GPU redesign | Particle Foundry</title>
 <style>
@@ -429,10 +429,15 @@ the pacing measurements establish no simulation speedup. The correction is merge
 in <a href="https://github.com/Xerrion/particle-foundry/pull/28">PR #28</a>, after the activity
 investigation in <a href="https://github.com/Xerrion/particle-foundry/pull/27">PR #27</a>.
 This bounded correction is delivered under XER-64; the real-time target remains open.</p>
-<p>Pressure convergence and completion synchronization remain a proposed later
-investigation on the same brush fixture. Record per-candidate convergence,
-batch counts and GPU-completion-to-host timing before selecting a change. The
-profile records 2,541 PCG batches and 4,302 pressure completion maps. Inclusive
+<p>On 14 October 2026 the user selected pressure convergence and completion
+synchronization profiling on the same brush fixture in
+<a href="https://linear.app/xerrion/issue/XER-80/profile-pressure-convergence-and-gpu-completion-timing">XER-80</a>,
+a sub-issue of XER-64. Record per-candidate convergence, batch counts, browser
+work and inclusive completion waits before selecting a change. Keep host and GPU
+clock origins explicit; independent shader timestamps do not establish
+GPU-completion-to-host delay. The earlier
+<a href="../../validation/p1-m3-e08.md#transport-activity-investigation-on-14-october-2026">activity profile</a>
+records 2,541 PCG batches and 4,302 pressure completion maps. Inclusive
 map waits overlap GPU work; they do not isolate communication cost. Keep pressure
 limits, transport gates and atomic rejection fixed during this investigation.
 The <a href="../../validation/p1-m3-e08.md#resident-candidate-buffer-reuse-on-13-october-2026">buffer-reuse evidence</a>
