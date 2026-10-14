@@ -4,6 +4,12 @@
 
 The active goal is to replace the current sandbox engine with Rust/WASM and GPU simulation/rendering while preserving the [frozen current-sandbox scope](plans/rust-wasm-migration/current-sandbox-scope.md). P1 must prove that the existing materials, interactions, tools and controls work, then pass browser correctness, performance and recovery gates before the GPU backend becomes the default.
 
+The [shared P1 gameplay target](plans/fluid-gpu-redesign/plan.md#final-gameplay-target-clarified-on-13-october-2026)
+requires 60 displayed FPS, simulation in real time, responsive interaction and
+physically credible behavior in that complete scope. M7 must qualify these
+outcomes together on declared targets; a limited GPU scene is an intermediate
+checkpoint.
+
 The retained P2-P9 designs describe possible expansion to pressure waves, breakage, more materials, chemistry and nuclear behavior. They are deferred backlog, not an execution queue. Do not start any deferred phase without a separate user decision, even after P1 passes. The long-term 118-identity target does not authorize 118 independent solver functions or claims of 118 fully realistic elemental substances.
 
 ## Active scope and deferred phase register

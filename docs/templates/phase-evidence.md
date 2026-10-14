@@ -47,6 +47,15 @@ Report conserved inventory and each relevant energy channel before/after, bounda
 
 Record grid, active components, warm-up, sample count, displayed frame p50/p95, simulated seconds per wall second, latency, substeps, iteration/dispatch counts, allocation manifest, transfer bytes and queue sizes. Distinguish measured values from proposed targets.
 
+For P1 gameplay qualification, link the
+[shared target](../plans/fluid-gpu-redesign/plan.md#final-gameplay-target-clarified-on-13-october-2026)
+and record the declared browser/device, interactive workload, displayed-frame
+measurement method and uncertainty, frame/stall and input-response budgets,
+quality profile and numerical error limits. Report displayed FPS, accepted model
+seconds per wall second, response and physical-quality results from the same
+workload. Mark each outcome pass, fail or unrun. Render submissions or animation
+callbacks alone do not qualify displayed FPS.
+
 ## Recovery and compatibility
 
 List save/load, schema migration, device-absence/loss, component growth, command ordering, pause/reset, settings and replay tests. State unsupported combinations and whether their rejection was tested.

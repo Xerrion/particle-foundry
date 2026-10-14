@@ -1,6 +1,10 @@
 # Particle Foundry: phases and milestones
 
-**The current goal is to make today's sandbox work on the Rust/GPU engine.**
+**The current goal is today's complete sandbox on Rust/GPU with 60 FPS,
+simulation in real time and physically credible behavior.**
+Painting and controls must remain responsive during normal play.
+The [shared gameplay target](plans/fluid-gpu-redesign/plan.md#final-gameplay-target-clarified-on-13-october-2026)
+defines the measurements and checks required to prove that result.
 New pressure-wave physics, more elements, broader chemistry and nuclear behavior
 are deferred. Finishing the GPU switch will be a point to review the result and
 choose what comes next; it will not automatically start another phase.
@@ -65,7 +69,8 @@ validated. For live status, see the
    reactions, heat, sand, circuits, scenes and controls, including the eight
    existing element models. Correct known physics errors as part of this work.
 3. **Prove the default switch - M7.** Check the complete current-feature list,
-   real-browser performance, checkpoints and recovery before making GPU the default.
+   60 displayed FPS, simulation in real time, response, physical quality,
+   checkpoints and recovery before making GPU the default.
 
 All three checkpoints belong to P1. A fast demo alone does not finish the switch,
 and moving only a few scenes across does not finish the current-feature list.

@@ -235,7 +235,7 @@ Migrate all eight current elemental models and their existing products/interacti
 
 Run numerical and browser suites, sustained benchmarks, and device-loss tests on intended integrated and discrete GPUs. Record browser/adapter/driver, grid, scene seed, warm-up, samples, substeps, solver residuals, dispatches, memory, reduction/readback bytes, and physical time advanced. Track p50/p95 end-to-end frame time, input-to-command-application latency, and simulated-seconds per wall-second. Optional GPU timestamps supplement host measurements; support is not required for correctness.
 
-Product target, clarified by the user on 13 October 2026: 480×270 at 1×, 60 displayed frames per second during normal interaction and at least 1.0 accepted simulated second per wall-second on the agreed baseline device. The nominal frame budget is 16.7 ms; record p50/p95 frame intervals, long frames and input latency separately. These are targets to validate, not measured results. Include painting, worst-case sand pools, boiling/venting, disconnected cavities, and dense circuits; a fast ambient frame is insufficient.
+M7 must pass the [final gameplay target](#final-gameplay-target-clarified-on-13-october-2026) across the complete current-sandbox scope on declared browser/device targets. Qualify displayed frames, accepted simulation time, brush response and numerical quality together. Include painting, sand pools, boiling/venting, disconnected cavities, fire and dense circuits. These are required outcomes to validate, not measured results.
 
 On GPU loss, stop accepting new tick commits, cancel pending readbacks and preserve the last valid committed checkpoint plus command log. The newest device state may be unavailable. Recover only through a compatible validated Rust CPU or restored wgpu backend, with an explicit checkpoint rollback notice, or restart with a clear notice. Replay restores commands, not a promise of bit-identical cross-device trajectories. Never hot-swap partially evolved GPU fields into the legacy parcel engine. Keep backend selection and versioned snapshots reversible through the experimental period.
 
@@ -285,12 +285,35 @@ In Progress. Feature coverage and M7 promotion remain open.
 
 ### Final gameplay target clarified on 13 October 2026
 
-The user sets the final goal at 60 FPS with simulation time following real time
-and behavior close to real life within the falling-sand model. Qualify visible
-frame pacing, brush response and accepted-time throughput together during
-normal interaction. A throughput benchmark alone does not establish displayed
-FPS or input responsiveness. Record the browser, adapter, scene, render cadence,
-p50/p95 frame intervals, stalls, input latency and accepted model time.
+**Accepted product goal:** deliver the complete existing Particle Foundry sandbox
+on Rust/WASM + wgpu with 60 displayed FPS, simulation time following real time
+and behavior close to real life within the falling-sand model. The user clarified
+this goal on 13 October and requested consistent docs and Linear on 14 October
+2026. This section owns the shared P1 gameplay target. The
+[current-sandbox checklist](../rust-wasm-migration/current-sandbox-scope.md)
+owns its required feature coverage, including all eight existing elemental
+models, interactions, scenes, tools and controls. P2-P9 remain deferred.
+
+| Required outcome | Qualification |
+| --- | --- |
+| Smooth visible play | 60 displayed frames per second during normal interaction at 480 x 270 and 1x on the agreed baseline device. The nominal frame budget is `1000 / 60` ms, approximately 16.7 ms. |
+| Simulation in real time | At least one accepted model second per wall second at 1x in the same interactive workload. Requested ticks, queued work and a slowed model clock do not establish this result. |
+| Responsive interaction | Painting and controls remain responsive while the simulation advances. Record brush/input-to-command latency, visible response, p50/p95 frame intervals and stalls against budgets declared before qualification. |
+| Physically credible behavior | Required material interactions pass their independent references and regression gates at equal accepted model time. Document numerical approximations and measured errors while preserving the invariants below. |
+
+Qualify these outcomes together during normal play on the declared browser,
+adapter, scene and quality profile. Include the complete CUR workload matrix;
+an empty/resting scene or the limited Water-brush fixture cannot qualify all
+existing features. A throughput benchmark, render submission count or animation
+callback rate alone does not establish displayed FPS or input responsiveness.
+
+Before qualification, freeze the browser/device matrix, fixture inputs, run
+duration, warm-up, repetitions, displayed-frame measurement method and its
+measurement tolerance, frame/stall and input-response budgets, and numerical
+error limits. Report these settings with measured results. The earlier p95
+frame interval limit of 33.3 ms is superseded as a P1 completion criterion;
+passing it alone cannot establish the 60 FPS target. Measurement tolerances
+must describe measurement uncertainty and cannot lower the product target.
 
 Physical credibility remains part of acceptance. Compare fluid motion and the
 required material interactions with their controlling references and regression
@@ -298,7 +321,11 @@ gates. Preserve finite values, nonnegative amounts, source and conservation
 accounting, volume bounds and atomic rejection. Document any approximation and
 its measured errors before claiming a quality/performance tradeoff. The current
 limited GPU scene does not establish full-sandbox physics coverage or promotion.
-XER-64 owns this performance target; XER-38 retains complete-scene qualification.
+XER-64 owns optimization and qualification of the current limited GPU scene.
+XER-38/E14 owns the full-sandbox target and complete-scene qualification;
+XER-45 supplies its coverage evidence and XER-46 owns the gated default switch.
+Missing feature, hardware, performance, response or quality evidence keeps the
+affected gate open. A documentation update does not pass any of these gates.
 
 ### Candidate error budgets on 7 October 2026
 

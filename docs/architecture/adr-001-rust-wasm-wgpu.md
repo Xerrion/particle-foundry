@@ -39,6 +39,12 @@ Keep pressure and temperature derived where required by the model. The example l
 
 ## Delivery policy
 
+The [shared P1 gameplay target](../plans/fluid-gpu-redesign/plan.md#final-gameplay-target-clarified-on-13-october-2026)
+requires 60 displayed FPS, simulation in real time, responsive interaction and
+physically credible behavior across the complete existing sandbox on declared
+targets. This stack decision supplies ownership and integration boundaries;
+actual browser measurements and numerical evidence must qualify that result.
+
 Scope decision, 27 September 2026: P1 M0-M7 is the only active release. P2-P9 remain deferred and require separate user activation. Complete the [current-sandbox scope](../plans/rust-wasm-migration/current-sandbox-scope.md), including the existing eight elemental models, before the default GPU switch. Integrate Rust workspace/bootstrap, facade, bindings, data projection and browser capability checks inside M0/M1. M2 implements the Rust reference. M3 brings the same solver to WGSL with direct rendering. M4 adds complete supported thermodynamics and phase closure; M5 adds solids and granular coupling; M6 integrates chemistry/circuits and UI; M7 requires evidence for every current-sandbox row plus browser performance and recovery. Experimental subset promotion does not complete P1.
 
 The initial demonstrator remains one liquid, carrier gas and fixed walls with passive thermal/species markers. Full phase physics, sand, existing chemistry integration, the 40/83-element expansion and nuclear reactions keep their existing gates. Establish regressions before replacement, but do not require every legacy defect to be fixed twice.

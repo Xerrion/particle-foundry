@@ -12,6 +12,12 @@ see [baseline](validation/p1-m0.md), [bootstrap](validation/p1-m1.md),
 
 ## Current active queue: P1 only
 
+The final outcome for this queue is the complete existing sandbox on Rust/GPU
+with 60 displayed FPS, simulation in real time, responsive painting and physically
+credible behavior. The [shared gameplay target](plans/fluid-gpu-redesign/plan.md#final-gameplay-target-clarified-on-13-october-2026)
+owns those acceptance rules. XER-64 advances the limited scene; XER-38/E14
+qualifies the full current-sandbox outcome before default promotion.
+
 **GPU follow-up ownership, 6 October 2026:**
 [XER-63](https://linear.app/xerrion/issue/XER-63/fix-gpu-pressure-nonconvergence-during-sustained-browser-scene)
 retains the pressure-stop defect and remaining production verification.
