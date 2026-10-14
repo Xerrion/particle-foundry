@@ -51,9 +51,12 @@ samples. Skipping unchanged 16 x 16 regions is therefore rejected for this solve
 The preview-pacing test submits about 9.5 frames per second. In the separate
 throughput test, one model second takes about 13.7 wall seconds. No new runtime
 optimization is retained.
-The user then selected the [water-line correction](validation/p1-m3-e08.md#continuous-gpu-brush-strokes-on-14-october-2026).
-The repeated teeth follow small scallops in the painted line. Continuous brush
-strokes connect pointer positions without changing the physics calculations.
+The [water-line correction](validation/p1-m3-e08.md#continuous-gpu-brush-strokes-on-14-october-2026)
+is merged in [PR #28](https://github.com/Xerrion/particle-foundry/pull/28), after
+[PR #27](https://github.com/Xerrion/particle-foundry/pull/27) delivered the activity
+investigation. The repeated teeth follow small scallops in the painted line.
+Continuous brush strokes connect pointer positions without changing the physics
+calculations. This fixes the input pattern; no simulation speedup is established.
 The pressure solver and its completion waits remain a proposed later investigation.
 Camera visibility cannot decide which parts of the world evolve. PR #26, which
 aligns the gameplay goal and acceptance rules, is merged with passing CI.
