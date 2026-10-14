@@ -26,7 +26,7 @@ for (let index = 0; index < args.length; index += 2) {
 	const value = args[index + 1];
 	if (!args[index]?.startsWith("--") || !allowed.has(key) || !value || params.has(key)) {
 		throw new Error(
-			"Usage: run-gpu-activity.ts [new-evidence-directory] [--mode baseline|activity|profile] [--fixture rest|brush|dense] [--ticks 60] [--warmup-ticks 10] [--repeats 3] [--sample-tick 10] [--sample-passes 2] [--sample-every 64] [--timeout-seconds 900]",
+			"Usage: run-gpu-activity.ts [new-evidence-directory] [--mode baseline|activity|profile] [--fixture rest|brush|dense|water-line|water-line-shift|flat-line|flat-line-shift|flat-line-thin|continuous-line|stroke-line] [--ticks 60] [--warmup-ticks 10] [--repeats 3] [--sample-tick 10] [--sample-passes 2] [--sample-every 64] [--timeout-seconds 900]",
 		);
 	}
 	params.set(key, value);

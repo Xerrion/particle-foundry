@@ -105,6 +105,44 @@ impl BrowserGpuScene {
         Ok(format_progress(progress, false, false))
     }
 
+    /// Applies a continuous water or air stroke while the scene owner is idle.
+    /// Endpoint coordinates and radius must be nonnegative integers.
+    /// Radius zero selects crossed cell interiors, with diagonal corner ties excluded.
+    pub fn paint_stroke(
+        &self,
+        from_x: JsValue,
+        from_y: JsValue,
+        to_x: JsValue,
+        to_y: JsValue,
+        radius: JsValue,
+        material: JsValue,
+    ) -> Result<String, JsValue> {
+        let from = [
+            checked_nonnegative_u32(from_x, "GPU paint start x", u32::MAX)?,
+            checked_nonnegative_u32(from_y, "GPU paint start y", u32::MAX)?,
+        ];
+        let to = [
+            checked_nonnegative_u32(to_x, "GPU paint end x", u32::MAX)?,
+            checked_nonnegative_u32(to_y, "GPU paint end y", u32::MAX)?,
+        ];
+        let radius = checked_nonnegative_u32(radius, "GPU paint radius", 16)?;
+        let material = material
+            .as_string()
+            .ok_or_else(|| JsValue::from_str("GPU paint material must be water or air"))?;
+        let mut state = self.state.borrow_mut();
+        if state.disposed {
+            return Err(JsValue::from_str("GPU browser scene disposed"));
+        }
+        let progress = state
+            .owner
+            .as_mut()
+            .ok_or_else(|| JsValue::from_str("GPU browser scene busy"))?
+            .paint_stroke(from, to, radius, &material)
+            .map_err(|error| JsValue::from_str(&error))?;
+        state.latest = progress;
+        Ok(format_progress(progress, false, false))
+    }
+
     /// Returns a committed-only stamp. During an advance, this is the
     /// last settled stamp and busy is true.
     pub fn status_json(&self) -> Result<String, JsValue> {

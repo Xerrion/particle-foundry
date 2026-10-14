@@ -17,8 +17,14 @@ export type RunOptions = {
 };
 
 export async function measureActivityFixture(scene: BrowserGpuSceneSession, options: RunOptions) {
-	let last = prepareFixture(scene, options.fixture);
+	const resetStamp = scene.reset();
+	await scene.probe(240, 100);
+	const paintStarted = performance.now();
+	let last = prepareFixture({ ...scene, reset: () => resetStamp }, options.fixture);
+	const paintEnqueueMs = performance.now() - paintStarted;
 	if (!scene.render()) throw new Error("Activity fixture cannot render its initial state");
+	await scene.probe(240, 100);
+	const paintQueueCompletionMs = performance.now() - paintStarted;
 	const beforeBytes = await scene.checkpoint_prototype();
 	const before = await checkedFields(beforeBytes, last);
 	await options.saveCheckpoint?.("before", beforeBytes);
@@ -100,6 +106,10 @@ export async function measureActivityFixture(scene: BrowserGpuSceneSession, opti
 	return {
 		...run,
 		fixture: options.fixture,
+		paintEnqueueMs,
+		paintQueueCompletionMs,
+		paintMeasurementScope:
+			"Reset completion is excluded. Queue completion includes paint, one render and a 16-byte probe. This does not measure input-to-photon latency.",
 		policy: options.pacing ? "requestAnimationFrame, advance(8), render" : "advance(8), render",
 		measurementScope:
 			"Render submissions are presentation proxies. Displayed FPS and input latency remain unqualified.",

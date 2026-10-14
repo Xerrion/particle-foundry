@@ -19,6 +19,14 @@ export interface BrowserGpuSceneSession {
 	resize(width: number, height: number): void;
 	advance(maxSubsteps: number): Promise<string>;
 	paint(centerX: number, centerY: number, radius: number, material: "water" | "air"): string;
+	paintStroke(
+		fromX: number,
+		fromY: number,
+		toX: number,
+		toY: number,
+		radius: number,
+		material: "water" | "air",
+	): string;
 	probe(x: number, y: number): Promise<string>;
 	checkpoint_prototype(): Promise<Uint8Array>;
 	reset(): string;
@@ -61,6 +69,17 @@ function checkedBrowserScene(raw: BrowserGpuScene): BrowserGpuSceneSession {
 				throw new RangeError("GPU paint material must be water or air");
 			}
 			return raw.paint(centerX, centerY, radius, material);
+		},
+		paintStroke(fromX, fromY, toX, toY, radius, material) {
+			nonnegativeSafeInteger(fromX, "GPU stroke start x", 479);
+			nonnegativeSafeInteger(fromY, "GPU stroke start y", 269);
+			nonnegativeSafeInteger(toX, "GPU stroke end x", 479);
+			nonnegativeSafeInteger(toY, "GPU stroke end y", 269);
+			nonnegativeSafeInteger(radius, "GPU paint radius", 16);
+			if (material !== "water" && material !== "air") {
+				throw new RangeError("GPU paint material must be water or air");
+			}
+			return raw.paint_stroke(fromX, fromY, toX, toY, radius, material);
 		},
 		probe(x, y) {
 			nonnegativeSafeInteger(x, "GPU probe x", 479);
