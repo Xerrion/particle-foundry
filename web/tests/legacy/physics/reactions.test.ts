@@ -3,7 +3,7 @@ import { createReactions } from "../../../src/legacy/physics/reactions";
 import { energyAtTemperature } from "../../../src/legacy/physics/thermal";
 import { compareConservation, measureWorld } from "../../../src/legacy/simulation/diagnostics";
 import { createWorld } from "../../../src/legacy/simulation/world";
-import { combustionProfile, EMPTY, FIRE, SMOKE, STONE, WOOD } from "../../../src/materials";
+import { combustionProfile, EMPTY, FIRE, PLANT, SMOKE, STONE, WOOD } from "../../../src/materials";
 
 describe("bounded combustion", () => {
 	test("new flame is not aged or reacted twice before the separate transport pass", () => {
@@ -42,10 +42,10 @@ describe("bounded combustion", () => {
 		expect(first.chemicalEnergyKj[0]).toBeLessThan(11.2);
 	});
 
-	test("pauses combustion at the product temperature ceiling without discarding fuel", () => {
+	test("plants retain their product-temperature ceiling pause without discarding fuel", () => {
 		const world = createWorld(1, 1);
-		world.setCell(0, WOOD);
-		world.energy[0] = energyAtTemperature(WOOD, 400, undefined, world.massKg[0]);
+		world.setCell(0, PLANT);
+		world.energy[0] = energyAtTemperature(PLANT, 400, undefined, world.massKg[0]);
 		const reactions = createReactions(world);
 		for (let tick = 0; tick < 300; tick += 1) reactions.update(0);
 		const maximumProductEnergy = energyAtTemperature(

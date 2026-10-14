@@ -1,11 +1,23 @@
 # Active work and delivered-history boundary
 
-**Status date:** 14 October 2026. **Selected work track:** performance and
-interaction follow-up on P1/M3/E08 under XER-64. The water-line correction is
+**Status date:** 14 October 2026. **Selected work track:** the bounded legacy
+Wood/Oil burn-tempo correction in [XER-99](https://linear.app/xerrion/issue/XER-99/restore-playable-wood-and-oil-burning-in-the-current-sandbox),
+under XER-40/E11. It does not implement Rust/GPU combustion or complete E11.
+The [current behavior and fresh evidence](combustion.md#legacy-woodoil-tempo-checkpoint-on-14-october-2026)
+record the thermal-ceiling stall, explicit heat outflow and scene-specific budgets.
+The correction passes complete local CI, including 522 TypeScript tests, and
+is delivered in [PR #32](https://github.com/Xerrion/particle-foundry/pull/32).
+The PR and XER-99 comments record current merge and hosted-check status.
+The [playable-tempo requirement](plans/fire-combustion/plan.md#playable-wood-and-oil-burn-tempo)
+is accepted for the future migration; corrected FIRE-A gates remain planned.
+
+P1/M3/E08 performance follow-up remains open under XER-64. The water-line correction is
 merged. The selected fresh RTX baseline and required sustained browser GPU
 qualification are complete locally after reboot; [the measured evidence](validation/p1-m3-e08.md#rtx-qualification-and-baseline-after-reboot-on-14-october-2026)
 records the Linux/NVIDIA launch requirements, numerical checks and unmet
-real-time target. No further optimization has been started. See [the short Danish
+real-time target. Baseline documentation is merged in [PR #30](https://github.com/Xerrion/particle-foundry/pull/30).
+Profiling tooling is in [draft PR #31](https://github.com/Xerrion/particle-foundry/pull/31)
+under XER-80, with no established speedup. No further optimization has been started. See [the short Danish
 status](STATUS.md) for the current P/M/E and next selected action.
 
 The next migration item remains P1/M4/E09, with an isolated

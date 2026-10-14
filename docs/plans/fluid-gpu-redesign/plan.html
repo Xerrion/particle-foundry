@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="source-sha256" content="d6df9196d9558f21e1390656dcc947e526296a80c70b5dc24ee208c65576f7e2">
+<meta name="source-sha256" content="1f7168c0f6182aeeaeb180662948f3bcdaa8aa11f04d2a2494015e4efc13263f">
 <meta name="description" content="Particle Foundry P1 implementation plan: Rust reference, WASM delivery, wgpu/WGSL execution, and future-ready composition.">
 <title>Fluid and GPU redesign | Particle Foundry</title>
 <style>
@@ -328,6 +328,12 @@ models, interactions, scenes, tools and controls. P2-P9 remain deferred.</p>
 </tr>
 </tbody>
 </table></div>
+<p>Wood and Oil also require a
+<a href="../fire-combustion/plan.md#playable-wood-and-oil-burn-tempo">playable burn tempo</a>.
+Representative normally air-fed fires must ignite, spread and consume substantial
+fuel within declared budgets of seconds or tens of seconds at 1x. Measure model and wall
+time separately and include user play review. Declared calibrated rates preserve
+the accounting and numerical gates; the requirement does not enable fire in M3.</p>
 <p>Qualify these outcomes together during normal play on the declared browser,
 adapter, scene and quality profile. Include the complete CUR workload matrix;
 an empty/resting scene or the limited Water-brush fixture cannot qualify all

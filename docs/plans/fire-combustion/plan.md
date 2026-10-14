@@ -1,6 +1,6 @@
 # Fire and combustion integration plan
 
-**Revision:** 27 September 2026. FIRE-W00 baseline and FIRE-W01 contracts have recorded validation; corrected P1 combustion remains planned; FIRE-W08 is deferred. The [fire manifest](../../data/fire-combustion-work.json) owns the next item. Start with [START_HERE.md](../../START_HERE.md).
+**Revision:** 14 October 2026. FIRE-W00 baseline and FIRE-W01 contracts have recorded validation; corrected P1 combustion remains planned; FIRE-W08 is deferred. The [fire manifest](../../data/fire-combustion-work.json) owns the next item. Start with [START_HERE.md](../../START_HERE.md).
 
 This plan incorporates the [preserved fire audit](../../evidence/fire-review-2026-09-23/FIRE_REVIEW.md) into the existing Rust/WASM + wgpu redesign. It is a bounded game-combustion model, not an implementation of a complete fire-engineering solver. [ADR-001](../../architecture/adr-001-rust-wasm-wgpu.md), the [GPU plan](../fluid-gpu-redesign/plan.md) and the [engine boundary](../../architecture/engine-boundary.md) remain in force.
 
@@ -10,7 +10,7 @@ This plan incorporates the [preserved fire audit](../../evidence/fire-review-202
 
 The imported audit records 12 characterization checks against the supplied `src(3).zip`: ten isolated subsystem checks and two complete physics-tick checks, F02 and F08. It confirmed the closed-boundary oxygen and cold-FIRE ignition defects through the full pipeline. Other findings are composition defects, documented scope limitations or simplified gameplay rules. The audit runner asserts those historical observations, including the bugs. Its success is not a pass of the corrected specification.
 
-Read [validation/fire-combustion.md](../../validation/fire-combustion.md) for the finding-to-gate mapping, evidence limits and reproduction policy. The report, runners, results and provenance are retained unchanged; none was rerun for this documentation update. Application source is not modified or bundled. FIRE-W00 and FIRE-W01 have recorded baseline and contract validation. FIRE-W02-W07 and corrected FIRE-A gates remain planned; FIRE-W08 is deferred; no chemistry is enabled.
+Read [validation/fire-combustion.md](../../validation/fire-combustion.md) for the finding-to-gate mapping, evidence limits and reproduction policy. The imported report, runners, results and provenance are retained unchanged. Their original import did not modify or bundle application source. Fresh legacy Wood/Oil tempo checks belong in [the current combustion article](../../combustion.md); they do not reproduce the historical audit or pass corrected Rust/GPU gates. FIRE-W00 and FIRE-W01 have recorded baseline and contract validation. FIRE-W02-W07 and corrected FIRE-A gates remain planned; FIRE-W08 is deferred; no Rust/GPU chemistry is enabled.
 
 ## 2. Scope and milestones
 
@@ -86,6 +86,29 @@ For promoted wood/oil/plant presets, heating releases a bounded amount of define
 
 Retain unreacted fuel and products continuously. Exhausting an energy store must not turn an entire parcel into unspecified smoke. A simple mass-balanced pseudo-fuel is acceptable; an undeclared chemical recipe or arbitrary soot source is not.
 
+### Playable Wood and Oil burn tempo
+
+**Accepted gameplay requirement, 14 October 2026:** Wood and Oil must burn at a
+playable tempo. In representative, normally air-fed scenes at 1x, funded ignition
+must lead to visible ignition, spread and substantial fuel depletion on a scale
+of seconds or tens of seconds. Players must not wait hours for ordinary fire
+interaction. Physical credibility must preserve the fun of a falling-sand game.
+
+Before tuning, freeze each scene's geometry, fuel amount, ventilation, initial
+thermal state and ignition input. Declare measurable per-scene timing budgets
+for ignition and spread, plus a fuel-consumption threshold and its deadline.
+Measure accepted model time and wall time separately. Require user play review
+of the declared scenes as well as numerical results. The earlier idealized
+single-cell depletion estimates for Wood and Oil are not acceptance thresholds.
+
+Declared gameplay calibration of release and combustion rates is allowed. It
+must preserve mass, energy, oxygen and product accounting, nonnegative
+inventories, equal-time refinement and atomic rejection. Large fuel loads,
+quenched scenes and oxygen-starved scenes have their own physical controls;
+this requirement does not impose a universal complete-consumption deadline.
+[FIRE-A13](../../validation/fire-combustion.md#fire-a13-condensed-fuel-release-is-bounded-and-accounted)
+owns the fixture evidence. This requirement does not enable combustion in M3.
+
 ### Water and smoke
 
 Thermal coupling, finite water mass, phase change and supported vapor/mixing effects determine suppression. Remove the physical-mode adjacency kill switch. Dose-response tests must stay within the validated property domain and compare against the zero-dose limit; they do not assume every fire responds monotonically to water in all circumstances.
@@ -154,9 +177,9 @@ Implement one declared fuel-vapor/O2 network with complete products, amount-limi
 
 **P1 / M6. Engine work:** E11. **Dependencies:** FIRE-W03.
 
-Implement the minimum calibrated condensed-fuel release needed by each promoted wood/oil/plant scene, with explicit vapor and residue yields and thermal costs. Add amount-based water/steam suppression and persistent supported smoke/soot composition; preserve the funded ignition-brush contract.
+Implement the minimum calibrated condensed-fuel release needed by each promoted wood/oil/plant scene, with explicit vapor and residue yields and thermal costs. Meet the playable Wood and Oil burn-tempo requirement in frozen representative air-fed scenes. Add amount-based water/steam suppression and persistent supported smoke/soot composition; preserve the funded ignition-brush contract.
 
-**Exit:** FIRE-A07, FIRE-A08, FIRE-A09 and FIRE-A13 pass in Rust; unsupported presets are excluded visibly. No contact-water kill switch, whole-fuel smoke swap or timed physical smoke erasure survives in the physical model.
+**Exit:** FIRE-A07, FIRE-A08, FIRE-A09 and FIRE-A13 pass in Rust, including measured Wood/Oil ignition, spread and fuel-depletion budgets at 1x plus user play review; unsupported presets are excluded visibly. Record accepted model time and wall time. No contact-water kill switch, whole-fuel smoke swap or timed physical smoke erasure survives in the physical model.
 
 ### FIRE-W05: Implement WGSL parity and transactional reactant ownership
 
