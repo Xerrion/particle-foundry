@@ -1,6 +1,6 @@
 # Hvor er vi nu?
 
-**Opdateret: 14. oktober 2026. Vi er i P1. Det prioriterede arbejdsspor er opfølgning på M3/E08: få GPU-scenen til at fungere godt i realtid.**
+**Opdateret: 14. oktober 2026. Vi er i P1. Det prioriterede arbejdsspor er opfølgning på M3/E08: få GPU-scenen til at fungere godt i realtid. WebGPU er verificeret på RTX-maskinen, og en frisk baseline er målt lokalt. Realtidsmålet er stadig ikke opfyldt.**
 
 | Niveau | Hvor vi er | Hvad det betyder |
 | --- | --- | --- |
@@ -12,6 +12,7 @@ P, M og E er projektets egne betegnelser for fase, milepæl og konkret udvikling
 
 ## Senest færdigt
 
+- [RTX-verifikation og frisk baseline](validation/p1-m3-e08.md#rtx-qualification-and-baseline-after-reboot-on-14-october-2026) er færdige lokalt. Genstart løste driverkonflikten. De krævede GPU-tests og de numeriske checks består med den dokumenterede Linux/NVIDIA-testopsætning. Dokumentationen leveres i [draft PR #30](https://github.com/Xerrion/particle-foundry/pull/30), som ikke er merged.
 - [PR #28](https://github.com/Xerrion/particle-foundry/pull/28) er merged. Vandpenslen tegner nu sammenhængende streger, så separate penselaftryk ikke skaber det gentagne tandmønster.
 - [PR #27](https://github.com/Xerrion/particle-foundry/pull/27) er merged. Undersøgelsen fandt ikke områder, som sikkert kunne springes over i den afprøvede væsketransport.
 
@@ -25,7 +26,11 @@ Planens rækkefølge og det valgte arbejdsspor kan derfor være forskellige. M1/
 
 ## Næste skridt
 
-Merge og statusopdatering afslutter den seneste aftalte opgave. Der er ikke startet en ny optimering. Forslaget er at undersøge trykløserens arbejde og ventetiden på GPU-resultater; det kræver, at vi vælger det som næste opgave.
+Den aftalte RTX-baseline for XER-64 er målt fra seneste `main`, `427f162`, uden nye ændringer i simuleringen. Ét sekund i simuleringen tager i gennemsnit **19,12 sekunder** i tre korte kørsler. Den længere kørsel simulerer **fem sekunder på 49,94 sekunder**. Renderingsrytmen er **6,68 indsendelser pr. sekund**. Dette er ikke en måling af viste FPS. [Målemetode, tal og begrænsninger](validation/p1-m3-e08.md#rtx-qualification-and-baseline-after-reboot-on-14-october-2026) er gemt.
+
+XER-64 er fortsat igangværende, fordi realtid og 60 viste FPS mangler. Den lokale baseline afslutter denne aftalte opgave og giver udgangspunktet for det næste valgte performancearbejde.
+
+Der er ikke startet en ny optimering. Forslaget om trykløserens arbejde og ventetiden på GPU-resultater kræver fortsat, at vi vælger det som næste opgave.
 
 Slutmålet er hele det eksisterende sandbox-spil med **60 viste FPS, simulering i realtid, hurtig betjening og fysisk troværdig adfærd**. Den lille GPU-demo er kun en del af det. Det normale spil bruger fortsat den eksisterende TypeScript-motor.
 
