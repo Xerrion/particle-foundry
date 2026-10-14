@@ -225,8 +225,9 @@ env PATH=/home/xerrion/.cargo/bin:$PATH \
 
 The passing log is `artifacts/wood-oil-burn-tempo-2026-10-14/ci-verified.log`.
 Final documentation-only evidence text is checked again with `mise run docs:check`.
-Delivery is a separate feature branch and draft PR linked from XER-99; it is
-not merged into `main` or verified in public deployment.
+Delivery is [PR #32](https://github.com/Xerrion/particle-foundry/pull/32).
+The PR and XER-99 comments record merge and hosted-check status. The local
+checks above do not establish public deployment or user play acceptance.
 
 ## Planned corrections
 

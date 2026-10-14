@@ -34,8 +34,9 @@ bogfører energitabet. I små, faste testscener forbruges 95% af brændstoffet p
 og 5,31% forbrugt efter 60 sekunder. [Metode, tests og begrænsninger](combustion.md#legacy-woodoil-tempo-checkpoint-on-14-october-2026).
 
 Rettelsen består samlet lokal CI, herunder 522 TypeScript-tests, og er leveret
-på en separat featurebranch til draft PR og review via XER-99. Den er ikke
-merged. Næste skridt er review og afprøvning af brandtempoet i almindeligt spil.
+i [PR #32](https://github.com/Xerrion/particle-foundry/pull/32). PR'en og
+XER-99 registrerer merge og GitHub-checks. Næste skridt er afprøvning af
+brandtempoet i almindeligt spil.
 [Acceptkravet om spilbart brandtempo](plans/fire-combustion/plan.md#playable-wood-and-oil-burn-tempo)
 er også skrevet ind i E11 og Linear. Rust/GPU-brand er stadig planlagt.
 

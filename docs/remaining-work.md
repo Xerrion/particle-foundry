@@ -6,7 +6,8 @@ under XER-40/E11. It does not implement Rust/GPU combustion or complete E11.
 The [current behavior and fresh evidence](combustion.md#legacy-woodoil-tempo-checkpoint-on-14-october-2026)
 record the thermal-ceiling stall, explicit heat outflow and scene-specific budgets.
 The correction passes complete local CI, including 522 TypeScript tests, and
-is delivered for draft-PR review through XER-99. It is not merged.
+is delivered in [PR #32](https://github.com/Xerrion/particle-foundry/pull/32).
+The PR and XER-99 comments record current merge and hosted-check status.
 The [playable-tempo requirement](plans/fire-combustion/plan.md#playable-wood-and-oil-burn-tempo)
 is accepted for the future migration; corrected FIRE-A gates remain planned.
 
