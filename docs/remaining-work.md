@@ -1,15 +1,31 @@
 # Active work and delivered-history boundary
 
-**Status date:** 14 October 2026. **Selected work track:** performance and
-interaction follow-up on P1/M3/E08 under XER-64. XER-80 is the selected pressure
-convergence and GPU completion profiling task. Its tools pass independent review,
-full local CI and required RTX browser GPU checks. The delivery is on a feature
-branch awaiting review and merge; see [profiling evidence](validation/p1-m3-e08.md#pressure-convergence-and-completion-profiling-on-14-october-2026).
-No new solver or transport optimization is selected. The water-line correction
-is merged.
-The fresh RTX baseline and required sustained browser GPU qualification are
-complete locally after reboot. Their documentation is merged in
-[PR #30](https://github.com/Xerrion/particle-foundry/pull/30) at main
+**Status date:** 14 October 2026. **Selected work track:** repair the integration
+of profiling [draft PR #31](https://github.com/Xerrion/particle-foundry/pull/31)
+with the latest `main`. [XER-80](https://linear.app/xerrion/issue/XER-80/profile-pressure-convergence-and-gpu-completion-timing)
+is In Review under XER-64/P1/M3/E08. The original profiling delivery passes
+independent review, full local CI and required RTX browser GPU checks; see
+[profiling evidence](validation/p1-m3-e08.md#pressure-convergence-and-completion-profiling-on-14-october-2026).
+The PR is open and draft. Its [integration with merged main](validation/p1-m3-e08.md#profiling-integration-with-main-on-14-october-2026)
+passes full local CI, including 527 TypeScript tests. Profiling establishes no new speedup. No new solver or transport
+optimization is selected.
+
+The bounded legacy Wood/Oil burn-tempo correction in
+[XER-99](https://linear.app/xerrion/issue/XER-99/restore-playable-wood-and-oil-burning-in-the-current-sandbox),
+under XER-40/E11, is Done and merged in
+[PR #32](https://github.com/Xerrion/particle-foundry/pull/32) at `a8d9cc2`.
+The [current behavior and fresh evidence](combustion.md#legacy-woodoil-tempo-checkpoint-on-14-october-2026)
+record the thermal-ceiling stall, explicit heat outflow and scene-specific budgets.
+The correction passes complete local CI, including 522 TypeScript tests. Normal
+browser play review remains unrun. The accepted
+[playable-tempo requirement](plans/fire-combustion/plan.md#playable-wood-and-oil-burn-tempo)
+is also recorded for future migration. This legacy fix does not implement
+Rust/GPU combustion or complete E11; corrected FIRE-A gates remain planned.
+
+P1/M3/E08 performance follow-up remains open under XER-64. The water-line
+correction is merged. The fresh RTX baseline and required sustained browser GPU
+qualification are complete locally after reboot. Their documentation is merged
+in [PR #30](https://github.com/Xerrion/particle-foundry/pull/30) at
 `f47e2eb7f8a2e5128b5bba09b420c31560a4c092`.
 [The measured evidence](validation/p1-m3-e08.md#rtx-qualification-and-baseline-after-reboot-on-14-october-2026)
 records the Linux/NVIDIA launch requirements, numerical checks and unmet
@@ -113,8 +129,11 @@ is merged in [PR #28](https://github.com/Xerrion/particle-foundry/pull/28) at
 `8c963f8`. Continuous GPU brush strokes remove the repeated input scallops
 while preserving the simulation equations and limits. The measured pacing change
 is within variation, so no simulation speedup is established.
-Pressure convergence and completion synchronization are now selected in
-[XER-80](https://linear.app/xerrion/issue/XER-80/profile-pressure-convergence-and-gpu-completion-timing).
+Pressure convergence and completion profiling tools are delivered for review in
+[XER-80](https://linear.app/xerrion/issue/XER-80/profile-pressure-convergence-and-gpu-completion-timing)
+and [draft PR #31](https://github.com/Xerrion/particle-foundry/pull/31).
+The selected task is to repair and verify integration with the merged Wood/Oil
+fix from PR #32. No new solver or transport optimization is selected.
 Frustum culling has lower priority for the current full-grid renderer.
 Real time remains unmet.
 PR [#26](https://github.com/Xerrion/particle-foundry/pull/26) is merged at main

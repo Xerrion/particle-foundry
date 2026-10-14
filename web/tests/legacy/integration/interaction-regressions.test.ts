@@ -216,7 +216,7 @@ describe("ignition and held painting", () => {
 		}
 	});
 
-	test("burning and flame emission conserve thermal plus chemical energy", () => {
+	test("burning and flame emission account for thermal, chemical and atmospheric heat exchange", () => {
 		const world = createWorld(9, 9);
 		// Force a release to include the flame transfer in the energy audit.
 		world.random.next = () => 0;
@@ -224,12 +224,15 @@ describe("ignition and held painting", () => {
 		world.energy[40] = energyAtTemperature(WOOD, 800, undefined, world.massKg[40]);
 		const total = () =>
 			world.energy.reduce((a, b) => a + b, 0) +
-			world.chemicalEnergyKj.reduce((a, b) => a + b, 0) * 1000;
+			world.chemicalEnergyKj.reduce((a, b) => a + b, 0) * 1000 +
+			world.ledger.externalEnergyRemoved -
+			world.ledger.externalEnergyAdded;
 		const before = total();
 		const reactions = createReactions(world);
 		reactions.beginStep();
 		reactions.update(40);
 		expect(world.grid.includes(FIRE)).toBe(true);
+		expect(world.ledger.externalEnergyRemoved).toBe(100);
 		expect(total()).toBeCloseTo(before, 8);
 	});
 

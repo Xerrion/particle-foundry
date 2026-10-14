@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-09-27",
+  "updatedAt": "2026-10-14",
   "kind": "planning-fire-work-not-implementation-evidence",
   "plan": "plans/fire-combustion/plan.md",
   "acceptance": "validation/fire-combustion.md",
@@ -139,8 +139,8 @@
         "FIRE-A13"
       ],
       "title": "Add bounded fuel release and thermal suppression",
-      "work": "Implement the minimum calibrated condensed-fuel release needed by each promoted wood/oil/plant scene, with explicit vapor and residue yields and thermal costs. Add amount-based water/steam suppression and persistent supported smoke/soot composition; preserve the funded ignition-brush contract.",
-      "acceptance": "FIRE-A07, FIRE-A08, FIRE-A09 and FIRE-A13 pass in Rust; unsupported presets are excluded visibly. No contact-water kill switch, whole-fuel smoke swap or timed physical smoke erasure survives in the physical model.",
+      "work": "Implement the minimum calibrated condensed-fuel release needed by each promoted wood/oil/plant scene, with explicit vapor and residue yields and thermal costs. Meet the playable Wood and Oil burn-tempo requirement in frozen representative air-fed scenes. Add amount-based water/steam suppression and persistent supported smoke/soot composition; preserve the funded ignition-brush contract.",
+      "acceptance": "FIRE-A07, FIRE-A08, FIRE-A09 and FIRE-A13 pass in Rust, including measured Wood/Oil ignition, spread and fuel-depletion budgets at 1x plus user play review; unsupported presets are excluded visibly. Record accepted model time and wall time. No contact-water kill switch, whole-fuel smoke swap or timed physical smoke erasure survives in the physical model.",
       "status": "planned",
       "evidence": []
     },
@@ -436,8 +436,8 @@
         "F04",
         "F05"
       ],
-      "specification": "For each promoted wood/oil/plant preset, a declared reduced pyrolysis or evaporation model moves bounded condensed mass into fuel vapor and declared residues. Gas combustion consumes that vapor; supported char/surface oxidation is a separate channel.",
-      "measurement": "Track condensed fuel, volatile fuel, residue, O2, all products and heat of release/phase change. Include insufficient heat, exhausted fuel, O2-free heating and a sustained air-fed control; no automatic whole-parcel conversion to smoke.",
+      "specification": "For each promoted wood/oil/plant preset, a declared reduced pyrolysis or evaporation model moves bounded condensed mass into fuel vapor and declared residues. Gas combustion consumes that vapor; supported char/surface oxidation is a separate channel. Wood and Oil also meet the fire plan's playable burn-tempo requirement: representative normally air-fed scenes at 1x show ignition, spread and substantial fuel depletion within frozen budgets of seconds or tens of seconds. Freeze geometry, fuel amount, ventilation, initial thermal state, funded ignition input, timing budgets and consumption thresholds before tuning. Require user play review. Large, quenched and oxygen-starved scenes do not inherit a universal complete-consumption deadline.",
+      "measurement": "Track condensed fuel, volatile fuel, residue, O2, all products and heat of release/phase change. Include insufficient heat, exhausted fuel, O2-free heating and a sustained air-fed control; no automatic whole-parcel conversion to smoke. For each Wood/Oil tempo fixture, report accepted model time and wall time to ignition, spread and the declared fuel-consumption threshold, with calibrated rates, exact inputs, pass/fail results and user play-review outcome. Preserve the amount/energy balances, nonnegativity, equal-time refinement and failed-step rollback controls.",
       "status": "planned",
       "evidence": []
     },

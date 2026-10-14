@@ -1,6 +1,6 @@
 # Fire evidence and corrected acceptance
 
-**Revision:** 23 September 2026. **Status:** historical characterization imported; all corrected gates planned. Controlling work: [fire/combustion plan](../plans/fire-combustion/plan.md). Developer entrypoint: [START_HERE.md](../START_HERE.md).
+**Revision:** 14 October 2026. **Status:** historical characterization imported; all corrected gates planned. Controlling work: [fire/combustion plan](../plans/fire-combustion/plan.md). Developer entrypoint: [START_HERE.md](../START_HERE.md).
 
 ## Evidence boundary
 
@@ -10,7 +10,10 @@ The review ran 12 headless characterization checks against `src(3).zip`, whose h
 
 **A passing characterization harness proves that an observation was reproduced, including an undesirable behavior. It does not mean fire is correct.** New assertions use FIRE-A IDs. Preserve F IDs and original results instead of inverting the old harness and silently reusing its evidence.
 
-The update does not rerun the fire checks, compile the application, run Rust/WASM code, validate rendering, or execute a GPU. The corrected implementation remains future work.
+The imported results do not establish current Rust/WGSL combustion, rendering or
+GPU fire validation. Fresh legacy Wood/Oil tempo checks are recorded separately
+in [the current combustion article](../combustion.md). The corrected Rust/GPU
+implementation remains future work.
 
 ## Finding-to-work traceability
 
@@ -150,9 +153,12 @@ Preflight the full reactant/product/water domain and validate runtime boundary c
 
 **First milestone:** P1/M6. **Historical context:** F04, F05.
 
-For each promoted wood/oil/plant preset, a declared reduced pyrolysis or evaporation model moves bounded condensed mass into fuel vapor and declared residues. Gas combustion consumes that vapor; supported char/surface oxidation is a separate channel.
+For each promoted wood/oil/plant preset, a declared reduced pyrolysis or evaporation model moves bounded condensed mass into fuel vapor and declared residues. Gas combustion consumes that vapor; supported char/surface oxidation is a separate channel. Wood and Oil also meet the fire plan's playable burn-tempo requirement: representative normally air-fed scenes at 1x show ignition, spread and substantial fuel depletion within frozen budgets of seconds or tens of seconds. Freeze geometry, fuel amount, ventilation, initial thermal state, funded ignition input, timing budgets and consumption thresholds before tuning. Require user play review. Large, quenched and oxygen-starved scenes do not inherit a universal complete-consumption deadline.
 
-**Measure:** Track condensed fuel, volatile fuel, residue, O2, all products and heat of release/phase change. Include insufficient heat, exhausted fuel, O2-free heating and a sustained air-fed control; no automatic whole-parcel conversion to smoke.
+The [fire plan](../plans/fire-combustion/plan.md#playable-wood-and-oil-burn-tempo)
+owns the playable burn-tempo requirement.
+
+**Measure:** Track condensed fuel, volatile fuel, residue, O2, all products and heat of release/phase change. Include insufficient heat, exhausted fuel, O2-free heating and a sustained air-fed control; no automatic whole-parcel conversion to smoke. For each Wood/Oil tempo fixture, report accepted model time and wall time to ignition, spread and the declared fuel-consumption threshold, with calibrated rates, exact inputs, pass/fail results and user play-review outcome. Preserve the amount/energy balances, nonnegativity, equal-time refinement and failed-step rollback controls.
 
 ### FIRE-A14: Transactions, persistence and visuals cannot alter combustion
 

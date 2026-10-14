@@ -1329,7 +1329,7 @@ export const combustionProfile = freezeData({
 	heatPerTick: 100,
 	oxygenKgPerKj: 0.00007,
 	ignitionMarginC: 80,
-	/** Reaction pauses at this product-gas temperature until heat can leave the fuel parcel. */
+	/** Non-vented release pauses at this ceiling. Fresh-air Wood/Oil export newly released excess heat through the declared legacy reservoir. */
 	maximumProductTemperatureC: 1200,
 	emittedFlameTemperatureC: 450,
 	/** Independent per-fuel-cell emission, avoiding synchronized sheets on hot surfaces. */
