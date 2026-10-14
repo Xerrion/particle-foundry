@@ -148,7 +148,16 @@ selected packed records on native and browser GPU adapters. The private
 [E07 coupled scene](../engine/crates/sim-gpu/src/scene/coupled.rs) qualifies one
 small two-phase tick and rejected-candidate rollback on both adapters. The
 [E08 browser owner](../engine/crates/sim-gpu/src/browser_scene.rs) uses that
-stage graph for the persistent 480 x 270 experimental scene. Its
+stage graph for the persistent 480 x 270 experimental scene. The coupled
+owner's [lifecycle](../engine/crates/sim-gpu/src/scene/coupled/lifecycle.rs),
+[stepping](../engine/crates/sim-gpu/src/scene/coupled/stepping.rs),
+[clock](../engine/crates/sim-gpu/src/scene/coupled/clock.rs),
+[readback](../engine/crates/sim-gpu/src/scene/coupled/readback.rs) and
+[validation](../engine/crates/sim-gpu/src/scene/coupled/validation.rs) modules
+keep those responsibilities separate. Its
+[candidate storage](../engine/crates/sim-gpu/src/scene/coupled/candidate.rs)
+retains unmapped transport, momentum, density, optional shear and gravity
+buffers for sequential attempts. Reset constructs a new owner. Its
 [evidence](validation/p1-m3-e08.md) records the passed sustained browser run
 and the remaining limits.
 

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="source-sha256" content="2e0f810fd3fc3873c721e726269e144cd209ee14c76dd4cfffdbe6410e834dfa">
+<meta name="source-sha256" content="c768e3d27cb12a0f5fc16a40bf1895346386be2f3be2986b449822e3f8af4303">
 <meta name="description" content="Particle Foundry P1 implementation plan: Rust reference, WASM delivery, wgpu/WGSL execution, and future-ready composition.">
 <title>Fluid and GPU redesign | Particle Foundry</title>
 <style>
@@ -427,6 +427,22 @@ cumulative API requests, not live memory or exclusive allocation/GPU durations.
 The <a href="../../validation/p1-m3-e08.md#transport-parameter-and-allocation-comparison-on-13-october-2026">E08 allocation comparison</a>
 records results and the proposed investigation of repeated large scratch
 allocations. Throughput remains distinct from visible FPS and input latency.</p>
+<h3 id="resident-candidate-storage-on-13-october-2026">Resident candidate storage on 13 October 2026</h3>
+<p>The <a href="../../../engine/crates/sim-gpu/src/scene/coupled.rs">coupled owner</a> retains
+one <a href="../../../engine/crates/sim-gpu/src/scene/coupled/candidate.rs">candidate set</a>
+for transport, momentum, density, optional viscosity and gravity. Sequential
+mutable advances reuse unmapped storage after stage encoding resets its consumed
+fields. Attempt-local mapped status staging remains separate. Accepted inventory
+copies into the alternate committed generation only after every gate passes.
+Queue resource dependencies and complete owner reconstruction on reset preserve
+cancellation, rejection and epoch isolation. No shader or numerical limit changes.</p>
+<p>The <a href="../../validation/p1-m3-e08.md#resident-candidate-buffer-reuse-on-13-october-2026">E08 comparison</a>
+requires identical complete fields and shows 5.26% shorter repeated browser
+duration. Separate preview-policy pacing improves from 9.47 to 10.12 render
+submissions per second. This is a presentation proxy, not qualification of
+60 displayed FPS. The fixed candidate set requests 29,635,844 bytes across
+34 buffers with viscosity. Peak driver-resident memory is not measured.
+Real time and the complete-sandbox promotion target remain open.</p>
 <h2 id="4-acceptance-matrix">4. Acceptance matrix</h2>
 <p>The following are proposed starting gates, not measurements. Freeze fixture scales and thresholds in M0/M2 before optimization. Any later tolerance change needs a numerical rationale, including grid/time refinement, rather than matching the latest output.</p>
 <div class="table-scroll"><table>

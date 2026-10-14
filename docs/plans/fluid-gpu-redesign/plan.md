@@ -443,6 +443,25 @@ The [E08 allocation comparison](../../validation/p1-m3-e08.md#transport-paramete
 records results and the proposed investigation of repeated large scratch
 allocations. Throughput remains distinct from visible FPS and input latency.
 
+### Resident candidate storage on 13 October 2026
+
+The [coupled owner](../../../engine/crates/sim-gpu/src/scene/coupled.rs) retains
+one [candidate set](../../../engine/crates/sim-gpu/src/scene/coupled/candidate.rs)
+for transport, momentum, density, optional viscosity and gravity. Sequential
+mutable advances reuse unmapped storage after stage encoding resets its consumed
+fields. Attempt-local mapped status staging remains separate. Accepted inventory
+copies into the alternate committed generation only after every gate passes.
+Queue resource dependencies and complete owner reconstruction on reset preserve
+cancellation, rejection and epoch isolation. No shader or numerical limit changes.
+
+The [E08 comparison](../../validation/p1-m3-e08.md#resident-candidate-buffer-reuse-on-13-october-2026)
+requires identical complete fields and shows 5.26% shorter repeated browser
+duration. Separate preview-policy pacing improves from 9.47 to 10.12 render
+submissions per second. This is a presentation proxy, not qualification of
+60 displayed FPS. The fixed candidate set requests 29,635,844 bytes across
+34 buffers with viscosity. Peak driver-resident memory is not measured.
+Real time and the complete-sandbox promotion target remain open.
+
 ## 4. Acceptance matrix
 
 The following are proposed starting gates, not measurements. Freeze fixture scales and thresholds in M0/M2 before optimization. Any later tolerance change needs a numerical rationale, including grid/time refinement, rather than matching the latest output.
