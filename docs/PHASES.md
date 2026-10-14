@@ -43,6 +43,11 @@ The user clarified the final goal on 13 October: 60 FPS during normal play,
 simulation time that follows real time and physically credible behavior.
 Frame pacing, brush response, simulation speed and quality need separate checks.
 Current throughput measurements do not establish 60 FPS.
+The [14 October choice](plans/fluid-gpu-redesign/plan.md#realism-and-active-region-investigation-selected-on-14-october-2026)
+investigates whether regions without physical changes can avoid repeated work.
+First measure transport activity while the complete simulation still runs.
+Neighbor effects and pressure must remain correct. Camera visibility cannot decide
+which parts of the world evolve. This investigation has no measured speedup yet.
 The user resumed this work after the existing PRs were merged. See the [performance decision](plans/fluid-gpu-redesign/plan.md#interactive-performance-priority-on-6-october-2026)
 for the target, measurement rules and remaining correctness requirements.
 

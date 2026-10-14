@@ -57,9 +57,11 @@ comparison with rejection, queue-order, reset and complete-field checks.
 The [resident-buffer checkpoint](validation/p1-m3-e08.md#resident-candidate-buffer-reuse-on-13-october-2026)
 then reduces repeated duration by 5.26% with complete field identity. Preview-policy
 render submissions improve from 9.47 to 10.12 per second. Native and required
-sustained browser checks pass. The next bounded investigation should measure
-remaining per-attempt parameter/binding work and pressure/transport scheduling
-costs against the same quality and pacing gates. Real time remains unmet.
+sustained browser checks pass. The [14 October decision](plans/fluid-gpu-redesign/plan.md#realism-and-active-region-investigation-selected-on-14-october-2026)
+selects a bounded transport-activity investigation. Measure over all closure rounds
+before skipping work, including classification and scheduling costs. Pressure
+retains its complete coupled solve. Frustum culling has lower priority for the
+current full-grid renderer. Real time remains unmet.
 PR [#24](https://github.com/Xerrion/particle-foundry/pull/24) is merged at main
 `372d6ff` with passing main CI. Real time remains unmet.
 The [clarified final target](plans/fluid-gpu-redesign/plan.md#final-gameplay-target-clarified-on-13-october-2026)

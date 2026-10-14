@@ -327,6 +327,72 @@ XER-45 supplies its coverage evidence and XER-46 owns the gated default switch.
 Missing feature, hardware, performance, response or quality evidence keeps the
 affected gate open. A documentation update does not pass any of these gates.
 
+### Realism and active-region investigation selected on 14 October 2026
+
+The user delegated the optimization choice after discussing realism, scene load
+and frustum culling. Select a bounded investigation of physically active regions,
+starting with transport. This selects the next experiment, not a sparse engine
+implementation. XER-64 owns the investigation within the Working GPU scene checkpoint.
+
+Realism means physical behavior within declared models, scales and error limits.
+Use independent physical or analytical references to validate that behavior.
+CPU/GPU agreement establishes implementation agreement, not physical validity.
+Choose numerical detail that meets the shared 60 FPS and real-time target while
+passing those references. Keep approximations explicit and qualify their errors.
+The declared workload and device define capacity. Neither particle count alone
+nor this decision guarantees 60 FPS for arbitrary scene complexity.
+
+The current [renderer](../../../engine/crates/sim-gpu/src/render.rs) issues one
+fullscreen-triangle draw in `SceneRenderer::encode`. The
+[browser scene](../../../engine/crates/sim-gpu/src/browser_scene.rs) supplies
+`RenderViewport::full`. Frustum culling has lower priority for this full-grid
+preview. Revisit it when camera/scene support changes or rendering measurements
+show a material cost. Visibility must not determine physical activity.
+
+The [transport encoder](../../../engine/crates/sim-gpu/src/transport/encoding.rs)
+dispatches whole-grid work, including 256 rounds of four ordered pair passes.
+The [pair shader](../../../engine/crates/sim-gpu/shaders/transport_pair.wgsl)
+changes residuals that later passes read. Its early returns include walls,
+closed faces and zero corrections. The
+[residual shader](../../../engine/crates/sim-gpu/shaders/transport_close_residual.wgsl)
+also includes carrier gas. These observations motivate measurement, but do not
+establish that a region can sleep. A fixed small border around the brush does
+not bound activity throughout all closure rounds.
+
+The next experiment has this boundary:
+
+1. Freeze fixtures for exact rest, the existing Water radius-4 brush and dense
+   moving liquid/carrier gas. Use the same 480 x 270 grid, device and accepted
+   simulation time for each comparison. Record inputs, warm-up and repetitions.
+2. Add diagnostic counters while retaining every physical stage and its order.
+   Record pair invocations, early-return reasons, actual writes and activity by
+   region across closure rounds. Count validation work separately from writes.
+   Keep diagnostic instrumentation out of the uninstrumented baseline timings.
+3. Measure transport GPU work, host parameter/binding costs, pressure and rendering
+   separately where supported. Record instrumentation overhead and unavailable
+   timings. Inclusive waits are not exclusive GPU measurements.
+4. Estimate removable work conservatively. Account for classification, dependency
+   propagation, region-list maintenance and dispatch costs. A sparse candidate
+   needs wake rules for changed neighbors, sources, geometry and solver outputs.
+   Pressure retains its complete coupled solve. Offscreen state remains physical
+   state. Later thermal/reaction stages need their own dependencies before sleeping.
+5. Return an implement-or-stop decision with evidence. Reject an approach whose
+   overhead consumes its savings or whose inactivity rule misses a dependency.
+   A retained scheduling candidate must improve repeated Water-brush timings
+   beyond observed run variation, with equal-time field checks and measured response.
+   Declare acceptable timing variation before comparison. Dense-scene overhead
+   must remain within that allowance, including the full-grid fallback cost.
+   Record every remaining gap against the shared gameplay target.
+
+Any subsequent skipping must preserve face-flux accounting, finite/nonnegative
+state, volume bounds, validation, cancellation/reset and atomic rejection.
+Shared donor budgets must include both outgoing faces. Reused candidate buffers
+need defined contents for every consumed field, including regions that skip work.
+Unchanged final fields alone do not prove that intermediate work was removable.
+If active regions fail this screening, return to the measured pressure/transport
+and host-scheduling costs. The [buffer-reuse evidence](../../validation/p1-m3-e08.md#resident-candidate-buffer-reuse-on-13-october-2026)
+remains the latest comparison. This decision supplies no new FPS or physics result.
+
 ### Candidate error budgets on 7 October 2026
 
 Before qualification, the initial interactive candidate uses at most 256 PCG
