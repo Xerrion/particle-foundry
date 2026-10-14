@@ -301,6 +301,13 @@ models, interactions, scenes, tools and controls. P2-P9 remain deferred.
 | Responsive interaction | Painting and controls remain responsive while the simulation advances. Record brush/input-to-command latency, visible response, p50/p95 frame intervals and stalls against budgets declared before qualification. |
 | Physically credible behavior | Required material interactions pass their independent references and regression gates at equal accepted model time. Document numerical approximations and measured errors while preserving the invariants below. |
 
+Wood and Oil also require a
+[playable burn tempo](../fire-combustion/plan.md#playable-wood-and-oil-burn-tempo).
+Representative normally air-fed fires must ignite, spread and consume substantial
+fuel within declared budgets of seconds or tens of seconds at 1x. Measure model and wall
+time separately and include user play review. Declared calibrated rates preserve
+the accounting and numerical gates; the requirement does not enable fire in M3.
+
 Qualify these outcomes together during normal play on the declared browser,
 adapter, scene and quality profile. Include the complete CUR workload matrix;
 an empty/resting scene or the limited Water-brush fixture cannot qualify all
