@@ -66,9 +66,12 @@ throughput timing averages 13.6638 wall seconds per model second. The separate
 preview-pacing runs average 9.50 render submissions per second. These measurements
 establish no new speedup or displayed-FPS result. The full dense comparison was
 stopped without a complete timing series;
-the separate ten-tick dense screen passes. The next proposed investigation is
-pressure convergence and completion synchronization, retaining the existing
-numerical limits. Frustum culling has lower priority for the current full-grid
+the separate ten-tick dense screen passes. The user then selected the
+[water-line correction](validation/p1-m3-e08.md#continuous-gpu-brush-strokes-on-14-october-2026).
+The repeated teeth follow scallops in the input. Continuous GPU brush strokes
+address that input defect while preserving the simulation equations and limits.
+Pressure convergence and completion synchronization remain a proposed later
+investigation. Frustum culling has lower priority for the current full-grid
 renderer. Real time remains unmet.
 PR [#26](https://github.com/Xerrion/particle-foundry/pull/26) is merged at main
 `360d514` with all six post-merge CI jobs passing. It aligns the gameplay target;

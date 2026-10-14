@@ -71,6 +71,15 @@ host costs. Diagnostic modes run separately from baseline timing. An existing
 frozen WASM can use `mise exec -- bun web/scripts/run-gpu-activity.ts` with the
 same arguments, which avoids rebuilding the runtime.
 
+The water-line fixtures compare spaced disks (`water-line`), flat controls
+(`flat-line`, `flat-line-thin`), one-cell translations (`water-line-shift`,
+`flat-line-shift`), dense point painting (`continuous-line`) and one swept segment
+(`stroke-line`). Their exact geometry is defined in
+[`fixtures.ts`](../web/benchmarks/gpu-activity/fixtures.ts). Paint enqueue and queue
+completion measurements are separate from the advancing-scene timer. The
+[E08 water-line evidence](validation/p1-m3-e08.md#continuous-gpu-brush-strokes-on-14-october-2026)
+identifies which controls were executed and records their limits.
+
 [`gpu-activity.ts`](../web/benchmarks/gpu-activity.ts) owns the browser experiment.
 Its modules under [`gpu-activity/`](../web/benchmarks/gpu-activity/) own fixtures,
 timing, shader observation and cost sampling. The observer pins the original
@@ -102,6 +111,12 @@ and the opt-in `gpu.html` page. It keeps the experimental path out of the normal
 application bundle. E03 defines the queued session contract; the current M3 GPU
 preview uses a narrower dedicated adapter while that general session remains a
 mock-owner contract.
+
+The experimental GPU page uses [`gpu-paint-pointer.ts`](../web/src/app/gpu-paint-pointer.ts)
+for pointer capture, stroke continuity and cancellation. The engine client sends
+bounded stroke endpoints through WASM to the resident GPU paint stage. The
+[water-line evidence](validation/p1-m3-e08.md#continuous-gpu-brush-strokes-on-14-october-2026)
+owns the geometry contract and measured limits.
 
 `web/src/legacy/simulation/world.ts` owns current mutable state;
 `physics.ts` orders its passes, and `sandbox.ts` composes state, tools and rendering.
