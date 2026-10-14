@@ -1,9 +1,11 @@
 import { type BrowserGpuSceneSession, initializeBrowserGpuScene } from "../src/engine-client/wasm";
 
+import { measurePreviewPacing } from "./gpu-pacing";
+
 const CELLS = 480 * 270;
 const FIELD_BYTES = (5 * CELLS + 481 * 270 + 480 * 271) * 4;
 const INVENTORY_DRIFT_LIMIT = 1e-5;
-type Advance = {
+export type Advance = {
 	epoch: number;
 	tick: number;
 	acceptedTimeS: number;
@@ -211,11 +213,13 @@ async function benchmark(canvas: HTMLCanvasElement) {
 		return adapter;
 	};
 	let scene: BrowserGpuSceneSession;
+	const initializationStarted = performance.now();
 	try {
 		scene = await initializeBrowserGpuScene(canvas);
 	} finally {
 		gpu.requestAdapter = originalRequest;
 	}
+	const initializationWallMs = performance.now() - initializationStarted;
 	try {
 		const selectedAdapter = adapterRequests.at(-1)?.info;
 		if (selectedAdapter?.isFallbackAdapter !== false) {
@@ -258,6 +262,12 @@ async function benchmark(canvas: HTMLCanvasElement) {
 			devicePrototype.createBuffer = originalBuffer;
 		}
 		const sustainedRun = await measure(scene, 300);
+		const previewPacing = [];
+		for (let run = 0; run < 3; run += 1) {
+			const { last, ...pacing } = await measurePreviewPacing(scene, 60);
+			const fields = await checkedFields(await scene.checkpoint_prototype(), last);
+			previewPacing.push({ ...pacing, fields });
+		}
 		return {
 			status: "pass",
 			targetMet:
@@ -274,12 +284,15 @@ async function benchmark(canvas: HTMLCanvasElement) {
 				closureRounds: 256,
 				closurePairScheduling: "packed interior parity faces",
 				transportParameters: "seven immutable buffers per encode",
+				candidateStorage: "resident sequential scene candidate buffers",
 			},
 			measurement:
 				"10-tick warm-up; fresh scene per run; render per advance; final queue probe included; checkpoints excluded",
 			pressureObservationScope: "last accepted substep of each completed tick",
 			adapter: JSON.parse(scene.adapter_info_json()) as unknown,
 			adapterRequests,
+			initializationWallMs,
+			previewPacing,
 			warmup,
 			runs,
 			sustainedRun,
