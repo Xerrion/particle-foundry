@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="source-sha256" content="1b676ff644551a82f6ad256a678756ab574e0c926e2d6efe4fb54c44dc4d122b">
+<meta name="source-sha256" content="be01fc548362bb95d567b4004b88dbc74fd2dde44dc7974bb8c84aaf56759040">
 <meta name="description" content="Particle Foundry P1 implementation plan: Rust reference, WASM delivery, wgpu/WGSL execution, and future-ready composition.">
 <title>Fluid and GPU redesign | Particle Foundry</title>
 <style>
@@ -378,7 +378,7 @@ closed faces and zero corrections. The
 also includes carrier gas. These observations motivate measurement, but do not
 establish that a region can sleep. A fixed small border around the brush does
 not bound activity throughout all closure rounds.</p>
-<p>The next experiment has this boundary:</p>
+<p>The selected experiment has this boundary:</p>
 <ol>
 <li>Freeze fixtures for exact rest, the existing Water radius-4 brush and dense
 moving liquid/carrier gas. Use the same 480 x 270 grid, device and accepted
@@ -408,9 +408,28 @@ state, volume bounds, validation, cancellation/reset and atomic rejection.
 Shared donor budgets must include both outgoing faces. Reused candidate buffers
 need defined contents for every consumed field, including regions that skip work.
 Unchanged final fields alone do not prove that intermediate work was removable.
-If active regions fail this screening, return to the measured pressure/transport
-and host-scheduling costs. The <a href="../../validation/p1-m3-e08.md#resident-candidate-buffer-reuse-on-13-october-2026">buffer-reuse evidence</a>
-remains the latest comparison. This decision supplies no new FPS or physics result.</p>
+The <a href="../../validation/p1-m3-e08.md#transport-activity-investigation-on-14-october-2026">completed activity investigation</a>
+rejects exact inactive 16 x 16 region scheduling for the sampled residual-pair
+workload. Brush captures at ticks 1, 10 and 59 change all 480 regions that contain
+fluid in every closure round. The remaining 30 regions contain only the floor.
+The short dense capture shows the same coverage. No classifier or sparse runtime
+is retained. This does not rule out other region sizes or approximations with
+separately qualified error limits.</p>
+<p>Current brush timing averages 13.6638 wall seconds per model second. The pacing
+test averages 9.50 render submissions per second and a 145.87 ms p95 interval.
+These are baseline observations, not a speedup or displayed-FPS qualification.
+Complete diagnostic field hashes and accepted-step accounting match. The full
+dense comparison was stopped after normal interaction had rejected the approach;
+its partial run supplies no performance or failure claim.</p>
+<p>The recommended next bounded investigation is pressure convergence and completion
+synchronization on the same brush fixture. Record per-candidate convergence,
+batch counts and GPU-completion-to-host timing before selecting a change. The
+profile records 2,541 PCG batches and 4,302 pressure completion maps. Inclusive
+map waits overlap GPU work; they do not isolate communication cost. Keep pressure
+limits, transport gates and atomic rejection fixed during this investigation.
+The <a href="../../validation/p1-m3-e08.md#resident-candidate-buffer-reuse-on-13-october-2026">buffer-reuse evidence</a>
+remains the latest retained optimization comparison. Real time and 60 displayed
+FPS remain unmet.</p>
 <h3 id="candidate-error-budgets-on-7-october-2026">Candidate error budgets on 7 October 2026</h3>
 <p>Before qualification, the initial interactive candidate uses at most 256 PCG
 iterations and <code>1e-4</code> scaled residual and divergence limits. A transport-only

@@ -58,10 +58,22 @@ The [resident-buffer checkpoint](validation/p1-m3-e08.md#resident-candidate-buff
 then reduces repeated duration by 5.26% with complete field identity. Preview-policy
 render submissions improve from 9.47 to 10.12 per second. Native and required
 sustained browser checks pass. The [14 October decision](plans/fluid-gpu-redesign/plan.md#realism-and-active-region-investigation-selected-on-14-october-2026)
-selects a bounded transport-activity investigation. Measure over all closure rounds
-before skipping work, including classification and scheduling costs. Pressure
-retains its complete coupled solve. Frustum culling has lower priority for the
-current full-grid renderer. Real time remains unmet.
+selected a bounded transport-activity investigation. The
+[completed screening](validation/p1-m3-e08.md#transport-activity-investigation-on-14-october-2026)
+rejects exact sleeping of 16 x 16 regions: every region containing fluid changes
+in the later normal-brush samples. No sparse runtime is retained. Current brush
+throughput timing averages 13.6638 wall seconds per model second. The separate
+preview-pacing runs average 9.50 render submissions per second. These measurements
+establish no new speedup or displayed-FPS result. The full dense comparison was
+stopped without a complete timing series;
+the separate ten-tick dense screen passes. The next proposed investigation is
+pressure convergence and completion synchronization, retaining the existing
+numerical limits. Frustum culling has lower priority for the current full-grid
+renderer. Real time remains unmet.
+PR [#26](https://github.com/Xerrion/particle-foundry/pull/26) is merged at main
+`360d514` with all six post-merge CI jobs passing. It aligns the gameplay target;
+the activity tools and evidence are delivered separately in
+[draft PR #27](https://github.com/Xerrion/particle-foundry/pull/27).
 PR [#24](https://github.com/Xerrion/particle-foundry/pull/24) is merged at main
 `372d6ff` with passing main CI. Real time remains unmet.
 The [clarified final target](plans/fluid-gpu-redesign/plan.md#final-gameplay-target-clarified-on-13-october-2026)
