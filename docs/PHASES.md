@@ -51,7 +51,10 @@ samples. Skipping unchanged 16 x 16 regions is therefore rejected for this solve
 The preview-pacing test submits about 9.5 frames per second. In the separate
 throughput test, one model second takes about 13.7 wall seconds. No new runtime
 optimization is retained.
-The next proposed investigation is the pressure solver and its completion waits.
+The user then selected the [water-line correction](validation/p1-m3-e08.md#continuous-gpu-brush-strokes-on-14-october-2026).
+The repeated teeth follow small scallops in the painted line. Continuous brush
+strokes connect pointer positions without changing the physics calculations.
+The pressure solver and its completion waits remain a proposed later investigation.
 Camera visibility cannot decide which parts of the world evolve. PR #26, which
 aligns the gameplay goal and acceptance rules, is merged with passing CI.
 The user resumed this work after the existing PRs were merged. See the [performance decision](plans/fluid-gpu-redesign/plan.md#interactive-performance-priority-on-6-october-2026)

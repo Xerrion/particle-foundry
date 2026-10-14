@@ -153,6 +153,25 @@ impl GpuBrowserScene {
         Ok(self.progress())
     }
 
+    /// Replaces fluid along a segment swept by a circular brush in one GPU commit.
+    /// Both endpoints must be inside the grid. Fixed walls and model time stay unchanged.
+    /// Radius zero selects crossed cell interiors, with diagonal corner ties excluded.
+    pub fn paint_stroke(
+        &mut self,
+        from: [u32; 2],
+        to: [u32; 2],
+        radius: u32,
+        material: &str,
+    ) -> Result<GpuBrowserProgress, String> {
+        let material = match material {
+            "water" => GpuPaintMaterial::Water,
+            "air" => GpuPaintMaterial::Air,
+            _ => return Err("GPU paint material must be water or air".into()),
+        };
+        self.scene.paint_stroke(from, to, radius, material)?;
+        Ok(self.progress())
+    }
+
     /// Samples one cell without downloading either complete phase field.
     pub async fn probe(&self, x: u32, y: u32) -> Result<GpuBrowserProbe, String> {
         let sample = self.scene.probe_cell(x, y).await?;

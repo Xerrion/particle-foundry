@@ -111,6 +111,7 @@ canvas {
   height: auto;
   aspect-ratio: 16 / 9;
   image-rendering: pixelated;
+  touch-action: none;
 }
 
 canvas[data-paintable="true"] { cursor: crosshair; }

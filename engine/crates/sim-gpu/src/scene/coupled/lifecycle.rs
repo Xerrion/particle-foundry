@@ -100,6 +100,18 @@ impl GpuCoupledScene {
             .apply(&mut self.scene, center_x, center_y, radius, material)
     }
 
+    /// Sweeps a bounded circular brush in one detached generation at zero model time.
+    pub(crate) fn paint_stroke(
+        &mut self,
+        from: [u32; 2],
+        to: [u32; 2],
+        radius: u32,
+        material: GpuPaintMaterial,
+    ) -> Result<(), String> {
+        self.paint_stage
+            .apply_stroke(&mut self.scene, from, to, radius, material)
+    }
+
     /// Draws the selected committed generation on the scene's own device.
     /// A failed candidate never reaches this renderer. No simulation field is
     /// mapped or copied to the host for a normal frame.

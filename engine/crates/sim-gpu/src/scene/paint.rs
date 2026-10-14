@@ -1,7 +1,7 @@
 //! Bounded zero-time paint on the resident scene's detached generation.
 //!
-//! Host input selects only a circle, one phase, and one validated cell mass.
-//! The compute pass preserves fixed walls and all cells outside that circle.
+//! Host input selects a swept circle, one phase, and one validated cell mass.
+//! The compute pass preserves fixed walls and all cells outside that stroke.
 //! It never downloads the world to the browser.
 
 use particle_sim::Grid;
@@ -20,8 +20,8 @@ pub(crate) enum GpuPaintMaterial {
 
 #[derive(Clone, Copy)]
 struct PaintCommand {
-    center_x: u32,
-    center_y: u32,
+    from: [u32; 2],
+    to: [u32; 2],
     radius: u32,
     phase: u32,
     selected_mass_kg: f32,
@@ -39,6 +39,27 @@ impl PaintCommand {
     ) -> Result<Self, String> {
         if grid.cell_index(center_x, center_y).is_none() {
             return Err("GPU paint center must be inside the scene grid".into());
+        }
+        Self::stroke(
+            grid,
+            phase_density_kg_m3,
+            [center_x, center_y],
+            [center_x, center_y],
+            radius,
+            material,
+        )
+    }
+
+    fn stroke(
+        grid: Grid,
+        phase_density_kg_m3: [f32; 2],
+        from: [u32; 2],
+        to: [u32; 2],
+        radius: u32,
+        material: GpuPaintMaterial,
+    ) -> Result<Self, String> {
+        if grid.cell_index(from[0], from[1]).is_none() || grid.cell_index(to[0], to[1]).is_none() {
+            return Err("GPU paint endpoints must be inside the scene grid".into());
         }
         if radius > MAX_RADIUS_CELLS {
             return Err(format!(
@@ -66,8 +87,8 @@ impl PaintCommand {
             return Err("GPU paint mass does not close the selected cell volume".into());
         }
         Ok(Self {
-            center_x,
-            center_y,
+            from,
+            to,
             radius,
             phase,
             selected_mass_kg,
@@ -75,18 +96,20 @@ impl PaintCommand {
         })
     }
 
-    fn bytes(self, grid: Grid) -> [u8; 32] {
+    fn bytes(self, grid: Grid) -> [u8; 40] {
         let words = [
             grid.width(),
             grid.height(),
-            self.center_x,
-            self.center_y,
+            self.from[0],
+            self.from[1],
+            self.to[0],
+            self.to[1],
             self.radius,
             self.phase,
             self.selected_mass_kg.to_bits(),
             self.selected_density_kg_m3.to_bits(),
         ];
-        let mut bytes = [0; 32];
+        let mut bytes = [0; 40];
         for (slot, word) in words.into_iter().enumerate() {
             bytes[slot * 4..slot * 4 + 4].copy_from_slice(&word.to_le_bytes());
         }
@@ -134,9 +157,6 @@ impl GpuPaintStage {
         radius: u32,
         material: GpuPaintMaterial,
     ) -> Result<(), String> {
-        if scene.grid != self.grid {
-            return Err("GPU paint stage does not match the scene grid".into());
-        }
         let command = PaintCommand::new(
             self.grid,
             scene.phase_density_kg_m3,
@@ -145,6 +165,32 @@ impl GpuPaintStage {
             radius,
             material,
         )?;
+        self.commit(scene, command)
+    }
+
+    pub(super) fn apply_stroke(
+        &self,
+        scene: &mut GpuScene,
+        from: [u32; 2],
+        to: [u32; 2],
+        radius: u32,
+        material: GpuPaintMaterial,
+    ) -> Result<(), String> {
+        let command = PaintCommand::stroke(
+            self.grid,
+            scene.phase_density_kg_m3,
+            from,
+            to,
+            radius,
+            material,
+        )?;
+        self.commit(scene, command)
+    }
+
+    fn commit(&self, scene: &mut GpuScene, command: PaintCommand) -> Result<(), String> {
+        if scene.grid != self.grid {
+            return Err("GPU paint stage does not match the scene grid".into());
+        }
         let next_revision = scene
             .state_revision
             .checked_add(1)
@@ -239,7 +285,7 @@ mod tests {
         }
     }
 
-    fn block_on<F: Future>(future: F) -> F::Output {
+    pub(super) fn block_on<F: Future>(future: F) -> F::Output {
         let waker: Waker = Arc::new(Notify(std::thread::current())).into();
         let mut context = Context::from_waker(&waker);
         let mut future = Box::pin(future);
@@ -255,7 +301,7 @@ mod tests {
         }
     }
 
-    fn seed() -> super::super::GpuSceneSeed {
+    pub(super) fn seed() -> super::super::GpuSceneSeed {
         let grid = Grid::new(4.0, 3.0).unwrap();
         let cells = grid.cells();
         let volume = grid.cell_volume_m3();
@@ -309,7 +355,7 @@ mod tests {
         }
     }
 
-    fn read_f32(scene: &GpuScene, field: &wgpu::Buffer) -> Vec<f32> {
+    pub(super) fn read_f32(scene: &GpuScene, field: &wgpu::Buffer) -> Vec<f32> {
         let staging = scene.context.device.create_buffer(&wgpu::BufferDescriptor {
             label: Some("paint test readback"),
             size: field.size(),
@@ -430,3 +476,7 @@ mod tests {
         });
     }
 }
+
+#[cfg(test)]
+#[path = "paint_stroke_tests.rs"]
+mod stroke_tests;

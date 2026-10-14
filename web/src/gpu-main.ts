@@ -1,5 +1,6 @@
 import "./observability/init";
 
+import { bindGpuPaintPointer, type PaintBrush, type PaintPoint } from "./app/gpu-paint-pointer";
 import { type BrowserGpuSceneSession, initializeBrowserGpuScene } from "./engine-client/wasm";
 import { errorReporting } from "./observability/init";
 
@@ -103,14 +104,28 @@ function clearError(): void {
 	errorText.hidden = true;
 }
 
+function paintAvailable(): boolean {
+	return Boolean(
+		scene &&
+			!disposed &&
+			!running &&
+			!activeStep &&
+			!activeProbe &&
+			!failed &&
+			!document.hidden &&
+			!progress?.busy &&
+			!progress?.resetPending,
+	);
+}
+
 function refreshView(): void {
 	pauseButton.disabled = !scene || disposed || failed || activeProbe;
 	resetButton.disabled = !scene || disposed;
-	paintAtButton.disabled = !scene || disposed || running || activeStep || activeProbe || failed;
+	const paintable = paintAvailable();
+	paintAtButton.disabled = !paintable;
 	probeAtButton.disabled = !scene || disposed || running || activeStep || activeProbe || failed;
-	canvas.dataset.paintable = String(
-		Boolean(scene && !disposed && !running && !activeStep && !activeProbe && !failed),
-	);
+	canvas.dataset.paintable = String(paintable);
+	if (!paintable) pointerPaint.cancel();
 	pauseButton.textContent = running ? "Pause" : "Resume";
 	if (progress) {
 		modelTime.value = `${progress.acceptedTimeS.toFixed(3)} s`;
@@ -141,31 +156,40 @@ function refreshView(): void {
 	}
 }
 
-function paintCell(x: number, y: number): void {
-	if (!scene || disposed) {
-		return;
-	}
-	if (running || activeStep || activeProbe) {
-		paintMessage.textContent = "Pause and wait for the current GPU step before painting.";
-		return;
-	}
-	if (failed) {
-		paintMessage.textContent = "Reset the scene before painting again.";
-		return;
-	}
+function commitPaint(to: PaintPoint, brush: PaintBrush, from?: PaintPoint): boolean {
+	if (!scene || !paintAvailable()) return false;
 	try {
-		const material = paintMaterial.value;
-		if (material !== "water" && material !== "air") {
-			throw new RangeError("Select water or air");
-		}
-		const radius = Number(paintRadius.value);
-		progress = parseStatus(scene.paint(x, y, radius, material));
+		const { material, radius } = brush;
+		const status = from
+			? scene.paintStroke(from.x, from.y, to.x, to.y, radius, material)
+			: scene.paint(to.x, to.y, radius, material);
+		progress = parseStatus(status);
 		scene.render();
-		paintMessage.textContent = `${material === "water" ? "Water" : "Air"} brush accepted at cell ${x}, ${y}. Fixed walls stay unchanged.`;
+		paintX.value = String(to.x);
+		paintY.value = String(to.y);
+		paintMessage.textContent = `${material === "water" ? "Water" : "Air"} brush accepted at cell ${to.x}, ${to.y}. Fixed walls stay unchanged.`;
 		refreshView();
+		return true;
 	} catch (error) {
 		paintMessage.textContent = `Paint command failed: ${errorMessage(error)}`;
+		return false;
 	}
+}
+
+function paintCell(x: number, y: number): PaintBrush | undefined {
+	if (!paintAvailable()) {
+		paintMessage.textContent = failed
+			? "Reset the scene before painting again."
+			: "Pause and wait for the current GPU step before painting.";
+		return;
+	}
+	const material = paintMaterial.value;
+	if (material !== "water" && material !== "air") {
+		paintMessage.textContent = "Select water or air.";
+		return;
+	}
+	const brush: PaintBrush = { radius: Number(paintRadius.value), material };
+	return commitPaint({ x, y }, brush) ? brush : undefined;
 }
 
 async function probeCell(x: number, y: number): Promise<void> {
@@ -287,23 +311,10 @@ paintRadius.addEventListener("input", () => {
 	paintRadiusValue.value = `${paintRadius.value} cells`;
 });
 
-canvas.addEventListener("pointerdown", (event) => {
-	if (event.button !== 0) {
-		return;
-	}
-	const bounds = canvas.getBoundingClientRect();
-	if (bounds.width <= 0 || bounds.height <= 0) {
-		return;
-	}
-	const x = Math.floor(((event.clientX - bounds.left) / bounds.width) * canvas.width);
-	const y = Math.floor(((event.clientY - bounds.top) / bounds.height) * canvas.height);
-	if (x < 0 || x >= canvas.width || y < 0 || y >= canvas.height) {
-		return;
-	}
-	event.preventDefault();
-	paintX.value = String(x);
-	paintY.value = String(y);
-	paintCell(x, y);
+const pointerPaint = bindGpuPaintPointer(canvas, {
+	available: paintAvailable,
+	begin: ({ x, y }) => paintCell(x, y),
+	segment: (from, to, brush) => commitPaint(to, brush, from),
 });
 
 paintAtButton.addEventListener("click", () => {
@@ -333,6 +344,7 @@ document.addEventListener("visibilitychange", () => {
 });
 
 resetButton.addEventListener("click", () => {
+	pointerPaint.cancel();
 	if (!scene) {
 		return;
 	}
@@ -355,6 +367,7 @@ resetButton.addEventListener("click", () => {
 
 window.addEventListener("pagehide", () => {
 	if (disposed) return;
+	pointerPaint.cancel();
 	disposed = true;
 	if (scheduledFrame !== undefined) {
 		cancelAnimationFrame(scheduledFrame);
