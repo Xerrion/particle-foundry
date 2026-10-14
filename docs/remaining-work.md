@@ -1,12 +1,12 @@
 # Active work and delivered-history boundary
 
 **Status date:** 14 October 2026. **Selected work track:** repair the integration
-of profiling [draft PR #31](https://github.com/Xerrion/particle-foundry/pull/31)
+of profiling [PR #31](https://github.com/Xerrion/particle-foundry/pull/31)
 with the latest `main`. [XER-80](https://linear.app/xerrion/issue/XER-80/profile-pressure-convergence-and-gpu-completion-timing)
 is In Review under XER-64/P1/M3/E08. The original profiling delivery passes
 independent review, full local CI and required RTX browser GPU checks; see
 [profiling evidence](validation/p1-m3-e08.md#pressure-convergence-and-completion-profiling-on-14-october-2026).
-The PR is open and draft. Its [integration with merged main](validation/p1-m3-e08.md#profiling-integration-with-main-on-14-october-2026)
+The PR is open for review. Its [integration with merged main](validation/p1-m3-e08.md#profiling-integration-with-main-on-14-october-2026)
 passes full local CI, including 527 TypeScript tests. Profiling establishes no new speedup. No new solver or transport
 optimization is selected.
 
@@ -131,7 +131,7 @@ while preserving the simulation equations and limits. The measured pacing change
 is within variation, so no simulation speedup is established.
 Pressure convergence and completion profiling tools are delivered for review in
 [XER-80](https://linear.app/xerrion/issue/XER-80/profile-pressure-convergence-and-gpu-completion-timing)
-and [draft PR #31](https://github.com/Xerrion/particle-foundry/pull/31).
+and [PR #31](https://github.com/Xerrion/particle-foundry/pull/31).
 The selected task is to repair and verify integration with the merged Wood/Oil
 fix from PR #32. No new solver or transport optimization is selected.
 Frustum culling has lower priority for the current full-grid renderer.
