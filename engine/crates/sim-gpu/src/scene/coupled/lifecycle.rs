@@ -1,6 +1,18 @@
 use super::*;
 
 impl GpuCoupledScene {
+    pub(crate) fn enable_pressure_diagnostics(&mut self, capacity: u32) -> Result<(), String> {
+        self.pressure.enable_diagnostics(capacity)
+    }
+
+    pub(crate) fn disable_pressure_diagnostics(&mut self) {
+        self.pressure.disable_diagnostics();
+    }
+
+    pub(crate) fn take_pressure_diagnostics_json(&mut self) -> String {
+        self.pressure.take_diagnostics_json()
+    }
+
     /// Returns this scene's grid for a viewport bound to its committed state.
     pub(crate) fn grid(&self) -> Grid {
         self.scene.grid
@@ -225,6 +237,7 @@ impl GpuCoupledScene {
             probe,
             remaining_outer_s: 0.0,
             encoded_time_s,
+            diagnostic_candidate_id: 0,
             #[cfg(test)]
             test_fault: None,
             #[cfg(test)]

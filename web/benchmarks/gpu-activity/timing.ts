@@ -1,6 +1,7 @@
 import type { BrowserGpuSceneSession } from "../../src/engine-client/wasm";
 import { type Advance, type CommittedStamp, checkedFields, FIELD_BYTES } from "../gpu-checkpoint";
 import { type FixtureName, prepareFixture } from "./fixtures";
+import type { AdvanceContext } from "./timeline";
 
 const animationFrame = () => new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
 const percentile = (values: number[], fraction: number) =>
@@ -10,7 +11,8 @@ export type RunOptions = {
 	fixture: FixtureName;
 	ticks: number;
 	pacing: boolean;
-	beforeAdvance?: (last: CommittedStamp) => void;
+	beforeAdvance?: (last: CommittedStamp, context: AdvanceContext) => void;
+	afterAdvance?: (context: AdvanceContext, outcome: "complete" | "error") => void;
 	beforeTimer?: () => void;
 	afterTimer?: () => void;
 	saveCheckpoint?: (phase: "before" | "after", bytes: Uint8Array) => Promise<void>;
@@ -44,8 +46,25 @@ export async function measureActivityFixture(scene: BrowserGpuSceneSession, opti
 	const started = performance.now();
 	for (let calls = 0; last.tick < options.ticks && calls < options.ticks * 64; calls += 1) {
 		if (options.pacing) await animationFrame();
-		options.beforeAdvance?.(last);
-		const next = JSON.parse(await scene.advance(8)) as Advance;
+		const context: AdvanceContext | undefined =
+			options.beforeAdvance || options.afterAdvance
+				? {
+						advanceId: calls + 1,
+						epoch: last.epoch,
+						outerTick: last.tick + 1,
+						stateRevision: last.stateRevision,
+						acceptedTimeBeforeS: last.acceptedTimeS,
+					}
+				: undefined;
+		if (context) options.beforeAdvance?.(last, context);
+		let next: Advance;
+		try {
+			next = JSON.parse(await scene.advance(8)) as Advance;
+		} catch (error) {
+			if (context) options.afterAdvance?.(context, "error");
+			throw error;
+		}
+		if (context) options.afterAdvance?.(context, "complete");
 		if (
 			next.epoch !== initialStamp.epoch ||
 			!Number.isFinite(next.acceptedTimeS) ||

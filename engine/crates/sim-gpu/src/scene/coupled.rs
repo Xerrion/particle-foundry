@@ -37,7 +37,8 @@ use crate::{
     gravity::{GpuGravityCandidate, GpuGravityInput, GpuGravityStage, GpuGravityStep},
     momentum::{self, GpuMomentumCandidate, GpuMomentumInput, GpuMomentumStage},
     pressure::{
-        GpuPressureProjector, PressureConfig, PressureDiagnostics, PressureError, PressureFields,
+        CandidateContext, CandidateOutcome, GpuPressureProjector, PressureConfig,
+        PressureDiagnostics, PressureError, PressureFields,
     },
     probe::{GpuCellProbe, ProbeSample, ProbeSource, ProbeStamp},
     render::{RenderScene, RenderViewport, SceneRenderer},
@@ -150,6 +151,7 @@ pub(crate) struct GpuCoupledScene {
     probe: GpuCellProbe,
     remaining_outer_s: f64,
     encoded_time_s: f64,
+    diagnostic_candidate_id: u64,
     #[cfg(test)]
     test_fault: Option<TestFaultPoint>,
     #[cfg(test)]

@@ -189,6 +189,23 @@ impl GpuBrowserScene {
         self.scene.checkpoint_prototype().await
     }
 
+    /// Starts a bounded host journal of existing pressure maps and candidate outcomes.
+    /// Capacity must be 1 through 65,536 events. It does not add GPU work or readbacks.
+    pub fn enable_pressure_diagnostics(&mut self, capacity: u32) -> Result<(), String> {
+        self.scene.enable_pressure_diagnostics(capacity)
+    }
+
+    /// Disables recording and clears the retained journal. Reset also disables recording.
+    pub fn disable_pressure_diagnostics(&mut self) {
+        self.scene.disable_pressure_diagnostics();
+    }
+
+    /// Drains retained events and the overflow count while keeping recording enabled.
+    /// Disabled recording returns a versioned empty journal with capacity zero.
+    pub fn take_pressure_diagnostics_json(&mut self) -> String {
+        self.scene.take_pressure_diagnostics_json()
+    }
+
     /// Runs at most `max_substeps` complete candidate steps.
     /// A failed candidate returns an error without publishing its candidate buffers.
     pub async fn advance(&mut self, max_substeps: u32) -> Result<GpuBrowserAdvance, String> {

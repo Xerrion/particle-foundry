@@ -15,6 +15,9 @@ export interface BrowserGpuSceneSession {
 	backend(): string;
 	adapter_info_json(): string;
 	status_json(): string;
+	enable_pressure_diagnostics(capacity: number): void;
+	disable_pressure_diagnostics(): void;
+	take_pressure_diagnostics_json(): string;
 	render(): boolean;
 	resize(width: number, height: number): void;
 	advance(maxSubsteps: number): Promise<string>;
@@ -51,6 +54,12 @@ function checkedBrowserScene(raw: BrowserGpuScene): BrowserGpuSceneSession {
 		backend: () => raw.backend(),
 		adapter_info_json: () => raw.adapter_info_json(),
 		status_json: () => raw.status_json(),
+		enable_pressure_diagnostics(capacity) {
+			positiveSafeInteger(capacity, "GPU pressure diagnostic capacity", 65_536);
+			raw.enable_pressure_diagnostics(capacity);
+		},
+		disable_pressure_diagnostics: () => raw.disable_pressure_diagnostics(),
+		take_pressure_diagnostics_json: () => raw.take_pressure_diagnostics_json(),
 		render: () => raw.render(),
 		resize(width, height) {
 			positiveSafeInteger(width, "GPU canvas width", 0xffff_ffff);

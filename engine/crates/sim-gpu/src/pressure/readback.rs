@@ -26,19 +26,36 @@ pub(super) fn stage_status_readback(
 pub(super) async fn read_status(
     device: &wgpu::Device,
     staging: wgpu::Buffer,
+    journal: Option<&mut journal::PressureJournal>,
+    phase: PressurePhase,
+    batch_index: u32,
+    requested_iterations: u32,
 ) -> Result<SolveStatus, String> {
+    let map_started_ms = journal.as_ref().map(|journal| journal.now_ms());
     wait_for_map(device, &staging).await?;
+    let map_completed_ms = journal.as_ref().map(|journal| journal.now_ms());
     let mapped = staging.get_mapped_range(..);
     let words = mapped.as_chunks::<4>().0;
+    let status_words = std::array::from_fn(|index| u32::from_le_bytes(words[index]));
     let status = SolveStatus {
-        scaled_residual: f32::from_bits(u32::from_le_bytes(words[3])),
-        scaled_divergence: f32::from_bits(u32::from_le_bytes(words[4])),
-        iterations: u32::from_le_bytes(words[5]),
-        converged: u32::from_le_bytes(words[6]),
-        invalid: u32::from_le_bytes(words[7]),
+        scaled_residual: f32::from_bits(status_words[3]),
+        scaled_divergence: f32::from_bits(status_words[4]),
+        iterations: status_words[5],
+        converged: status_words[6],
+        invalid: status_words[7],
     };
     drop(mapped);
     staging.unmap();
+    if let Some(journal) = journal {
+        journal.pressure_status(
+            phase,
+            batch_index,
+            requested_iterations,
+            map_started_ms.expect("enabled diagnostic clock"),
+            map_completed_ms.expect("enabled diagnostic clock"),
+            status_words,
+        );
+    }
     Ok(status)
 }
 

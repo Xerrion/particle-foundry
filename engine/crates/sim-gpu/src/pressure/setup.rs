@@ -176,6 +176,7 @@ impl GpuPressureProjector {
             pipelines,
             last_readback_bytes: 0,
             coarse: None,
+            journal: None,
         })
     }
 }

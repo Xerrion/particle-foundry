@@ -70,7 +70,16 @@ fn pcg_stop_reserves_headroom_without_changing_final_gates() {
         dispatch(&mut encoder, &initial, &initial_bind, 1);
         let staging = stage_status_readback(&context.device, &mut encoder, &status_buffer);
         context.queue.submit([encoder.finish()]);
-        let status = read_status(&context.device, staging).await.unwrap();
+        let status = read_status(
+            &context.device,
+            staging,
+            None,
+            PressurePhase::FinalGate,
+            0,
+            0,
+        )
+        .await
+        .unwrap();
         assert_eq!(status.converged, 0, "{status:?}");
         assert!(status.scaled_residual < 1e-5, "{status:?}");
 
@@ -93,7 +102,16 @@ fn pcg_stop_reserves_headroom_without_changing_final_gates() {
         dispatch(&mut encoder, &completion, &completion_bind, 1);
         let staging = stage_status_readback(&context.device, &mut encoder, &status_buffer);
         context.queue.submit([encoder.finish()]);
-        let status = read_status(&context.device, staging).await.unwrap();
+        let status = read_status(
+            &context.device,
+            staging,
+            None,
+            PressurePhase::FinalGate,
+            0,
+            0,
+        )
+        .await
+        .unwrap();
         assert_eq!(status.converged, 1, "{status:?}");
         assert!(status.scaled_residual > 9e-6, "{status:?}");
         assert!(status.scaled_divergence > 9e-6, "{status:?}");
@@ -107,7 +125,16 @@ fn pcg_stop_reserves_headroom_without_changing_final_gates() {
         dispatch(&mut encoder, &completion, &completion_bind, 1);
         let staging = stage_status_readback(&context.device, &mut encoder, &status_buffer);
         context.queue.submit([encoder.finish()]);
-        let status = read_status(&context.device, staging).await.unwrap();
+        let status = read_status(
+            &context.device,
+            staging,
+            None,
+            PressurePhase::FinalGate,
+            0,
+            0,
+        )
+        .await
+        .unwrap();
         assert_eq!(status.converged, 0, "{status:?}");
         assert!(status.scaled_divergence > 1e-5, "{status:?}");
         context.dispose();

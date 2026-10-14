@@ -148,7 +148,16 @@ fn horizontal_hydrostatic_variation_converges_with_gravity() {
             });
         let staging = stage_status_readback(&context.device, &mut encoder, &projector.status);
         context.queue.submit([encoder.finish()]);
-        let status = read_status(&context.device, staging).await.unwrap();
+        let status = read_status(
+            &context.device,
+            staging,
+            None,
+            PressurePhase::FinalGate,
+            0,
+            0,
+        )
+        .await
+        .unwrap();
         assert_eq!(status.invalid, 0, "{status:?}");
         assert_eq!(status.converged, 1, "{status:?}");
         let corrected_u = read_f32(&context.device, &context.queue, &corrected_u).await;

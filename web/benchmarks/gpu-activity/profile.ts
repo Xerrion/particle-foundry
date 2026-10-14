@@ -1,15 +1,22 @@
 import type { ProfileBuffer, ProfileDevice, ProfileGlobals, QuerySet } from "./profile-types";
+import {
+	type AdvanceContext,
+	boundedEvents,
+	type GpuEvent,
+	type HostEvent,
+	type ProfileTimeline,
+} from "./timeline";
 
 type Counter = { calls: number; milliseconds: number };
 type Pending = {
 	buffer: ProfileBuffer;
 	resolved: ProfileBuffer;
 	query: QuerySet;
-	labels: string[];
+	passes: { label: string; sequence: number; context: AdvanceContext | null }[];
 };
 
 /** Diagnostic hooks run separately from every baseline timing run. */
-export function installProfile(sampleEvery = 64) {
+export function installProfile(sampleEvery = 64, timelineCapacity = 8192) {
 	const api = globalThis as unknown as ProfileGlobals;
 	if (!api.GPUAdapter || !api.GPUDevice || !api.GPUBuffer)
 		throw new Error("WebGPU profile hooks are unavailable");
@@ -29,6 +36,15 @@ export function installProfile(sampleEvery = 64) {
 	const pending: Pending[] = [];
 	const errors: string[] = [];
 	const devices: ProfileDevice[] = [];
+	const hostEvents = boundedEvents<HostEvent>(timelineCapacity);
+	const gpuEvents = boundedEvents<GpuEvent>(timelineCapacity);
+	let hostSequence = 0;
+	let gpuSequence = 0;
+	let hostOriginMs = 0;
+	let context: AdvanceContext | null = null;
+	let advanceEvent: HostEvent | null = null;
+	let completedTimestampBatches = 0;
+	let finishPromise: Promise<ReturnType<typeof snapshot>> | undefined;
 	let active = false;
 	let timestampsAvailable = false;
 	let adapterInfo: unknown;
@@ -50,6 +66,23 @@ export function installProfile(sampleEvery = 64) {
 		table[key] = row;
 		row.calls += 1;
 		row.milliseconds += performance.now() - started;
+	}
+	function span(type: HostEvent["type"], label: string, startedMs: number) {
+		return hostEvents.add({
+			sequence: ++hostSequence,
+			type,
+			label,
+			startedMs,
+			completedMs: startedMs,
+			outcome: "complete",
+			context,
+		});
+	}
+	function complete(event: HostEvent | null, outcome: HostEvent["outcome"] = "complete") {
+		if (event) {
+			event.completedMs = performance.now();
+			event.outcome = outcome;
+		}
 	}
 	api.GPUAdapter.prototype.requestDevice = async function (descriptor) {
 		timestampsAvailable = this.features.has("timestamp-query");
@@ -109,21 +142,35 @@ export function installProfile(sampleEvery = 64) {
 	api.GPUQueue.prototype.submit = function (commands) {
 		if (!active) return submit.call(this, commands);
 		const started = performance.now();
-		submit.call(this, commands);
-		record(cpu, "submit", started);
+		const event = span("submit", "queue", started);
+		try {
+			submit.call(this, commands);
+			complete(event);
+			record(cpu, "submit", started);
+		} catch (error) {
+			complete(event, "error");
+			throw error;
+		}
 	};
 	api.GPUBuffer.prototype.mapAsync = async function (...args: Parameters<typeof map>) {
 		if (!active) return map.apply(this, args);
 		const started = performance.now();
-		await map.apply(this, args);
-		record(waits, this.label, started);
+		const event = span("map", this.label, started);
+		try {
+			await map.apply(this, args);
+			complete(event);
+			record(waits, this.label, started);
+		} catch (error) {
+			complete(event, "error");
+			throw error;
+		}
 	};
 	api.GPUDevice.prototype.createCommandEncoder = function (descriptor) {
 		const encoder = create.call(this, descriptor);
 		if (!active) return encoder;
 		const device = this;
 		let query: QuerySet | undefined;
-		const labels: string[] = [];
+		const passes: Pending["passes"] = [];
 		const compute = encoder.beginComputePass.bind(encoder);
 		const render = encoder.beginRenderPass.bind(encoder);
 		const finish = encoder.finish.bind(encoder);
@@ -134,11 +181,11 @@ export function installProfile(sampleEvery = 64) {
 			const label = `${kind}:${desc.label ?? "unlabelled"}`;
 			totalPasses[label] = (totalPasses[label] ?? 0) + 1;
 			if (!timestampsAvailable || totalPasses[label] % sampleEvery !== 1 % sampleEvery) return desc;
-			if (desc.timestampWrites || labels.length >= 64)
+			if (desc.timestampWrites || passes.length >= 64)
 				throw new Error("Profile query capacity or ownership conflict");
 			query ??= device.createQuerySet({ type: "timestamp", count: 128 });
-			const index = labels.length * 2;
-			labels.push(label);
+			const index = passes.length * 2;
+			passes.push({ label, sequence: ++gpuSequence, context });
 			return {
 				...desc,
 				timestampWrites: {
@@ -151,8 +198,8 @@ export function installProfile(sampleEvery = 64) {
 		encoder.beginComputePass = (desc = {}) => compute(timestamp("compute", desc));
 		encoder.beginRenderPass = (desc) => render(timestamp("render", desc));
 		encoder.finish = (desc) => {
-			if (query && labels.length) {
-				const size = labels.length * 16;
+			if (query && passes.length) {
+				const size = passes.length * 16;
 				// Use original allocation calls so profiling storage does not enter engine API counts.
 				const resolved = createBuffer.call(device, {
 					label: "activity-profile-resolve",
@@ -164,30 +211,68 @@ export function installProfile(sampleEvery = 64) {
 					size,
 					usage: api.GPUBufferUsage.MAP_READ | api.GPUBufferUsage.COPY_DST,
 				});
-				encoder.resolveQuerySet(query, 0, 2 * labels.length, resolved, 0);
+				encoder.resolveQuerySet(query, 0, 2 * passes.length, resolved, 0);
 				encoder.copyBufferToBuffer(resolved, 0, buffer, 0, size);
-				pending.push({ buffer, resolved, query, labels });
+				pending.push({ buffer, resolved, query, passes });
 			}
 			return finish(desc);
 		};
 		return encoder;
 	};
-	return {
-		start() {
-			active = true;
-		},
-		stop() {
-			active = false;
-		},
-		async finish() {
-			active = false;
-			for (const item of pending) {
-				await map.call(item.buffer, api.GPUMapMode.READ);
+	function snapshot() {
+		const timeline: ProfileTimeline = {
+			version: 1,
+			host: {
+				clockDomain: "browser-performance-now",
+				originMs: hostOriginMs,
+				...hostEvents.snapshot(),
+			},
+			gpu: {
+				clockDomain: "gpu-timestamp",
+				originTimestampNs: gpuEvents.snapshot().events[0]?.beginTimestampNs ?? null,
+				...gpuEvents.snapshot(),
+			},
+			note: "Host milliseconds use performance.now. GPU nanoseconds use the device timestamp clock. These clocks have no measured alignment. Relative origins are independent. Do not subtract GPU timestamps from host timestamps or infer host queue delay from their horizontal positions.",
+		};
+		return {
+			adapterInfo,
+			timestampsAvailable,
+			timestampStatus: timestampsAvailable ? "available" : "unavailable",
+			sampleEvery,
+			gpu,
+			totalPasses,
+			cpu,
+			inclusiveMapWaits: waits,
+			bufferAllocations,
+			timeline,
+			timestampCollection: {
+				completedBatches: completedTimestampBatches,
+				pendingBatches: pending.length - completedTimestampBatches,
+				validationErrors: [...errors],
+			},
+			measurement:
+				"Separate instrumented run. GPU values cover sampled passes only. Inclusive map waits overlap GPU execution. CPU durations include hook overhead. Requested bytes are cumulative, not peak memory.",
+		};
+	}
+	async function collectTimestamps() {
+		active = false;
+		for (const item of pending) {
+			await map.call(item.buffer, api.GPUMapMode.READ);
+			try {
 				const values = new BigUint64Array(item.buffer.getMappedRange());
-				item.labels.forEach((label, index) => {
-					const seconds = Number(values[2 * index + 1] - values[2 * index]) / 1e9;
+				item.passes.forEach(({ label, sequence, context }, index) => {
+					const begin = values[2 * index];
+					const end = values[2 * index + 1];
+					const seconds = Number(end - begin) / 1e9;
 					if (seconds < 0 || !Number.isFinite(seconds))
 						throw new Error("Invalid GPU timestamp interval");
+					gpuEvents.add({
+						sequence,
+						label,
+						beginTimestampNs: String(begin),
+						endTimestampNs: String(end),
+						context,
+					});
 					const row = gpu[label] ?? {
 						sampledPasses: 0,
 						sampledSeconds: 0,
@@ -200,22 +285,42 @@ export function installProfile(sampleEvery = 64) {
 					row.minimumSeconds = Math.min(row.minimumSeconds, seconds);
 					row.maximumSeconds = Math.max(row.maximumSeconds, seconds);
 				});
+				completedTimestampBatches += 1;
+			} finally {
 				item.buffer.unmap();
 			}
-			if (errors.length) throw new Error(`WebGPU profile validation failed: ${errors.join("; ")}`);
-			return {
-				adapterInfo,
-				timestampsAvailable,
-				timestampStatus: timestampsAvailable ? "available" : "unavailable",
-				sampleEvery,
-				gpu,
-				totalPasses,
-				cpu,
-				inclusiveMapWaits: waits,
-				bufferAllocations,
-				measurement:
-					"Separate instrumented run. GPU values cover sampled passes only. Inclusive map waits overlap GPU execution. CPU durations include hook overhead. Requested bytes are cumulative, not peak memory.",
-			};
+		}
+		if (errors.length) throw new Error(`WebGPU profile validation failed: ${errors.join("; ")}`);
+		return snapshot();
+	}
+	return {
+		start() {
+			hostOriginMs = performance.now();
+			active = true;
+		},
+		beforeAdvance(nextContext: AdvanceContext) {
+			context = nextContext;
+			advanceEvent = span("advance", "advance(8)", performance.now());
+		},
+		afterAdvance(outcome: HostEvent["outcome"] = "complete") {
+			complete(advanceEvent, outcome);
+			if (advanceEvent) {
+				performance.measure("pf.advance", {
+					start: advanceEvent.startedMs,
+					end: advanceEvent.completedMs,
+					detail: context,
+				});
+				performance.clearMeasures("pf.advance");
+			}
+			advanceEvent = null;
+		},
+		stop() {
+			active = false;
+		},
+		snapshot,
+		finish() {
+			finishPromise ??= collectTimestamps();
+			return finishPromise;
 		},
 		restore() {
 			active = false;

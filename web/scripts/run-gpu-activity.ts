@@ -2,7 +2,13 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { readOptions } from "../benchmarks/gpu-activity/page";
+import {
+	type PressureJournal,
+	type ProfileTimeline,
+	profileTrace,
+} from "../benchmarks/gpu-activity/timeline";
 import { waitForBrowserServer } from "./browser-server";
+import { browserTraceBufferKb, browserTraceCategories, captureBrowserTrace } from "./browser-trace";
 import { createEvidenceDirectory } from "./evidence-output";
 
 const root = resolve(import.meta.dir, "../..");
@@ -20,17 +26,32 @@ const allowed = new Set([
 	"sample-passes",
 	"sample-every",
 	"timeout-seconds",
+	"browser-trace-seconds",
 ]);
-for (let index = 0; index < args.length; index += 2) {
+let browserTrace = false;
+for (let index = 0; index < args.length; index += 1) {
 	const key = args[index]?.slice(2);
-	const value = args[index + 1];
-	if (!args[index]?.startsWith("--") || !allowed.has(key) || !value || params.has(key)) {
+	if (args[index] === "--browser-trace" && !browserTrace) {
+		browserTrace = true;
+		continue;
+	}
+	const value = args[++index];
+	if (!args[index - 1]?.startsWith("--") || !allowed.has(key) || !value || params.has(key)) {
 		throw new Error(
-			"Usage: run-gpu-activity.ts [new-evidence-directory] [--mode baseline|activity|profile] [--fixture rest|brush|dense|water-line|water-line-shift|flat-line|flat-line-shift|flat-line-thin|continuous-line|stroke-line] [--ticks 60] [--warmup-ticks 10] [--repeats 3] [--sample-tick 10] [--sample-passes 2] [--sample-every 64] [--timeout-seconds 900]",
+			"Usage: run-gpu-activity.ts [new-evidence-directory] [--mode baseline|activity|profile] [--fixture rest|brush|dense|water-line|water-line-shift|flat-line|flat-line-shift|flat-line-thin|continuous-line|stroke-line] [--ticks 60] [--warmup-ticks 10] [--repeats 3] [--sample-tick 10] [--sample-passes 2] [--sample-every 64] [--timeout-seconds 900] [--browser-trace] [--browser-trace-seconds 120]",
 		);
 	}
 	params.set(key, value);
 }
+const browserTraceSeconds = Number(params.get("browser-trace-seconds") ?? 120);
+if (
+	!Number.isSafeInteger(browserTraceSeconds) ||
+	browserTraceSeconds < 1 ||
+	browserTraceSeconds > 300
+)
+	throw new Error("Browser trace duration must be between 1 and 300 seconds");
+if (!browserTrace && params.has("browser-trace-seconds"))
+	throw new Error("Browser trace duration requires --browser-trace");
 const options = readOptions(params);
 const timeoutSeconds = Number(params.get("timeout-seconds") ?? 900);
 if (!Number.isSafeInteger(timeoutSeconds) || timeoutSeconds < 900 || timeoutSeconds > 7200) {
@@ -52,6 +73,7 @@ const port = reservation.port;
 await reservation.stop(true);
 const url = new URL(`http://127.0.0.1:${port}/gpu-activity/gpu-activity.html`);
 for (const [key, value] of params) url.searchParams.set(key, value);
+if (browserTrace) url.searchParams.set("browser-trace", "true");
 const token = crypto.randomUUID();
 let finish!: (report: Record<string, unknown>) => void;
 const completion = new Promise<Record<string, unknown>>((resolve) => {
@@ -113,6 +135,7 @@ url.searchParams.set("report-url", `http://127.0.0.1:${receiver.port}/report`);
 let server: ReturnType<typeof Bun.spawn> | undefined;
 let browser: ReturnType<typeof Bun.spawn> | undefined;
 let timeout: ReturnType<typeof setTimeout> | undefined;
+let trace: Awaited<ReturnType<typeof captureBrowserTrace>> | undefined;
 try {
 	const source = Bun.spawn(["git", "rev-parse", "HEAD"], {
 		cwd: root,
@@ -131,6 +154,15 @@ try {
 				wasmSha256,
 				options,
 				timeoutSeconds,
+				browserTrace: {
+					enabled: browserTrace,
+					maximumSeconds: browserTraceSeconds,
+					bufferKb: browserTraceBufferKb,
+					maximumOutputBytes: 128 * 1024 * 1024,
+					categories: browserTraceCategories,
+					scope:
+						"Optional CDP diagnostic capture starts before page navigation and includes initialization, warmup and measured work until completion or duration limit. The fixed buffer retains a prefix. CDP tracing adds overhead, including in baseline mode. These timings are not an uninstrumented baseline. Trace clocks use Chrome's own synchronization; custom host/GPU profile tracks remain independently referenced.",
+				},
 				startedAt: new Date().toISOString(),
 				bun: Bun.version,
 				note: "Revision alone does not identify uncommitted changes. Preserve the working-tree patch with this evidence.",
@@ -180,7 +212,9 @@ try {
 			"--no-first-run",
 			"--no-default-browser-check",
 			"--disable-background-networking",
-			url.href,
+			...(browserTrace
+				? ["--remote-debugging-port=0", "--remote-debugging-address=127.0.0.1", "about:blank"]
+				: [url.href]),
 		],
 		{
 			stdout: Bun.file(join(output, "browser.log")),
@@ -188,6 +222,15 @@ try {
 		},
 	);
 	browser = browserProcess;
+	if (browserTrace) {
+		trace = await captureBrowserTrace(
+			profileDirectory,
+			() => browserProcess.exitCode,
+			url,
+			join(output, "browser-trace.json"),
+			browserTraceSeconds,
+		);
+	}
 	const report = await Promise.race([
 		completion,
 		browserProcess.exited.then((code) => {
@@ -201,6 +244,19 @@ try {
 		}),
 	]);
 	await Bun.write(join(output, "result.json"), `${JSON.stringify(report, null, 2)}\n`);
+	const profile = report.profile as { timeline?: ProfileTimeline } | undefined;
+	if (profile?.timeline) {
+		await Bun.write(
+			join(output, "profile-trace.json"),
+			`${JSON.stringify(profileTrace(profile.timeline, report.pressureJournal as PressureJournal | undefined))}\n`,
+		);
+	}
+	if (trace) {
+		await Bun.write(
+			join(output, "browser-trace-metadata.json"),
+			`${JSON.stringify(await trace.stop(), null, 2)}\n`,
+		);
+	}
 	if (report.status !== "pass") throw new Error(`Activity benchmark failed: ${report.error}`);
 	console.log(
 		JSON.stringify({ status: "pass", output, options, checkpoints: savedCheckpoints.size }),
@@ -213,6 +269,18 @@ try {
 	throw error;
 } finally {
 	clearTimeout(timeout);
+	if (trace) {
+		try {
+			await trace.stop();
+		} catch (error) {
+			await Bun.write(
+				join(output, "browser-trace-error.json"),
+				`${JSON.stringify({ status: "fail", error: String(error) }, null, 2)}\n`,
+			);
+		} finally {
+			trace.close();
+		}
+	}
 	await receiver.stop(true);
 	for (const child of [browser, server]) {
 		if (child?.exitCode === null) child.kill("SIGKILL");

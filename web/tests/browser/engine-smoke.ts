@@ -6,6 +6,11 @@ import {
 	wasmAssetUrl,
 } from "../../src/engine-client/wasm";
 import { type InteractiveGpuReport, qualifyInteractiveGpu } from "./gpu-interactive";
+import {
+	checkAcceptedPressureJournal,
+	checkBusyPressureJournal,
+	checkEmptyPressureJournal,
+} from "./pressure-diagnostics";
 
 const result = document.querySelector("#result");
 if (!result) throw new Error("Smoke-test result element is missing");
@@ -599,7 +604,10 @@ try {
 						throw new Error("Canvas scene probe returned the wrong committed cell");
 					}
 				}
+				checkEmptyPressureJournal(browserScene);
+				browserScene.enable_pressure_diagnostics(8192);
 				const stale = browserScene.advance(1) as Promise<unknown>;
+				checkBusyPressureJournal(browserScene);
 				const pendingReset = JSON.parse(browserScene.reset()) as {
 					busy: boolean;
 					resetPending: boolean;
@@ -623,6 +631,7 @@ try {
 				if (reset.epoch !== 2 || reset.tick !== 0 || reset.acceptedTimeS !== 0 || reset.busy) {
 					throw new Error("Canvas scene reset did not start a clean epoch");
 				}
+				checkEmptyPressureJournal(browserScene);
 				if (!browserScene.render()) throw new Error("Canvas scene did not render after reset");
 				const expectedReadbackBytes = 3_631_800;
 				const restInitialCheckpoint = await browserScene.checkpoint_prototype();
@@ -641,7 +650,16 @@ try {
 						async () => browserScene.resize(960, invalid),
 						`adapter GPU height ${invalid}`,
 					);
+					await rejects(
+						async () => browserScene.enable_pressure_diagnostics(invalid),
+						`adapter GPU pressure diagnostic capacity ${invalid}`,
+					);
 				}
+				await rejects(
+					async () => browserScene.enable_pressure_diagnostics(65_537),
+					"adapter GPU pressure diagnostic capacity over cap",
+				);
+				browserScene.enable_pressure_diagnostics(8192);
 				const tick = JSON.parse(
 					(await browserScene.advance(8)) as string,
 				) as GpuAttemptAccounting & {
@@ -655,6 +673,7 @@ try {
 					pressureIterations: number;
 				};
 				checkGpuAttemptAccounting(tick, "Canvas first GPU tick");
+				checkAcceptedPressureJournal(browserScene, tick);
 				if (
 					!tick.completedOuterTick ||
 					!Number.isSafeInteger(tick.acceptedSubsteps) ||
@@ -1288,9 +1307,25 @@ try {
 					await rejects(async () => rawScene.advance(invalid), `raw GPU advance ${invalid}`);
 					await rejects(async () => rawScene.resize(invalid, 540), `raw GPU width ${invalid}`);
 					await rejects(async () => rawScene.resize(960, invalid), `raw GPU height ${invalid}`);
+					await rejects(
+						async () => rawScene.enable_pressure_diagnostics(invalid),
+						`raw GPU pressure diagnostic capacity ${invalid}`,
+					);
 				}
+				await rejects(
+					async () => rawScene.enable_pressure_diagnostics(65_537),
+					"raw GPU pressure diagnostic capacity over cap",
+				);
 				if (rawScene.status_json() !== beforeInvalid) {
 					throw new Error("Invalid raw GPU command changed committed status");
+				}
+				rawScene.dispose();
+				for (const action of [
+					() => rawScene.enable_pressure_diagnostics(256),
+					() => rawScene.disable_pressure_diagnostics(),
+					() => rawScene.take_pressure_diagnostics_json(),
+				]) {
+					await rejects(async () => action(), "disposed raw GPU pressure journal operation");
 				}
 			} finally {
 				rawScene.dispose();

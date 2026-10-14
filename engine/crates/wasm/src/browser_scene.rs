@@ -157,6 +157,49 @@ impl BrowserGpuScene {
         ))
     }
 
+    /// Enables a bounded diagnostic journal while the scene owner is idle.
+    /// Reset disables recording. Call this method again after reset to record its new epoch.
+    pub fn enable_pressure_diagnostics(&self, capacity: JsValue) -> Result<(), JsValue> {
+        let capacity = checked_u32(capacity, "GPU pressure diagnostic capacity", 65_536)?;
+        let mut state = self.state.borrow_mut();
+        if state.disposed {
+            return Err(JsValue::from_str("GPU browser scene disposed"));
+        }
+        state
+            .owner
+            .as_mut()
+            .ok_or_else(|| JsValue::from_str("GPU browser scene busy"))?
+            .enable_pressure_diagnostics(capacity)
+            .map_err(|error| JsValue::from_str(&error))
+    }
+
+    /// Disables and clears the diagnostic journal while the scene owner is idle.
+    pub fn disable_pressure_diagnostics(&self) -> Result<(), JsValue> {
+        let mut state = self.state.borrow_mut();
+        if state.disposed {
+            return Err(JsValue::from_str("GPU browser scene disposed"));
+        }
+        state
+            .owner
+            .as_mut()
+            .ok_or_else(|| JsValue::from_str("GPU browser scene busy"))?
+            .disable_pressure_diagnostics();
+        Ok(())
+    }
+
+    /// Drains retained diagnostic events and overflow count while the scene owner is idle.
+    pub fn take_pressure_diagnostics_json(&self) -> Result<String, JsValue> {
+        let mut state = self.state.borrow_mut();
+        if state.disposed {
+            return Err(JsValue::from_str("GPU browser scene disposed"));
+        }
+        Ok(state
+            .owner
+            .as_mut()
+            .ok_or_else(|| JsValue::from_str("GPU browser scene busy"))?
+            .take_pressure_diagnostics_json())
+    }
+
     /// Runs a bounded batch and returns a Promise containing completed
     /// work, pressure diagnostics and the resulting committed stamp.
     pub fn advance(&self, max_substeps: JsValue) -> Result<JsValue, JsValue> {

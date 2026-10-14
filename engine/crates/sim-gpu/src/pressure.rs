@@ -7,6 +7,7 @@
 // E07 stage-graph integration will call the crate-private projector.
 #![allow(dead_code)]
 
+pub(crate) use journal::{CandidateContext, CandidateOutcome, PressurePhase};
 use particle_sim::{CELL_WIDTH_M, Grid};
 
 const WORKGROUP_SIZE: u32 = 64;
@@ -178,10 +179,12 @@ pub(crate) struct GpuPressureProjector {
     pipelines: Pipelines,
     last_readback_bytes: u64,
     coarse: Option<coarse::CoarsePressure>,
+    journal: Option<journal::PressureJournal>,
 }
 
 mod bindings;
 mod coarse;
+mod journal;
 mod readback;
 mod setup;
 mod solve;
@@ -189,6 +192,38 @@ mod solve;
 use readback::{read_status, stage_status_readback};
 
 impl GpuPressureProjector {
+    pub(crate) fn enable_diagnostics(&mut self, capacity: u32) -> Result<(), String> {
+        self.journal = Some(journal::PressureJournal::new(capacity)?);
+        Ok(())
+    }
+
+    pub(crate) fn disable_diagnostics(&mut self) {
+        self.journal = None;
+    }
+
+    pub(crate) fn diagnostics_enabled(&self) -> bool {
+        self.journal.is_some()
+    }
+
+    pub(crate) fn take_diagnostics_json(&mut self) -> String {
+        self.journal.as_mut().map_or_else(
+            journal::PressureJournal::empty_json,
+            journal::PressureJournal::take_json,
+        )
+    }
+
+    pub(crate) fn begin_candidate_diagnostics(&mut self, context: CandidateContext) {
+        if let Some(journal) = self.journal.as_mut() {
+            journal.begin_candidate(context);
+        }
+    }
+
+    pub(crate) fn finish_candidate_diagnostics(&mut self, outcome: CandidateOutcome) {
+        if let Some(journal) = self.journal.as_mut() {
+            journal.finish_candidate(outcome);
+        }
+    }
+
     /// Compact records copied for the latest solve, including a rejected solve.
     pub(crate) fn last_readback_bytes(&self) -> u64 {
         self.last_readback_bytes
