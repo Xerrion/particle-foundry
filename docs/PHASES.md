@@ -1,5 +1,8 @@
 # Particle Foundry: phases and milestones
 
+Read [Hvor er vi nu?](STATUS.md) for the short Danish view of the current P/M/E,
+latest delivery and next selected action.
+
 **The current goal is today's complete sandbox on Rust/GPU with 60 FPS,
 simulation in real time and physically credible behavior.**
 Painting and controls must remain responsive during normal play.
