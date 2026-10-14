@@ -45,9 +45,15 @@ Frame pacing, brush response, simulation speed and quality need separate checks.
 Current throughput measurements do not establish 60 FPS.
 The [14 October choice](plans/fluid-gpu-redesign/plan.md#realism-and-active-region-investigation-selected-on-14-october-2026)
 investigates whether regions without physical changes can avoid repeated work.
-First measure transport activity while the complete simulation still runs.
-Neighbor effects and pressure must remain correct. Camera visibility cannot decide
-which parts of the world evolve. This investigation has no measured speedup yet.
+The [measurements](validation/p1-m3-e08.md#transport-activity-investigation-on-14-october-2026)
+now show changes in every region containing fluid during the later water-brush
+samples. Skipping unchanged 16 x 16 regions is therefore rejected for this solver.
+The preview-pacing test submits about 9.5 frames per second. In the separate
+throughput test, one model second takes about 13.7 wall seconds. No new runtime
+optimization is retained.
+The next proposed investigation is the pressure solver and its completion waits.
+Camera visibility cannot decide which parts of the world evolve. PR #26, which
+aligns the gameplay goal and acceptance rules, is merged with passing CI.
 The user resumed this work after the existing PRs were merged. See the [performance decision](plans/fluid-gpu-redesign/plan.md#interactive-performance-priority-on-6-october-2026)
 for the target, measurement rules and remaining correctness requirements.
 

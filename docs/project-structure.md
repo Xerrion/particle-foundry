@@ -49,7 +49,7 @@ particle-foundry/
     scripts/                        WASM/catalogue builds, browser and evidence tools
     generated/wasm/                 Ignored generated glue, declarations and WASM
     generated/catalogue/            Ignored candidate material projection
-    benchmarks/                     Existing simulation workloads
+    benchmarks/                     Legacy workloads and isolated GPU measurements
   engine/                          Cargo workspace, Rust contracts and bootstrap
   docs/                             Current model, plans, validation and history
   artifacts/                        Ignored local evidence and snapshots
@@ -59,6 +59,35 @@ Keep frontend configuration and tests with the application. Root `mise.toml`
 selects `web/` as the working directory for frontend tasks, preserving commands
 such as `mise run dev` and `mise run ci`. Documentation tools and their `.venv/`
 remain at repository level. There is no second package manager or task framework.
+
+### Transport activity measurements
+
+`mise run bench:gpu-activity artifacts/validation/gpu-activity/<new-run>` builds
+and runs the isolated browser investigation. Its default fixture is the Water
+radius-4 brush: ten warm-up ticks, three fresh 60-tick throughput runs and three
+fresh pacing runs. Select `--fixture rest`, `brush` or `dense`. Use `--mode activity`
+for sampled closure counters or `--mode profile` for sampled GPU timestamps and
+host costs. Diagnostic modes run separately from baseline timing. An existing
+frozen WASM can use `mise exec -- bun web/scripts/run-gpu-activity.ts` with the
+same arguments, which avoids rebuilding the runtime.
+
+[`gpu-activity.ts`](../web/benchmarks/gpu-activity.ts) owns the browser experiment.
+Its modules under [`gpu-activity/`](../web/benchmarks/gpu-activity/) own fixtures,
+timing, shader observation and cost sampling. The observer pins the original
+pair shader, preserves its physical arithmetic and checks complete face visits
+before reporting activity. [`gpu-checkpoint.ts`](../web/benchmarks/gpu-checkpoint.ts)
+shares complete-field validation with the existing GPU benchmark.
+[`run-gpu-activity.ts`](../web/scripts/run-gpu-activity.ts) owns the isolated Chrome
+process, loopback result receiver and fresh evidence directory.
+
+Each mode requires positive identification of a hardware adapter. Baseline
+timing has no WebGPU instrumentation. Reset, paint and full checkpoint transfers
+stay outside timing; the final queue-completion probe stays inside. Render
+submissions and callback intervals do not qualify displayed FPS. Activity
+counters do not establish safe sleeping or a measured optimization gain. The
+`gpu-activity` Vite mode includes the diagnostic page only in its isolated build;
+the normal application build does not include it. See
+[E08 evidence](validation/p1-m3-e08.md) for the recorded protocol and results.
 
 ## TypeScript ownership
 

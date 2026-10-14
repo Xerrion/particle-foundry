@@ -194,6 +194,12 @@ depends = ["install", "build:wasm"]
 usage = 'arg "<output>" help="New evidence directory under artifacts/"'
 run = 'bun scripts/test-browser.ts "${usage_output?}" --require-gpu --benchmark-gpu'
 
+[tasks."bench:gpu-activity"]
+description = "Measure transport activity, browser cadence and GPU stage costs in isolated fixtures"
+dir = "{{config_root}}/web"
+depends = ["install", "build:wasm"]
+run = "bun scripts/run-gpu-activity.ts"
+
 [tasks."test:reporting"]
 description = "Verify browser errors and Rust/WASM panics with local event receivers"
 dir = "{{config_root}}/web"

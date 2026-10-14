@@ -3,7 +3,7 @@ import { defineConfig } from "vite";
 
 export default defineConfig(({ mode }) => ({
 	define: { __PF_VERIFY_LIVE__: false },
-	base: ["engine-smoke", "sentry-smoke"].includes(mode) ? `/${mode}/` : "/",
+	base: ["engine-smoke", "sentry-smoke", "gpu-activity"].includes(mode) ? `/${mode}/` : "/",
 	resolve: {
 		alias:
 			mode === "sentry-smoke"
@@ -32,9 +32,11 @@ export default defineConfig(({ mode }) => ({
 			input:
 				mode === "engine-smoke"
 					? ["tests/browser/engine-smoke.html", "benchmarks/gpu.html"]
-					: mode === "sentry-smoke"
-						? "tests/browser/sentry-smoke.html"
-						: ["index.html", "gpu.html"],
+					: mode === "gpu-activity"
+						? "gpu-activity.html"
+						: mode === "sentry-smoke"
+							? "tests/browser/sentry-smoke.html"
+							: ["index.html", "gpu.html"],
 		},
 	},
 }));
