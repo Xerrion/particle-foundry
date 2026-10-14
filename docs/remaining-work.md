@@ -72,7 +72,8 @@ numerical limits. Frustum culling has lower priority for the current full-grid
 renderer. Real time remains unmet.
 PR [#26](https://github.com/Xerrion/particle-foundry/pull/26) is merged at main
 `360d514` with all six post-merge CI jobs passing. It aligns the gameplay target;
-the activity evidence is a separate delivery.
+the activity tools and evidence are delivered separately in
+[draft PR #27](https://github.com/Xerrion/particle-foundry/pull/27).
 PR [#24](https://github.com/Xerrion/particle-foundry/pull/24) is merged at main
 `372d6ff` with passing main CI. Real time remains unmet.
 The [clarified final target](plans/fluid-gpu-redesign/plan.md#final-gameplay-target-clarified-on-13-october-2026)
