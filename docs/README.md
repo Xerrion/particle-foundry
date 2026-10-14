@@ -1,5 +1,8 @@
 # Particle Foundry knowledge base
 
+For a short Danish view of the current P/M/E, latest delivery and next selected
+action, read [Hvor er vi nu?](STATUS.md).
+
 Use this index to retrieve the knowledge needed for the current task. Each topic
 should explain what is implemented, why it works that way, where the code and
 tests live, and what remains uncertain. Read the relevant topic and follow its
@@ -40,6 +43,7 @@ A plan or reference entry is not evidence of implementation.
 
 | Question | Start here | Read further when needed |
 | --- | --- | --- |
+| Which P, M and E are we working on now? | [Current status in Danish](STATUS.md) | [Active work](remaining-work.md), [phases and milestones](PHASES.md) |
 | Where does behavior belong? | [Project structure](project-structure.md) | [Existing controls and sandbox](legacy-sandbox.md) |
 | How are browser errors and Rust panics reported? | [Sentry reporting](error-reporting.md) | [Deployment configuration](deployment.md) |
 | How does CI run and what must pass before merging? | [GitHub CI and merge policy](../.github/README.md) | [mise tasks](../mise.toml) |
@@ -140,3 +144,9 @@ measurements, record the Git commit and working-tree changes using the
 [evidence template](templates/phase-evidence.md).
 
 `mise run docs:render` regenerates the GPU plan's HTML.
+
+Keep [STATUS.md](STATUS.md) current in the same change when the selected work
+track, item completion, merge state, blocker or deployment evidence changes.
+Verify live Linear status and the owning evidence. Distinguish the selected
+P/M/E follow-up from the manifests' next migration item. Keep this Danish overview
+short; link detailed measurements and history instead of copying them.

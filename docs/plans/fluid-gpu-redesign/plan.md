@@ -404,12 +404,14 @@ Complete diagnostic field hashes and accepted-step accounting match. The full
 dense comparison was stopped after normal interaction had rejected the approach;
 its partial run supplies no performance or failure claim.
 
-The user then selected correction of the repeated tooth pattern after drawing a
-water line. The [stroke investigation](../../validation/p1-m3-e08.md#continuous-gpu-brush-strokes-on-14-october-2026)
-identifies repeated scallops in the painted input. A continuous GPU brush command
-connects pointer positions without changing simulation equations or limits.
-Qualification includes geometry, cancellation, equal-input fields and measured
-frame pacing. This is the current bounded task under XER-64.
+The [stroke investigation](../../validation/p1-m3-e08.md#continuous-gpu-brush-strokes-on-14-october-2026)
+identifies repeated scallops in the painted water line. Continuous GPU brush
+strokes connect pointer positions without changing simulation equations or
+limits. Geometry, cancellation, equal-input fields and local browser checks pass;
+the pacing measurements establish no simulation speedup. The correction is merged
+in [PR #28](https://github.com/Xerrion/particle-foundry/pull/28), after the activity
+investigation in [PR #27](https://github.com/Xerrion/particle-foundry/pull/27).
+This bounded correction is delivered under XER-64; the real-time target remains open.
 
 Pressure convergence and completion synchronization remain a proposed later
 investigation on the same brush fixture. Record per-candidate convergence,
