@@ -1,6 +1,6 @@
 # Hvor er vi nu?
 
-**Opdateret: 14. oktober 2026. Vi er i P1. Det prioriterede arbejdsspor er opfølgning på M3/E08: få GPU-scenen til at fungere godt i realtid.**
+**Opdateret: 14. oktober 2026. Vi er i P1. Det prioriterede arbejdsspor er opfølgning på M3/E08: få GPU-scenen til at fungere godt i realtid. Den valgte RTX-baseline er blokeret af en driverkonflikt.**
 
 | Niveau | Hvor vi er | Hvad det betyder |
 | --- | --- | --- |
@@ -25,7 +25,11 @@ Planens rækkefølge og det valgte arbejdsspor kan derfor være forskellige. M1/
 
 ## Næste skridt
 
-Merge og statusopdatering afslutter den seneste aftalte opgave. Der er ikke startet en ny optimering. Forslaget er at undersøge trykløserens arbejde og ventetiden på GPU-resultater; det kræver, at vi vælger det som næste opgave.
+Den valgte opgave er at verificere WebGPU og måle en frisk baseline for XER-64 på RTX-maskinen fra seneste `main`, `427f162`. Chromium er installeret med tilladelse, og WASM er genbygget og kontrolleret. Den almindelige browser/WASM-test består, men den krævede GPU-test og benchmark fejler, fordi browseren ikke finder en GPU-adapter. Der er derfor ingen ny hastighedsmåling.
+
+RTX 5070 Ti bruger en indlæst NVIDIA-driver på `615.71.09`, mens systembibliotekerne og driveren til den installerede kernel er `615.78.08`. Genstart maskinen, kontrollér at NVIDIA virker, og kør derefter GPU-verifikation og baseline. [Fejlevidens og præcis fortsættelse](validation/p1-m3-e08.md#rtx-baseline-preflight-on-14-october-2026) er gemt. XER-64 er fortsat igangværende.
+
+Der er ikke startet en ny optimering. Forslaget om trykløserens arbejde og ventetiden på GPU-resultater kræver fortsat, at vi vælger det som næste opgave.
 
 Slutmålet er hele det eksisterende sandbox-spil med **60 viste FPS, simulering i realtid, hurtig betjening og fysisk troværdig adfærd**. Den lille GPU-demo er kun en del af det. Det normale spil bruger fortsat den eksisterende TypeScript-motor.
 
