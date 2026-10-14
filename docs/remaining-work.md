@@ -2,10 +2,10 @@
 
 **Status date:** 14 October 2026. **Selected work track:** performance and
 interaction follow-up on P1/M3/E08 under XER-64. The water-line correction is
-merged. The selected fresh RTX baseline is blocked by a loaded NVIDIA driver
-and userspace version mismatch; [preflight evidence and continuation](validation/p1-m3-e08.md#rtx-baseline-preflight-on-14-october-2026)
-record the failed hardware checks and required reboot. No further optimization
-has been started. See [the short Danish
+merged. The selected fresh RTX baseline and required sustained browser GPU
+qualification are complete locally after reboot; [the measured evidence](validation/p1-m3-e08.md#rtx-qualification-and-baseline-after-reboot-on-14-october-2026)
+records the Linux/NVIDIA launch requirements, numerical checks and unmet
+real-time target. No further optimization has been started. See [the short Danish
 status](STATUS.md) for the current P/M/E and next selected action.
 
 The next migration item remains P1/M4/E09, with an isolated
