@@ -42,9 +42,24 @@ passing main CI and public GPU UI checks; see the owning evidence for limits.
 The [packed transport comparison](validation/p1-m3-e08.md#packed-transport-pair-comparison-on-13-october-2026)
 then reduces dispatched workgroups with identical complete field hashes.
 Its paired browser duration falls by 12.63%, from 15.7259 to 13.7391 wall
-seconds per model second. Dispatch counts remain fixed. The next bounded
-action is to assess remaining closure-dispatch and host preparation costs.
-Real time remains unmet; this local candidate is separate from merged main.
+seconds per model second. Dispatch counts remain fixed.
+The [closure and allocation screening](validation/p1-m3-e08.md#transport-parameter-and-allocation-comparison-on-13-october-2026)
+rejects exact fixed-point stopping and parameter packing after both fail to
+improve repeated browser duration. That screening selected large
+transport/momentum scratch allocations at the transaction owner for a reuse
+comparison with rejection, queue-order, reset and complete-field checks.
+The [resident-buffer checkpoint](validation/p1-m3-e08.md#resident-candidate-buffer-reuse-on-13-october-2026)
+then reduces repeated duration by 5.26% with complete field identity. Preview-policy
+render submissions improve from 9.47 to 10.12 per second. Native and required
+sustained browser checks pass. The next bounded investigation should measure
+remaining per-attempt parameter/binding work and pressure/transport scheduling
+costs against the same quality and pacing gates. Real time remains unmet.
+PR [#24](https://github.com/Xerrion/particle-foundry/pull/24) is merged at main
+`372d6ff` with passing main CI. Real time remains unmet.
+The [clarified final target](plans/fluid-gpu-redesign/plan.md#final-gameplay-target-clarified-on-13-october-2026)
+is 60 visible FPS during normal play, accepted simulation time following wall
+time and physically credible material behavior. Measure frame pacing and input
+latency alongside throughput; the current benchmark does not qualify game FPS.
 
 Complete the [current-sandbox checklist](plans/rust-wasm-migration/current-sandbox-scope.md)
 before the default GPU switch. Its current materials, interactions and controls

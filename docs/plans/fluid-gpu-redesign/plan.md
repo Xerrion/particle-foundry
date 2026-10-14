@@ -235,7 +235,7 @@ Migrate all eight current elemental models and their existing products/interacti
 
 Run numerical and browser suites, sustained benchmarks, and device-loss tests on intended integrated and discrete GPUs. Record browser/adapter/driver, grid, scene seed, warm-up, samples, substeps, solver residuals, dispatches, memory, reduction/readback bytes, and physical time advanced. Track p50/p95 end-to-end frame time, input-to-command-application latency, and simulated-seconds per wall-second. Optional GPU timestamps supplement host measurements; support is not required for correctness.
 
-Proposed product gate: 480×270 at 1×, p95 displayed frame interval ≤33.3 ms and at least 1.0 simulated second per wall-second on the agreed baseline device. These are targets to validate, not predicted results. Include painting, worst-case sand pools, boiling/venting, disconnected cavities, and dense circuits; a fast ambient frame is insufficient.
+Product target, clarified by the user on 13 October 2026: 480×270 at 1×, 60 displayed frames per second during normal interaction and at least 1.0 accepted simulated second per wall-second on the agreed baseline device. The nominal frame budget is 16.7 ms; record p50/p95 frame intervals, long frames and input latency separately. These are targets to validate, not measured results. Include painting, worst-case sand pools, boiling/venting, disconnected cavities, and dense circuits; a fast ambient frame is insufficient.
 
 On GPU loss, stop accepting new tick commits, cancel pending readbacks and preserve the last valid committed checkpoint plus command log. The newest device state may be unavailable. Recover only through a compatible validated Rust CPU or restored wgpu backend, with an explicit checkpoint rollback notice, or restart with a clear notice. Replay restores commands, not a promise of bit-identical cross-device trajectories. Never hot-swap partially evolved GPU fields into the legacy parcel engine. Keep backend selection and versioned snapshots reversible through the experimental period.
 
@@ -282,6 +282,23 @@ the merge of PRs #18, #14 and #17. The resumed comparison measures cheaper
 pressure and transport settings on the same workload. The reference profile
 remains distinguishable from each interactive candidate. XER-64 remains
 In Progress. Feature coverage and M7 promotion remain open.
+
+### Final gameplay target clarified on 13 October 2026
+
+The user sets the final goal at 60 FPS with simulation time following real time
+and behavior close to real life within the falling-sand model. Qualify visible
+frame pacing, brush response and accepted-time throughput together during
+normal interaction. A throughput benchmark alone does not establish displayed
+FPS or input responsiveness. Record the browser, adapter, scene, render cadence,
+p50/p95 frame intervals, stalls, input latency and accepted model time.
+
+Physical credibility remains part of acceptance. Compare fluid motion and the
+required material interactions with their controlling references and regression
+gates. Preserve finite values, nonnegative amounts, source and conservation
+accounting, volume bounds and atomic rejection. Document any approximation and
+its measured errors before claiming a quality/performance tradeoff. The current
+limited GPU scene does not establish full-sandbox physics coverage or promotion.
+XER-64 owns this performance target; XER-38 retains complete-scene qualification.
 
 ### Candidate error budgets on 7 October 2026
 
@@ -401,6 +418,49 @@ It validates and hashes explicit checkpoint fields outside the timed interval.
 Neither workgroup counts nor inclusive queue waits establish exclusive GPU
 shader durations. Required hardware qualification remains separate from the
 throughput runs and ordinary hosted browser smoke.
+
+### Exact fixed-point scheduling rejected on 13 October 2026
+
+A temporary resident stop flag monitors bit changes over complete ordered
+transport rounds every 16 rounds, keeping the 256-round cap. The native rest
+fixtures stop early with identical complete candidate bytes. Nonuniform
+fixtures still reach the cap. A paired hardware browser series keeps identical
+fields and accounting but takes 70.03% longer than merged PR #24.
+The indirect schedule is removed. This does not change the current transport
+method or authorize relaxed acceptance gates. The
+[E08 rejected comparison](../../validation/p1-m3-e08.md#rejected-exact-transport-fixed-point-comparison-on-13-october-2026)
+records the protocol, screening, measurements and unrun qualification.
+
+### Allocation comparison on 13 October 2026
+
+Packing the seven immutable transport parameter records into one aligned
+allocation preserves complete fields and work counts, but fails to improve
+repeated browser duration. That temporary engine change is removed. The
+[browser benchmark](../../../web/benchmarks/gpu-browser.ts) retains buffer
+allocation counts and requested bytes in its separate trace. Measurements are
+cumulative API requests, not live memory or exclusive allocation/GPU durations.
+The [E08 allocation comparison](../../validation/p1-m3-e08.md#transport-parameter-and-allocation-comparison-on-13-october-2026)
+records results and the proposed investigation of repeated large scratch
+allocations. Throughput remains distinct from visible FPS and input latency.
+
+### Resident candidate storage on 13 October 2026
+
+The [coupled owner](../../../engine/crates/sim-gpu/src/scene/coupled.rs) retains
+one [candidate set](../../../engine/crates/sim-gpu/src/scene/coupled/candidate.rs)
+for transport, momentum, density, optional viscosity and gravity. Sequential
+mutable advances reuse unmapped storage after stage encoding resets its consumed
+fields. Attempt-local mapped status staging remains separate. Accepted inventory
+copies into the alternate committed generation only after every gate passes.
+Queue resource dependencies and complete owner reconstruction on reset preserve
+cancellation, rejection and epoch isolation. No shader or numerical limit changes.
+
+The [E08 comparison](../../validation/p1-m3-e08.md#resident-candidate-buffer-reuse-on-13-october-2026)
+requires identical complete fields and shows 5.26% shorter repeated browser
+duration. Separate preview-policy pacing improves from 9.47 to 10.12 render
+submissions per second. This is a presentation proxy, not qualification of
+60 displayed FPS. The fixed candidate set requests 29,635,844 bytes across
+34 buffers with viscosity. Peak driver-resident memory is not measured.
+Real time and the complete-sandbox promotion target remain open.
 
 ## 4. Acceptance matrix
 

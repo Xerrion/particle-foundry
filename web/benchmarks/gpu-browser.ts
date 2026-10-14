@@ -1,9 +1,11 @@
 import { type BrowserGpuSceneSession, initializeBrowserGpuScene } from "../src/engine-client/wasm";
 
+import { measurePreviewPacing } from "./gpu-pacing";
+
 const CELLS = 480 * 270;
 const FIELD_BYTES = (5 * CELLS + 481 * 270 + 480 * 271) * 4;
 const INVENTORY_DRIFT_LIMIT = 1e-5;
-type Advance = {
+export type Advance = {
 	epoch: number;
 	tick: number;
 	acceptedTimeS: number;
@@ -186,6 +188,10 @@ async function measure(scene: BrowserGpuSceneSession, ticks: number) {
 	};
 }
 
+type BufferDevice = {
+	createBuffer(descriptor: GPUBufferDescriptor): GPUBuffer;
+};
+
 async function benchmark(canvas: HTMLCanvasElement) {
 	const gpu = navigator.gpu;
 	if (!gpu) throw new Error("GPU benchmark requires WebGPU");
@@ -207,11 +213,13 @@ async function benchmark(canvas: HTMLCanvasElement) {
 		return adapter;
 	};
 	let scene: BrowserGpuSceneSession;
+	const initializationStarted = performance.now();
 	try {
 		scene = await initializeBrowserGpuScene(canvas);
 	} finally {
 		gpu.requestAdapter = originalRequest;
 	}
+	const initializationWallMs = performance.now() - initializationStarted;
 	try {
 		const selectedAdapter = adapterRequests.at(-1)?.info;
 		if (selectedAdapter?.isFallbackAdapter !== false) {
@@ -224,6 +232,20 @@ async function benchmark(canvas: HTMLCanvasElement) {
 			globalThis as typeof globalThis & { GPUComputePassEncoder?: { prototype: ComputePass } }
 		).GPUComputePassEncoder?.prototype;
 		if (!prototype) throw new Error("GPU benchmark dispatch tracing is unavailable");
+		const devicePrototype = (
+			globalThis as typeof globalThis & { GPUDevice?: { prototype: BufferDevice } }
+		).GPUDevice?.prototype;
+		if (!devicePrototype) throw new Error("GPU benchmark buffer tracing is unavailable");
+		const bufferAllocations: Record<string, { count: number; bytes: number }> = {};
+		const originalBuffer = devicePrototype.createBuffer;
+		devicePrototype.createBuffer = function (descriptor) {
+			const label = descriptor.label ?? "unlabelled";
+			const totals = bufferAllocations[label] ?? { count: 0, bytes: 0 };
+			bufferAllocations[label] = totals;
+			totals.count += 1;
+			totals.bytes += Number(descriptor.size);
+			return originalBuffer.call(this, descriptor);
+		};
 		const dispatches: Record<string, number> = {};
 		const workgroups: Record<string, number> = {};
 		const originalDispatch = prototype.dispatchWorkgroups;
@@ -237,8 +259,15 @@ async function benchmark(canvas: HTMLCanvasElement) {
 			tracedRun = await measure(scene, 60);
 		} finally {
 			prototype.dispatchWorkgroups = originalDispatch;
+			devicePrototype.createBuffer = originalBuffer;
 		}
 		const sustainedRun = await measure(scene, 300);
+		const previewPacing = [];
+		for (let run = 0; run < 3; run += 1) {
+			const { last, ...pacing } = await measurePreviewPacing(scene, 60);
+			const fields = await checkedFields(await scene.checkpoint_prototype(), last);
+			previewPacing.push({ ...pacing, fields });
+		}
 		return {
 			status: "pass",
 			targetMet:
@@ -254,12 +283,16 @@ async function benchmark(canvas: HTMLCanvasElement) {
 				pressureTolerance: 1e-5,
 				closureRounds: 256,
 				closurePairScheduling: "packed interior parity faces",
+				transportParameters: "seven immutable buffers per encode",
+				candidateStorage: "resident sequential scene candidate buffers",
 			},
 			measurement:
 				"10-tick warm-up; fresh scene per run; render per advance; final queue probe included; checkpoints excluded",
 			pressureObservationScope: "last accepted substep of each completed tick",
 			adapter: JSON.parse(scene.adapter_info_json()) as unknown,
 			adapterRequests,
+			initializationWallMs,
+			previewPacing,
 			warmup,
 			runs,
 			sustainedRun,
@@ -267,6 +300,9 @@ async function benchmark(canvas: HTMLCanvasElement) {
 				measurement: "separate instrumented run; duration is excluded from targetMet",
 				dispatches,
 				workgroups,
+				bufferAllocations,
+				allocationScope:
+					"API createBuffer calls and requested bytes; cumulative, not peak resident memory",
 				run: tracedRun,
 			},
 			userAgent: navigator.userAgent,

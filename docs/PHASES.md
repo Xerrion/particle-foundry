@@ -26,7 +26,19 @@ passes the existing accuracy limits and takes about fourteen wall seconds
 per model second on the measured Apple adapter. Real time remains unmet.
 The [next transport comparison](validation/p1-m3-e08.md#packed-transport-pair-comparison-on-13-october-2026)
 starts fewer GPU threads for the same calculation. It takes 12.6% less time
-in paired browser runs and keeps identical final fields. Real time remains open.
+in paired browser runs and keeps identical final fields. PR #24 is merged.
+The [next cost screening](validation/p1-m3-e08.md#transport-parameter-and-allocation-comparison-on-13-october-2026)
+rejects two changes that do not improve repeated duration. It records GPU buffer
+allocations for the next comparison. Real time remains open.
+The [buffer reuse comparison](validation/p1-m3-e08.md#resident-candidate-buffer-reuse-on-13-october-2026)
+then keeps the large working buffers for each scene. Paired runs take 5.3% less
+time with identical fields. The preview scheduling test submits about 10 frames
+per second, up from about 9.5. This is closer to the target, but it does not
+establish 60 displayed FPS or real-time simulation.
+The user clarified the final goal on 13 October: 60 FPS during normal play,
+simulation time that follows real time and physically credible behavior.
+Frame pacing, brush response, simulation speed and quality need separate checks.
+Current throughput measurements do not establish 60 FPS.
 The user resumed this work after the existing PRs were merged. See the [performance decision](plans/fluid-gpu-redesign/plan.md#interactive-performance-priority-on-6-october-2026)
 for the target, measurement rules and remaining correctness requirements.
 
