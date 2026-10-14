@@ -4,6 +4,12 @@ En browserbaseret falling-sand-sandkasse med reproducerbar fysik, varmeledning,
 faseændringer, væsketransport, idealgastryk, bevægelige faste parceller og begrænset
 forbrænding. Verden er som standard et gitter på 480 × 270 celler med zoom og panorering.
 
+Slutmålet er hele den eksisterende sandbox på Rust/GPU med 60 viste FPS under
+normal leg, simulering i realtid og troværdig fysik inden for falling-sand-modellen.
+[Det fælles slutkrav](docs/plans/fluid-gpu-redesign/plan.md#final-gameplay-target-clarified-on-13-october-2026)
+beskriver måling, respons og fysisk kvalitet. Det er et mål, som skal dokumenteres;
+den eksperimentelle GPU-scene opfylder det endnu ikke.
+
 Se [faser og milepæle i almindeligt sprog](docs/PHASES.md) for projektets retning.
 Læs [modelspecifikationen](docs/model.md) for enheder, tilstandsejerskab,
 bevarelsesregler og modellens bevidste grænser. [Restarbejdet](docs/remaining-work.md)

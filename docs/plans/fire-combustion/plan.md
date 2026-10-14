@@ -14,6 +14,13 @@ Read [validation/fire-combustion.md](../../validation/fire-combustion.md) for th
 
 ## 2. Scope and milestones
 
+Existing P1 fire coverage must meet the
+[shared gameplay target](../fluid-gpu-redesign/plan.md#final-gameplay-target-clarified-on-13-october-2026)
+with the complete current sandbox: 60 displayed FPS, simulation in real time,
+responsive interaction and physically credible behavior. FIRE-M7 pairs those
+product checks with corrected combustion evidence. Deferred P4 expansion keeps
+its separate activation and domain requirements.
+
 | Existing milestone | Fire work | Required boundary |
 | --- | --- | --- |
 | P1/M0, E00 | FIRE-W00: preserve observations and freeze corrected specifications | Do not treat expected old bugs as desired regressions |

@@ -107,6 +107,12 @@ No E02 import converts legacy `world.energy` into thermodynamic internal energy.
 
 ## 7. GPU scheduling and failure
 
+P1 scheduling and direct rendering must support the
+[shared gameplay target](../plans/fluid-gpu-redesign/plan.md#final-gameplay-target-clarified-on-13-october-2026):
+60 displayed FPS, accepted simulation in real time, responsive interaction and
+physically credible behavior. Qualification measures these outcomes together;
+submitting frames or commands alone does not establish completed gameplay work.
+
 Use separately dispatched stages for whole-grid dependencies. Owned face fluxes, gather updates and reductions avoid conflicting floating-point scatter. Pressure/closure success depends on residuals and invariants, not a fixed arbitrary number of iterations.
 
 M3 should begin with one bounded batch in flight. GPU status/validation records decide whether a candidate state can become committed; later passes must not consume a failed candidate as valid. Read only small completion/diagnostic records asynchronously when needed. Retry from the same committed state and do not consume command/source IDs twice. This synchronization cost is measured, not hidden.

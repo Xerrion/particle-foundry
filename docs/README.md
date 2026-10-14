@@ -7,6 +7,11 @@ links when needed; there is no repository-wide required reading sequence.
 
 [AGENTS.md](../AGENTS.md) owns working rules. [The root README](../README.md)
 owns setup, and [mise.toml](../mise.toml) owns executable commands and tool versions.
+The [shared P1 gameplay target](plans/fluid-gpu-redesign/plan.md#final-gameplay-target-clarified-on-13-october-2026)
+owns the required 60 displayed FPS, simulation in real time, responsive controls
+and physically credible behavior for the complete existing sandbox. Plans and
+acceptance articles reference that target; measured evidence records its actual
+results and remaining gaps.
 The running application is TypeScript in `web/`. `engine/` contains the Rust/WASM
 bootstrap, portable contracts and the locally validated E05-E06 f64 CPU fluid
 reference. E03 adds an experimental browser session contract and one generated
@@ -42,6 +47,7 @@ A plan or reference entry is not evidence of implementation.
 | How does the simulation behave? | [Physical model](model.md) | [Combustion](combustion.md), [elements](elements.md) and the relevant source/tests |
 | Why was this architecture chosen? | [ADR-001](architecture/adr-001-rust-wasm-wgpu.md) | [Engine boundary](architecture/engine-boundary.md), [matter model](architecture/matter-model.md) |
 | What should an assigned migration item deliver? | [Active work](remaining-work.md) | Its controlling plan, dependencies and acceptance gates below |
+| What is the final gameplay goal? | [Shared P1 gameplay target](plans/fluid-gpu-redesign/plan.md#final-gameplay-target-clarified-on-13-october-2026) | [Current sandbox scope](plans/rust-wasm-migration/current-sandbox-scope.md), [acceptance](validation/acceptance.md) and [backend qualification](validation/backend-migration.md) |
 | What supports a claim? | The topic's source/test links | [Evidence and history](#evidence-and-history), including the recorded snapshot and execution scope |
 
 The user's task determines scope. The active delivery scope is the

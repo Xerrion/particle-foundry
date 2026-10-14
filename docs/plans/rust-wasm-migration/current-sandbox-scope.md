@@ -20,6 +20,12 @@ stone/lava phase family. Later P1 work adds the required groups below. Every
 claimed. Experimental subset delivery and temporary legacy fallback are allowed;
 they do not satisfy missing current-feature rows.
 
+All required rows also inherit the [shared P1 gameplay target](../fluid-gpu-redesign/plan.md#final-gameplay-target-clarified-on-13-october-2026):
+60 displayed FPS, simulation in real time, responsive interaction and physically
+credible behavior on the declared baseline. CUR-17 records joint performance
+and response evidence across the full workload matrix; numerical checks for the
+other rows remain required. A passing limited-scene benchmark cannot waive them.
+
 Preserve user operations, material identities, observable interactions and existing
 named regression scenarios. Do not require bit-identical cellular trajectories,
 old internal storage or synchronous probes. The new conservative solver and corrected

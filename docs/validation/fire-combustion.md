@@ -34,6 +34,12 @@ Keep the two full-pipeline bug fixtures alongside isolated cases and positive co
 
 ## Corrected gates
 
+P1 combustion scenes also inherit the
+[shared gameplay target](../plans/fluid-gpu-redesign/plan.md#final-gameplay-target-clarified-on-13-october-2026).
+FIRE-M7 requires its 60 displayed FPS, accepted simulation in real time and
+interaction evidence together with the physical-quality gates below. A passing
+isolated reaction or limited water scene cannot qualify a complete fire workload.
+
 The canonical [fire work manifest](../data/fire-combustion-work.json) separates tasks, fixtures and aggregate gates. All statuses and evidence arrays are initially planned/empty. Fixture descriptions below are proposed requirements, not newly measured results.
 
 | Gate | Parent milestone | Required scope |

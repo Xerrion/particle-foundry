@@ -235,7 +235,7 @@ Migrate all eight current elemental models and their existing products/interacti
 
 Run numerical and browser suites, sustained benchmarks, and device-loss tests on intended integrated and discrete GPUs. Record browser/adapter/driver, grid, scene seed, warm-up, samples, substeps, solver residuals, dispatches, memory, reduction/readback bytes, and physical time advanced. Track p50/p95 end-to-end frame time, input-to-command-application latency, and simulated-seconds per wall-second. Optional GPU timestamps supplement host measurements; support is not required for correctness.
 
-Product target, clarified by the user on 13 October 2026: 480×270 at 1×, 60 displayed frames per second during normal interaction and at least 1.0 accepted simulated second per wall-second on the agreed baseline device. The nominal frame budget is 16.7 ms; record p50/p95 frame intervals, long frames and input latency separately. These are targets to validate, not measured results. Include painting, worst-case sand pools, boiling/venting, disconnected cavities, and dense circuits; a fast ambient frame is insufficient.
+M7 must pass the [final gameplay target](#final-gameplay-target-clarified-on-13-october-2026) across the complete current-sandbox scope on declared browser/device targets. Qualify displayed frames, accepted simulation time, brush response and numerical quality together. Include painting, sand pools, boiling/venting, disconnected cavities, fire and dense circuits. These are required outcomes to validate, not measured results.
 
 On GPU loss, stop accepting new tick commits, cancel pending readbacks and preserve the last valid committed checkpoint plus command log. The newest device state may be unavailable. Recover only through a compatible validated Rust CPU or restored wgpu backend, with an explicit checkpoint rollback notice, or restart with a clear notice. Replay restores commands, not a promise of bit-identical cross-device trajectories. Never hot-swap partially evolved GPU fields into the legacy parcel engine. Keep backend selection and versioned snapshots reversible through the experimental period.
 
@@ -285,12 +285,35 @@ In Progress. Feature coverage and M7 promotion remain open.
 
 ### Final gameplay target clarified on 13 October 2026
 
-The user sets the final goal at 60 FPS with simulation time following real time
-and behavior close to real life within the falling-sand model. Qualify visible
-frame pacing, brush response and accepted-time throughput together during
-normal interaction. A throughput benchmark alone does not establish displayed
-FPS or input responsiveness. Record the browser, adapter, scene, render cadence,
-p50/p95 frame intervals, stalls, input latency and accepted model time.
+**Accepted product goal:** deliver the complete existing Particle Foundry sandbox
+on Rust/WASM + wgpu with 60 displayed FPS, simulation time following real time
+and behavior close to real life within the falling-sand model. The user clarified
+this goal on 13 October and requested consistent docs and Linear on 14 October
+2026. This section owns the shared P1 gameplay target. The
+[current-sandbox checklist](../rust-wasm-migration/current-sandbox-scope.md)
+owns its required feature coverage, including all eight existing elemental
+models, interactions, scenes, tools and controls. P2-P9 remain deferred.
+
+| Required outcome | Qualification |
+| --- | --- |
+| Smooth visible play | 60 displayed frames per second during normal interaction at 480 x 270 and 1x on the agreed baseline device. The nominal frame budget is `1000 / 60` ms, approximately 16.7 ms. |
+| Simulation in real time | At least one accepted model second per wall second at 1x in the same interactive workload. Requested ticks, queued work and a slowed model clock do not establish this result. |
+| Responsive interaction | Painting and controls remain responsive while the simulation advances. Record brush/input-to-command latency, visible response, p50/p95 frame intervals and stalls against budgets declared before qualification. |
+| Physically credible behavior | Required material interactions pass their independent references and regression gates at equal accepted model time. Document numerical approximations and measured errors while preserving the invariants below. |
+
+Qualify these outcomes together during normal play on the declared browser,
+adapter, scene and quality profile. Include the complete CUR workload matrix;
+an empty/resting scene or the limited Water-brush fixture cannot qualify all
+existing features. A throughput benchmark, render submission count or animation
+callback rate alone does not establish displayed FPS or input responsiveness.
+
+Before qualification, freeze the browser/device matrix, fixture inputs, run
+duration, warm-up, repetitions, displayed-frame measurement method and its
+measurement tolerance, frame/stall and input-response budgets, and numerical
+error limits. Report these settings with measured results. The earlier p95
+frame interval limit of 33.3 ms is superseded as a P1 completion criterion;
+passing it alone cannot establish the 60 FPS target. Measurement tolerances
+must describe measurement uncertainty and cannot lower the product target.
 
 Physical credibility remains part of acceptance. Compare fluid motion and the
 required material interactions with their controlling references and regression
@@ -298,7 +321,77 @@ gates. Preserve finite values, nonnegative amounts, source and conservation
 accounting, volume bounds and atomic rejection. Document any approximation and
 its measured errors before claiming a quality/performance tradeoff. The current
 limited GPU scene does not establish full-sandbox physics coverage or promotion.
-XER-64 owns this performance target; XER-38 retains complete-scene qualification.
+XER-64 owns optimization and qualification of the current limited GPU scene.
+XER-38/E14 owns the full-sandbox target and complete-scene qualification;
+XER-45 supplies its coverage evidence and XER-46 owns the gated default switch.
+Missing feature, hardware, performance, response or quality evidence keeps the
+affected gate open. A documentation update does not pass any of these gates.
+
+### Realism and active-region investigation selected on 14 October 2026
+
+The user delegated the optimization choice after discussing realism, scene load
+and frustum culling. Select a bounded investigation of physically active regions,
+starting with transport. This selects the next experiment, not a sparse engine
+implementation. XER-64 owns the investigation within the Working GPU scene checkpoint.
+
+Realism means physical behavior within declared models, scales and error limits.
+Use independent physical or analytical references to validate that behavior.
+CPU/GPU agreement establishes implementation agreement, not physical validity.
+Choose numerical detail that meets the shared 60 FPS and real-time target while
+passing those references. Keep approximations explicit and qualify their errors.
+The declared workload and device define capacity. Neither particle count alone
+nor this decision guarantees 60 FPS for arbitrary scene complexity.
+
+The current [renderer](../../../engine/crates/sim-gpu/src/render.rs) issues one
+fullscreen-triangle draw in `SceneRenderer::encode`. The
+[browser scene](../../../engine/crates/sim-gpu/src/browser_scene.rs) supplies
+`RenderViewport::full`. Frustum culling has lower priority for this full-grid
+preview. Revisit it when camera/scene support changes or rendering measurements
+show a material cost. Visibility must not determine physical activity.
+
+The [transport encoder](../../../engine/crates/sim-gpu/src/transport/encoding.rs)
+dispatches whole-grid work, including 256 rounds of four ordered pair passes.
+The [pair shader](../../../engine/crates/sim-gpu/shaders/transport_pair.wgsl)
+changes residuals that later passes read. Its early returns include walls,
+closed faces and zero corrections. The
+[residual shader](../../../engine/crates/sim-gpu/shaders/transport_close_residual.wgsl)
+also includes carrier gas. These observations motivate measurement, but do not
+establish that a region can sleep. A fixed small border around the brush does
+not bound activity throughout all closure rounds.
+
+The next experiment has this boundary:
+
+1. Freeze fixtures for exact rest, the existing Water radius-4 brush and dense
+   moving liquid/carrier gas. Use the same 480 x 270 grid, device and accepted
+   simulation time for each comparison. Record inputs, warm-up and repetitions.
+2. Add diagnostic counters while retaining every physical stage and its order.
+   Record pair invocations, early-return reasons, actual writes and activity by
+   region across closure rounds. Count validation work separately from writes.
+   Keep diagnostic instrumentation out of the uninstrumented baseline timings.
+3. Measure transport GPU work, host parameter/binding costs, pressure and rendering
+   separately where supported. Record instrumentation overhead and unavailable
+   timings. Inclusive waits are not exclusive GPU measurements.
+4. Estimate removable work conservatively. Account for classification, dependency
+   propagation, region-list maintenance and dispatch costs. A sparse candidate
+   needs wake rules for changed neighbors, sources, geometry and solver outputs.
+   Pressure retains its complete coupled solve. Offscreen state remains physical
+   state. Later thermal/reaction stages need their own dependencies before sleeping.
+5. Return an implement-or-stop decision with evidence. Reject an approach whose
+   overhead consumes its savings or whose inactivity rule misses a dependency.
+   A retained scheduling candidate must improve repeated Water-brush timings
+   beyond observed run variation, with equal-time field checks and measured response.
+   Declare acceptable timing variation before comparison. Dense-scene overhead
+   must remain within that allowance, including the full-grid fallback cost.
+   Record every remaining gap against the shared gameplay target.
+
+Any subsequent skipping must preserve face-flux accounting, finite/nonnegative
+state, volume bounds, validation, cancellation/reset and atomic rejection.
+Shared donor budgets must include both outgoing faces. Reused candidate buffers
+need defined contents for every consumed field, including regions that skip work.
+Unchanged final fields alone do not prove that intermediate work was removable.
+If active regions fail this screening, return to the measured pressure/transport
+and host-scheduling costs. The [buffer-reuse evidence](../../validation/p1-m3-e08.md#resident-candidate-buffer-reuse-on-13-october-2026)
+remains the latest comparison. This decision supplies no new FPS or physics result.
 
 ### Candidate error budgets on 7 October 2026
 

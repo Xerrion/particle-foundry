@@ -6,6 +6,11 @@
 
 Deliver the current sandbox feature set on the Rust/WASM + wgpu engine, with verified physics, browser interactions, recovery and measured performance, before adding new capabilities.
 
+The [shared P1 gameplay target](../fluid-gpu-redesign/plan.md#final-gameplay-target-clarified-on-13-october-2026)
+requires 60 displayed FPS, simulation in real time, responsive controls and
+physically credible behavior across that complete feature set. This plan assigns
+work toward those outcomes; completing a small GPU scene does not meet them.
+
 The [current-sandbox scope](current-sandbox-scope.md) fixes the required materials, interactions, tools and controls. It owns the product coverage for P1. The [fluid/GPU plan](../fluid-gpu-redesign/plan.md) owns equations and numerical exit gates. This document owns work sequencing and runtime integration. The [engine boundary](../../architecture/engine-boundary.md) owns commands, state authority, async behavior and persistence. A subset demonstration cannot satisfy the full replacement gate.
 
 ## Scope decisions
@@ -184,6 +189,11 @@ Complete engine checkpoint/save-load contracts, component/version preflight, rol
 **P1 / M7. Dependencies:** E13. **Source:** SRC-09, SRC-12.
 
 Run the complete current-sandbox scope matrix through native references, actual browser GPU scenes, regressions, memory/readback, sustained performance and input-latency checks on declared target devices. Complete FIRE-W07/FIRE-M7 for all required current combustion scenarios. Record per-row evidence and all intentional numerical corrections before changing the default backend.
+
+Qualify the [shared gameplay target](../fluid-gpu-redesign/plan.md#final-gameplay-target-clarified-on-13-october-2026)
+with displayed-frame, accepted-time, input-response and physical-quality evidence
+from the same interactive workloads. Freeze the declared target matrix and
+measurement/error budgets before qualification.
 
 **Exit:** GPU-M7 and FIRE-M7 pass and every required current-sandbox scope row has evidence on its declared targets. No current feature remains legacy-only, silently removed or relabelled optional to pass this gate. Report actual completed simulation time, latency and transfer costs; unrun or failed required gates keep P1 incomplete. Retain reversible legacy access until rollout is proven. P2-P9 remain deferred after completion.
 

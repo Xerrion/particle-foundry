@@ -19,6 +19,10 @@ the [engine tracker](data/engine-migration-work.json) owns status.
 
 Deliver the current sandbox on Rust/WASM + wgpu with correct physics, usable
 browser controls, bounded resources, failure recovery and measured performance.
+The [shared gameplay target](plans/fluid-gpu-redesign/plan.md#final-gameplay-target-clarified-on-13-october-2026)
+requires 60 displayed FPS during normal play, simulation in real time, responsive
+painting and physically credible behavior on the declared baseline. Qualify
+these outcomes together across the complete existing sandbox before M7 passes.
 The [current-sandbox scope](plans/rust-wasm-migration/current-sandbox-scope.md)
 fixes required coverage. Every row must pass before the full default switch.
 This includes the eight existing elemental models and all current interactions;
@@ -55,6 +59,8 @@ GPU engine; the scene retains one authoritative state owner.
 ```text
 Read docs/README.md, this entrypoint and the assigned E-work package.
 The sole active release is P1: migrate the current sandbox to Rust/WASM + wgpu.
+The final goal is 60 displayed FPS, simulation in real time and physically credible play.
+Use the shared gameplay target in docs/plans/fluid-gpu-redesign/plan.md for qualification.
 Use docs/plans/rust-wasm-migration/current-sandbox-scope.md as required coverage.
 E00-E03 and E05-E08 are validated locally. E09 is in progress; E10-E14 remain planned.
 E04 circuits remain planned and are required before E11.
@@ -74,6 +80,7 @@ P1 completion does not authorize later work.
 Run relevant reference/native/WASM/browser/GPU checks and report unavailable checks.
 Record per-row evidence and numerical differences; do not reduce scope to pass M7.
 Default switch requires the complete current-sandbox matrix plus GPU-M7/FIRE-M7.
+M7 requires the shared FPS, accepted-time, response and physical-quality checks together.
 ```
 
 ## Controlling documents
