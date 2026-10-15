@@ -420,10 +420,15 @@ in [PR #28](https://github.com/Xerrion/particle-foundry/pull/28), after the acti
 investigation in [PR #27](https://github.com/Xerrion/particle-foundry/pull/27).
 This bounded correction is delivered under XER-64; the real-time target remains open.
 
-Pressure convergence and completion synchronization remain a proposed later
-investigation on the same brush fixture. Record per-candidate convergence,
-batch counts and GPU-completion-to-host timing before selecting a change. The
-profile records 2,541 PCG batches and 4,302 pressure completion maps. Inclusive
+On 14 October 2026 the user selected pressure convergence and completion
+synchronization profiling on the same brush fixture in
+[XER-80](https://linear.app/xerrion/issue/XER-80/profile-pressure-convergence-and-gpu-completion-timing),
+a sub-issue of XER-64. Record per-candidate convergence, batch counts, browser
+work and inclusive completion waits before selecting a change. Keep host and GPU
+clock origins explicit; independent shader timestamps do not establish
+GPU-completion-to-host delay. The earlier
+[activity profile](../../validation/p1-m3-e08.md#transport-activity-investigation-on-14-october-2026)
+records 2,541 PCG batches and 4,302 pressure completion maps. Inclusive
 map waits overlap GPU work; they do not isolate communication cost. Keep pressure
 limits, transport gates and atomic rejection fixed during this investigation.
 The [buffer-reuse evidence](../../validation/p1-m3-e08.md#resident-candidate-buffer-reuse-on-13-october-2026)

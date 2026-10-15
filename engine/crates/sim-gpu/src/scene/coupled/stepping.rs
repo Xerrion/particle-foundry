@@ -61,6 +61,18 @@ impl GpuCoupledScene {
                 let mut pressure_config = self.pressure_config;
                 pressure_config.dt_s = encoded_dt_s;
                 pressure_config.gravity_m_s2 = self.gravity_m_s2;
+                if self.pressure.diagnostics_enabled() {
+                    self.diagnostic_candidate_id = self.diagnostic_candidate_id.saturating_add(1);
+                    self.pressure.begin_candidate_diagnostics(CandidateContext {
+                        epoch: self.scene.epoch,
+                        outer_tick: self.scene.tick + 1,
+                        candidate_id: self.diagnostic_candidate_id,
+                        attempt: candidate_refinements + 1,
+                        state_revision: self.scene.state_revision,
+                        accepted_time_before_s: self.scene.accepted_time_s,
+                        encoded_dt_s,
+                    });
+                }
                 match self
                     .advance_candidate(
                         encoded_dt_s,
@@ -70,12 +82,22 @@ impl GpuCoupledScene {
                     )
                     .await
                 {
-                    Ok(pressure) => break (pressure, next_remaining_s, next_encoded_time),
-                    Err(CandidateRejection::Terminal(message)) => return Err(message),
+                    Ok(pressure) => {
+                        self.pressure
+                            .finish_candidate_diagnostics(CandidateOutcome::Accepted);
+                        break (pressure, next_remaining_s, next_encoded_time);
+                    }
+                    Err(CandidateRejection::Terminal(message)) => {
+                        self.pressure
+                            .finish_candidate_diagnostics(CandidateOutcome::TerminalRejection);
+                        return Err(message);
+                    }
                     Err(CandidateRejection::Numerical {
                         message,
                         readback_bytes: rejected_bytes,
                     }) => {
+                        self.pressure
+                            .finish_candidate_diagnostics(CandidateOutcome::NumericalRejection);
                         rejected_readback_bytes += rejected_bytes;
                         if candidate_refinements == MAX_CANDIDATE_REFINEMENTS {
                             return Err(format!(

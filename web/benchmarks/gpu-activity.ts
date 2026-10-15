@@ -1,9 +1,11 @@
 import { type BrowserGpuSceneSession, initializeBrowserGpuScene } from "../src/engine-client/wasm";
+import { failedProfileReport } from "./gpu-activity/failure-report";
 import { fixtureDescriptions } from "./gpu-activity/fixtures";
 import { installActivityObserver } from "./gpu-activity/observer";
 import { readOptions, reporter } from "./gpu-activity/page";
 import { installProfile } from "./gpu-activity/profile";
-import { measureActivityFixture } from "./gpu-activity/timing";
+import type { PressureJournal } from "./gpu-activity/timeline";
+import { measureActivityFixture, type RunOptions } from "./gpu-activity/timing";
 
 type AdapterIdentity = {
 	vendor: string;
@@ -21,12 +23,18 @@ const canvas = document.getElementById("scene");
 if (!output || !(canvas instanceof HTMLCanvasElement))
 	throw new Error("Activity benchmark DOM is missing");
 const receiver = reporter(params);
-let report: unknown;
+let report: Record<string, unknown> = {
+	status: "fail",
+	error: "Activity benchmark did not complete",
+};
 let scene: BrowserGpuSceneSession | undefined;
 let observer: ReturnType<typeof installActivityObserver> | undefined;
 let profile: ReturnType<typeof installProfile> | undefined;
+let pressureJournal: PressureJournal | undefined;
+let pressureRecordingEnabled = false;
 try {
 	const options = readOptions(params);
+	const browserTraceEnabled = params.get("browser-trace") === "true";
 	if (options.mode === "activity")
 		observer = installActivityObserver({ width: 480, height: 270, tileSize: 16 });
 	if (options.mode === "profile") profile = installProfile(options.sampleEvery);
@@ -75,23 +83,46 @@ try {
 	const measuredScene = scene;
 	const run = (name: string, pacing: boolean, diagnostic = false) => {
 		let armed = false;
+		const diagnosticHooks: Pick<
+			RunOptions,
+			"beforeTimer" | "afterTimer" | "beforeAdvance" | "afterAdvance"
+		> = diagnostic
+			? {
+					beforeTimer: () => {
+						if (profile) {
+							profile.start();
+							measuredScene.enable_pressure_diagnostics(8192);
+							pressureRecordingEnabled = true;
+						}
+					},
+					afterTimer: () => {
+						if (profile) {
+							profile.stop();
+							pressureJournal = JSON.parse(
+								measuredScene.take_pressure_diagnostics_json(),
+							) as PressureJournal;
+							measuredScene.disable_pressure_diagnostics();
+							pressureRecordingEnabled = false;
+						}
+					},
+					beforeAdvance: (last, context) => {
+						profile?.beforeAdvance(context);
+						if (observer && !armed && last.tick >= options.sampleTick) {
+							observer.arm(options.samplePasses);
+							armed = true;
+						}
+					},
+					afterAdvance: (_context, outcome) => {
+						profile?.afterAdvance(outcome);
+					},
+				}
+			: {};
 		return measureActivityFixture(measuredScene, {
 			fixture: options.fixture,
 			ticks: options.ticks,
 			pacing,
 			saveCheckpoint: (phase, bytes) => receiver.checkpoint(`${name}-${phase}`, bytes),
-			beforeTimer: () => {
-				if (diagnostic) profile?.start();
-			},
-			afterTimer: () => {
-				if (diagnostic) profile?.stop();
-			},
-			beforeAdvance: (last) => {
-				if (diagnostic && observer && !armed && last.tick >= options.sampleTick) {
-					observer.arm(options.samplePasses);
-					armed = true;
-				}
-			},
+			...diagnosticHooks,
 		});
 	};
 	if (options.mode === "baseline") {
@@ -121,11 +152,17 @@ try {
 		adapter,
 		adapterRequests,
 		selectedAdapter,
+		browserTraceEnabled,
+		measurementMode:
+			options.mode === "baseline" && !browserTraceEnabled
+				? "uninstrumented-baseline"
+				: "diagnostic",
 		userAgent: navigator.userAgent,
 		width: 480,
 		height: 270,
 		measurement:
-			"Warmup duration is recorded in options. Each measured run resets the scene. Paint, checkpoints and checkpoint transfer are outside timing. Final queue probe is included.",
+			"Warmup duration is recorded in options. Each measured run resets the scene. Paint, checkpoints and checkpoint transfer are outside timing. Final queue probe is included." +
+			(browserTraceEnabled ? " CDP browser tracing adds overhead. This run is diagnostic." : ""),
 		baselineHooks:
 			options.mode === "baseline"
 				? "Adapter identification during initialization only. No timing hooks."
@@ -135,6 +172,7 @@ try {
 		runs,
 		activity,
 		profile: profiling,
+		pressureJournal,
 	};
 } catch (error) {
 	report = {
@@ -142,13 +180,40 @@ try {
 		error: error instanceof Error ? (error.stack ?? error.message) : String(error),
 		userAgent: navigator.userAgent,
 	};
-} finally {
 	try {
-		scene?.dispose();
-		scene?.free();
-	} finally {
-		observer?.restore();
-		profile?.restore();
+		Object.assign(
+			report,
+			await failedProfileReport(error, {
+				scene,
+				profile,
+				pressureJournal,
+				pressureRecordingEnabled,
+			}),
+		);
+	} catch (exportError) {
+		report.diagnosticExport = { partial: true, error: String(exportError) };
+	}
+} finally {
+	const cleanupErrors: { stage: string; error: string }[] = [];
+	for (const [stage, cleanup] of [
+		["scene-dispose", () => scene?.dispose()],
+		["scene-free", () => scene?.free()],
+		["activity-hooks", () => observer?.restore()],
+		["profile-hooks", () => profile?.restore()],
+	] as const) {
+		try {
+			cleanup();
+		} catch (error) {
+			cleanupErrors.push({ stage, error: String(error) });
+		}
+	}
+	if (cleanupErrors.length) {
+		report = {
+			...report,
+			status: "fail",
+			error: report.error ?? "Activity cleanup failed",
+			cleanupErrors,
+		};
 	}
 }
 output.textContent = JSON.stringify(report);

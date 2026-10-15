@@ -38,6 +38,9 @@ const scene: BrowserGpuSceneSession = {
 	backend: () => "BrowserWebGpu",
 	adapter_info_json: () => "{}",
 	status_json: status,
+	enable_pressure_diagnostics: () => {},
+	disable_pressure_diagnostics: () => {},
+	take_pressure_diagnostics_json: () => "{}",
 	render: () => {
 		renderCalls++;
 		return true;

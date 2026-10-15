@@ -1,4 +1,5 @@
 mod clock;
+mod diagnostics;
 mod parity;
 mod rejection;
 mod reuse;

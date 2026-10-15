@@ -89,6 +89,31 @@ shares complete-field validation with the existing GPU benchmark.
 [`run-gpu-activity.ts`](../web/scripts/run-gpu-activity.ts) owns the isolated Chrome
 process, loopback result receiver and fresh evidence directory.
 
+Profile mode also records bounded, ordered host spans and GPU timestamp samples
+through [`profile.ts`](../web/benchmarks/gpu-activity/profile.ts). The scene-owned
+[`pressure journal`](../engine/crates/sim-gpu/src/pressure/journal.rs) copies the
+existing 32-byte pressure status after each map. It records candidate identity,
+batch, raw status words, map timing and the final candidate outcome. Diagnostics
+are disabled by default. Enable, drain and disable operations pass through the
+engine adapter and require an idle session. Drain before disabling; reset clears
+the configuration and record. No extra simulation dispatch or readback is added.
+Each journal retains its prefix up to the requested capacity and reports dropped
+events. Failed profile runs retain the available diagnostic prefix and the
+original failure.
+
+[`timeline.ts`](../web/benchmarks/gpu-activity/timeline.ts) exports
+`profile-trace.json` for Chrome or Perfetto. Host spans and browser pressure maps
+use `performance.now`; sampled shader timestamps have an independent origin.
+Their horizontal positions do not measure GPU-completion-to-host delay.
+Use `--browser-trace --browser-trace-seconds 120` for an optional CDP capture.
+[`browser-trace.ts`](../web/scripts/browser-trace.ts) attaches only to the newly
+launched isolated browser. It starts tracing before navigation and writes
+`browser-trace.json` plus capture metadata. Its prefix buffer is 32 MiB, its
+output limit is 128 MiB and its duration limit is 1 to 300 seconds. Check metadata
+for loss or early stopping. Browser tracing adds overhead in every mode; a
+traced baseline is reported as diagnostic. Load the browser trace in Chrome
+DevTools Performance or Perfetto, and load the custom profile trace separately.
+
 Each mode requires positive identification of a hardware adapter. Baseline
 timing has no WebGPU instrumentation. Reset, paint and full checkpoint transfers
 stay outside timing; the final queue-completion probe stays inside. Render

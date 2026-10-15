@@ -1,24 +1,36 @@
 # Active work and delivered-history boundary
 
-**Status date:** 14 October 2026. **Selected work track:** the bounded legacy
-Wood/Oil burn-tempo correction in [XER-99](https://linear.app/xerrion/issue/XER-99/restore-playable-wood-and-oil-burning-in-the-current-sandbox),
-under XER-40/E11. It does not implement Rust/GPU combustion or complete E11.
+**Status date:** 14 October 2026. **Selected work track:** repair the integration
+of profiling [PR #31](https://github.com/Xerrion/particle-foundry/pull/31)
+with the latest `main`. [XER-80](https://linear.app/xerrion/issue/XER-80/profile-pressure-convergence-and-gpu-completion-timing)
+is In Review under XER-64/P1/M3/E08. The original profiling delivery passes
+independent review, full local CI and required RTX browser GPU checks; see
+[profiling evidence](validation/p1-m3-e08.md#pressure-convergence-and-completion-profiling-on-14-october-2026).
+The PR is open for review. Its [integration with merged main](validation/p1-m3-e08.md#profiling-integration-with-main-on-14-october-2026)
+passes full local CI, including 527 TypeScript tests. Profiling establishes no new speedup. No new solver or transport
+optimization is selected.
+
+The bounded legacy Wood/Oil burn-tempo correction in
+[XER-99](https://linear.app/xerrion/issue/XER-99/restore-playable-wood-and-oil-burning-in-the-current-sandbox),
+under XER-40/E11, is Done and merged in
+[PR #32](https://github.com/Xerrion/particle-foundry/pull/32) at `a8d9cc2`.
 The [current behavior and fresh evidence](combustion.md#legacy-woodoil-tempo-checkpoint-on-14-october-2026)
 record the thermal-ceiling stall, explicit heat outflow and scene-specific budgets.
-The correction passes complete local CI, including 522 TypeScript tests, and
-is delivered in [PR #32](https://github.com/Xerrion/particle-foundry/pull/32).
-The PR and XER-99 comments record current merge and hosted-check status.
-The [playable-tempo requirement](plans/fire-combustion/plan.md#playable-wood-and-oil-burn-tempo)
-is accepted for the future migration; corrected FIRE-A gates remain planned.
+The correction passes complete local CI, including 522 TypeScript tests. Normal
+browser play review remains unrun. The accepted
+[playable-tempo requirement](plans/fire-combustion/plan.md#playable-wood-and-oil-burn-tempo)
+is also recorded for future migration. This legacy fix does not implement
+Rust/GPU combustion or complete E11; corrected FIRE-A gates remain planned.
 
-P1/M3/E08 performance follow-up remains open under XER-64. The water-line correction is
-merged. The selected fresh RTX baseline and required sustained browser GPU
-qualification are complete locally after reboot; [the measured evidence](validation/p1-m3-e08.md#rtx-qualification-and-baseline-after-reboot-on-14-october-2026)
+P1/M3/E08 performance follow-up remains open under XER-64. The water-line
+correction is merged. The fresh RTX baseline and required sustained browser GPU
+qualification are complete locally after reboot. Their documentation is merged
+in [PR #30](https://github.com/Xerrion/particle-foundry/pull/30) at
+`f47e2eb7f8a2e5128b5bba09b420c31560a4c092`.
+[The measured evidence](validation/p1-m3-e08.md#rtx-qualification-and-baseline-after-reboot-on-14-october-2026)
 records the Linux/NVIDIA launch requirements, numerical checks and unmet
-real-time target. Baseline documentation is merged in [PR #30](https://github.com/Xerrion/particle-foundry/pull/30).
-Profiling tooling is in [draft PR #31](https://github.com/Xerrion/particle-foundry/pull/31)
-under XER-80, with no established speedup. No further optimization has been started. See [the short Danish
-status](STATUS.md) for the current P/M/E and next selected action.
+real-time target. See [the short Danish status](STATUS.md) for the current P/M/E
+and next selected action.
 
 The next migration item remains P1/M4/E09, with an isolated
 [pure-water reference](thermodynamics.md).
@@ -37,6 +49,31 @@ with 60 displayed FPS, simulation in real time, responsive painting and physical
 credible behavior. The [shared gameplay target](plans/fluid-gpu-redesign/plan.md#final-gameplay-target-clarified-on-13-october-2026)
 owns those acceptance rules. XER-64 advances the limited scene; XER-38/E14
 qualifies the full current-sandbox outcome before default promotion.
+
+### XER-64 work split on 14 October 2026
+
+[XER-64](https://linear.app/xerrion/issue/XER-64/run-the-experimental-gpu-scene-in-real-time)
+retains the limited-scene outcome and acceptance checks. Its description contains
+the task. Progress, measurements and delivery evidence are recorded in comments.
+The work is split into 19 direct sub-issues:
+
+- XER-81 through XER-95 are Done. They record 15 completed units from PR #17
+  through PR #30, including retained changes, rejected comparisons, tooling and
+  RTX qualification. Their comments retain the actual delivery dates and evidence.
+- [XER-80](https://linear.app/xerrion/issue/XER-80/profile-pressure-convergence-and-gpu-completion-timing)
+  is In Review. It owns pressure convergence diagnostics, host and GPU timing,
+  browser tracing and a measured recommendation for the next bounded comparison.
+- XER-96 through XER-98 are Backlog. They cover displayed-frame and interaction
+  measurements, the next measured optimization, and final limited-scene
+  qualification of real time and 60 displayed FPS. XER-97 depends on XER-80.
+  XER-98 depends on XER-96 and XER-97.
+
+The completed RTX baseline averages 19.12 wall seconds per model second across
+three short runs. The longer run advances five model seconds in 49.94 wall
+seconds. Preview pacing averages 6.68 render submissions per second. These
+measurements do not qualify displayed FPS or active-input latency.
+The backlog items await selection. XER-63 retains the pressure
+stability defect, and XER-38 retains full-sandbox promotion.
 
 **GPU follow-up ownership, 6 October 2026:**
 [XER-63](https://linear.app/xerrion/issue/XER-63/fix-gpu-pressure-nonconvergence-during-sustained-browser-scene)
@@ -92,9 +129,13 @@ is merged in [PR #28](https://github.com/Xerrion/particle-foundry/pull/28) at
 `8c963f8`. Continuous GPU brush strokes remove the repeated input scallops
 while preserving the simulation equations and limits. The measured pacing change
 is within variation, so no simulation speedup is established.
-Pressure convergence and completion synchronization remain a proposed later
-investigation. Frustum culling has lower priority for the current full-grid
-renderer. Real time remains unmet.
+Pressure convergence and completion profiling tools are delivered for review in
+[XER-80](https://linear.app/xerrion/issue/XER-80/profile-pressure-convergence-and-gpu-completion-timing)
+and [PR #31](https://github.com/Xerrion/particle-foundry/pull/31).
+The selected task is to repair and verify integration with the merged Wood/Oil
+fix from PR #32. No new solver or transport optimization is selected.
+Frustum culling has lower priority for the current full-grid renderer.
+Real time remains unmet.
 PR [#26](https://github.com/Xerrion/particle-foundry/pull/26) is merged at main
 `360d514` with all six post-merge CI jobs passing. It aligns the gameplay target;
 the activity tools and evidence are merged in

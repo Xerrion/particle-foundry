@@ -141,8 +141,17 @@ impl GpuPressureProjector {
         let staging = stage_status_readback(device, &mut encoder, &self.status);
         queue.submit([encoder.finish()]);
         self.last_readback_bytes += STATUS_BYTES;
-        let mut status = read_status(device, staging).await?;
+        let mut status = read_status(
+            device,
+            staging,
+            self.journal.as_mut(),
+            PressurePhase::Initialization,
+            0,
+            0,
+        )
+        .await?;
         let mut status_readbacks = 1_u64;
+        let mut batch_index = 0_u32;
         if status.invalid != 0 {
             return Err(PressureError::Invalid(format!(
                 "GPU pressure arithmetic rejected the initial fields: {status:?}"
@@ -224,7 +233,16 @@ impl GpuPressureProjector {
             let staging = stage_status_readback(device, &mut encoder, &self.status);
             queue.submit([encoder.finish()]);
             self.last_readback_bytes += STATUS_BYTES;
-            status = read_status(device, staging).await?;
+            batch_index += 1;
+            status = read_status(
+                device,
+                staging,
+                self.journal.as_mut(),
+                PressurePhase::PcgBatch,
+                batch_index,
+                batch,
+            )
+            .await?;
             status_readbacks += 1;
             if status.invalid != 0 {
                 return Err(PressureError::Invalid(format!(
@@ -330,7 +348,15 @@ impl GpuPressureProjector {
         let staging = stage_status_readback(device, &mut encoder, &self.status);
         queue.submit([encoder.finish()]);
         self.last_readback_bytes += STATUS_BYTES;
-        status = read_status(device, staging).await?;
+        status = read_status(
+            device,
+            staging,
+            self.journal.as_mut(),
+            PressurePhase::FinalGate,
+            batch_index + 1,
+            0,
+        )
+        .await?;
         status_readbacks += 1;
         let diagnostics = PressureDiagnostics {
             iterations: status.iterations,
