@@ -1,49 +1,28 @@
 {
-	"$schema": "https://biomejs.dev/schemas/2.5.14/schema.json",
-	"files": {
-		"includes": [
-			"src/**/*.ts",
-			"tests/**/*.ts",
-			"benchmarks/**/*.ts",
-			"scripts/**/*.ts",
-			"*.json",
-			"vite.config.ts",
-			"!!artifacts",
-			"!!generated",
-			"!!.playwright-mcp"
-		]
-	},
-	"formatter": {
-		"enabled": true,
-		"indentStyle": "tab",
-		"lineWidth": 100
-	},
-	"linter": {
-		"enabled": true,
-		"rules": {
-			"preset": "recommended"
-		}
-	},
-	"overrides": [
-		{
-			"includes": ["src/main.ts", "src/app/**/*.ts", "src/materials/**/*.ts", "tests/app/**/*.ts"],
-			"linter": {
-				"rules": {
-					"style": {
-						"noRestrictedImports": {
-							"level": "error",
-							"options": {
-								"patterns": [
-									{
-										"group": ["**/legacy/**", "**/generated/**"],
-										"message": "Use the engine-client entrypoint; backend internals and generated bindings are private."
-									}
-								]
-							}
-						}
-					}
-				}
-			}
-		}
-	]
+  "$schema": "https://biomejs.dev/schemas/2.5.15/schema.json",
+  "vcs": {
+    "enabled": true,
+    "clientKind": "git",
+    "useIgnoreFile": true
+  },
+  "files": {
+    "ignoreUnknown": true
+  },
+  "formatter": {
+    "enabled": true,
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineWidth": 88,
+    "lineEnding": "lf"
+  },
+  "linter": {
+    "enabled": true
+  },
+  "assist": {
+    "actions": {
+      "source": {
+        "organizeImports": "on"
+      }
+    }
+  }
 }

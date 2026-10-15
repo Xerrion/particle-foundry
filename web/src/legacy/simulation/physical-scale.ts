@@ -11,8 +11,8 @@ export const CONSERVATION_ABSOLUTE_TOLERANCE = 1e-9;
 export const CONSERVATION_RELATIVE_TOLERANCE = 1e-10;
 
 export function conservationTolerance(reference: number): number {
-	return Math.max(
-		CONSERVATION_ABSOLUTE_TOLERANCE,
-		Math.abs(reference) * CONSERVATION_RELATIVE_TOLERANCE,
-	);
+  return Math.max(
+    CONSERVATION_ABSOLUTE_TOLERANCE,
+    Math.abs(reference) * CONSERVATION_RELATIVE_TOLERANCE,
+  );
 }

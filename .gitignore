@@ -15,3 +15,4 @@ artifacts/
 
 # Private error-reporting build artifacts.
 web/reporting-artifacts/
+/.tooling-backups/

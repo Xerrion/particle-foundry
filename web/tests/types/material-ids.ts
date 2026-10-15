@@ -1,12 +1,12 @@
 import {
-	isMatterId,
-	type MaterialDefinition,
-	type MaterialId,
-	materialDefinitions,
-	physicalProperties,
-	pickerIds,
-	type ToolId,
-	WATER,
+  isMatterId,
+  type MaterialDefinition,
+  type MaterialId,
+  materialDefinitions,
+  physicalProperties,
+  pickerIds,
+  type ToolId,
+  WATER,
 } from "../../src/materials/definitions";
 
 // Compile with strict + noUncheckedIndexedAccess; intentionally not a runtime test.
@@ -23,12 +23,21 @@ const notTool: ToolId = WATER;
 const missing = materialDefinitions[99];
 
 function checkedLookup(input: number): MaterialDefinition {
-	if (isMatterId(input)) {
-		const narrowed: MaterialId = input;
-		return materialDefinitions[narrowed];
-	}
-	return physicalProperties(input); // Checked arbitrary-number boundary remains supported.
+  if (isMatterId(input)) {
+    const narrowed: MaterialId = input;
+    return materialDefinitions[narrowed];
+  }
+  return physicalProperties(input); // Checked arbitrary-number boundary remains supported.
 }
 
 const selection: MaterialId | ToolId | undefined = pickerIds.unrecognised;
-void [waterDefinition, tool, notMatter, unknownMatter, notTool, missing, checkedLookup, selection];
+void [
+  waterDefinition,
+  tool,
+  notMatter,
+  unknownMatter,
+  notTool,
+  missing,
+  checkedLookup,
+  selection,
+];

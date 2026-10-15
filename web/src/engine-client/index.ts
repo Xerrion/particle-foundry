@@ -11,14 +11,14 @@ export { selectCanvasContext } from "./canvas";
 export type { CellReading, Sandbox } from "./legacy-adapter";
 export { createSandbox } from "./legacy-adapter";
 export type {
-	AdvanceReceipt,
-	EngineCommand,
-	EngineSession,
-	EpochOwner,
-	QueueReceipt,
-	SceneCapabilities,
-	SceneRequest,
-	SessionStatus,
-	SmallProbe,
+  AdvanceReceipt,
+  EngineCommand,
+  EngineSession,
+  EpochOwner,
+  QueueReceipt,
+  SceneCapabilities,
+  SceneRequest,
+  SessionStatus,
+  SmallProbe,
 } from "./session";
 export { createEngineSession, preflightScene } from "./session";

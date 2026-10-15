@@ -1,7 +1,7 @@
 {
-	"extends": "./tsconfig.json",
-	"compilerOptions": {
-		"noUncheckedIndexedAccess": true
-	},
-	"include": ["tests/types/material-ids.ts"]
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noUncheckedIndexedAccess": true
+  },
+  "include": ["tests/types/material-ids.ts"]
 }
