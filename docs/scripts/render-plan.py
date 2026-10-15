@@ -1,10 +1,10 @@
-#!/usr/bin/env python3
 """Regenerate the self-contained GPU plan HTML from its canonical Markdown.
 
 Run from the repository through mise, which installs markdown-it-py:
     mise run docs:render
 The game and its runtime dependencies are not modified.
 """
+
 from __future__ import annotations
 
 import hashlib
@@ -25,7 +25,10 @@ def main() -> int:
     try:
         from markdown_it import MarkdownIt
     except ImportError:
-        print("Missing documentation dependency: run mise run docs:install.", file=sys.stderr)
+        print(
+            "Missing documentation dependency: run mise run docs:install.",
+            file=sys.stderr,
+        )
         return 2
     root = Path(__file__).resolve().parents[1]
     source = root / "plans/fluid-gpu-redesign/plan.md"
@@ -47,9 +50,13 @@ def main() -> int:
         anchor = base if duplicate == 0 else f"{base}-{duplicate}"
         token.attrSet("id", anchor)
         if token.tag == "h2":
-            nav.append(f'<a href="#{html.escape(anchor, quote=True)}">{html.escape(heading)}</a>')
+            nav.append(
+                f'<a href="#{html.escape(anchor, quote=True)}">{html.escape(heading)}</a>'
+            )
     body = parser.renderer.render(tokens, parser.options, {})
-    body = body.replace("<table>", '<div class="table-scroll"><table>').replace("</table>", "</table></div>")
+    body = body.replace("<table>", '<div class="table-scroll"><table>').replace(
+        "</table>", "</table></div>"
+    )
     stylesheet = """
 :root { color-scheme: light; --ink:#142331; --muted:#526574; --line:#d9e3e8; --accent:#176572; }
 * { box-sizing:border-box; }
@@ -102,7 +109,7 @@ footer { border-top:1px solid var(--line); padding:1.5rem; max-width:1400px; mar
 <p><a href="../../START_HERE.md">Developer entrypoint</a> / <a href="../../roadmap.md">All phases</a> / <a href="plan.md">Canonical Markdown</a></p>
 </header>
 <div class="layout">
-<nav aria-label="Plan sections"><strong>Implementation plan</strong>{''.join(nav)}</nav>
+<nav aria-label="Plan sections"><strong>Implementation plan</strong>{"".join(nav)}</nav>
 <main>{body}</main>
 </div>
 <footer>Generated from plan.md. Historical audit evidence is preserved; this documentation revision does not implement or benchmark the simulation.</footer>
