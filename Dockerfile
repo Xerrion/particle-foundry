@@ -53,10 +53,14 @@ COPY --from=build /app/web/reporting-artifacts/ /
 
 FROM nginx:1.31.7-alpine@sha256:892bb2152464f0c5d8972593a5f5afaf8054552580b699d95f8ff4af08c2d33d AS runtime
 
-RUN rm -rf /usr/share/nginx/html/*
+RUN rm -rf /usr/share/nginx/html/* \
+    && sed -i -e '/^user[[:space:]]/d' \
+        -e 's|/run/nginx.pid|/tmp/nginx.pid|' /etc/nginx/nginx.conf \
+    && chown -R 101:101 /var/cache/nginx
 COPY web/deployment/nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=build /app/web/dist/ /usr/share/nginx/html/
 
+USER 101:101
 EXPOSE 80
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
     CMD ["wget", "-q", "-O", "/dev/null", "http://127.0.0.1/"]

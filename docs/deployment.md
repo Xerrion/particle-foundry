@@ -21,6 +21,10 @@ Only `web/dist/` enters the final Nginx image. The
 on port `80`. WASM responses use `application/wasm`. The Docker healthcheck sends
 `GET /` every 30 seconds and requires a successful response. Missing paths return `404`.
 
+The runtime uses Nginx's existing UID/GID `101:101`. Its PID file is under
+`/tmp`, and its cache directory belongs to that user. Static files stay owned
+by root and are readable by the runtime user. The container still serves port `80`.
+
 The application needs no required environment variables, database or persistent volume.
 Optional [Sentry reporting](error-reporting.md) uses public ingestion DSNs and
 release metadata at build time. The Dockerfile accepts `VITE_SENTRY_WEB_DSN`,

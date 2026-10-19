@@ -22,6 +22,8 @@ Bun, Node.js, Python and validation tools from the project configuration.
 Rustup selects the engine toolchain and WASM target from
 [`engine/rust-toolchain.toml`](../engine/rust-toolchain.toml).
 The WASM library and wasm-bindgen CLI must use the same version.
+Action references use full commit SHAs. Comments retain their release versions
+so future upgrades can identify the corresponding upstream tags.
 
 Use a feature branch and a conventional commit or PR title. Review the complete
 change, applicable checks and resolved review conversations before merging.
