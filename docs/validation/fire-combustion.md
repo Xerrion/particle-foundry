@@ -1,6 +1,6 @@
 # Fire evidence and corrected acceptance
 
-**Revision:** 14 October 2026. **Status:** historical characterization imported; all corrected gates planned. Controlling work: [fire/combustion plan](../plans/fire-combustion/plan.md). Developer entrypoint: [START_HERE.md](../START_HERE.md).
+**Revision:** 14 October 2026. **Status:** historical characterization imported; all corrected gates planned. Controlling work: [fire/combustion plan](../plans/fire-combustion/plan.md). Developer entrypoint: [handbook](../README.md).
 
 ## Evidence boundary
 
@@ -17,15 +17,15 @@ implementation remains future work.
 
 ## Finding-to-work traceability
 
-| Historical checks | Observed scope and interpretation | Corrected work / gates |
-| --- | --- | --- |
-| F01, F02; F03 control | Closed boundary flag still replenished O2; approximately 100 J was released in one tick from a zero-O2 setup. An explicit stone enclosure stopped burning. Two different sealing semantics, not proof that every sealed cavity fails. | FIRE-W01-W03; FIRE-A01, FIRE-A03 |
-| F04; F12 control | Generic combustion spent O2 inventory without consuming O2 material mass or forming products. About 18.87 J was released with near-zero tracked scalar energy error. The explicit H2/O2 control retained mass/momentum/energy. | FIRE-W03-W05; FIRE-A05, FIRE-A06, FIRE-A11 |
-| F07, F08 | A cold FIRE neighbor ignited cold H2/O2 at 22 C, including the full pipeline; approximately 9.98 J released. | FIRE-W03; FIRE-A04 |
-| F05, F10 | Generic flames were heated-air proxies with zero chemical inventory. Sealed expired smoke preserved mass/heat and added no O2, but lost its smoke identity. | FIRE-W04-W06; FIRE-A09, FIRE-A13 |
-| F06 | A tiny water neighbor stopped burning in a reaction-only call without a heat or phase debit. The separate thermal solver was deliberately excluded; this is not a full-tick cooling result. | FIRE-W02, FIRE-W04; FIRE-A08, FIRE-A12 |
-| F09 | Hot hydrogen could not use finite O2 in enclosed ordinary air. This restriction was disclosed in the legacy material guide, unlike generic-fuel behavior. | FIRE-W03; FIRE-A02 |
-| F11 | Ignition brush added ledgered external heat, preserved air mass, supplied no chemical fuel and expired without smoke. A useful control to retain, not validation of sustained combustion. | FIRE-W04, FIRE-W06; FIRE-A07 |
+| Historical checks     | Observed scope and interpretation                                                                                                                                                                                                     | Corrected work / gates                     |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------ |
+| F01, F02; F03 control | Closed boundary flag still replenished O2; approximately 100 J was released in one tick from a zero-O2 setup. An explicit stone enclosure stopped burning. Two different sealing semantics, not proof that every sealed cavity fails. | FIRE-W01-W03; FIRE-A01, FIRE-A03           |
+| F04; F12 control      | Generic combustion spent O2 inventory without consuming O2 material mass or forming products. About 18.87 J was released with near-zero tracked scalar energy error. The explicit H2/O2 control retained mass/momentum/energy.        | FIRE-W03-W05; FIRE-A05, FIRE-A06, FIRE-A11 |
+| F07, F08              | A cold FIRE neighbor ignited cold H2/O2 at 22 C, including the full pipeline; approximately 9.98 J released.                                                                                                                          | FIRE-W03; FIRE-A04                         |
+| F05, F10              | Generic flames were heated-air proxies with zero chemical inventory. Sealed expired smoke preserved mass/heat and added no O2, but lost its smoke identity.                                                                           | FIRE-W04-W06; FIRE-A09, FIRE-A13           |
+| F06                   | A tiny water neighbor stopped burning in a reaction-only call without a heat or phase debit. The separate thermal solver was deliberately excluded; this is not a full-tick cooling result.                                           | FIRE-W02, FIRE-W04; FIRE-A08, FIRE-A12     |
+| F09                   | Hot hydrogen could not use finite O2 in enclosed ordinary air. This restriction was disclosed in the legacy material guide, unlike generic-fuel behavior.                                                                             | FIRE-W03; FIRE-A02                         |
+| F11                   | Ignition brush added ledgered external heat, preserved air mass, supplied no chemical fuel and expired without smoke. A useful control to retain, not validation of sustained combustion.                                             | FIRE-W04, FIRE-W06; FIRE-A07               |
 
 All numerical observations above are from [the preserved JSON](../evidence/fire-review-2026-09-23/fire-audit-results.json). They are not acceptance targets for the corrected model. Source locations and the inspection of carbon/sulfur oxygen rules are in [the original report](../evidence/fire-review-2026-09-23/FIRE_REVIEW.md). Locations refer to that source snapshot, not line numbers after a future refactor.
 
@@ -45,11 +45,11 @@ isolated reaction or limited water scene cannot qualify a complete fire workload
 
 The canonical [fire work manifest](../data/fire-combustion-work.json) separates tasks, fixtures and aggregate gates. All statuses and evidence arrays are initially planned/empty. Fixture descriptions below are proposed requirements, not newly measured results.
 
-| Gate | Parent milestone | Required scope |
-| --- | --- | --- |
-| FIRE-PRECONDITIONS | P1/M4, E09 | FIRE-A03 and FIRE-A12 in passive-transport/preflight mode; appropriate hot-scene properties before coupling |
-| FIRE-M6 | P1/M6, E11-E12 | FIRE-A01 through FIRE-A13 on the declared supported reference/GPU integration paths, with applicable controls |
-| FIRE-M7 | P1/M7, E13-E14 | FIRE-A01 through FIRE-A14 plus the existing GPU-M7 browser, numerical, transfer/performance and recovery requirements |
+| Gate               | Parent milestone | Required scope                                                                                                        |
+| ------------------ | ---------------- | --------------------------------------------------------------------------------------------------------------------- |
+| FIRE-PRECONDITIONS | P1/M4, E09       | FIRE-A03 and FIRE-A12 in passive-transport/preflight mode; appropriate hot-scene properties before coupling           |
+| FIRE-M6            | P1/M6, E11-E12   | FIRE-A01 through FIRE-A13 on the declared supported reference/GPU integration paths, with applicable controls         |
+| FIRE-M7            | P1/M7, E13-E14   | FIRE-A01 through FIRE-A14 plus the existing GPU-M7 browser, numerical, transfer/performance and recovery requirements |
 
 A03 and A12 must be rerun with enabled reactions at M6. A physical fire scene cannot be promoted merely because passive gas transport passed M4. Pure gas scenes may have no condensed fuel, water or soot, but any claimed wood/oil/plant, water-suppression or smoke capability requires its corresponding fixtures; record feature-level eligibility rather than deleting gates.
 

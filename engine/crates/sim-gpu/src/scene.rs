@@ -707,7 +707,7 @@ mod tests {
             .recv_timeout(Duration::from_secs(10))
             .unwrap()
             .unwrap();
-        let mapped = staging.get_mapped_range(..);
+        let mapped = staging.get_mapped_range(..).expect("fixture mapped range");
         let value = f32::from_le_bytes(mapped[..4].try_into().unwrap());
         drop(mapped);
         staging.unmap();

@@ -53,12 +53,12 @@ with upload access to the configured projects. Keep the token in a secret manage
 or protected process environment. Never put it in browser variables, Docker build
 arguments, Coolify settings or committed files.
 
-| Variable | Purpose |
-| --- | --- |
-| `SENTRY_AUTH_TOKEN` | Private upload token |
-| `SENTRY_URL` | Sentry instance URL, such as `https://sentry.io` |
-| `SENTRY_ORG` | Organization slug, such as `xerrion` |
-| `SENTRY_PROJECT` | Web project slug, such as `particle-foundry-web` |
+| Variable             | Purpose                                                   |
+| -------------------- | --------------------------------------------------------- |
+| `SENTRY_AUTH_TOKEN`  | Private upload token                                      |
+| `SENTRY_URL`         | Sentry instance URL, such as `https://sentry.io`          |
+| `SENTRY_ORG`         | Organization slug, such as `xerrion`                      |
+| `SENTRY_PROJECT`     | Web project slug, such as `particle-foundry-web`          |
 | `SENTRY_SIM_PROJECT` | Optional sim project slug, such as `particle-foundry-sim` |
 
 Run these steps from the repository root in a trusted local or CI environment:

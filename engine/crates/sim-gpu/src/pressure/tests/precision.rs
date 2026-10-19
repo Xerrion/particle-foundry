@@ -139,7 +139,9 @@ fn mapped_prior_status_staging_cannot_poison_reused_projector() {
         let abandoned = stage_status_readback(&context.device, &mut encoder, &projector.status);
         context.queue.submit([encoder.finish()]);
         wait_for_map(&context.device, &abandoned).await.unwrap();
-        let stale_map = abandoned.get_mapped_range(..);
+        let stale_map = abandoned
+            .get_mapped_range(..)
+            .expect("fixture mapped range");
 
         for _ in 0..2 {
             let result = projector

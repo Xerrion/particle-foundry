@@ -357,7 +357,7 @@ mod tests {
             .recv_timeout(Duration::from_secs(10))
             .unwrap()
             .unwrap();
-        let mapped = staging.get_mapped_range(..);
+        let mapped = staging.get_mapped_range(..).expect("fixture mapped range");
         let pixels = (0..target_size_px[1] as usize)
             .flat_map(|row| {
                 let start = row * row_bytes as usize;

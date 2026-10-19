@@ -34,7 +34,9 @@ pub(super) async fn read_status(
     let map_started_ms = journal.as_ref().map(|journal| journal.now_ms());
     wait_for_map(device, &staging).await?;
     let map_completed_ms = journal.as_ref().map(|journal| journal.now_ms());
-    let mapped = staging.get_mapped_range(..);
+    let mapped = staging
+        .get_mapped_range(..)
+        .map_err(|error| format!("GPU mapped range failed: {error}"))?;
     let words = mapped.as_chunks::<4>().0;
     let status_words = std::array::from_fn(|index| u32::from_le_bytes(words[index]));
     let status = SolveStatus {

@@ -5,3 +5,8 @@ build/
 dist/
 coverage/
 target/
+
+# Preserved records are checked byte-for-byte by docs:check.
+docs/history/
+docs/evidence/
+docs/elements.md

@@ -204,7 +204,10 @@ impl ProbePending {
     /// Resolves only the submitted cell. The scene owner must reject stale data.
     pub async fn resolve(self, device: &wgpu::Device) -> Result<ProbeSample, String> {
         wait_for_map(device, &self.staging).await?;
-        let mapped = self.staging.get_mapped_range(..);
+        let mapped = self
+            .staging
+            .get_mapped_range(..)
+            .map_err(|error| format!("GPU mapped range failed: {error}"))?;
         let words = mapped
             .as_chunks::<4>()
             .0

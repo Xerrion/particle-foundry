@@ -2,7 +2,7 @@
 
 Implementation plan · Particle Foundry · scope revised 27 September 2026
 
-**Phase:** P1, the sole active release scope. Start at [the developer entrypoint](../../START_HERE.md). Complete M0-M7 against the mandatory [current-sandbox scope](../rust-wasm-migration/current-sandbox-scope.md). P2-P9 are deferred; completing P1 does not activate them. This document retains the numerical requirements for a correct migration.
+**Phase:** P1, the sole active release scope. Start at [the handbook](../../README.md). Complete M0-M7 against the mandatory [current-sandbox scope](../rust-wasm-migration/current-sandbox-scope.md). P2-P9 are deferred; completing P1 does not activate them. This document retains the numerical requirements for a correct migration.
 
 **Selected implementation:** retain the TypeScript frontend, implement the conservative CPU reference in Rust f64, compile the browser engine/bridge to WASM, and execute equivalent WGSL/f32 stages plus direct rendering through Rust wgpu. Keep legacy scenes available while the new backend gains thermodynamics, granular coupling and material coverage. Promote only after numerical, interaction and measured performance gates pass. [ADR-001](../../architecture/adr-001-rust-wasm-wgpu.md) supersedes the previous TypeScript-reference default.
 
@@ -20,14 +20,14 @@ The review describes an earlier source snapshot. Seventeen of its 39 hashed sour
 
 The supplied audit records 35 checks against its source snapshot: **24 pass and 11 fail**, compared with the earlier report's 20 pass and 15 fail. All 20 original controls still pass. N03, N04, N07, and N10 now pass: liquid falling acquires velocity, cellular transport accounts for gravitational work, hydrostatic transfers close their tested budget, and the tested solid impact closes its budget. These narrow results are not proof of general physical validity.
 
-| Remaining issue | Historical audit evidence | Planned resolution |
-| --- | --- | --- |
-| Pressure equilibrium and clipped gradients | N01, N02 fail | Compatible MAC operators and boundary tests, M2 |
-| Fluid velocity does not determine transport | N05, N06 fail | Shared conservative face fluxes, M2 |
-| Phase cycle and open/sealed volume mismatch | N08, N09 fail | Conserved mass/internal energy/actual volume closure, M4 |
-| Electrical convergence, heat allocation, terminal work | N11-N13 fail | Small independent prerequisite, M1 |
-| Excess acid loses its identity | N14 fails | Species amounts and reaction extents, M6 |
-| Tangential gas shear absent | N15 fails | Explicit viscous stress, M2 |
+| Remaining issue                                        | Historical audit evidence | Planned resolution                                       |
+| ------------------------------------------------------ | ------------------------- | -------------------------------------------------------- |
+| Pressure equilibrium and clipped gradients             | N01, N02 fail             | Compatible MAC operators and boundary tests, M2          |
+| Fluid velocity does not determine transport            | N05, N06 fail             | Shared conservative face fluxes, M2                      |
+| Phase cycle and open/sealed volume mismatch            | N08, N09 fail             | Conserved mass/internal energy/actual volume closure, M4 |
+| Electrical convergence, heat allocation, terminal work | N11-N13 fail              | Small independent prerequisite, M1                       |
+| Excess acid loses its identity                         | N14 fails                 | Species amounts and reaction extents, M6                 |
+| Tangential gas shear absent                            | N15 fails                 | Explicit viscous stress, M2                              |
 
 The audited entry points illustrate the architectural problem. `src/simulation/world.ts` stores one material ID and parcel per cell. The supplied source has four unconditional pressure derivations per tick when the nested call inside `gas.step()` is included, plus a possible fifth after venting; it also runs cellular gas/liquid motion and hydrostatic relocation. [Exact call sites](../../validation/source-review-2026-09-21.md#pressure-count-clarification). `src/physics/motion.ts` still searches liquid regions per sinking grain. `src/simulation/sandbox.ts` exposes synchronous probes and mutations. `src/main.ts` advances whole synchronous ticks at 480 × 270; `src/rendering/renderer.ts` reads CPU fields into ImageData.
 
@@ -51,16 +51,16 @@ The [fire review](../../validation/fire-combustion.md) reproduced boundary-O2 re
 
 Keep the current 0.01 m cell width, 0.01 m represented depth, and 1/60 s outer clock. Introduce a versioned Rust-owned `FluidState` contract independent of the legacy parcel arrays. A CPU backend owns Rust arrays; a GPU backend owns wgpu buffers, not a fully current duplicate Rust world. Reference and GPU tests use separate instances. Checkpoints are occasional snapshots, not a second ticking authority.
 
-| Field | Location and meaning | Authority |
-| --- | --- | --- |
-| Solid occupancy and face aperture | Cell volume blocked by solid; open area at each face | Topology state |
-| Liquid phase masses and gas species masses | kg per cell; multiple phases may coexist | Fluid state |
-| Phase volume fractions | Fraction of whole geometric cell volume; phase fractions plus solid fraction sum to one | Conserved transport, reconciled with thermodynamic closure |
-| Internal energy U | J per cell, with a defined phase/species reference zero | Fluid state |
-| Face velocity and compatible momentum | u: (W+1)×H; v: W×(H+1), m/s | MAC state |
-| Correction pressure π | Cell-centered Pa for mechanical projection | Derived solve output |
-| Thermodynamic pressure p0 | Chamber pressure used by EOS and phase closure | Derived from conserved amounts, U, and available volume |
-| Temperature, display material, cell velocity | Derived samples; material ID is a visual/interaction label | Read-only views |
+| Field                                        | Location and meaning                                                                    | Authority                                                  |
+| -------------------------------------------- | --------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
+| Solid occupancy and face aperture            | Cell volume blocked by solid; open area at each face                                    | Topology state                                             |
+| Liquid phase masses and gas species masses   | kg per cell; multiple phases may coexist                                                | Fluid state                                                |
+| Phase volume fractions                       | Fraction of whole geometric cell volume; phase fractions plus solid fraction sum to one | Conserved transport, reconciled with thermodynamic closure |
+| Internal energy U                            | J per cell, with a defined phase/species reference zero                                 | Fluid state                                                |
+| Face velocity and compatible momentum        | u: (W+1)×H; v: W×(H+1), m/s                                                             | MAC state                                                  |
+| Correction pressure π                        | Cell-centered Pa for mechanical projection                                              | Derived solve output                                       |
+| Thermodynamic pressure p0                    | Chamber pressure used by EOS and phase closure                                          | Derived from conserved amounts, U, and available volume    |
+| Temperature, display material, cell velocity | Derived samples; material ID is a visual/interaction label                              | Read-only views                                            |
 
 Begin with incompressible phase densities and no phase change. Liquid mass and liquid volume are linked by density; do not independently evolve contradictory copies. Later EOS-dependent phase volumes must close the same geometric volume constraint. Never overwrite a phase mass just to normalize fractions.
 
@@ -115,7 +115,7 @@ Start geometric VOF with CFL ≤ 0.5 and verify the actual multidimensional sche
 
 ## 3. Milestones and exit gates
 
-### M0  -  Freeze evidence and acceptance fixtures
+### M0 - Freeze evidence and acceptance fixtures
 
 **Dependency:** none. **Primary surface:** tests and benchmark harnesses.
 
@@ -127,7 +127,7 @@ Execute FIRE-W00: preserve the original F01-F12 report/runners/results and recor
 
 **Exit:** reproducible fresh baseline with a pass/fail ledger compared to the historical 24/11 result; protect the controls and record any differences against the actual checkout. Never force a changed source tree to reproduce old totals.
 
-### M1  -  State contract, backend seam, and isolated prerequisites
+### M1 - State contract, backend seam, and isolated prerequisites
 
 **Dependency:** M0. **Primary surfaces:** proposed `engine/crates/sim/`, `engine/crates/sim-cpu/`, `engine/crates/wasm/`, the existing `web/src/engine-client/` entrypoint and `web/src/legacy/simulation/sandbox.ts`, generated catalogue/binding outputs, and Rust/build configuration under `engine/`. Execute E01-E04.
 
@@ -147,7 +147,7 @@ Introduce explicit versions for topology, composition/mass, and thermal state. R
 
 **Exit:** native/WASM bootstrap and bindings smoke tests pass; the backend contract hosts an isolated Rust CPU test world; async facade/ID/snapshot contracts and invalidation tests pass; no two transport owners operate in one scene. E04 electrical analytical fixtures complete the independent branch and are mandatory before M6. M2 may start after the contract branch without waiting for E04.
 
-### M2  -  Conservative CPU fluid reference
+### M2 - Conservative CPU fluid reference
 
 **Dependency:** M1 state/facade contract, E03. **Primary surfaces:** proposed `engine/crates/sim/src/fluid/`, `engine/crates/sim-cpu/src/fluid/`, Rust integration tests and shared fixtures. Execute E05-E06.
 
@@ -159,7 +159,7 @@ Keep full energy/phase physics disabled here; markers validate transport, not th
 
 **Exit:** pressure/operator, volume, tracer, shear, hydrostatic-rest, symmetry, and dam-break/refinement tests pass in Float64. The base fluid core has one transport owner and no per-grain search path.
 
-### M3  -  WebGPU demonstrator and direct rendering
+### M3 - WebGPU demonstrator and direct rendering
 
 **Dependency:** M2. **Primary surfaces:** proposed `engine/crates/sim-gpu/`, `engine/crates/sim-gpu/shaders/fluid/`, `engine/crates/sim-gpu/shaders/render/`, `engine/crates/wasm/` and the existing TypeScript host adapter. Execute E07-E08.
 
@@ -179,7 +179,7 @@ One 480×270 f32 cell field is 518,400 bytes; a u/v face pair is 1,039,800 bytes
 
 **Exit:** CPU/GPU comparisons pass at the same physical times; rendering requires no full-world frame-loop readback; the demonstrator runs at 480×270 with existing painting, pause and reset controls, controlled API/test-harness stepping, and end-to-end timings. This completes the first experimental checkpoint. All current-sandbox coverage is still required before the default switch.
 
-### M4  -  Closed/open thermodynamics and partial phase state
+### M4 - Closed/open thermodynamics and partial phase state
 
 **Dependency:** M2 state/transport; GPU parity follows M3. **Primary surfaces:** proposed Rust thermal/chamber contracts and references in `engine/crates/sim/` and `engine/crates/sim-cpu/`, wgpu pipelines in `engine/crates/sim-gpu/`, and `engine/crates/sim-gpu/shaders/thermal/`. Legacy `src/physics/thermal.ts` and `src/physics/boiling.ts` supply regression context, not the new state owner. Execute E09.
 
@@ -193,7 +193,7 @@ Execute FIRE-W02 alongside E09. Validate passive O2/product transport with a fin
 
 **Exit:** FIRE-PRECONDITIONS passes; fixed-mass/fixed-U/fixed-volume cases converge without a water/steam cycle; a vent has finite, ledgered exchange; gas/liquid volumes fit available geometry; moving-wall work and phase source terms close their documented budgets.
 
-### M5  -  Sand, moving solids, and additional liquids
+### M5 - Sand, moving solids, and additional liquids
 
 **Dependency:** M2; M4 for heated/phase-changing coupling. **Primary surfaces:** proposed Rust granular/solid references in `engine/crates/sim-cpu/`, wgpu pipelines and `engine/crates/sim-gpu/shaders/granular/`; retirement seams in legacy `src/physics/motion.ts`, `src/physics/hydrostatics.ts`, and `src/physics/solid-mechanics.ts`. Execute E10.
 
@@ -207,7 +207,7 @@ Add an oil/water two-liquid fixture with explicit phase fractions, density order
 
 **Exit:** many grains competing for one opening neither duplicate occupants nor lose water; sealed/no-outlet, narrow-tube, disconnected-pool, sinking, impact, and oil/water tests pass. Instrumented searches scale by batches/regions, not one overlapping traversal per grain. Publish operation counts and timings, not an unproved linear-time claim.
 
-### M6  -  Reactions, circuits, and product integration
+### M6 - Reactions, circuits, and product integration
 
 **Dependency:** M4 and M5 for full-scene coverage, plus the E04 circuit-reference branch. **Primary surfaces:** Rust reaction/circuit contracts and bounded CPU algorithms, wgpu source pipelines and WGSL chemistry, `engine/crates/wasm/`, and the retained TypeScript tool/control/sandbox/main adapters. Legacy reaction modules are source/regression context, not the GPU scene owner. Execute E11-E12.
 
@@ -229,7 +229,7 @@ Migrate all eight current elemental models and their existing products/interacti
 
 **Exit:** FIRE-M6 (FIRE-A01-FIRE-A13) and the current-sandbox reaction/circuit/source/control rows pass. All current starter-scene, material and tool capabilities have evidence; no legacy pass mutates GPU-owned state. Missing current interactions keep M6 incomplete.
 
-### M7  -  Promotion, recovery, and retirement
+### M7 - Promotion, recovery, and retirement
 
 **Dependency:** all implementation, feature and numerical gates for every required row of the current-sandbox scope, including M6 and E04 circuits.
 
@@ -288,18 +288,17 @@ In Progress. Feature coverage and M7 promotion remain open.
 **Accepted product goal:** deliver the complete existing Particle Foundry sandbox
 on Rust/WASM + wgpu with 60 displayed FPS, simulation time following real time
 and behavior close to real life within the falling-sand model. The user clarified
-this goal on 13 October and requested consistent docs and Linear on 14 October
-2026. This section owns the shared P1 gameplay target. The
+this goal on 13 October and requested consistent docs and Linear on 14 October 2026. This section owns the shared P1 gameplay target. The
 [current-sandbox checklist](../rust-wasm-migration/current-sandbox-scope.md)
 owns its required feature coverage, including all eight existing elemental
 models, interactions, scenes, tools and controls. P2-P9 remain deferred.
 
-| Required outcome | Qualification |
-| --- | --- |
-| Smooth visible play | 60 displayed frames per second during normal interaction at 480 x 270 and 1x on the agreed baseline device. The nominal frame budget is `1000 / 60` ms, approximately 16.7 ms. |
-| Simulation in real time | At least one accepted model second per wall second at 1x in the same interactive workload. Requested ticks, queued work and a slowed model clock do not establish this result. |
-| Responsive interaction | Painting and controls remain responsive while the simulation advances. Record brush/input-to-command latency, visible response, p50/p95 frame intervals and stalls against budgets declared before qualification. |
-| Physically credible behavior | Required material interactions pass their independent references and regression gates at equal accepted model time. Document numerical approximations and measured errors while preserving the invariants below. |
+| Required outcome             | Qualification                                                                                                                                                                                                     |
+| ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Smooth visible play          | 60 displayed frames per second during normal interaction at 480 x 270 and 1x on the agreed baseline device. The nominal frame budget is `1000 / 60` ms, approximately 16.7 ms.                                    |
+| Simulation in real time      | At least one accepted model second per wall second at 1x in the same interactive workload. Requested ticks, queued work and a slowed model clock do not establish this result.                                    |
+| Responsive interaction       | Painting and controls remain responsive while the simulation advances. Record brush/input-to-command latency, visible response, p50/p95 frame intervals and stalls against budgets declared before qualification. |
+| Physically credible behavior | Required material interactions pass their independent references and regression gates at equal accepted model time. Document numerical approximations and measured errors while preserving the invariants below.  |
 
 Wood and Oil also require a
 [playable burn tempo](../fire-combustion/plan.md#playable-wood-and-oil-burn-tempo).
@@ -601,20 +600,20 @@ Real time and the complete-sandbox promotion target remain open.
 
 The following are proposed starting gates, not measurements. Freeze fixture scales and thresholds in M0/M2 before optimization. Any later tolerance change needs a numerical rationale, including grid/time refinement, rather than matching the latest output.
 
-| Invariant | CPU Float64 target | GPU f32 target / comparison |
-| --- | --- | --- |
-| Closed conservative advection, 1,000 outer ticks | Relative liquid mass and marker-total drift ≤1e-10 | ≤1e-5; compare inventories, not bit identity |
-| Fraction boundedness | −1e-12 ≤ alpha ≤ 1+1e-12 | −1e-6 ≤ alpha ≤ 1+1e-6; no unledgered clipping |
-| Projection | max(dt × abs(Du−S)) ≤1e-8 | ≤1e-5; also report scaled equation residual |
-| Uniform sealed pressure and hydrostatic rest | max speed ≤1e-8 m/s after 1,000 ticks | ≤1e-4 m/s; no systematic wallward drift |
-| Marker displacement in periodic prescribed flow | Centroid error ≤0.1 cell after one crossing | ≤0.15 cell; phase/species/energy marker totals share flux accounting |
-| CPU/GPU one-tick fixture parity | Reference | Volume-fraction mean absolute error ≤1e-5 and scaled velocity RMS error ≤1e-4; refine long-time gates per fixture |
-| Isolated phase equilibrium | No cycle; relative U/mass/volume residual ≤1e-9 within table domain | ≤1e-5, plus property interpolation error budget |
-| Coupled energy budget | Report U, kinetic, potential, chemical, boundary work/flux and numerical loss separately | Initial closed-fixture drift target ≤1e-4 of a declared physical energy scale; no negative state or hidden heat repair |
-| Dam break and refinement | Bounded/conservative; front and center-of-mass converge as dx/dt decrease | Match CPU envelopes at equal physical times; inspect snapshots |
-| Sand contention / topology | Exact unique occupancy; mass conservation | Same winning proposals for fixed seed/input; conservative fluid accommodation |
-| Circuit analytics | N11-N13 and C17/C18, plus exhaustion/network edits | CPU circuit path retains these gates |
-| Device absent/lost, pause and reset | Correct fallback and command ordering | No stale probe presented as current; no partially committed tick |
+| Invariant                                        | CPU Float64 target                                                                       | GPU f32 target / comparison                                                                                            |
+| ------------------------------------------------ | ---------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| Closed conservative advection, 1,000 outer ticks | Relative liquid mass and marker-total drift ≤1e-10                                       | ≤1e-5; compare inventories, not bit identity                                                                           |
+| Fraction boundedness                             | −1e-12 ≤ alpha ≤ 1+1e-12                                                                 | −1e-6 ≤ alpha ≤ 1+1e-6; no unledgered clipping                                                                         |
+| Projection                                       | max(dt × abs(Du−S)) ≤1e-8                                                                | ≤1e-5; also report scaled equation residual                                                                            |
+| Uniform sealed pressure and hydrostatic rest     | max speed ≤1e-8 m/s after 1,000 ticks                                                    | ≤1e-4 m/s; no systematic wallward drift                                                                                |
+| Marker displacement in periodic prescribed flow  | Centroid error ≤0.1 cell after one crossing                                              | ≤0.15 cell; phase/species/energy marker totals share flux accounting                                                   |
+| CPU/GPU one-tick fixture parity                  | Reference                                                                                | Volume-fraction mean absolute error ≤1e-5 and scaled velocity RMS error ≤1e-4; refine long-time gates per fixture      |
+| Isolated phase equilibrium                       | No cycle; relative U/mass/volume residual ≤1e-9 within table domain                      | ≤1e-5, plus property interpolation error budget                                                                        |
+| Coupled energy budget                            | Report U, kinetic, potential, chemical, boundary work/flux and numerical loss separately | Initial closed-fixture drift target ≤1e-4 of a declared physical energy scale; no negative state or hidden heat repair |
+| Dam break and refinement                         | Bounded/conservative; front and center-of-mass converge as dx/dt decrease                | Match CPU envelopes at equal physical times; inspect snapshots                                                         |
+| Sand contention / topology                       | Exact unique occupancy; mass conservation                                                | Same winning proposals for fixed seed/input; conservative fluid accommodation                                          |
+| Circuit analytics                                | N11-N13 and C17/C18, plus exhaustion/network edits                                       | CPU circuit path retains these gates                                                                                   |
+| Device absent/lost, pause and reset              | Correct fallback and command ordering                                                    | No stale probe presented as current; no partially committed tick                                                       |
 
 For totals near zero, each fixture defines absolute tolerances in the same physical units and a nonzero characteristic scale. Use pairwise/compensated CPU totals and hierarchical GPU reductions. Do not normalize thermal error by a huge arbitrary reference enthalpy that conceals meaningful heating error.
 
@@ -622,16 +621,16 @@ Some old tests must be translated. N01 becomes sealed uniform-pressure rest; N02
 
 ## 5. Risks and decisions
 
-| Risk | Severity | Mitigation / decision |
-| --- | --- | --- |
-| Mixing calibrated enthalpy with physical U | HIGH | Version units/reference zeros and reject unsupported conversion; validate energy before enabling phases |
-| Incompressibility conflicts with evaporation in sealed cells | HIGH | Couple volume source, compressibility, p0 and phase closure; fully liquid case is a required test |
-| Density contrast or tiny fluid volumes destabilize projection | HIGH | Compatible mass/momentum fluxes, density coefficients, substeps and residual gates; inspect degenerate cells |
-| Geometric VOF conservation is broken by nonzero phase divergence | HIGH | Derive the source-aware update in M4 and test split-stage volume closure; do not reuse zero-divergence proof blindly |
-| GPU iterations or component labeling dominate | MED | Batch reductions, measure dispatch count, evaluate multigrid; retain correct CPU reference |
-| CPU circuit coupling becomes dense | MED | Measure transfer footprint and topology events; define a supported boundary before promotion |
-| Visual behavior changes despite correct conservation | MED | Seeded browser fixtures for pools, boiling, plumes, oil and sand; preserve controls and material cues |
-| Device failure loses authoritative fields | MED | Checkpoints, command replay, explicit recovery path; bounded queues |
+| Risk                                                             | Severity | Mitigation / decision                                                                                                |
+| ---------------------------------------------------------------- | -------- | -------------------------------------------------------------------------------------------------------------------- |
+| Mixing calibrated enthalpy with physical U                       | HIGH     | Version units/reference zeros and reject unsupported conversion; validate energy before enabling phases              |
+| Incompressibility conflicts with evaporation in sealed cells     | HIGH     | Couple volume source, compressibility, p0 and phase closure; fully liquid case is a required test                    |
+| Density contrast or tiny fluid volumes destabilize projection    | HIGH     | Compatible mass/momentum fluxes, density coefficients, substeps and residual gates; inspect degenerate cells         |
+| Geometric VOF conservation is broken by nonzero phase divergence | HIGH     | Derive the source-aware update in M4 and test split-stage volume closure; do not reuse zero-divergence proof blindly |
+| GPU iterations or component labeling dominate                    | MED      | Batch reductions, measure dispatch count, evaluate multigrid; retain correct CPU reference                           |
+| CPU circuit coupling becomes dense                               | MED      | Measure transfer footprint and topology events; define a supported boundary before promotion                         |
+| Visual behavior changes despite correct conservation             | MED      | Seeded browser fixtures for pools, boiling, plumes, oil and sand; preserve controls and material cues                |
+| Device failure loses authoritative fields                        | MED      | Checkpoints, command replay, explicit recovery path; bounded queues                                                  |
 
 Defaults for review: preserve falling-sand visual style; prioritize stable pools, boilers, trapped gas, and thermal transport; defer resolved shocks, surface tension, adaptive meshes, and arbitrary moving cut-cell geometry. Start with grid-aligned geometry and substep solid moves. Surface tension and wetting need their own balanced-force tests before addition.
 
@@ -674,7 +673,6 @@ mise exec -- node docs/plans/fluid-gpu-redesign/audit.cjs $auditBuild (Join-Path
 The source tree was reorganized after this baseline was captured. Paths in the narrative and commands above follow the new layout; recorded source hashes, audit locations, and outputs retain their historical provenance.
 
 The raw harness emits historical archive labels even when run against another tree. Use the source hashes and corrected provenance in `current-audit-results.json` for this run; capture fresh hashes for subsequent runs. Full implementation validation additionally requires `mise run ci`, numerical fixtures, and browser/GPU tests on actual hardware.
-
 
 ## 7. Forward-compatible composition without widening M3
 

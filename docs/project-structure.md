@@ -203,6 +203,20 @@ not require a ticking CPU mirror or normal-frame whole-world readback.
 `engine/target/`; track Cargo and Bun lockfiles. The build verifies that the
 wasm-bindgen CLI matches the pinned library version.
 
+Rustup selects the Rust version, components and WASM target from
+`engine/rust-toolchain.toml`. Keep Rust out of the mise `[tools]` table:
+mise sets `RUSTUP_TOOLCHAIN` for its Rust tool, which overrides the engine pin
+and can select a toolchain without the required WASM target.
+Mise adds `$CARGO_HOME/bin` to `PATH`, with `~/.cargo/bin` as the default, so
+tasks can use the installed rustup proxies and wasm-bindgen CLI.
+It clears inherited `RUSTUP_TOOLCHAIN` values so an earlier shell selection
+cannot override the engine pin.
+
+The engine uses wgpu 30. Mapped GPU ranges return errors through the existing
+`Result` paths. Native GPU fixtures require successful maps before they inspect
+the returned bytes. Biome reads the repository root ignore file so generated
+WASM, build output and private reporting artifacts stay outside authored-code checks.
+
 ### Implemented bootstrap and contracts
 
 [`particle-sim`](../engine/crates/sim/src/lib.rs) owns grid geometry and the
@@ -328,16 +342,16 @@ are implemented and tested; see [E03 evidence](validation/p1-m1-e03.md).
 
 Paths in the first column are relative to `web/src/`.
 
-| Current owner | Migration destination and gate |
-| --- | --- |
-| `main.ts`, `app/` | Browser lifecycle, controls and requested versus accepted ticks; E03/E08/E12 |
-| `engine-client/`, `legacy/simulation/sandbox.ts` | Async facade and separate legacy adapter; E03/E08 |
-| `legacy/simulation/world.ts`, `physical-scale.ts` | `particle-sim` contracts and selected-backend state; E02 |
-| `legacy/physics/` | Corrected Rust references then matching WGSL stages; E04-E11 |
-| `legacy/rendering/` | Same-device rendering in `sim-gpu` and browser overlays in `app/`; E08/E12 |
-| `legacy/simulation/diagnostics.ts` | Bounded `sim-gpu` reductions and async browser observations; E08 |
-| `legacy/tools/`, `legacy/scenes/` | Ordered, funded engine commands and initialization; E03/E11/E12 |
-| `materials/` | Single-source validated projections at E03, expanded data pipeline in P3 |
+| Current owner                                     | Migration destination and gate                                               |
+| ------------------------------------------------- | ---------------------------------------------------------------------------- |
+| `main.ts`, `app/`                                 | Browser lifecycle, controls and requested versus accepted ticks; E03/E08/E12 |
+| `engine-client/`, `legacy/simulation/sandbox.ts`  | Async facade and separate legacy adapter; E03/E08                            |
+| `legacy/simulation/world.ts`, `physical-scale.ts` | `particle-sim` contracts and selected-backend state; E02                     |
+| `legacy/physics/`                                 | Corrected Rust references then matching WGSL stages; E04-E11                 |
+| `legacy/rendering/`                               | Same-device rendering in `sim-gpu` and browser overlays in `app/`; E08/E12   |
+| `legacy/simulation/diagnostics.ts`                | Bounded `sim-gpu` reductions and async browser observations; E08             |
+| `legacy/tools/`, `legacy/scenes/`                 | Ordered, funded engine commands and initialization; E03/E11/E12              |
+| `materials/`                                      | Single-source validated projections at E03, expanded data pipeline in P3     |
 
 The [migration work plan](plans/rust-wasm-migration/plan.md) remains the E00-E14
 execution map. P2-P9 and [fire integration](plans/fire-combustion/plan.md) use the
@@ -356,8 +370,10 @@ New numerical algorithms use Rust references and the frozen engine fixture conve
 Keep transient results under ignored `artifacts/` and durable summaries under
 `docs/validation/`.
 
-[docs/README.md](README.md) is the developer index. [START_HERE.md](START_HERE.md)
-is the detailed engine migration brief. [The legacy sandbox guide](legacy-sandbox.md)
+[docs/README.md](README.md) is the single starting point for continuing work.
+[The documentation guide](documentation.md) owns authoring and browser compilation.
+`mise run docs:build` compiles all chapters into ignored `artifacts/docs/index.html`
+with linked repository files beside it. [The legacy sandbox guide](legacy-sandbox.md)
 documents current controls and implementation. Root README stays a short quick start.
 
 The 2026-09-27 layout supersedes earlier instructions to keep root `src/` in place.

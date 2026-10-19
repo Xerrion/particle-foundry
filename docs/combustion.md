@@ -11,13 +11,13 @@ own the future correction requirements. [The knowledge map](README.md) routes ot
 
 ## Source ownership
 
-| Responsibility | Source and symbols |
-| --- | --- |
-| Parcel state and reaction parameters | [world.ts](../web/src/legacy/simulation/world.ts): `World`, `changeMaterial`, `swap`, `addExternalEnergy`; [definitions.ts](../web/src/materials/definitions.ts): `combustionProfile`, material ignition thresholds and `ignitionBrush` |
-| User-funded ignition | [brush.ts](../web/src/legacy/tools/brush.ts): `createBrush`, Fire branch of `paintCell` |
-| Generic fuels, flame emission, oxygen shortcut and smoke expiry | [reactions.ts](../web/src/legacy/physics/reactions.ts): `createReactions`, `beginStep`, `update`, `releaseChemicalEnergy`, `emitFlame` |
-| Hydrogen, carbon and sulfur oxidation | [element-reactions.ts](../web/src/legacy/physics/element-reactions.ts): `createElementReactions`, `reactPair`, `reactWithAir` |
-| Coupling to heat and movement | [physics.ts](../web/src/legacy/simulation/physics.ts): `createPhysics.step`; [thermal.ts](../web/src/legacy/physics/thermal.ts): `energyAtTemperature`; [motion.ts](../web/src/legacy/physics/motion.ts): `createMotion` |
+| Responsibility                                                  | Source and symbols                                                                                                                                                                                                                      |
+| --------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Parcel state and reaction parameters                            | [world.ts](../web/src/legacy/simulation/world.ts): `World`, `changeMaterial`, `swap`, `addExternalEnergy`; [definitions.ts](../web/src/materials/definitions.ts): `combustionProfile`, material ignition thresholds and `ignitionBrush` |
+| User-funded ignition                                            | [brush.ts](../web/src/legacy/tools/brush.ts): `createBrush`, Fire branch of `paintCell`                                                                                                                                                 |
+| Generic fuels, flame emission, oxygen shortcut and smoke expiry | [reactions.ts](../web/src/legacy/physics/reactions.ts): `createReactions`, `beginStep`, `update`, `releaseChemicalEnergy`, `emitFlame`                                                                                                  |
+| Hydrogen, carbon and sulfur oxidation                           | [element-reactions.ts](../web/src/legacy/physics/element-reactions.ts): `createElementReactions`, `reactPair`, `reactWithAir`                                                                                                           |
+| Coupling to heat and movement                                   | [physics.ts](../web/src/legacy/simulation/physics.ts): `createPhysics.step`; [thermal.ts](../web/src/legacy/physics/thermal.ts): `energyAtTemperature`; [motion.ts](../web/src/legacy/physics/motion.ts): `createMotion`                |
 
 Nested function names above are search targets within their modules, not public
 APIs. Browser code reaches the backend through [engine-client](../web/src/engine-client/index.ts);
@@ -116,26 +116,26 @@ Historical check IDs link to the [preserved finding-to-work mapping](validation/
 Historical measurements and execution claims belong to that audit's snapshot;
 they were not reproduced by this source inspection.
 
-| Limitation | Current source mechanism | Historical evidence |
-| --- | --- | --- |
-| Closed-boundary oxygen shortcut | Generic `beginStep` replenishes edge-connected air and `consumeOxygen` grants fresh oxygen without a debit. Neither it nor elemental `markVentilatedAir` consults `boundariesEnabled`; a drawn stone enclosure has different semantics. The Wood/Oil product-heat outflow uses the same legacy reservoir eligibility, including that flag limitation. Its energy removal is ledgered. | F01-F03 characterize generic burning; the flag does not prove a sealed combustion budget. |
-| Incomplete generic products | Generic release spends chemical energy and, for enclosed gas, a separate oxygen counter without progressively consuming fuel/O2 material mass into declared products. Elemental `reactPair` is a separate mechanism. | F04/F05; F12 is an explicit-reaction control. Scalar energy conservation alone does not establish correct composition. |
-| Cold flame label ignites reactants | Elemental `step` accepts an adjacent `FIRE` identity or burning flag without requiring that neighbor to be hot. It runs before generic flame quenching. | F07/F08 include the cold-H2/O2 full-tick case. |
-| Water contact ignores dose | Generic `update` disables burning for any orthogonally adjacent `WATER`, without a cooling or evaporation debit in that reaction call. | F06 isolates reactions. Thermal diffusion runs separately; this is not evidence of full-tick cooling performance. |
-| Fuel-dependent oxygen and disappearing smoke identity | Enclosed-air oxygen cannot feed hydrogen's `reactWithAir`; generic smoke can expire to `EMPTY` while retaining mass/heat. | F09/F10. F11 separately covers funded brush ignition. |
+| Limitation                                            | Current source mechanism                                                                                                                                                                                                                                                                                                                                                              | Historical evidence                                                                                                    |
+| ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| Closed-boundary oxygen shortcut                       | Generic `beginStep` replenishes edge-connected air and `consumeOxygen` grants fresh oxygen without a debit. Neither it nor elemental `markVentilatedAir` consults `boundariesEnabled`; a drawn stone enclosure has different semantics. The Wood/Oil product-heat outflow uses the same legacy reservoir eligibility, including that flag limitation. Its energy removal is ledgered. | F01-F03 characterize generic burning; the flag does not prove a sealed combustion budget.                              |
+| Incomplete generic products                           | Generic release spends chemical energy and, for enclosed gas, a separate oxygen counter without progressively consuming fuel/O2 material mass into declared products. Elemental `reactPair` is a separate mechanism.                                                                                                                                                                  | F04/F05; F12 is an explicit-reaction control. Scalar energy conservation alone does not establish correct composition. |
+| Cold flame label ignites reactants                    | Elemental `step` accepts an adjacent `FIRE` identity or burning flag without requiring that neighbor to be hot. It runs before generic flame quenching.                                                                                                                                                                                                                               | F07/F08 include the cold-H2/O2 full-tick case.                                                                         |
+| Water contact ignores dose                            | Generic `update` disables burning for any orthogonally adjacent `WATER`, without a cooling or evaporation debit in that reaction call.                                                                                                                                                                                                                                                | F06 isolates reactions. Thermal diffusion runs separately; this is not evidence of full-tick cooling performance.      |
+| Fuel-dependent oxygen and disappearing smoke identity | Enclosed-air oxygen cannot feed hydrogen's `reactWithAir`; generic smoke can expire to `EMPTY` while retaining mass/heat.                                                                                                                                                                                                                                                             | F09/F10. F11 separately covers funded brush ignition.                                                                  |
 
 ## Verification
 
 These current regression suites protect specific behavior, including useful
 controls. Passing them does not establish that the defects above are corrected.
 
-| Claim or regression | Existing tests |
-| --- | --- |
-| Full-physics Wood/Oil spread and finite fuel depletion, bounded heat outflow and extinction controls | [combustion-tempo.test.ts](../web/tests/legacy/physics/combustion-tempo.test.ts), [playable-fuel-fire.ts](../web/tests/legacy/fixtures/playable-fuel-fire.ts) |
-| Finite chemical heat, contact transfer, ceiling and funded asynchronous emission | [reactions.test.ts](../web/tests/legacy/physics/reactions.test.ts), [combustion-emission.test.ts](../web/tests/legacy/physics/combustion-emission.test.ts) |
-| Brush accounting, no lifetime refresh, finite fuel and held-brush behavior | [fire-brush.test.ts](../web/tests/legacy/tools/fire-brush.test.ts), [interaction-regressions.test.ts](../web/tests/legacy/integration/interaction-regressions.test.ts) |
-| Explicit oxidation, residual reactants, source accounting and hydrogen ignition | [element-expansion.test.ts](../web/tests/legacy/integration/element-expansion.test.ts), [review-regressions.test.ts](../web/tests/legacy/integration/review-regressions.test.ts) |
-| Same-tick plume transport, wall geometry and seeded gas movement | [gas-motion.test.ts](../web/tests/legacy/physics/gas-motion.test.ts) |
+| Claim or regression                                                                                  | Existing tests                                                                                                                                                                   |
+| ---------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Full-physics Wood/Oil spread and finite fuel depletion, bounded heat outflow and extinction controls | [combustion-tempo.test.ts](../web/tests/legacy/physics/combustion-tempo.test.ts), [playable-fuel-fire.ts](../web/tests/legacy/fixtures/playable-fuel-fire.ts)                    |
+| Finite chemical heat, contact transfer, ceiling and funded asynchronous emission                     | [reactions.test.ts](../web/tests/legacy/physics/reactions.test.ts), [combustion-emission.test.ts](../web/tests/legacy/physics/combustion-emission.test.ts)                       |
+| Brush accounting, no lifetime refresh, finite fuel and held-brush behavior                           | [fire-brush.test.ts](../web/tests/legacy/tools/fire-brush.test.ts), [interaction-regressions.test.ts](../web/tests/legacy/integration/interaction-regressions.test.ts)           |
+| Explicit oxidation, residual reactants, source accounting and hydrogen ignition                      | [element-expansion.test.ts](../web/tests/legacy/integration/element-expansion.test.ts), [review-regressions.test.ts](../web/tests/legacy/integration/review-regressions.test.ts) |
+| Same-tick plume transport, wall geometry and seeded gas movement                                     | [gas-motion.test.ts](../web/tests/legacy/physics/gas-motion.test.ts)                                                                                                             |
 
 After the root setup, run the focused suites from the repository root:
 
@@ -180,12 +180,12 @@ fixtures required spread beyond the four brush-heated cells and at least 95%
 chemical-fuel consumption within 1800 ticks (30 model seconds). Those latter
 checks cover seeds 1, 42 and 123. Seed 42 measurements are:
 
-| Scene | Before: fuel consumed after 60 model s | After: model s to 95% consumption |
-| --- | --- | --- |
-| Wood block, one Fire click | 13.94% | 5.12 |
-| Oil basin, one Fire click | 5.31% | 17.22 |
-| Wood strip, all cells preheated | 24.52% | 1.78 |
-| Oil strip, all cells preheated | 7.73% | 5.67 |
+| Scene                           | Before: fuel consumed after 60 model s | After: model s to 95% consumption |
+| ------------------------------- | -------------------------------------- | --------------------------------- |
+| Wood block, one Fire click      | 13.94%                                 | 5.12                              |
+| Oil basin, one Fire click       | 5.31%                                  | 17.22                             |
+| Wood strip, all cells preheated | 24.52%                                 | 1.78                              |
+| Oil strip, all cells preheated  | 7.73%                                  | 5.67                              |
 
 Held Fire for three model seconds followed by release reaches 95% at 5.45 s
 for Wood and 17.28 s for Oil. With the default boundary flag enabled, the same

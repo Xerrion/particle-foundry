@@ -1,6 +1,6 @@
 # Nuclear simulation implementation plan
 
-**Status:** deferred. **Roadmap:** P6-P8. Each phase requires separate user activation and its recorded dependencies; no earlier phase completion starts nuclear work automatically. **Dependencies:** validated matter/composition contracts, selected material coverage, and source/energy accounting. [Developer entrypoint](../../START_HERE.md).
+**Status:** deferred. **Roadmap:** P6-P8. Each phase requires separate user activation and its recorded dependencies; no earlier phase completion starts nuclear work automatically. **Dependencies:** validated matter/composition contracts, selected material coverage, and source/energy accounting. [Handbook](../../README.md).
 
 ## Purpose and scope
 

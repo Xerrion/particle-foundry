@@ -1,6 +1,6 @@
 # Fire and combustion integration plan
 
-**Revision:** 14 October 2026. FIRE-W00 baseline and FIRE-W01 contracts have recorded validation; corrected P1 combustion remains planned; FIRE-W08 is deferred. The [fire manifest](../../data/fire-combustion-work.json) owns the next item. Start with [START_HERE.md](../../START_HERE.md).
+**Revision:** 14 October 2026. FIRE-W00 baseline and FIRE-W01 contracts have recorded validation; corrected P1 combustion remains planned; FIRE-W08 is deferred. The [fire manifest](../../data/fire-combustion-work.json) owns the next item. Start with [handbook](../../README.md).
 
 This plan incorporates the [preserved fire audit](../../evidence/fire-review-2026-09-23/FIRE_REVIEW.md) into the existing Rust/WASM + wgpu redesign. It is a bounded game-combustion model, not an implementation of a complete fire-engineering solver. [ADR-001](../../architecture/adr-001-rust-wasm-wgpu.md), the [GPU plan](../fluid-gpu-redesign/plan.md) and the [engine boundary](../../architecture/engine-boundary.md) remain in force.
 
@@ -21,16 +21,16 @@ responsive interaction and physically credible behavior. FIRE-M7 pairs those
 product checks with corrected combustion evidence. Deferred P4 expansion keeps
 its separate activation and domain requirements.
 
-| Existing milestone | Fire work | Required boundary |
-| --- | --- | --- |
-| P1/M0, E00 | FIRE-W00: preserve observations and freeze corrected specifications | Do not treat expected old bugs as desired regressions |
-| P1/M1, E02 | FIRE-W01: component/source/boundary/visual contracts | Small active set only; no working chemistry required |
-| P1/M2-M3 | Reuse conservative passive-marker transport and same-device rendering | Demonstrator remains nonreactive |
-| P1/M4, E09 | FIRE-W02: finite species ventilation and supported hot-scene thermodynamics | FIRE-PRECONDITIONS before coupled fire scenes |
-| P1/M6, E11 | FIRE-W03-FIRE-W05: Rust reference, reduced fuel/suppression model, then WGSL parity | Core combustion and products before visual promotion |
-| P1/M6, E12 | FIRE-W06: tools, derived flames and probes | FIRE-M6 for the declared integration scenes |
-| P1/M7, E13-E14 | FIRE-W07: persistence, recovery and measured promotion | FIRE-M7 in addition to GPU-M7 |
-| Deferred P4/C3-C6 | FIRE-W08: additional fuel models and selected mechanisms | Requires separate user activation after current-sandbox replacement |
+| Existing milestone | Fire work                                                                           | Required boundary                                                   |
+| ------------------ | ----------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| P1/M0, E00         | FIRE-W00: preserve observations and freeze corrected specifications                 | Do not treat expected old bugs as desired regressions               |
+| P1/M1, E02         | FIRE-W01: component/source/boundary/visual contracts                                | Small active set only; no working chemistry required                |
+| P1/M2-M3           | Reuse conservative passive-marker transport and same-device rendering               | Demonstrator remains nonreactive                                    |
+| P1/M4, E09         | FIRE-W02: finite species ventilation and supported hot-scene thermodynamics         | FIRE-PRECONDITIONS before coupled fire scenes                       |
+| P1/M6, E11         | FIRE-W03-FIRE-W05: Rust reference, reduced fuel/suppression model, then WGSL parity | Core combustion and products before visual promotion                |
+| P1/M6, E12         | FIRE-W06: tools, derived flames and probes                                          | FIRE-M6 for the declared integration scenes                         |
+| P1/M7, E13-E14     | FIRE-W07: persistence, recovery and measured promotion                              | FIRE-M7 in addition to GPU-M7                                       |
+| Deferred P4/C3-C6  | FIRE-W08: additional fuel models and selected mechanisms                            | Requires separate user activation after current-sandbox replacement |
 
 Choose and version a minimal fuel-vapor/O2 channel with explicit products at M0/M1, subject to complete property coverage. One validated channel is enough to establish the architecture; it is not permission to advertise all fuel chemistry. For each wood/oil/plant scene promoted at M7, also implement its declared reduced condensed-fuel release model. Unsupported scenes remain separate legacy or experimental scenes during development. Every required fire row in the [current-sandbox scope](../rust-wasm-migration/current-sandbox-scope.md) must pass before P1 can complete; keeping a current scene legacy-only does not satisfy the replacement gate.
 
@@ -44,15 +44,15 @@ Do not maintain a second spendable `oxygenKg` inventory that can reach zero whil
 
 At minimum, define these contracts before the M1 layout freezes:
 
-| Contract | Required meaning |
-| --- | --- |
-| Reactant/product amounts | One authority for fuel, O2, products, condensed residues and any physical soot |
-| Boundary state | One open/closed face contract shared by transport, pressure, heat and chemistry |
-| Reaction network | Stable version, balanced composition mapping, supported domains, rate/extinction model and product closure |
-| Source transaction | Bounded extent plus simultaneous reactant, product, energy and coupled-volume changes |
-| Thermal/chemical ownership | SI J and one reference convention; no duplicate formation-energy and explicit-store release |
-| Visual diagnostics | Derived heat-release rate, thermal state, supported luminous fraction and soot concentration; never additional physical stores |
-| Persistence | Network/property versions, active mappings, component amounts, residues, source/event state and saved approximation settings |
+| Contract                   | Required meaning                                                                                                               |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| Reactant/product amounts   | One authority for fuel, O2, products, condensed residues and any physical soot                                                 |
+| Boundary state             | One open/closed face contract shared by transport, pressure, heat and chemistry                                                |
+| Reaction network           | Stable version, balanced composition mapping, supported domains, rate/extinction model and product closure                     |
+| Source transaction         | Bounded extent plus simultaneous reactant, product, energy and coupled-volume changes                                          |
+| Thermal/chemical ownership | SI J and one reference convention; no duplicate formation-energy and explicit-store release                                    |
+| Visual diagnostics         | Derived heat-release rate, thermal state, supported luminous fraction and soot concentration; never additional physical stores |
+| Persistence                | Network/property versions, active mappings, component amounts, residues, source/event state and saved approximation settings   |
 
 A pseudo-material such as wood or game oil may be calibrated, but a reacting version needs a declared constituent model and balanced yields. A truly opaque legacy preset cannot claim exact element/isotope balance; reject it from physical chemistry until a mapping exists. Source-qualified properties and visibly calibrated rates are different categories.
 

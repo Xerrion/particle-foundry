@@ -18,9 +18,9 @@ mkdir -p "$runner_state" "$runner_work" "$CARGO_HOME" "$CARGO_TARGET_DIR" \
 
 # Tools remain in the image. Only downloads and build products use the cache volume.
 install -m 0755 /usr/local/bin/mise "$MISE_DATA_DIR/bin/mise"
-mise link bun@1.3.12 /opt/bun >/dev/null
-mise link node@24.15.0 /opt/node >/dev/null
-mise link python@3.14.7 /usr/local >/dev/null
+mise link bun@1.4.3 /opt/bun >/dev/null
+mise link node@26.12.0 /opt/node >/dev/null
+mise link python@3.15.0 /usr/local >/dev/null
 
 # The persistent directory is the actual runner root. Its delete-and-recreate
 # credential writes then stay on the volume without relying on symbolic links.

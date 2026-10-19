@@ -689,7 +689,7 @@ mod tests {
             .recv_timeout(Duration::from_secs(10))
             .expect("M3 render map callback")
             .expect("M3 render map result");
-        let mapped = staging.get_mapped_range(..);
+        let mapped = staging.get_mapped_range(..).expect("fixture mapped range");
         let samples = std::array::from_fn(|index| {
             let offset = index * 256;
             mapped[offset..offset + 4].try_into().unwrap()

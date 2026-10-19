@@ -24,17 +24,17 @@ official runner, but that tooling has no Docker daemon connection.
 
 ## Image and tool pins
 
-The base is the official `ghcr.io/actions/actions-runner:2.337.0` image, pinned
-to digest `sha256:e5496277be5d09bc968b3d64911b74e219ac4a3f2edce956a3ecf9271bea1ef4`.
+The base is the official `ghcr.io/actions/actions-runner:2.338.0` image, pinned
+to digest `sha256:4ffadc0002b2581327e06101fc8c06cd189232baf79fe561fac9caeb76f5e807`.
 Its Linux distribution is Ubuntu 24.04. The tool image versions and digests
-match the [production Dockerfile](../../Dockerfile): Bun `1.3.12`, Node
-`24.15.0`, Python `3.14.7`, mise `2026.9.13` and Rust `1.98.1`.
-Rustfmt, Clippy, `wasm32-unknown-unknown` and wasm-bindgen CLI `0.2.108` are
+match the [production Dockerfile](../../Dockerfile): Bun `1.4.3`, Node
+`26.12.0`, Python `3.15.0`, mise `2026.10.14` and Rust `1.99.1`.
+Rustfmt, Clippy, `wasm32-unknown-unknown` and wasm-bindgen CLI `0.2.129` are
 installed during the image build.
 
-Chrome is `154.0.8037.97-1`, downloaded from Google's official Debian package
+Chrome is `155.0.8059.84-1`, downloaded from Google's official Debian package
 URL. The build verifies SHA256
-`a4edbe95e9b01db6c9b97d7a1323121eda18362b5620df06abac1b59bee80053`
+`8fbd2ae69cdf7ee98b7513c3396a7b5e06f974f8625fdd590df3091dd0c3e9de`
 before installation. Initial requests and redirects are restricted to HTTPS.
 Chrome runs with its sandbox enabled. CI uses headless
 Chrome and localhost ports `4174` and `4175`; it needs no Xvfb or public port.
@@ -59,13 +59,16 @@ separate native and browser hardware qualification.
 
 ## Build and initial registration
 
+`Dockerfile.dockerignore` restricts this build context to the startup script.
+The production image keeps its separate root context rules.
+
 Build on Charles from the repository root. No registration credential is
 needed to build the image:
 
 ```sh
 docker build --platform linux/amd64 \
   --file .github/runners/Dockerfile \
-  --tag particle-foundry-github-runner:2026-10-05 .
+  --tag particle-foundry-github-runner:2026-10-19 .
 ```
 
 For the existing Coolify deployment, start the registered service through
@@ -181,7 +184,7 @@ docker compose stop runner-1
 umask 077
 docker run --rm --user 1001:1001 \
   --mount "type=volume,src=$RUNNER_1_CONFIG_VOLUME,dst=/state,readonly" \
-  --entrypoint tar particle-foundry-github-runner:2026-10-05 \
+  --entrypoint tar particle-foundry-github-runner:2026-10-19 \
   -C /state --exclude=./bin --exclude=./externals -czf - . \
   > /secure-backups/particle-foundry-charles-1-state.tar.gz
 ```

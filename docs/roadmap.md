@@ -1,6 +1,8 @@
 # Development roadmap
 
-**Status:** 27 September 2026. **P1 is the sole active release goal; P2-P9 are deferred.** M0 baseline evidence is recorded; no redesigned scene is promoted. Start at [START_HERE.md](START_HERE.md).
+P1 is the sole active release goal. P2-P9 require a separate user decision.
+Use [the handbook](README.md) to continue project work.
+[Current status](STATUS.md) records the selected action. This roadmap defines phase order and scope.
 
 The active goal is to replace the current sandbox engine with Rust/WASM and GPU simulation/rendering while preserving the [frozen current-sandbox scope](plans/rust-wasm-migration/current-sandbox-scope.md). P1 must prove that the existing materials, interactions, tools and controls work, then pass browser correctness, performance and recovery gates before the GPU backend becomes the default.
 
@@ -17,6 +19,7 @@ The retained P2-P9 designs describe possible expansion to pressure waves, breaka
 The phase manifest is [development-phases.json](data/development-phases.json). Old references to delivery phases 1-5 described partial legacy work and are historical, not the order below. GPU milestones M0-M7 and backlog IDs R9-R14 are retained for continuity.
 
 <!-- BEGIN PHASE TABLE -->
+<!-- prettier-ignore -->
 | Phase | Deliverable | Local milestones | Exit gate |
 | --- | --- | --- | --- |
 | P1 | Rust/WASM + wgpu and conservative-fluid redesign | M0, M1, M2, M3, M4, M5, M6, M7 | GPU-M7 |
@@ -28,6 +31,7 @@ The phase manifest is [development-phases.json](data/development-phases.json). O
 | P7 | Explicit fusion and fission reaction networks | N4, N5, N6 | NUC-N6 |
 | P8 | Superheavy and creative-mode coverage: 118 elements | N7, N8 | NUC-N8 |
 | P9 | Whole-product validation and release hardening | Q0, Q1, Q2 | REL-Q2 |
+
 <!-- END PHASE TABLE -->
 
 P1 is the only active phase in this table. P2 -> P3 -> P4 -> P5 -> P6 -> P7 -> P8 -> P9 preserves conditional future dependency order if the user activates later work. A satisfied dependency is not activation. Finishing P1 does not advance the work queue to P2.
@@ -102,18 +106,19 @@ Follow Q0-Q2 in [acceptance](validation/acceptance.md) for the expanded P2-P8 pr
 
 ## What roster counts mean
 
-| Cohort | New identities | Cumulative | Primary representation |
-| --- | ---: | ---: | --- |
-| Core | 40 | 40 | At least one bounded elemental-material form |
-| Extended | 43 | 83 | Additional bounded material forms and shared mechanisms |
-| Nuclear | 20 | 103 | Nuclide-first; bulk behavior only when separately justified |
-| Exotic | 15 | 118 | Nuclides plus explicit predicted/creative-only material options |
+| Cohort   | New identities | Cumulative | Primary representation                                          |
+| -------- | -------------: | ---------: | --------------------------------------------------------------- |
+| Core     |             40 |         40 | At least one bounded elemental-material form                    |
+| Extended |             43 |         83 | Additional bounded material forms and shared mechanisms         |
+| Nuclear  |             20 |        103 | Nuclide-first; bulk behavior only when separately justified     |
+| Exotic   |             15 |        118 | Nuclides plus explicit predicted/creative-only material options |
 
 These are project priorities, not scientific classifications. Thorium and uranium are in the core material cohort even though their nuclear behavior comes later. All 118 catalogue identities remain available for reference throughout. Scientific identity and isotope references are in [sources](sources.md#iupac-periodic-table).
 
 ## Definition of done
 
-Each phase requires implementation, independent reference tests, conservation checks, backend/model capability declarations, documented domain limits, source provenance, migration/recovery tests where relevant, and a recorded evidence bundle. A passing old regression suite does not demonstrate a new physical model. Use [remaining work](remaining-work.md) to track progress; never infer completion from a phase heading or element count.
+Each phase requires implementation, independent reference tests, conservation checks, backend/model capability declarations, documented domain limits, source provenance, migration/recovery tests where relevant, and a recorded evidence bundle. A passing old regression suite does not demonstrate a new physical model. Use [the phase manifest](data/development-phases.json) for recorded phase status and
+[engineering work](remaining-work.md) for deliverables. A phase heading or element count does not establish completion.
 
 ## Stack decision applied across P1-P9
 
@@ -129,4 +134,4 @@ If separately activated, P2-P9 extend the same engine contracts. Each later plan
 
 The [FIRE-A gates](validation/fire-combustion.md#corrected-gates) explicitly cover closed-boundary oxygen, cold-FIRE ignition, shared finite O2, product formation, condensed-fuel release, water-dose suppression, smoke persistence, substep rates, contention, CPU/GPU parity and recovery. Passing scalar energy checks is not a substitute for composition correctness. The provisional 350 C water ceiling does not authorize legacy 450 C flame/water scenes.
 
-Deferred P4/C3-C6 extends fuel chemistry, char, soot and selected radiative transfer with FIRE-W08 only if separately activated. P1 oxygen/product/ignition correctness and current-feature coverage remain required. Deferred P2 would use the same finite-reactant/source accounting with independently validated compressible physics. M3 and the conditional 40/83/103/118 delivery cohorts are unchanged. No implementation status is advanced by this documentation update.
+Deferred P4/C3-C6 extends fuel chemistry, char, soot and selected radiative transfer with FIRE-W08 only if separately activated. P1 oxygen/product/ignition correctness and current-feature coverage remain required. Deferred P2 would use the same finite-reactant/source accounting with independently validated compressible physics. M3 retains its limited scene scope. The conditional 40/83/103/118 cohorts describe later material expansion.

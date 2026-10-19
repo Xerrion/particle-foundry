@@ -1,15 +1,15 @@
 {
   "type": "module",
   "dependencies": {
-    "@sentry/browser": "11.4.0"
+    "@sentry/browser": "11.8.0"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.5.14",
-    "@types/bun": "1.4.2",
-    "happy-dom": "^20.14.5",
+    "@biomejs/biome": "2.5.15",
+    "@types/bun": "1.4.3",
+    "happy-dom": "21.0.3",
     "typescript": "7.0.2",
-    "vite": "8.3.0",
-    "sentry": "0.45.0",
-    "source-map-js": "1.2.1"
+    "vite": "8.3.4",
+    "sentry": "0.47.0",
+    "source-map-js": "1.2.2"
   }
 }

@@ -2,7 +2,7 @@
 
 Betjening og implementering af den nuværende TypeScript-motor.
 Se [dokumentationsindekset](README.md) og [projektstrukturen](project-structure.md)
-for navigation; [Rust-handoff](RESUME.md) beskriver migrationens aktuelle stade.
+for navigation; [aktuel status](STATUS.md) beskriver migrationens stade.
 
 ## Betjening
 

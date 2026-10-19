@@ -13,35 +13,35 @@ requires an explicit user scope decision; a failed gate cannot redefine coverage
 
 ## Validation layers
 
-| Layer | What it proves | Required evidence |
-| --- | --- | --- |
-| Static source inspection | Existing code shape and migration touchpoints | Hashes and exact paths/lines, no inferred timing |
-| Rust native reference | Contracts, independent equations and numerical invariants | f64 fixtures, tolerances, refinement and accepted time |
-| Rust/WASM browser integration | Bindings, lifecycle, input and generated data actually work in the browser | Built artifacts and real-browser tests |
-| WGSL/native wgpu parity | Shader equations, ABI and resource behavior on that adapter | Reference comparison and validation errors |
-| WGSL/browser WebGPU parity | Browser backend and its limits work for the tested scenes | Browser/device identification and equal-time results |
-| Product and performance | Usable, supported coverage on named devices | Sustained full-pipeline measurements and failure injection |
+| Layer                         | What it proves                                                             | Required evidence                                          |
+| ----------------------------- | -------------------------------------------------------------------------- | ---------------------------------------------------------- |
+| Static source inspection      | Existing code shape and migration touchpoints                              | Hashes and exact paths/lines, no inferred timing           |
+| Rust native reference         | Contracts, independent equations and numerical invariants                  | f64 fixtures, tolerances, refinement and accepted time     |
+| Rust/WASM browser integration | Bindings, lifecycle, input and generated data actually work in the browser | Built artifacts and real-browser tests                     |
+| WGSL/native wgpu parity       | Shader equations, ABI and resource behavior on that adapter                | Reference comparison and validation errors                 |
+| WGSL/browser WebGPU parity    | Browser backend and its limits work for the tested scenes                  | Browser/device identification and equal-time results       |
+| Product and performance       | Usable, supported coverage on named devices                                | Sustained full-pipeline measurements and failure injection |
 
 Native compilation, headless JS tests and online API documentation do not replace a browser GPU run. Agreement between Rust and WGSL is not sufficient without independent physical/reference checks.
 
 ## Stable migration fixture families
 
-| ID | Required contract |
-| --- | --- |
-| MIG-01 | Existing TypeScript application builds and controls work behind the facade; no UI rewrite or direct new-world array access |
-| MIG-02 | Native/WASM builds, bindings generation, asset loading, repeated initialization/disposal and generated-data freshness |
-| MIG-03 | ABI offsets, padding, strides, usages and integer encodings match in Rust and WGSL; sentinel round trip on device |
-| MIG-04 | Exactly one backend state owner; no legacy movement or thermal pass mutates a new session |
+| ID     | Required contract                                                                                                            |
+| ------ | ---------------------------------------------------------------------------------------------------------------------------- |
+| MIG-01 | Existing TypeScript application builds and controls work behind the facade; no UI rewrite or direct new-world array access   |
+| MIG-02 | Native/WASM builds, bindings generation, asset loading, repeated initialization/disposal and generated-data freshness        |
+| MIG-03 | ABI offsets, padding, strides, usages and integer encodings match in Rust and WGSL; sentinel round trip on device            |
+| MIG-04 | Exactly one backend state owner; no legacy movement or thermal pass mutates a new session                                    |
 | MIG-05 | Queue admission differs from commit; bounded backpressure, exactly-once commands/sources, accepted physical time and retries |
-| MIG-06 | Paused painting, held tools, controlled API stepping, hidden-tab, speed, reset/load and obsolete-probe epoch races |
+| MIG-06 | Paused painting, held tools, controlled API stepping, hidden-tab, speed, reset/load and obsolete-probe epoch races           |
 | MIG-07 | A renderer is selected before context acquisition; canvas replacement preserves controls, zoom, overlays and display scaling |
-| MIG-08 | No full-world GPU-to-host readback for normal render/probe/stats; traffic counters include JS/WASM and GPU staging |
-| MIG-09 | GPU completion/residual flags prevent invalid state publication or repeated source consumption |
-| MIG-10 | Snapshots capture one epoch/tick; atomic load rejection; device-loss rollback notices and unsupported fallback rejection |
-| MIG-11 | CPU graph versioning, source funding, changed-conductor samples, sparse event overflow and dense-network cost |
-| MIG-12 | Capability checks cover actual browser context, device limits, data domain, component capacity and physics combinations |
+| MIG-08 | No full-world GPU-to-host readback for normal render/probe/stats; traffic counters include JS/WASM and GPU staging           |
+| MIG-09 | GPU completion/residual flags prevent invalid state publication or repeated source consumption                               |
+| MIG-10 | Snapshots capture one epoch/tick; atomic load rejection; device-loss rollback notices and unsupported fallback rejection     |
+| MIG-11 | CPU graph versioning, source funding, changed-conductor samples, sparse event overflow and dense-network cost                |
+| MIG-12 | Capability checks cover actual browser context, device limits, data domain, component capacity and physics combinations      |
 | MIG-13 | f64 reference and WGSL comparisons at equal accepted time, with invariant and observable tolerances rather than bit identity |
-| MIG-14 | Reproducible benchmark environment, quality settings, transfers, CPU submission versus completed-GPU timing and coverage |
+| MIG-14 | Reproducible benchmark environment, quality settings, transfers, CPU submission versus completed-GPU timing and coverage     |
 
 Existing OWN/CMD/ID/FLUID/etc. families remain valid. Link migration tests to those invariants instead of duplicating inconsistent expected values. Freeze tolerances before optimizing.
 
@@ -51,13 +51,13 @@ The user quoted approximately 79 ms ambient, 114 ms pool and 479 ms sand-over-wa
 
 Capture these execution configurations where available:
 
-| Configuration | Purpose | Comparison caveat |
-| --- | --- | --- |
-| Current TypeScript legacy, headless | Reproduce baseline algorithm/scene costs | Legacy physical model differs from the redesigned solver |
-| Current TypeScript application | UI/input/render baseline on target browser | Includes Canvas and current clock behavior |
-| Corrected Rust f64 reference, native | Numerical reference and CPU work instrumentation | Host/runtime differs from WASM and GPU |
-| Corrected Rust reference in WASM | Browser CPU fallback feasibility and host costs | Does not measure a Rust-versus-TypeScript language effect with identical algorithms |
-| Rust/wgpu GPU solver plus direct renderer | Actual target product performance | Record shader precision, substeps, tolerances and enabled features |
+| Configuration                             | Purpose                                          | Comparison caveat                                                                   |
+| ----------------------------------------- | ------------------------------------------------ | ----------------------------------------------------------------------------------- |
+| Current TypeScript legacy, headless       | Reproduce baseline algorithm/scene costs         | Legacy physical model differs from the redesigned solver                            |
+| Current TypeScript application            | UI/input/render baseline on target browser       | Includes Canvas and current clock behavior                                          |
+| Corrected Rust f64 reference, native      | Numerical reference and CPU work instrumentation | Host/runtime differs from WASM and GPU                                              |
+| Corrected Rust reference in WASM          | Browser CPU fallback feasibility and host costs  | Does not measure a Rust-versus-TypeScript language effect with identical algorithms |
+| Rust/wgpu GPU solver plus direct renderer | Actual target product performance                | Record shader precision, substeps, tolerances and enabled features                  |
 
 Do not build a production TypeScript WebGPU duplicate just for a comparison. An optional bounded host-submission microbenchmark must submit equivalent shaders/work and be reported separately from solver/product speedups.
 
@@ -83,7 +83,7 @@ Test stale responses after clear/load, disposal with pending operations, WASM as
 
 ## Documentation-update boundary
 
-The original 23 September documentation revision added fire-plan integration and documentation checks only; it did not execute implementation gates. The preserved fire audit is historical characterization, not corrected acceptance. Subsequent E00-E02 and layout-recovery results are linked from [RESUME](../RESUME.md). Record new implementation evidence using [the template](../templates/phase-evidence.md); this specification alone establishes no pass.
+The original 23 September documentation revision added fire-plan integration and documentation checks only; it did not execute implementation gates. The preserved fire audit is historical characterization, not corrected acceptance. Subsequent E00-E02 and layout-recovery results are linked from [dated recovery record](../reference/recovery-2026-09-27.md). Record new implementation evidence using [the template](../templates/phase-evidence.md); this specification alone establishes no pass.
 
 ## Combustion migration and hardware checks
 

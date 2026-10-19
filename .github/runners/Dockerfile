@@ -1,19 +1,22 @@
-FROM oven/bun:1.3.12@sha256:8956c7667fa17beb6e3c664115e66bdacfe502da5d99603626e74c197bdef160 AS bun
-FROM node:24.15.0-bookworm@sha256:f22d6a1f082c02f292e86929b5b0442ac2e5eaf438a5dea9b1566601c3e05940 AS node
-FROM jdxcode/mise:2026.9.13@sha256:1e74fb7d744027d453731d948dda0748cf19a3e7b4357b09787448088d1ff2ad AS mise
-FROM python:3.14.7-bookworm@sha256:bfb689a7986adc6d5f16722e06c78e755efe4062e56276715fef450cbad09436 AS python
-FROM rust:1.98.1-bookworm@sha256:93ce27a88655056a51dbdd8f5f2d7ddc071c7b0070fb288a37b5a285fc83971e AS rust
+FROM oven/bun:1.4.3@sha256:ec06c3b6cea04192ae6770c434f668ca41d343ad19fa6472216c7b48be39c598 AS bun
+FROM node:26.12.0-bookworm@sha256:a856ae5e25d498bbe5ec85fde88f00f5ed99908fda803ba39d7735ab8574f58c AS node
+FROM jdxcode/mise:2026.10.14@sha256:7cb6019fd7e60dfc3622b1d667d3e57628549fbc9e36b4a5768265388342f754 AS mise
+FROM python:3.15.0-bookworm@sha256:589def1896e0bb0f4d73278a020391b4f91c16cccc3736631f6ab53a3d6c5acc AS python
+FROM rust:1.99.1-bookworm@sha256:e12566d5abc17a0da741628782cdb504b68b8961f5bfcf677936bf3e8b32de29 AS rust
 
 RUN rustup component add rustfmt clippy \
     && rustup target add wasm32-unknown-unknown \
-    && cargo install wasm-bindgen-cli --version 0.2.108 --locked
+    && cargo install wasm-bindgen-cli --version 0.2.129 --locked
 
-FROM ghcr.io/actions/actions-runner:2.337.0@sha256:e5496277be5d09bc968b3d64911b74e219ac4a3f2edce956a3ecf9271bea1ef4
+FROM ghcr.io/actions/actions-runner:2.338.0@sha256:4ffadc0002b2581327e06101fc8c06cd189232baf79fe561fac9caeb76f5e807
 
-USER root
+USER 0
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 # The official runner image uses Ubuntu 24.04. Package installation also resolves
 # Chrome's runtime libraries; the additional libraries support the copied Python.
+# Install current security updates from the pinned Ubuntu release.
+# hadolint ignore=DL3008
 RUN apt-get update \
     && apt-get install --yes --no-install-recommends \
         build-essential ca-certificates curl git jq libssl-dev pkg-config \
@@ -22,10 +25,10 @@ RUN apt-get update \
         tar xz-utils zlib1g zstd \
     && curl --fail --location --retry 3 \
         --proto '=https' --proto-redir '=https' --tlsv1.2 \
-        https://dl.google.com/linux/chrome/deb/pool/main/g/google-chrome-stable/google-chrome-stable_154.0.8037.97-1_amd64.deb \
+        https://dl.google.com/linux/chrome/deb/pool/main/g/google-chrome-stable/google-chrome-stable_155.0.8059.84-1_amd64.deb \
         --output /tmp/google-chrome.deb \
     && printf '%s  %s\n' \
-        a4edbe95e9b01db6c9b97d7a1323121eda18362b5620df06abac1b59bee80053 \
+        8fbd2ae69cdf7ee98b7513c3396a7b5e06f974f8625fdd590df3091dd0c3e9de \
         /tmp/google-chrome.deb | sha256sum --check --strict \
     && apt-get install --yes --no-install-recommends /tmp/google-chrome.deb \
     && rm /tmp/google-chrome.deb \

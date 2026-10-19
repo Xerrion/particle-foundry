@@ -11,7 +11,9 @@ pub(super) async fn read_stage_statuses(
     staging: &wgpu::Buffer,
 ) -> Result<[u32; STAGE_COUNT], String> {
     wait_for_scene_map(device, staging).await?;
-    let mapped = staging.get_mapped_range(..);
+    let mapped = staging
+        .get_mapped_range(..)
+        .map_err(|error| format!("GPU mapped range failed: {error}"))?;
     let mut statuses = [0_u32; STAGE_COUNT];
     for (slot, status) in statuses.iter_mut().enumerate() {
         let start = slot * 4;
@@ -62,7 +64,9 @@ pub(super) async fn read_fixture_committed_state(scene: &GpuScene) -> Result<[Ve
     }
     scene.context.queue.submit([encoder.finish()]);
     wait_for_scene_map(&scene.context.device, &staging).await?;
-    let mapped = staging.get_mapped_range(..);
+    let mapped = staging
+        .get_mapped_range(..)
+        .map_err(|error| format!("GPU mapped range failed: {error}"))?;
     let bytes = std::array::from_fn(|slot| {
         let start = offsets[slot] as usize;
         let end = (offsets[slot] + fields[slot].size()) as usize;

@@ -214,7 +214,9 @@ impl GpuContext {
         encoder.copy_buffer_to_buffer(&output, 0, &staging, 0, RESULT_BYTES);
         self.queue.submit([encoder.finish()]);
         wait_for_map(&self.device, &staging).await?;
-        let mapped = staging.get_mapped_range(..);
+        let mapped = staging
+            .get_mapped_range(..)
+            .map_err(|error| format!("GPU mapped range failed: {error}"))?;
         let words = mapped
             .as_chunks::<4>()
             .0

@@ -7,7 +7,7 @@ x-runner-environment: &runner-environment
   RUNNER_WORK_DIR: /home/runner/_work
 
 x-runner: &runner
-  image: particle-foundry-github-runner:2026-10-05
+  image: particle-foundry-github-runner:2026-10-19
   platform: linux/amd64
   init: true
   user: "1001:1001"

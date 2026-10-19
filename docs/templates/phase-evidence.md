@@ -39,7 +39,7 @@ Mark hardware fields `not run` for a CPU-only milestone. Do not imply GPU execut
 ## Results
 
 | Test/fixture ID | Independent reference | Physical time / scale | Tolerance or statistical criterion | Measured result | Pass / fail / unrun |
-| --- | --- | --- | --- | --- | --- |
+| --------------- | --------------------- | --------------------- | ---------------------------------- | --------------- | ------------------- |
 
 Report conserved inventory and each relevant energy channel before/after, boundary/brush/source terms, residuals, refinement results, and maximum invalid/negative states. Explain any explicitly approximated mass-defect or pseudo-material term.
 

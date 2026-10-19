@@ -130,7 +130,9 @@ pub(crate) async fn capture(
     }
     queue.submit([encoder.finish()]);
     wait_for_map(device, &staging).await?;
-    let mapped = staging.get_mapped_range(..);
+    let mapped = staging
+        .get_mapped_range(..)
+        .map_err(|error| format!("GPU mapped range failed: {error}"))?;
     let mut fields: [Vec<f32>; FIELD_COUNT] = std::array::from_fn(|_| Vec::new());
     for slot in 0..FIELD_COUNT {
         let start = offsets[slot] as usize;

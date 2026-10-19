@@ -52,20 +52,20 @@ The application uses the existing GitHub App source with access to the public
 `Xerrion/particle-foundry` repository. It runs on the existing Charles server.
 The former Forgejo application is stopped, and its image remains available.
 
-| Setting | Value |
-| --- | --- |
-| Repository | `https://github.com/Xerrion/particle-foundry` through the GitHub App source |
-| Branch | `main` |
-| Build pack | Dockerfile |
-| Base directory | `/` |
-| Dockerfile location | `/Dockerfile` |
-| Exposed port | `80` |
-| Healthcheck | HTTP `GET /` on port `80`, expected status `200` |
-| Healthcheck timing | Interval `30` seconds, timeout `3` seconds, retries `3`, start period `5` seconds |
-| Domain | `https://sand.xerrion.io` |
-| Auto deploy | Enabled for pushes to protected GitHub `main` |
-| Application environment | Empty |
-| Persistent storage | Empty |
+| Setting                 | Value                                                                             |
+| ----------------------- | --------------------------------------------------------------------------------- |
+| Repository              | `https://github.com/Xerrion/particle-foundry` through the GitHub App source       |
+| Branch                  | `main`                                                                            |
+| Build pack              | Dockerfile                                                                        |
+| Base directory          | `/`                                                                               |
+| Dockerfile location     | `/Dockerfile`                                                                     |
+| Exposed port            | `80`                                                                              |
+| Healthcheck             | HTTP `GET /` on port `80`, expected status `200`                                  |
+| Healthcheck timing      | Interval `30` seconds, timeout `3` seconds, retries `3`, start period `5` seconds |
+| Domain                  | `https://sand.xerrion.io`                                                         |
+| Auto deploy             | Enabled for pushes to protected GitHub `main`                                     |
+| Application environment | Empty                                                                             |
+| Persistent storage      | Empty                                                                             |
 
 Use the GitHub App connection for repository access and webhook events.
 Keep its private key and webhook secret in Coolify.

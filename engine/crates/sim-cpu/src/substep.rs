@@ -130,7 +130,7 @@ impl SubstepClock {
             return Err(SubstepError::InvalidScalar("max_substeps"));
         }
         let clock_id = NEXT_CLOCK_ID
-            .fetch_update(Ordering::Relaxed, Ordering::Relaxed, |next| {
+            .try_update(Ordering::Relaxed, Ordering::Relaxed, |next| {
                 next.checked_add(1)
             })
             .map_err(|_| SubstepError::ClockIdentityExhausted)?;

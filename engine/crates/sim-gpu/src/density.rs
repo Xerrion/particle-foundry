@@ -295,7 +295,10 @@ mod tests {
             .recv_timeout(Duration::from_secs(10))
             .expect("density fixture map callback")
             .expect("density fixture mapped result");
-        let bytes = staging.get_mapped_range(..).to_vec();
+        let bytes = staging
+            .get_mapped_range(..)
+            .expect("fixture mapped range")
+            .to_vec();
         staging.unmap();
         bytes
     }

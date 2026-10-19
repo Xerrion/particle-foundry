@@ -1,0 +1,5 @@
+# This recovery image only copies its startup script from the checkout.
+**
+!.github/
+!.github/runners/
+!.github/runners/entrypoint.sh

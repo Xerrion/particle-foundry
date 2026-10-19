@@ -50,13 +50,9 @@ def main() -> int:
         anchor = base if duplicate == 0 else f"{base}-{duplicate}"
         token.attrSet("id", anchor)
         if token.tag == "h2":
-            nav.append(
-                f'<a href="#{html.escape(anchor, quote=True)}">{html.escape(heading)}</a>'
-            )
+            nav.append(f'<a href="#{html.escape(anchor, quote=True)}">{html.escape(heading)}</a>')
     body = parser.renderer.render(tokens, parser.options, {})
-    body = body.replace("<table>", '<div class="table-scroll"><table>').replace(
-        "</table>", "</table></div>"
-    )
+    body = body.replace("<table>", '<div class="table-scroll"><table>').replace("</table>", "</table></div>")
     stylesheet = """
 :root { color-scheme: light; --ink:#142331; --muted:#526574; --line:#d9e3e8; --accent:#176572; }
 * { box-sizing:border-box; }
@@ -106,7 +102,7 @@ footer { border-top:1px solid var(--line); padding:1.5rem; max-width:1400px; mar
 <div class="eyebrow">Particle Foundry / P1 / Planning revision 21 September 2026</div>
 <h1>Rust reference. WASM delivery. wgpu execution.</h1>
 <p>Keep the TypeScript frontend. Redesign the engine around conservative transport, one authoritative state, and direct GPU rendering. Validate each milestone before promotion.</p>
-<p><a href="../../START_HERE.md">Developer entrypoint</a> / <a href="../../roadmap.md">All phases</a> / <a href="plan.md">Canonical Markdown</a></p>
+<p><a href="../../README.md">Project handbook</a> / <a href="../../roadmap.md">Phase reference</a> / <a href="plan.md">Canonical Markdown</a></p>
 </header>
 <div class="layout">
 <nav aria-label="Plan sections"><strong>Implementation plan</strong>{"".join(nav)}</nav>

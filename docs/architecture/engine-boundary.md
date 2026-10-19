@@ -80,14 +80,14 @@ The host clock expresses demand. The engine reports actual accepted time. Limit 
 
 ## 5. State authority and transfers
 
-| Data | GPU session owner | CPU/JS visibility |
-| --- | --- | --- |
-| Component/phase masses, U, compatible momentum and active radiation | GPU state buffers | Explicit checkpoint/export only |
-| Derived temperature, pressure, display label | GPU derived state | Small probe or reduction |
-| Immutable properties and scene component mapping | Rust metadata plus uploaded tables | Compact read-only UI projection |
-| Command queue and source acknowledgements | Rust session / GPU transaction metadata | Receipts and bounded events |
-| Small circuit graph | Rust CPU graph owner | Sparse state samples and funded source events |
-| Reference world | A separate CPU test session | Never a continuously synchronized GPU mirror |
+| Data                                                                | GPU session owner                       | CPU/JS visibility                             |
+| ------------------------------------------------------------------- | --------------------------------------- | --------------------------------------------- |
+| Component/phase masses, U, compatible momentum and active radiation | GPU state buffers                       | Explicit checkpoint/export only               |
+| Derived temperature, pressure, display label                        | GPU derived state                       | Small probe or reduction                      |
+| Immutable properties and scene component mapping                    | Rust metadata plus uploaded tables      | Compact read-only UI projection               |
+| Command queue and source acknowledgements                           | Rust session / GPU transaction metadata | Receipts and bounded events                   |
+| Small circuit graph                                                 | Rust CPU graph owner                    | Sparse state samples and funded source events |
+| Reference world                                                     | A separate CPU test session             | Never a continuously synchronized GPU mirror  |
 
 No normal step, render, probe or statistics refresh may copy the full physical world GPU -> WASM -> JavaScript. Initial import, an explicit save, controlled backend migration and periodic recovery checkpoints are exceptions with measured bytes and duration. In a genuinely CPU-owned fallback, exporting a compact render image is a different documented path; it must not cause GPU full-state readback.
 
