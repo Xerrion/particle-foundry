@@ -1,152 +1,121 @@
-# Particle Foundry knowledge base
+# Particle Foundry handbook
 
-For a short Danish view of the current P/M/E, latest delivery and next selected
-action, read [Hvor er vi nu?](STATUS.md).
+**Continue project work from this page.** Use the same starting point in GitHub,
+your editor or the compiled browser handbook.
 
-Use this index to retrieve the knowledge needed for the current task. Each topic
-should explain what is implemented, why it works that way, where the code and
-tests live, and what remains uncertain. Read the relevant topic and follow its
-links when needed; there is no repository-wide required reading sequence.
+The normal sandbox uses the TypeScript engine. `/gpu.html` runs a limited
+experimental Rust/GPU scene. P1 must migrate the complete existing sandbox before
+the default can change. P2-P9 remain deferred.
 
-[AGENTS.md](../AGENTS.md) owns working rules. [The root README](../README.md)
-owns setup, and [mise.toml](../mise.toml) owns executable commands and tool versions.
-The [shared P1 gameplay target](plans/fluid-gpu-redesign/plan.md#final-gameplay-target-clarified-on-13-october-2026)
-owns the required 60 displayed FPS, simulation in real time, responsive controls
-and physically credible behavior for the complete existing sandbox. Plans and
-acceptance articles reference that target; measured evidence records its actual
-results and remaining gaps.
-The running application is TypeScript in `web/`. `engine/` contains the Rust/WASM
-bootstrap, portable contracts and the locally validated E05-E06 f64 CPU fluid
-reference. E03 adds an experimental browser session contract and one generated
-catalogue projection. E06 owns conservative phase and marker transport,
-compatible momentum, viscous shear and bounded atomic substeps. Its named
-closed-scene and dam-refinement checks pass locally. E07 adds a limited
-Rust/WGSL GPU stage graph with native and browser qualification. E08 has an
-experimental 480 x 270 browser scene that directly renders committed GPU
-state. Bounded paint, inspection, pause and reset have passed isolated browser
-checks. A local Chrome run kept the pool exactly at rest for 3,600 ticks and
-qualified a one-cell surface perturbation for 300 more ticks. M3 passed local
-checks; the broader current-sandbox migration remains incomplete.
-E09 has an isolated water/carrier-air CPU reference with saturation, single-phase
-closure and finite gas exchange against a prescribed reservoir. It closes phase
-amounts from component masses, internal energy and actual volume. [Thermodynamics](thermodynamics.md)
-owns its bounded domain; [E09 evidence](validation/p1-m4-e09.md) records its limits.
-The live sandbox still uses TypeScript. See
-[E05 validation](validation/p1-m2-e05.md) and
-[E06 validation](validation/p1-m2-e06.md) for the CPU reference results,
-[E07 evidence](validation/p1-m3-e07.md) for the GPU stage checks,
-[E08 evidence](validation/p1-m3-e08.md) for browser-scene results, and
-[the dated recovery handoff](RESUME.md) for the earlier recovered commits.
-A plan or reference entry is not evidence of implementation.
+## Continue project work
 
-## Find knowledge by question
+1. Read [current status](STATUS.md) for the selected P/M/E, delivery state and open gaps.
+2. Check the working tree, relevant Git history, associated PR and live Linear issue. Preserve unrelated changes.
+3. Find the assigned item in the [work reference](remaining-work.md). Read its controlling contract and acceptance checks.
+4. Complete that bounded item. Use [project structure](project-structure.md) for ownership and [AGENTS.md](../AGENTS.md) for working rules.
+5. Record verification in the owning evidence article. Update the assigned issue and status when applicable. Pause at the project checkpoint.
 
-| Question | Start here | Read further when needed |
-| --- | --- | --- |
-| Which P, M and E are we working on now? | [Current status in Danish](STATUS.md) | [Active work](remaining-work.md), [phases and milestones](PHASES.md) |
-| Where does behavior belong? | [Project structure](project-structure.md) | [Existing controls and sandbox](legacy-sandbox.md) |
-| How are browser errors and Rust panics reported? | [Sentry reporting](error-reporting.md) | [Deployment configuration](deployment.md) |
-| How does CI run and what must pass before merging? | [GitHub CI and merge policy](../.github/README.md) | [mise tasks](../mise.toml) |
-| How does Coolify deploy the browser application? | [Coolify deployment](deployment.md) | [GitHub CI and merge policy](../.github/README.md) |
-| How does the simulation behave? | [Physical model](model.md) | [Combustion](combustion.md), [elements](elements.md) and the relevant source/tests |
-| Why was this architecture chosen? | [ADR-001](architecture/adr-001-rust-wasm-wgpu.md) | [Engine boundary](architecture/engine-boundary.md), [matter model](architecture/matter-model.md) |
-| What should an assigned migration item deliver? | [Active work](remaining-work.md) | Its controlling plan, dependencies and acceptance gates below |
-| What is the final gameplay goal? | [Shared P1 gameplay target](plans/fluid-gpu-redesign/plan.md#final-gameplay-target-clarified-on-13-october-2026) | [Current sandbox scope](plans/rust-wasm-migration/current-sandbox-scope.md), [acceptance](validation/acceptance.md) and [backend qualification](validation/backend-migration.md) |
-| What supports a claim? | The topic's source/test links | [Evidence and history](#evidence-and-history), including the recorded snapshot and execution scope |
+P means phase, M means milestone and E means engineering item.
+[Phases explained in Danish](PHASES.md) describes the checkpoints.
+The selected work track can differ from the manifests' next incomplete item.
+A plan or backlog does not authorize additional implementation.
 
-The user's task determines scope. The active delivery scope is the
-[current sandbox migration](plans/rust-wasm-migration/current-sandbox-scope.md).
-P2-P9 are deferred and require separate authorization; P1 completion does not
-activate them. Reading a plan does not authorize implementing its backlog. Use
-[the migration brief](START_HERE.md) for an assigned migration task; read later
-phases only when their contracts constrain that task.
+## Read the complete handbook in a browser
+
+Run from the repository root with the existing documentation renderer installed:
+
+```sh
+mise run docs:build
+mise run docs:serve
+```
+
+Open <http://127.0.0.1:8000>. The build also works offline: open
+`artifacts/docs/index.html` directly. All documentation chapters share one HTML
+page. Navigation and search help locate a topic. Linked source files, manifests
+and evidence remain available in the accompanying `files/` directory.
+
+[Documentation maintenance](documentation.md) describes prerequisites, output,
+checks and how to share the complete set.
+
+## Find the controlling reference
+
+Read the topic for your task. The tables below are a reference catalogue, not a
+required reading sequence.
+
+### Build and operate
+
+| Need                            | Reference                                                                               |
+| ------------------------------- | --------------------------------------------------------------------------------------- |
+| Install and run the game        | [Root quick start](../README.md)                                                        |
+| Find commands and pinned tools  | [mise.toml](../mise.toml)                                                               |
+| Locate code and module owners   | [Project structure](project-structure.md), [engine rules](../engine/AGENTS.override.md) |
+| Check CI and merge requirements | [GitHub policy](../.github/README.md)                                                   |
+| Deploy or investigate errors    | [Deployment](deployment.md), [error reporting](error-reporting.md)                      |
+
+### Understand current behavior
+
+| Subject                                     | Reference                             |
+| ------------------------------------------- | ------------------------------------- |
+| Controls, materials and tools               | [Existing sandbox](legacy-sandbox.md) |
+| State, units and conservation               | [Physical model](model.md)            |
+| Water, carrier air and phase closure        | [Thermodynamics](thermodynamics.md)   |
+| Ignition and burning                        | [Combustion](combustion.md)           |
+| Existing elemental models and future roster | [Elements](elements.md)               |
+
+### Implement an assigned migration item
+
+| Need                                            | Controlling reference                                                                                                                                       |
+| ----------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Work mapping and dependencies                   | [Work reference](remaining-work.md), [phase order](roadmap.md)                                                                                              |
+| Active release scope                            | [Current-sandbox checklist](plans/rust-wasm-migration/current-sandbox-scope.md)                                                                             |
+| E00-E14 tasks and exit gates                    | [Migration plan](plans/rust-wasm-migration/plan.md)                                                                                                         |
+| Fluid equations, GPU stages and gameplay target | [Fluid/GPU plan](plans/fluid-gpu-redesign/plan.md), [shared P1 target](plans/fluid-gpu-redesign/plan.md#final-gameplay-target-clarified-on-13-october-2026) |
+| Fire integration and corrected requirements     | [Fire plan](plans/fire-combustion/plan.md), [fire acceptance](validation/fire-combustion.md#corrected-gates)                                                |
+
+### Check design and acceptance
+
+| Need                                    | Reference                                                                                                                                                                                                                                                                              |
+| --------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Stack decision and integration boundary | [ADR-001](architecture/adr-001-rust-wasm-wgpu.md), [engine boundary](architecture/engine-boundary.md)                                                                                                                                                                                  |
+| Planned composition contracts           | [Matter model](architecture/matter-model.md)                                                                                                                                                                                                                                           |
+| Required qualification                  | [Acceptance](validation/acceptance.md), [backend migration](validation/backend-migration.md)                                                                                                                                                                                           |
+| Executed migration results              | [E00](validation/p1-m0.md), [E01](validation/p1-m1.md), [E02](validation/p1-m1-e02.md), [E03](validation/p1-m1-e03.md), [E05](validation/p1-m2-e05.md), [E06](validation/p1-m2-e06.md), [E07](validation/p1-m3-e07.md), [E08](validation/p1-m3-e08.md), [E09](validation/p1-m4-e09.md) |
+| Record a new run                        | [Evidence template](templates/phase-evidence.md)                                                                                                                                                                                                                                       |
+
+### Consult deferred plans and history
+
+| Subject                                       | Reference                                                                                                                                                                                                             |
+| --------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Deferred pressure waves and breakage          | [P2 plan](plans/pressure-waves-breakage/plan.md)                                                                                                                                                                      |
+| Deferred materials and chemistry              | [P3-P5 plan](plans/materials-and-chemistry/plan.md)                                                                                                                                                                   |
+| Deferred nuclear work                         | [P6-P9 plan](plans/nuclear-simulation/plan.md)                                                                                                                                                                        |
+| Historical audits and recovery                | [Archive index](history/README.md), [source review](validation/source-review-2026-09-21.md), [fire review](evidence/fire-review-2026-09-23/FIRE_REVIEW.md), [dated recovery record](reference/recovery-2026-09-27.md) |
+| External references and documentation changes | [Sources](sources.md), [change log](CHANGELOG.md)                                                                                                                                                                     |
 
 ## Authority and status
 
-| Knowledge kind | Authority | Interpretation |
-| --- | --- | --- |
-| Current behavior | Current source and focused regression tests, explained by topic articles | Implemented behavior can include known defects; a passing test covers only its assertions. |
-| Accepted design | Architecture decisions and the contract named by the relevant plan | Selected intent can remain unimplemented. ADR-001 owns the stack; the engine boundary owns integration. |
-| Planned work | [Current sandbox scope](plans/rust-wasm-migration/current-sandbox-scope.md), [phase manifest](data/development-phases.json), [engine work](data/engine-migration-work.json), [fire work](data/fire-combustion-work.json) and their controlling plans | Current sandbox scope owns the active release boundary. Manifests own status/dependencies; plans own work and exit gates within that boundary. Deferred phases require separate authorization. |
-| Evidence | Source, tests or a dated run with provenance and limitations | Static inspection, executed regression tests, characterization and corrected acceptance are different claims. |
-| History | Preserved archives, audit results and superseded descriptions | Valid only for the recorded snapshot; historical text does not override current instructions. |
+| Information             | Owner                                                                                                                                                                                                                                          |
+| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Current behavior        | Checked-out source, including uncommitted changes, and focused regression tests. Topic articles explain behavior and limits.                                                                                                                   |
+| Accepted design         | Architecture decisions and the contract named by the controlling plan. Accepted intent can remain unimplemented.                                                                                                                               |
+| Planned work and status | [Current scope](plans/rust-wasm-migration/current-sandbox-scope.md), [phase manifest](data/development-phases.json), [engineering manifest](data/engine-migration-work.json), [fire manifest](data/fire-combustion-work.json) and live Linear. |
+| Verification            | Dated evidence with revision, commands, execution scope and limitations. Required gates alone do not establish a pass.                                                                                                                         |
+| Historical claims       | Preserved archives and audit records for their recorded snapshot. They do not override current instructions.                                                                                                                                   |
 
-When sources disagree, inspect the relevant code, test and contract and state the
-discrepancy. Do not silently treat an implementation defect as intended design or
-an accepted design as delivered behavior. Update status only with supporting
-evidence. Generated HTML is a view of its canonical Markdown, not a second source.
-
-## Current system
-
-- [Project structure](project-structure.md): current module ownership, browser/engine boundary and proposed Rust placement.
-- [Existing sandbox](legacy-sandbox.md): controls, tools, materials and current TypeScript implementation.
-- [Physical model](model.md): units, state ownership, conservation, solver limitations and explicitly planned model changes.
-- [Thermodynamics](thermodynamics.md): isolated E09 water/carrier-air closure, IF97 tables, source heat, finite gas ventilation and unsupported domains.
-- [Combustion](combustion.md): ignition, generic fuels, explicit oxidation, tick ordering, known defects and regression coverage.
-- [Elements](elements.md): eight documented legacy elemental models and a separately labelled future roster. The [roster manifest](data/element-roadmap.json) and [schema](data/element-roadmap.schema.json) are planning data, not runtime properties.
-
-## Architecture and decisions
-
-- [ADR-001](architecture/adr-001-rust-wasm-wgpu.md): selected stack, rationale, costs and non-goals.
-- [Engine boundary](architecture/engine-boundary.md): planned state authority, commands, asynchronous probes, ABI, rendering and recovery.
-- [Matter model](architecture/matter-model.md): planned elements, nuclides, species, materials and composition contracts.
-
-## Planned work
-
-[Human-readable phases and milestones](PHASES.md) explains the three active P1
-checkpoints and retains P2-P9 as deferred plans. All other planning documents keep
-their technical contracts and acceptance detail.
-
-[Roadmap](roadmap.md) explains phase order; [active work](remaining-work.md) maps
-backlog items to deliverables. [START_HERE.md](START_HERE.md) describes the migration
-workflow. The phase manifest owns the next phase/milestone, and the engine-work
-manifest owns the next engine work item; consult them rather than copying status here.
-
-| Scope | Controlling knowledge |
-| --- | --- |
-| Active P1 current-feature migration | [Current sandbox scope](plans/rust-wasm-migration/current-sandbox-scope.md), [Rust/WASM work packages](plans/rust-wasm-migration/plan.md), [fluid/GPU equations and gates](plans/fluid-gpu-redesign/plan.md) |
-| Combustion within P1 and P4 | [Fire integration](plans/fire-combustion/plan.md), [corrected FIRE-A acceptance](validation/fire-combustion.md#corrected-gates) |
-| Deferred P2 pressure and breakage | [Pressure waves and material breakage](plans/pressure-waves-breakage/plan.md) |
-| Deferred P3-P5 materials and chemistry | [Materials/chemistry](plans/materials-and-chemistry/plan.md) |
-| Deferred P6-P9 nuclear work and expanded-product validation | [Nuclear simulation](plans/nuclear-simulation/plan.md), [acceptance](validation/acceptance.md), [backend migration](validation/backend-migration.md) |
+Inspect code, tests and contracts when sources disagree. Keep local checks,
+hosted CI, merged code and deployed behavior distinct. A browser smoke result
+with `gpu.status: unavailable` does not prove GPU simulation or rendering.
 
 ## Evidence and history
 
-- [Acceptance](validation/acceptance.md) and [backend migration](validation/backend-migration.md) specify required checks. Their existence does not establish a pass; use [phase evidence](templates/phase-evidence.md) to record actual results.
-- [Static source review](validation/source-review-2026-09-21.md) and [source manifest](data/source-review-manifest.json) describe an uploaded source snapshot, not a fresh runtime check.
-- [Fire characterization and corrected gates](validation/fire-combustion.md) links the [preserved report](evidence/fire-review-2026-09-23/FIRE_REVIEW.md) to future acceptance. [Fire provenance](data/fire-review-manifest.json) identifies the original files and execution scope.
-- [Sources](sources.md) records external references; [change log](CHANGELOG.md) records documentation revisions; [history](history/README.md) identifies immutable archives and superseded assumptions.
-- [Earlier package checks](validation/package-checks.txt) belong to their historical revision. Run current checks rather than quoting them as new results.
+Validation articles own their measurements. Historical source manifests identify
+original audit snapshots. They do not freeze today's working tree or require a
+replacement source ZIP. Preserve `history/`, `evidence/` and original audit files
+byte-for-byte.
 
 ## Maintain the knowledge base
 
-Use [combustion](combustion.md) as an example when a subject needs its own article.
-Extend an existing topic before creating another file. Keep one coherent subject
-per article, with descriptive headings, exact identifiers and ordinary Markdown links.
-
-1. State purpose, backend/scope and status at the top. Date a source review or measurement only when it actually occurred; distinguish inspection from execution.
-2. Explain behavior, units, invariants and exceptions. Keep rationale beside the relevant rule or link to its decision.
-3. Link current source files and named symbols, plus the tests that exercise the claim. Links are checked for existence; symbol names and scientific correctness still need review.
-4. Separate known defects, unknowns and future corrections. Link the controlling plan or evidence instead of duplicating its requirements, results or status.
-5. Update the owning article in the same change as behavior or path changes, and keep this index discoverable. Preserve historical evidence byte-for-byte and regenerate affected HTML.
-
-From the repository root, run `mise run docs:check`. The existing validator checks
-authored Markdown/HTML, root guidance, local links/anchors, synchronized manifests,
-generated HTML freshness and historical evidence integrity. It does not execute
-application tests or establish physical correctness. Use the topic's verification
-instructions for behavior and `mise run ci` for full repository checks.
-
-Current source means the checked-out files, including uncommitted changes. Source
-and test links resolve directly into the working tree; no source ZIP is needed.
-Historical source manifests describe their original audit snapshot and must not
-be used to freeze or validate the contents of today's source tree. For new
-measurements, record the Git commit and working-tree changes using the
-[evidence template](templates/phase-evidence.md).
-
-`mise run docs:render` regenerates the GPU plan's HTML.
-
-Keep [STATUS.md](STATUS.md) current in the same change when the selected work
-track, item completion, merge state, blocker or deployment evidence changes.
-Verify live Linear status and the owning evidence. Distinguish the selected
-P/M/E follow-up from the manifests' next migration item. Keep this Danish overview
-short; link detailed measurements and history instead of copying them.
+Update the owning article with a behavior, path or command change. Keep changing
+facts in one place and link to them. [STATUS.md](STATUS.md) owns the short Danish
+delivery overview. The [documentation guide](documentation.md) owns authoring
+rules, browser compilation and checks.

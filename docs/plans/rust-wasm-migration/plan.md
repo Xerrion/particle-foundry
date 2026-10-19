@@ -1,6 +1,6 @@
 # Rust/WASM + wgpu migration work packages
 
-**Revision:** 30 September 2026, current-sandbox migration scope. **Status:** E00-E03 and E05-E08 validated locally; E09 is in progress with an isolated [water reference](../../thermodynamics.md). E04 circuits and E10-E14 remain planned. [Baseline evidence](../../validation/p1-m0.md), [bootstrap evidence](../../validation/p1-m1.md), [E02 evidence](../../validation/p1-m1-e02.md), [E03 evidence](../../validation/p1-m1-e03.md), [E07 evidence](../../validation/p1-m3-e07.md) and [E08 evidence](../../validation/p1-m3-e08.md). P1 is the sole active release scope. P2-P9 are deferred and require a separate user decision to activate. **Selected decision:** [ADR-001](../../architecture/adr-001-rust-wasm-wgpu.md). **Entrypoint:** [START_HERE](../../START_HERE.md).
+**Revision:** 30 September 2026, current-sandbox migration scope. **Status:** E00-E03 and E05-E08 validated locally; E09 is in progress with an isolated [water reference](../../thermodynamics.md). E04 circuits and E10-E14 remain planned. [Baseline evidence](../../validation/p1-m0.md), [bootstrap evidence](../../validation/p1-m1.md), [E02 evidence](../../validation/p1-m1-e02.md), [E03 evidence](../../validation/p1-m1-e03.md), [E07 evidence](../../validation/p1-m3-e07.md) and [E08 evidence](../../validation/p1-m3-e08.md). P1 is the sole active release scope. P2-P9 are deferred and require a separate user decision to activate. **Selected decision:** [ADR-001](../../architecture/adr-001-rust-wasm-wgpu.md). **Entrypoint:** [handbook](../../README.md).
 
 ## Goal
 
@@ -15,20 +15,20 @@ The [current-sandbox scope](current-sandbox-scope.md) fixes the required materia
 
 ## Scope decisions
 
-| Decision | Required interpretation | Basis |
-| --- | --- | --- |
-| Current functionality before expansion | M4-M6 includes the existing eight elemental models and their current interactions. Their first migration cannot wait for P4/C3. | [Current-sandbox scope](current-sandbox-scope.md) and the user's 27 September 2026 scope decision |
-| Preserve user capabilities with corrected physics | Use legacy behavior/tests as regression context. Record intentional numerical changes and fix known conservation, fire and circuit defects; do not reproduce bugs to obtain pixel parity. | [Baseline evidence](../../validation/p1-m0.md), [fire acceptance](../../validation/fire-combustion.md) |
-| Prove the GPU path early | Keep M3 small; validate a complete browser compute/render/input path before extending current feature coverage. | [M3 numerical plan](../fluid-gpu-redesign/plan.md), [backend validation](../../validation/backend-migration.md) |
-| Defer unrelated work | P2-P9, FIRE-W08, expanded catalogue/reactions, optional worker deployment, native UI and additional product features are outside this release. Completing P1 does not start them. | [Phase tracker](../../data/development-phases.json) |
+| Decision                                          | Required interpretation                                                                                                                                                                   | Basis                                                                                                           |
+| ------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| Current functionality before expansion            | M4-M6 includes the existing eight elemental models and their current interactions. Their first migration cannot wait for P4/C3.                                                           | [Current-sandbox scope](current-sandbox-scope.md) and the user's 27 September 2026 scope decision               |
+| Preserve user capabilities with corrected physics | Use legacy behavior/tests as regression context. Record intentional numerical changes and fix known conservation, fire and circuit defects; do not reproduce bugs to obtain pixel parity. | [Baseline evidence](../../validation/p1-m0.md), [fire acceptance](../../validation/fire-combustion.md)          |
+| Prove the GPU path early                          | Keep M3 small; validate a complete browser compute/render/input path before extending current feature coverage.                                                                           | [M3 numerical plan](../fluid-gpu-redesign/plan.md), [backend validation](../../validation/backend-migration.md) |
+| Defer unrelated work                              | P2-P9, FIRE-W08, expanded catalogue/reactions, optional worker deployment, native UI and additional product features are outside this release. Completing P1 does not start them.         | [Phase tracker](../../data/development-phases.json)                                                             |
 
 ## Delivery checkpoints
 
-| Checkpoint | Work | Completion criterion |
-| --- | --- | --- |
-| 1. Working GPU slice | M2-M3 / E05-E08 | One liquid, carrier gas, fixed walls and passive markers; validated Rust reference, browser GPU simulation/direct rendering, basic interaction and measured transfers. Experimental only. |
-| 2. Current sandbox coverage | M4-M6 / E09-E12, with E04 before E11 | Every current-sandbox scope row has an implementation and applicable reference/integration results, including current elemental forms, sources, fire, circuits and controls. |
-| 3. Verified default switch | M7 / E13-E14 | Every scope row passes on the declared browser/device targets, including failure/recovery and sustained performance; the full GPU-M7 and FIRE-M7 evidence is recorded. |
+| Checkpoint                  | Work                                 | Completion criterion                                                                                                                                                                      |
+| --------------------------- | ------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1. Working GPU slice        | M2-M3 / E05-E08                      | One liquid, carrier gas, fixed walls and passive markers; validated Rust reference, browser GPU simulation/direct rendering, basic interaction and measured transfers. Experimental only. |
+| 2. Current sandbox coverage | M4-M6 / E09-E12, with E04 before E11 | Every current-sandbox scope row has an implementation and applicable reference/integration results, including current elemental forms, sources, fire, circuits and controls.              |
+| 3. Verified default switch  | M7 / E13-E14                         | Every scope row passes on the declared browser/device targets, including failure/recovery and sustained performance; the full GPU-M7 and FIRE-M7 evidence is recorded.                    |
 
 E00-E03 remain validated foundation work. E05-E06 have local CPU validation evidence, and E07-E08 have local native and browser GPU evidence. Checkpoint 1 is validated locally, and both [branch](https://github.com/Xerrion/particle-foundry/actions/runs/36572329356) and [pull request](https://github.com/Xerrion/particle-foundry/actions/runs/36572326343) CI passed on code commit `de34f1b`. E04 remains planned. Checkpoint 2 started with E09's isolated water reference. Execute only assigned work; this plan does not authorize automatic execution of deferred work.
 
@@ -253,17 +253,17 @@ Fresh synchronous cell reads, Canvas-only renderer signatures and submitted-time
 
 ## Deferred phase ownership
 
-| Phase | Implementation ownership | Existing detailed milestones |
-| --- | --- | --- |
-| P1 | Rust reference -> Rust/wgpu + WGSL backend; existing TypeScript host | M0-M7 |
-| P2 | sim-cpu compressible/solid references; sim-gpu and shaders/waves, shaders/solids; TypeScript breakage controls | W0-W4 |
-| P3 | sim matter/schema and offline data compiler; generated TS/Rust/WGSL projections; sim-cpu reference reactions | C0-C2 |
-| P4 | shared data/forms and sim-cpu/sim-gpu chemistry; TypeScript palette and probes | C3-C6 |
-| P5 | same engine modules with measured active-set capacity; advanced mechanism kernels only when justified | C7-C9 |
-| P6 | sim nuclide/network contracts; Rust decay/radiation reference and WGSL transport/deposition | N0-N3 |
-| P7 | Rust selected nuclear reaction references and shared tables; GPU population/source stages in supported domains | N4-N6 |
-| P8 | shared catalogue/network/override persistence; TypeScript labels; no special second physics engine | N7-N8 |
-| P9 | Rust/native plus browser WASM/GPU matrix, TypeScript product regressions and package/recovery evidence | Q0-Q2 |
+| Phase | Implementation ownership                                                                                       | Existing detailed milestones |
+| ----- | -------------------------------------------------------------------------------------------------------------- | ---------------------------- |
+| P1    | Rust reference -> Rust/wgpu + WGSL backend; existing TypeScript host                                           | M0-M7                        |
+| P2    | sim-cpu compressible/solid references; sim-gpu and shaders/waves, shaders/solids; TypeScript breakage controls | W0-W4                        |
+| P3    | sim matter/schema and offline data compiler; generated TS/Rust/WGSL projections; sim-cpu reference reactions   | C0-C2                        |
+| P4    | shared data/forms and sim-cpu/sim-gpu chemistry; TypeScript palette and probes                                 | C3-C6                        |
+| P5    | same engine modules with measured active-set capacity; advanced mechanism kernels only when justified          | C7-C9                        |
+| P6    | sim nuclide/network contracts; Rust decay/radiation reference and WGSL transport/deposition                    | N0-N3                        |
+| P7    | Rust selected nuclear reaction references and shared tables; GPU population/source stages in supported domains | N4-N6                        |
+| P8    | shared catalogue/network/override persistence; TypeScript labels; no special second physics engine             | N7-N8                        |
+| P9    | Rust/native plus browser WASM/GPU matrix, TypeScript product regressions and package/recovery evidence         | Q0-Q2                        |
 
 P2-P9 are deferred. The table preserves conditional ownership if a phase is separately activated; it is not an execution queue. Completing P1 does not activate P2 or any later phase. New physics sources always apply through the owning backend's stage/transaction rules. P2 remains a distinct compressible model. P3-P5 retain the exact 40/83-element milestones. P6-P8 retain nuclide/radiation/reaction validation and 103/118-identity coverage; Rust/WASM does not change those scientific limits. P9 validates combined features, including browser execution and loss recovery.
 

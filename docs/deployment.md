@@ -21,6 +21,10 @@ Only `web/dist/` enters the final Nginx image. The
 on port `80`. WASM responses use `application/wasm`. The Docker healthcheck sends
 `GET /` every 30 seconds and requires a successful response. Missing paths return `404`.
 
+The runtime uses Nginx's existing UID/GID `101:101`. Its PID file is under
+`/tmp`, and its cache directory belongs to that user. Static files stay owned
+by root and are readable by the runtime user. The container still serves port `80`.
+
 The application needs no required environment variables, database or persistent volume.
 Optional [Sentry reporting](error-reporting.md) uses public ingestion DSNs and
 release metadata at build time. The Dockerfile accepts `VITE_SENTRY_WEB_DSN`,
@@ -52,20 +56,20 @@ The application uses the existing GitHub App source with access to the public
 `Xerrion/particle-foundry` repository. It runs on the existing Charles server.
 The former Forgejo application is stopped, and its image remains available.
 
-| Setting | Value |
-| --- | --- |
-| Repository | `https://github.com/Xerrion/particle-foundry` through the GitHub App source |
-| Branch | `main` |
-| Build pack | Dockerfile |
-| Base directory | `/` |
-| Dockerfile location | `/Dockerfile` |
-| Exposed port | `80` |
-| Healthcheck | HTTP `GET /` on port `80`, expected status `200` |
-| Healthcheck timing | Interval `30` seconds, timeout `3` seconds, retries `3`, start period `5` seconds |
-| Domain | `https://sand.xerrion.io` |
-| Auto deploy | Enabled for pushes to protected GitHub `main` |
-| Application environment | Empty |
-| Persistent storage | Empty |
+| Setting                 | Value                                                                             |
+| ----------------------- | --------------------------------------------------------------------------------- |
+| Repository              | `https://github.com/Xerrion/particle-foundry` through the GitHub App source       |
+| Branch                  | `main`                                                                            |
+| Build pack              | Dockerfile                                                                        |
+| Base directory          | `/`                                                                               |
+| Dockerfile location     | `/Dockerfile`                                                                     |
+| Exposed port            | `80`                                                                              |
+| Healthcheck             | HTTP `GET /` on port `80`, expected status `200`                                  |
+| Healthcheck timing      | Interval `30` seconds, timeout `3` seconds, retries `3`, start period `5` seconds |
+| Domain                  | `https://sand.xerrion.io`                                                         |
+| Auto deploy             | Enabled for pushes to protected GitHub `main`                                     |
+| Application environment | Empty                                                                             |
+| Persistent storage      | Empty                                                                             |
 
 Use the GitHub App connection for repository access and webhook events.
 Keep its private key and webhook secret in Coolify.

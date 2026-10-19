@@ -93,7 +93,10 @@ fn read_bytes(device: &wgpu::Device, queue: &wgpu::Queue, source: &wgpu::Buffer)
         .recv_timeout(Duration::from_secs(10))
         .expect("transport fixture map callback")
         .expect("transport fixture mapped result");
-    let bytes = staging.get_mapped_range(..).to_vec();
+    let bytes = staging
+        .get_mapped_range(..)
+        .expect("fixture mapped range")
+        .to_vec();
     staging.unmap();
     bytes
 }

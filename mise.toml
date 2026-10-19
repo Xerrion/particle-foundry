@@ -1,10 +1,17 @@
 [tools]
-bun = "1.3.12"
-node = "24.15.0"
-python = "3.14.7"
+bun = "1.4.3"
+node = "26.12.0"
+python = "3.15.0"
+# Rust uses rustup and the pin in engine/rust-toolchain.toml.
+# A mise Rust version overrides that pin and its WASM target selection.
 
 [env]
-_.path = ["{{config_root}}/web/node_modules/.bin"]
+# Clear inherited mise selections so rustup can read the engine toolchain file.
+RUSTUP_TOOLCHAIN = false
+_.path = [
+    "{{config_root}}/web/node_modules/.bin",
+    "{{env.CARGO_HOME | default(value=env.HOME ~ '/.cargo')}}/bin",
+]
 _.python.venv = { path = ".venv", create = true }
 
 [tasks.setup]
@@ -83,11 +90,24 @@ depends = ["typecheck", "typecheck:catalogue", "test"]
 
 [tasks."docs:install"]
 description = "Install the existing Markdown renderer in the project virtual environment"
-run = ["python -m ensurepip --upgrade", "python -m pip install markdown-it-py==4.0.0"]
+run = ["python -m ensurepip --upgrade", "python -m pip install markdown-it-py==4.2.0"]
 
 [tasks."docs:check"]
-description = "Validate documentation, links, manifests and historical evidence"
-run = "python docs/scripts/validate-docs.py"
+description = "Validate documentation, preserved evidence and the complete browser handbook"
+run = [
+    "python docs/scripts/validate-docs.py",
+    "python docs/scripts/test-handbook.py",
+    "python docs/scripts/build-handbook.py",
+]
+
+[tasks."docs:build"]
+description = "Compile the complete offline browser handbook into artifacts/docs"
+run = "python docs/scripts/build-handbook.py"
+
+[tasks."docs:serve"]
+description = "Build and serve the handbook at http://127.0.0.1:8000"
+depends = ["docs:build"]
+run = "python -m http.server 8000 --bind 127.0.0.1 --directory artifacts/docs"
 
 [tasks."docs:render"]
 description = "Regenerate the GPU plan HTML from Markdown"
@@ -134,8 +154,8 @@ description = "Verify or install the wasm-bindgen CLI paired with the locked Rus
 dir = "{{config_root}}/engine"
 depends = ["rust:toolchain"]
 run = """
-if test "$(wasm-bindgen --version 2>/dev/null)" != 'wasm-bindgen 0.2.108'; then
-  cargo install wasm-bindgen-cli --version 0.2.108 --locked
+if test "$(wasm-bindgen --version 2>/dev/null)" != 'wasm-bindgen 0.2.129'; then
+  cargo install wasm-bindgen-cli --version 0.2.129 --locked
 fi
 """
 

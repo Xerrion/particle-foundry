@@ -205,6 +205,6 @@ impl GpuFrame<'_> {
 
     /// Presents the frame after the caller submits its render commands.
     pub fn present(self) {
-        self.texture.present();
+        self.surface.context.queue.present(self.texture);
     }
 }

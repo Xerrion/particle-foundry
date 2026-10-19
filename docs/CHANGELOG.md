@@ -1,5 +1,20 @@
 # Documentation change log
 
+## 19 October 2026: consolidate continuation and compile the complete handbook
+
+Made [the handbook index](README.md) the single starting point for project work.
+Reduced the root README to setup and navigation. Kept status in the Danish
+overview, phase order in the roadmap and engineering mapping in the work
+reference. Older entrypoint paths retain compatibility links. The dated recovery
+handoff moved to [historical reference](reference/recovery-2026-09-27.md).
+
+Added an offline browser build for all documentation chapters, with navigation,
+search and linked repository files. Mise owns build, serve and validation
+commands. The documentation CI job checks and retains the complete handbook.
+[The documentation guide](documentation.md) owns compilation and authoring rules.
+Preserved historical archives and evidence. This work changes no simulation
+behavior or migration acceptance status.
+
 ## 29 September 2026: record falling-sand gameplay references
 
 Recorded browser observations from Sandspiel and BoredHumans as qualitative design

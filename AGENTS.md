@@ -10,7 +10,7 @@ Search installed skill locations if a required skill is missing. Report any unre
 1. Establish the current state. Inspect the branch, working-tree changes and relevant Git history.
    For continued work, check the associated PR and live Linear issue when they exist.
    Preserve unrelated changes. Read `engine/AGENTS.override.md` before editing `engine/`.
-2. Bound the task. Use `docs/README.md` to find the controlling topic, contract and acceptance checks.
+2. Bound the task. Start and continue from `docs/README.md` to find the controlling topic, contract and acceptance checks.
    Identify one deliverable and its dependencies. A plan or backlog does not authorize additional work.
    For migration work, use the current-sandbox checklist and the assigned engineering item.
 3. Implement the bounded change. Keep one owner for each state and module responsibility.
@@ -74,27 +74,27 @@ It does not cover the complete existing sandbox. The default grid is 480 x 270 c
 
 P1 migrates the existing sandbox, including its eight elemental models, tools and interactions.
 The default switch requires complete feature coverage and recovery evidence.
-Use the [migration brief](docs/START_HERE.md) and
+Use the [handbook](docs/README.md) and
 [current-sandbox checklist](docs/plans/rust-wasm-migration/current-sandbox-scope.md) for assigned work.
 Use the work manifests and live Linear project for status. Keep test results in their owning validation articles.
 
-| Project checkpoint | Required outcome |
-| --- | --- |
-| Working GPU scene | Prove the Rust fluid reference and a matching experimental browser GPU scene. |
-| Existing sandbox features | Migrate every required current material, interaction, circuit, scene, tool and control. |
-| Verified default switch | Pass complete coverage, browser/device, performance, snapshot and recovery gates before promotion. |
+| Project checkpoint        | Required outcome                                                                                   |
+| ------------------------- | -------------------------------------------------------------------------------------------------- |
+| Working GPU scene         | Prove the Rust fluid reference and a matching experimental browser GPU scene.                      |
+| Existing sandbox features | Migrate every required current material, interaction, circuit, scene, tool and control.            |
+| Verified default switch   | Pass complete coverage, browser/device, performance, snapshot and recovery gates before promotion. |
 
-| Location | Responsibility |
-| --- | --- |
-| `web/src/app/`, `web/src/main.ts`, `web/src/styles/` | Browser startup, DOM, controls, viewport, clock and CSS |
-| `web/src/engine-client/` | Browser-facing simulation entrypoint; currently delegates to the legacy backend |
-| `web/src/legacy/` | Existing TypeScript state, physics, renderer, tools and scene construction |
-| `web/src/materials/` | Single authored legacy catalogue, validation, presentation and element reference |
-| `web/tests/`, `web/benchmarks/` | TypeScript verification; backend-specific tests and fixtures live under `tests/legacy/` |
-| `web/` configuration | Bun package/lockfile, Vite, TypeScript, Biome and browser HTML |
-| `engine/` | Rust workspace, portable contracts and experimental GPU scene; see `engine/AGENTS.override.md` |
-| `docs/README.md` | Knowledge map by question and topic; `docs/START_HERE.md` is the engine migration brief |
-| `mise.toml`, `.github/workflows/` | Root toolchain/task orchestration and GitHub CI |
+| Location                                             | Responsibility                                                                                                       |
+| ---------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `web/src/app/`, `web/src/main.ts`, `web/src/styles/` | Browser startup, DOM, controls, viewport, clock and CSS                                                              |
+| `web/src/engine-client/`                             | Browser-facing simulation entrypoint; currently delegates to the legacy backend                                      |
+| `web/src/legacy/`                                    | Existing TypeScript state, physics, renderer, tools and scene construction                                           |
+| `web/src/materials/`                                 | Single authored legacy catalogue, validation, presentation and element reference                                     |
+| `web/tests/`, `web/benchmarks/`                      | TypeScript verification; backend-specific tests and fixtures live under `tests/legacy/`                              |
+| `web/` configuration                                 | Bun package/lockfile, Vite, TypeScript, Biome and browser HTML                                                       |
+| `engine/`                                            | Rust workspace, portable contracts and experimental GPU scene; see `engine/AGENTS.override.md`                       |
+| `docs/README.md`                                     | Single continuation entry and reference catalogue; `docs/documentation.md` owns handbook compilation and maintenance |
+| `mise.toml`, `.github/workflows/`                    | Root toolchain/task orchestration and GitHub CI                                                                      |
 
 ## Architecture boundaries
 
@@ -144,19 +144,20 @@ Run tasks from the repository root. `mise.toml` owns tool versions and commands;
 application tasks run in `web/` automatically. Do not add duplicate package scripts
 or another workspace/task framework.
 
-| Command | Purpose |
-| --- | --- |
-| `mise install` then `mise run setup` | Install pinned tools and dependencies; Bun uses `web/bun.lock` with `--frozen-lockfile` |
-| `mise run dev` | Start Vite; production output is `web/dist/` |
-| `mise run docs:check` | Validate guidance, links, manifests and preserved evidence |
-| `mise run lint`, `mise run typecheck`, `mise run test` | Check browser code, types and regressions |
-| `mise run rust:fmt`, `mise run rust:clippy`, `mise run rust:test` | Check Rust formatting, lint and workspace tests |
-| `mise run build:wasm`, `mise run check:wasm` | Generate bindings and check their freshness |
-| `mise run build:catalogue`, `mise run check:catalogue` | Generate and check the single-source material projection |
-| `mise run test:browser` | Run isolated WASM/browser smoke with optional GPU availability |
-| `mise run ci` | Lint, TypeScript/Rust checks, tests, WASM freshness, builds, browser smoke and docs |
-| `mise run bench` | Run existing physics benchmarks when performance work requires them |
-| `mise run docs:render` | Regenerate the GPU HTML after changing its canonical Markdown |
+| Command                                                           | Purpose                                                                                         |
+| ----------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| `mise install` then `mise run setup`                              | Install pinned tools and dependencies; Bun uses `web/bun.lock` with `--frozen-lockfile`         |
+| `mise run dev`                                                    | Start Vite; production output is `web/dist/`                                                    |
+| `mise run docs:check`                                             | Validate guidance, links, manifests, preserved evidence and the browser handbook                |
+| `mise run docs:build`, `mise run docs:serve`                      | Compile the complete handbook into ignored `artifacts/docs/` and serve it on loopback port 8000 |
+| `mise run lint`, `mise run typecheck`, `mise run test`            | Check browser code, types and regressions                                                       |
+| `mise run rust:fmt`, `mise run rust:clippy`, `mise run rust:test` | Check Rust formatting, lint and workspace tests                                                 |
+| `mise run build:wasm`, `mise run check:wasm`                      | Generate bindings and check their freshness                                                     |
+| `mise run build:catalogue`, `mise run check:catalogue`            | Generate and check the single-source material projection                                        |
+| `mise run test:browser`                                           | Run isolated WASM/browser smoke with optional GPU availability                                  |
+| `mise run ci`                                                     | Lint, TypeScript/Rust checks, tests, WASM freshness, builds, browser smoke and docs             |
+| `mise run bench`                                                  | Run existing physics benchmarks when performance work requires them                             |
+| `mise run docs:render`                                            | Regenerate the GPU HTML after changing its canonical Markdown                                   |
 
 Use existing behavior tests for structural changes. Preserve deterministic seeds,
 fixed-step timing, source accounting and conservation assertions. Derived floating
@@ -221,6 +222,7 @@ credentials or generated build outputs. Keep changes focused and verify the
 actual working tree before reporting completion.
 
 <!-- dev-tooling:start -->
+
 ## Development tooling
 
 Run these mise tasks from the repository root. Existing project instructions and prerequisite tasks still apply.
@@ -231,24 +233,38 @@ Review formatting and safe-fix diffs; do not rewrite unrelated files or change t
 - After cross-stack behavior changes, run all configured test suites and their prerequisites. Use `mise run test`.
 - When project dependencies changed or are missing, sync dependencies for selected projects. Use `mise run deps`.
 
-### Rust
+### Docker
 
-- After Rust edits, check rustfmt and Clippy for the locked workspace. Use `mise run check:rust`.
-- When Rust formatting needs correction, run rustfmt. Use `mise run format:rust`.
-- After Rust behavior changes, run locked workspace tests. Use `mise run test:rust`.
+- After Dockerfile edits, check the selected files with Hadolint. Use `mise run check:docker`.
+- To build the configured Docker image, use Docker with a running daemon. Use `mise run build:docker`.
+- To build and run the configured Docker image, start a container that is removed on exit. Use `mise run run:docker`.
+
+### JavaScript / TypeScript
+
+- When JavaScript dependencies change or are missing, install the package dependencies. Use `mise run deps:javascript`.
+- After JavaScript or TypeScript edits, check lint, formatting, and import organization with Biome. Use `mise run check:javascript`.
+- When formatting or safe lint fixes need correction, run Biome check with write enabled; this also organizes imports. Use `mise run format:javascript`.
+- After TypeScript changes, run the package or existing project type check and its prerequisites. Use `mise run typecheck:javascript`.
+- After behavior changes, run the package or existing project tests and their prerequisites. Use `mise run test:javascript`.
 
 ### Markdown
 
 - After Markdown edits, run Markdownlint and Prettier checks. Use `mise run check:markdown`.
 - When Markdown formatting needs correction, run Prettier scoped to Markdown, not JavaScript or TypeScript. Use `mise run format:markdown`.
 
-### Javascript
+### Python
 
-- When JavaScript dependencies change or are missing, install the package dependencies. Use `mise run deps:javascript`.
-- After JavaScript or TypeScript edits, check lint, formatting, and import organization with Biome. Use `mise run check:javascript`.
-- When formatting needs correction, run Biome formatting; this does not apply lint fixes. Use `mise run format:javascript`.
-- After TypeScript changes, run the package or existing project type check and its prerequisites. Use `mise run typecheck:javascript`.
-- After behavior changes, run the package or existing project tests and their prerequisites. Use `mise run test:javascript`.
+- After Python edits, check Ruff lint and formatting. Use `mise run lint:python`.
+- When Python formatting needs correction, run the formatter. Use `mise run format:python`.
+- When applying safe Ruff lint fixes, review the resulting diff. Use `mise run fix:python`.
+- After Python API, annotation, import, or dependency changes, check types with ty. Use `mise run typecheck:python`.
+- This is script-only Python tooling. Do not create a uv project or pytest suite just to run these checks; retain the project's existing script setup and validation tasks.
+
+### Rust
+
+- After Rust edits, check rustfmt and Clippy for the locked workspace. Use `mise run check:rust`.
+- When Rust formatting needs correction, run rustfmt. Use `mise run format:rust`.
+- After Rust behavior changes, run locked workspace tests. Use `mise run test:rust`.
 
 Tool versions, variables, and tasks in higher-precedence mise files override the generated fragment. Check `mise config` and `mise tasks ls` when behavior differs.
 Run installation or dependency-sync commands only when needed; they can download packages or execute dependency build scripts.

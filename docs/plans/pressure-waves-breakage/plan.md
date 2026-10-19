@@ -2,7 +2,7 @@
 
 Implementation proposal · Particle Foundry · 21 September 2026
 
-Status: P2, **deferred**; not implemented. [Start here](../../START_HERE.md). P1 current-sandbox replacement is the sole active release goal. P2 requires separate user activation after the [current-sandbox scope](../rust-wasm-migration/current-sandbox-scope.md) passes P1 acceptance. P1 completion does not activate this plan.
+Status: P2, **deferred**; not implemented. [Start here](../../README.md). P1 current-sandbox replacement is the sole active release goal. P2 requires separate user activation after the [current-sandbox scope](../rust-wasm-migration/current-sandbox-scope.md) passes P1 acceptance. P1 completion does not activate this plan.
 
 ## Goal and placement
 
@@ -69,18 +69,17 @@ Extend speed controls with slow motion and accepted-substep inspection. Pressure
 - **Performance:** benchmark the existing 480×270 target, recording frame latency and simulated seconds per wall-second separately. Do not claim real-time performance before measuring it.
 - Run the existing checks, build, relevant browser tests, and GPU recovery tests. Update the model documentation to distinguish validated behavior from remaining approximations.
 
-
 ## Stable work-item IDs and future composition
 
 The five delivery stages above map to the following stable IDs in the [roadmap](../../roadmap.md):
 
-| ID | Stage | Required result |
-| --- | --- | --- |
-| W0 | Baseline and supported-domain contract | Fresh provenance, fixture definitions and model eligibility; no new blast impulse field masquerading as waves |
-| W1 | CPU gas reference | Conservative fixed-wall gas, reflection, finite venting and refinement references |
-| W2 | GPU parity | Equivalent equations/stage graph, direct rendering, equal-time comparison and retry tests |
-| W3 | Reactive sources and breakage | Energy-funded sources, structural loading, damage/fragments; M5 solid/fluid coupling is required |
-| W4 | Product acceptance | Persisted breakage toggle, slow motion/substeps, supported scenes, recovery and measurements |
+| ID  | Stage                                  | Required result                                                                                               |
+| --- | -------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| W0  | Baseline and supported-domain contract | Fresh provenance, fixture definitions and model eligibility; no new blast impulse field masquerading as waves |
+| W1  | CPU gas reference                      | Conservative fixed-wall gas, reflection, finite venting and refinement references                             |
+| W2  | GPU parity                             | Equivalent equations/stage graph, direct rendering, equal-time comparison and retry tests                     |
+| W3  | Reactive sources and breakage          | Energy-funded sources, structural loading, damage/fragments; M5 solid/fluid coupling is required              |
+| W4  | Product acceptance                     | Persisted breakage toggle, slow motion/substeps, supported scenes, recovery and measurements                  |
 
 Carry full composition/nuclide signatures with moving solids and fragments according to [the matter contract](../../architecture/matter-model.md). The P3 chemistry pipeline extends those signatures; it must not later require changing how fragment mass is owned. Breaking a body cannot reset its isotope composition or chemical inventory.
 

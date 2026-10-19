@@ -164,7 +164,9 @@ impl GpuCflStage {
     ) -> Result<GpuCflMeasurement, String> {
         let staging = self.submit_measurement(device, queue, u_velocity_m_s, v_velocity_m_s)?;
         wait_for_map(device, &staging).await?;
-        let mapped = staging.get_mapped_range(..);
+        let mapped = staging
+            .get_mapped_range(..)
+            .map_err(|error| format!("GPU mapped range failed: {error}"))?;
         let rate_bits = u32::from_le_bytes(mapped[..4].try_into().expect("rate word"));
         let status = u32::from_le_bytes(mapped[4..8].try_into().expect("status word"));
         drop(mapped);

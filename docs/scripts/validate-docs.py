@@ -25,7 +25,126 @@ ROOT = Path(__file__).resolve().parents[1]
 PROJECT_ROOT = ROOT.parent
 ORIGINAL_SHA256 = "f0c353534cca10736d98c449fa96b5e2ed07c241a3ba7cd4463f897ab9860eb5"
 FIRE_REVIEW_SHA256 = "977396260ed156adc2cd4eb439cfe7e645de449e6f5126130c667097e92cadb0"
-EXPECTED_SYMBOLS = "H He Li Be B C N O F Ne Na Mg Al Si P S Cl Ar K Ca Sc Ti V Cr Mn Fe Co Ni Cu Zn Ga Ge As Se Br Kr Rb Sr Y Zr Nb Mo Tc Ru Rh Pd Ag Cd In Sn Sb Te I Xe Cs Ba La Ce Pr Nd Pm Sm Eu Gd Tb Dy Ho Er Tm Yb Lu Hf Ta W Re Os Ir Pt Au Hg Tl Pb Bi Po At Rn Fr Ra Ac Th Pa U Np Pu Am Cm Bk Cf Es Fm Md No Lr Rf Db Sg Bh Hs Mt Ds Rg Cn Nh Fl Mc Lv Ts Og".split()
+EXPECTED_SYMBOLS = [
+    "H",
+    "He",
+    "Li",
+    "Be",
+    "B",
+    "C",
+    "N",
+    "O",
+    "F",
+    "Ne",
+    "Na",
+    "Mg",
+    "Al",
+    "Si",
+    "P",
+    "S",
+    "Cl",
+    "Ar",
+    "K",
+    "Ca",
+    "Sc",
+    "Ti",
+    "V",
+    "Cr",
+    "Mn",
+    "Fe",
+    "Co",
+    "Ni",
+    "Cu",
+    "Zn",
+    "Ga",
+    "Ge",
+    "As",
+    "Se",
+    "Br",
+    "Kr",
+    "Rb",
+    "Sr",
+    "Y",
+    "Zr",
+    "Nb",
+    "Mo",
+    "Tc",
+    "Ru",
+    "Rh",
+    "Pd",
+    "Ag",
+    "Cd",
+    "In",
+    "Sn",
+    "Sb",
+    "Te",
+    "I",
+    "Xe",
+    "Cs",
+    "Ba",
+    "La",
+    "Ce",
+    "Pr",
+    "Nd",
+    "Pm",
+    "Sm",
+    "Eu",
+    "Gd",
+    "Tb",
+    "Dy",
+    "Ho",
+    "Er",
+    "Tm",
+    "Yb",
+    "Lu",
+    "Hf",
+    "Ta",
+    "W",
+    "Re",
+    "Os",
+    "Ir",
+    "Pt",
+    "Au",
+    "Hg",
+    "Tl",
+    "Pb",
+    "Bi",
+    "Po",
+    "At",
+    "Rn",
+    "Fr",
+    "Ra",
+    "Ac",
+    "Th",
+    "Pa",
+    "U",
+    "Np",
+    "Pu",
+    "Am",
+    "Cm",
+    "Bk",
+    "Cf",
+    "Es",
+    "Fm",
+    "Md",
+    "No",
+    "Lr",
+    "Rf",
+    "Db",
+    "Sg",
+    "Bh",
+    "Hs",
+    "Mt",
+    "Ds",
+    "Rg",
+    "Cn",
+    "Nh",
+    "Fl",
+    "Mc",
+    "Lv",
+    "Ts",
+    "Og",
+]
 EXPECTED_COUNTS = {"core": 40, "extended": 43, "nuclear": 20, "exotic": 15}
 TIER_PHASE = {"core": "P4", "extended": "P5", "nuclear": "P6", "exotic": "P8"}
 
@@ -80,9 +199,7 @@ def main() -> int:
             errors.append(message)
 
     try:
-        roster = json.loads(
-            (ROOT / "data/element-roadmap.json").read_text(encoding="utf-8")
-        )
+        roster = json.loads((ROOT / "data/element-roadmap.json").read_text(encoding="utf-8"))
         records = roster["elements"]
         require(
             roster["kind"] == "planning-manifest-not-runtime-properties",
@@ -114,8 +231,7 @@ def main() -> int:
             "Wrong cumulative roster targets",
         )
         require(
-            {e["symbol"] for e in records if e["legacyModelDocumented"]}
-            == set("H He C N O S Fe Cu".split()),
+            {e["symbol"] for e in records if e["legacyModelDocumented"]} == {"H", "He", "C", "N", "O", "S", "Fe", "Cu"},
             "Historical eight-element status changed",
         )
         for e in records:
@@ -128,24 +244,16 @@ def main() -> int:
                 f"Bad support status for {e['symbol']}",
             )
             require(bool(e["sourceIds"]), f"No identity source for {e['symbol']}")
-        schema = json.loads(
-            (ROOT / "data/element-roadmap.schema.json").read_text(encoding="utf-8")
-        )
+        schema = json.loads((ROOT / "data/element-roadmap.schema.json").read_text(encoding="utf-8"))
         require(
             schema["properties"]["elements"]["minItems"] == 118,
             "Schema lost its roster cardinality contract",
         )
-        checked.append(
-            "118 element identities, tier counts, target phases and historical status"
-        )
+        checked.append("118 element identities, tier counts, target phases and historical status")
 
         elements_text = (ROOT / "elements.md").read_text(encoding="utf-8")
-        block = elements_text.split("<!-- BEGIN ELEMENT ROSTER -->", 1)[1].split(
-            "<!-- END ELEMENT ROSTER -->", 1
-        )[0]
-        table_rows = re.findall(
-            r"(?m)^\| (\d+) \| ([A-Za-z]+) \| ([^|]+) \| (P\d+) \| (Yes|No) \|$", block
-        )
+        block = elements_text.split("<!-- BEGIN ELEMENT ROSTER -->", 1)[1].split("<!-- END ELEMENT ROSTER -->", 1)[0]
+        table_rows = re.findall(r"(?m)^\| (\d+) \| ([A-Za-z]+) \| ([^|]+) \| (P\d+) \| (Yes|No) \|$", block)
         expected_rows = [
             (
                 str(e["atomicNumber"]),
@@ -164,9 +272,7 @@ def main() -> int:
         )
         checked.append("Markdown element roster matches the JSON manifest")
 
-        phase_manifest = json.loads(
-            (ROOT / "data/development-phases.json").read_text(encoding="utf-8")
-        )
+        phase_manifest = json.loads((ROOT / "data/development-phases.json").read_text(encoding="utf-8"))
         phases = phase_manifest["phases"]
         require(
             [p["id"] for p in phases] == [f"P{i}" for i in range(1, 10)],
@@ -199,9 +305,7 @@ def main() -> int:
                 f"Invalid phase status {p['id']}",
             )
             if p["status"] == "validated":
-                require(
-                    bool(p["evidence"]), f"Validated phase lacks evidence: {p['id']}"
-                )
+                require(bool(p["evidence"]), f"Validated phase lacks evidence: {p['id']}")
             seen.add(p["id"])
         if phase_manifest["nextPhase"] is None:
             require(
@@ -214,32 +318,24 @@ def main() -> int:
             )
         else:
             require(phase_manifest["nextPhase"] in seen, "Next phase does not exist")
-            next_phase = next(
-                p for p in phases if p["id"] == phase_manifest["nextPhase"]
-            )
+            next_phase = next(p for p in phases if p["id"] == phase_manifest["nextPhase"])
             require(
                 next_phase["status"] != "deferred",
                 "Next phase is deferred; explicit activation is required",
             )
-            require(
-                next_phase["status"] != "validated", "Next phase is already validated"
-            )
+            require(next_phase["status"] != "validated", "Next phase is already validated")
             require(
                 phase_manifest["nextMilestone"] in next_phase["milestones"],
                 "Next milestone does not belong to next phase",
             )
         roadmap = (ROOT / "roadmap.md").read_text(encoding="utf-8")
-        block = roadmap.split("<!-- BEGIN PHASE TABLE -->", 1)[1].split(
-            "<!-- END PHASE TABLE -->", 1
-        )[0]
+        block = roadmap.split("<!-- BEGIN PHASE TABLE -->", 1)[1].split("<!-- END PHASE TABLE -->", 1)[0]
         for p in phases:
             expected = f"| {p['id']} | {p['title']} | {', '.join(p['milestones'])} | {p['gate']} |"
             require(expected in block, f"Roadmap phase table out of sync for {p['id']}")
         checked.append("P1-P9 dependency order and synchronized roadmap table")
 
-        source_review = json.loads(
-            (ROOT / "data/source-review-manifest.json").read_text(encoding="utf-8")
-        )
+        source_review = json.loads((ROOT / "data/source-review-manifest.json").read_text(encoding="utf-8"))
         require(
             source_review["kind"] == "static-source-review-not-benchmark",
             "Source manifest lost its static-review qualification",
@@ -290,19 +386,12 @@ def main() -> int:
                 require(name in source_files, f"Unknown source location: {name}")
                 if name in source_files:
                     require(
-                        1
-                        <= location["startLine"]
-                        <= location["endLine"]
-                        <= source_files[name]["lines"],
+                        1 <= location["startLine"] <= location["endLine"] <= source_files[name]["lines"],
                         f"Source range out of bounds: {observation['id']} {name}",
                     )
-        checked.append(
-            "Historical 43-file source manifest and 12 observations; not compared with current source"
-        )
+        checked.append("Historical 43-file source manifest and 12 observations; not compared with current source")
 
-        work = json.loads(
-            (ROOT / "data/engine-migration-work.json").read_text(encoding="utf-8")
-        )
+        work = json.loads((ROOT / "data/engine-migration-work.json").read_text(encoding="utf-8"))
         require(
             work["kind"] == "planning-work-packages-not-implementation-status",
             "Work manifest is not labelled as a plan",
@@ -343,9 +432,7 @@ def main() -> int:
         }
         for item in items:
             identity = item["id"]
-            require(
-                item["phase"] == "P1", f"Migration work moved outside P1: {identity}"
-            )
+            require(item["phase"] == "P1", f"Migration work moved outside P1: {identity}")
             require(
                 item["milestone"] in phases[0]["milestones"],
                 f"Unknown P1 milestone: {identity}",
@@ -358,17 +445,13 @@ def main() -> int:
                 set(item["sourceObservations"]).issubset(set(observation_ids)),
                 f"Unknown source observation in {identity}",
             )
-            require(
-                item["status"] in allowed_statuses, f"Invalid work status: {identity}"
-            )
+            require(item["status"] in allowed_statuses, f"Invalid work status: {identity}")
             require(
                 isinstance(item["evidence"], list),
                 f"Evidence must be a list: {identity}",
             )
             if item["status"] == "validated":
-                require(
-                    bool(item["evidence"]), f"Validated work lacks evidence: {identity}"
-                )
+                require(bool(item["evidence"]), f"Validated work lacks evidence: {identity}")
             require(
                 f"### {identity}: {item['title']}" in migration_text,
                 f"Work title out of sync with Markdown: {identity}",
@@ -401,8 +484,7 @@ def main() -> int:
             )
         work_by_id = {i["id"]: i for i in items}
         require(
-            "E04" not in work_by_id["E05"]["dependsOn"]
-            and "E04" in work_by_id["E11"]["dependsOn"],
+            "E04" not in work_by_id["E05"]["dependsOn"] and "E04" in work_by_id["E11"]["dependsOn"],
             "Independent circuit branch dependency was lost",
         )
         execution = work["phaseExecution"]
@@ -410,26 +492,20 @@ def main() -> int:
             [e["phase"] for e in execution] == [p["id"] for p in phases],
             "Cross-phase engine ownership must cover P1-P9 exactly once",
         )
-        for entry, phase in zip(execution, phases):
+        for entry, phase in zip(execution, phases, strict=False):
             require(
-                entry["milestones"]
-                == f"{phase['milestones'][0]}-{phase['milestones'][-1]}",
+                entry["milestones"] == f"{phase['milestones'][0]}-{phase['milestones'][-1]}",
                 f"Wrong engine execution milestones: {entry['phase']}",
             )
-            require(
-                bool(entry["ownership"]), f"Missing runtime ownership: {entry['phase']}"
-            )
+            require(bool(entry["ownership"]), f"Missing runtime ownership: {entry['phase']}")
         checked.append(
             "E00-E14 DAG, source traceability, Markdown work/acceptance synchronization and P1-P9 runtime ownership"
         )
 
         # Fire evidence is immutable characterization, separate from future acceptance.
-        fire_evidence = json.loads(
-            (ROOT / "data/fire-review-manifest.json").read_text(encoding="utf-8")
-        )
+        fire_evidence = json.loads((ROOT / "data/fire-review-manifest.json").read_text(encoding="utf-8"))
         require(
-            fire_evidence["kind"]
-            == "historical-characterization-evidence-not-corrected-acceptance",
+            fire_evidence["kind"] == "historical-characterization-evidence-not-corrected-acceptance",
             "Fire evidence must be labelled as characterization",
         )
         require(
@@ -437,17 +513,14 @@ def main() -> int:
             "Fire import must not claim newly executed implementation checks",
         )
         require(
-            fire_evidence["sourceArchive"]["sha256"]
-            == source_review["sourceArchive"]["sha256"],
+            fire_evidence["sourceArchive"]["sha256"] == source_review["sourceArchive"]["sha256"],
             "Static and fire reviews refer to different source archives",
         )
         require(
             fire_evidence["sourceArchive"]["fileCount"] == 43,
             "Fire source file count mismatch",
         )
-        historical_fire = json.loads(
-            (ROOT / fire_evidence["results"]).read_text(encoding="utf-8")
-        )
+        historical_fire = json.loads((ROOT / fire_evidence["results"]).read_text(encoding="utf-8"))
         fire_results = historical_fire["results"]
         historical_ids = [r["id"] for r in fire_results]
         require(
@@ -455,8 +528,7 @@ def main() -> int:
             "Historical F01-F12 IDs changed",
         )
         require(
-            fire_evidence["checkIds"] == historical_ids
-            and fire_evidence["checkCount"] == 12,
+            fire_evidence["checkIds"] == historical_ids and fire_evidence["checkCount"] == 12,
             "Fire check inventory inconsistent",
         )
         require(
@@ -468,12 +540,9 @@ def main() -> int:
             all(r["status"] == "observed-and-asserted" for r in fire_results),
             "Historical fire observations must not become corrected passes",
         )
-        fire_provenance = json.loads(
-            (ROOT / fire_evidence["provenance"]).read_text(encoding="utf-8")
-        )
+        fire_provenance = json.loads((ROOT / fire_evidence["provenance"]).read_text(encoding="utf-8"))
         require(
-            fire_provenance["source_archive_sha256"]
-            == source_review["sourceArchive"]["sha256"],
+            fire_provenance["source_archive_sha256"] == source_review["sourceArchive"]["sha256"],
             "Fire provenance source hash changed",
         )
         require(
@@ -484,9 +553,7 @@ def main() -> int:
         fire_archive = ROOT / fire_evidence["reviewArchive"]["path"]
         fire_archive_hash = hashlib.sha256(fire_archive.read_bytes()).hexdigest()
         require(
-            fire_archive_hash
-            == fire_evidence["reviewArchive"]["sha256"]
-            == FIRE_REVIEW_SHA256,
+            fire_archive_hash == fire_evidence["reviewArchive"]["sha256"] == FIRE_REVIEW_SHA256,
             "Preserved fire review ZIP changed",
         )
         expected_review_files = {
@@ -515,8 +582,7 @@ def main() -> int:
                 )
                 content = evidence_path.read_bytes()
                 require(
-                    hashlib.sha256(content).hexdigest() == record["sha256"]
-                    and len(content) == record["bytes"],
+                    hashlib.sha256(content).hexdigest() == record["sha256"] and len(content) == record["bytes"],
                     f"Fire evidence file changed: {record['path']}",
                 )
                 require(
@@ -531,9 +597,7 @@ def main() -> int:
             "Unchanged fire review ZIP and five evidence files; F01-F12 characterization scope and 43 source hashes"
         )
 
-        fire = json.loads(
-            (ROOT / "data/fire-combustion-work.json").read_text(encoding="utf-8")
-        )
+        fire = json.loads((ROOT / "data/fire-combustion-work.json").read_text(encoding="utf-8"))
         require(
             fire["kind"] == "planning-fire-work-not-implementation-evidence",
             "Fire work is not clearly planning data",
@@ -587,8 +651,7 @@ def main() -> int:
                 f"Fire dependency cycle/order error: {fid}",
             )
             require(
-                item["phase"] in phase_by_id
-                and item["milestone"] in phase_by_id[item["phase"]]["milestones"],
+                item["phase"] in phase_by_id and item["milestone"] in phase_by_id[item["phase"]]["milestones"],
                 f"Unknown fire phase/milestone: {fid}",
             )
             require(
@@ -614,8 +677,7 @@ def main() -> int:
                 require(eid in work_by_id, f"Unknown parent engine item: {fid}/{eid}")
                 if eid in work_by_id:
                     require(
-                        (item["phase"], item["milestone"])
-                        == (work_by_id[eid]["phase"], work_by_id[eid]["milestone"]),
+                        (item["phase"], item["milestone"]) == (work_by_id[eid]["phase"], work_by_id[eid]["milestone"]),
                         f"Parent fire/engine milestone differs: {fid}/{eid}",
                     )
             require(
@@ -655,9 +717,7 @@ def main() -> int:
             "P4 fire work mapping missing",
         )
         for item in items:
-            expected = [
-                i["id"] for i in fire_work if item["id"] in i["engineWorkItems"]
-            ]
+            expected = [i["id"] for i in fire_work if item["id"] in i["engineWorkItems"]]
             require(
                 item["fireWorkItems"] == expected,
                 f"Bidirectional E/FIRE mapping differs: {item['id']}",
@@ -665,8 +725,7 @@ def main() -> int:
         for fixture in fire_fixtures:
             fid = fixture["id"]
             require(
-                fixture["phase"] == "P1"
-                and fixture["firstMilestone"] in phase_by_id["P1"]["milestones"],
+                fixture["phase"] == "P1" and fixture["firstMilestone"] in phase_by_id["P1"]["milestones"],
                 f"Unknown fire fixture milestone: {fid}",
             )
             require(
@@ -687,16 +746,13 @@ def main() -> int:
                 f"Corrected fixture title out of sync: {fid}",
             )
             require(
-                fixture["specification"] in fire_acceptance_text
-                and fixture["measurement"] in fire_acceptance_text,
+                fixture["specification"] in fire_acceptance_text and fixture["measurement"] in fire_acceptance_text,
                 f"Corrected fire requirement/measurement out of sync: {fid}",
             )
         bundles = fire["gateBundles"]
         expected_bundle_ids = ["FIRE-PRECONDITIONS", "FIRE-M6", "FIRE-M7"]
         require(
-            [b["id"] for b in bundles]
-            == phase_by_id["P1"]["supplementalGates"]
-            == expected_bundle_ids,
+            [b["id"] for b in bundles] == phase_by_id["P1"]["supplementalGates"] == expected_bundle_ids,
             "P1 supplemental fire gates are inconsistent",
         )
         require(
@@ -711,21 +767,20 @@ def main() -> int:
             bundles[2]["fixtures"] == fire_fixture_ids,
             "FIRE-M7 has incomplete corrected coverage",
         )
-        for b, ms in zip(bundles, ["M4", "M6", "M7"]):
+        for b, ms in zip(bundles, ["M4", "M6", "M7"], strict=False):
             require(
                 b["phase"] == "P1" and b["milestone"] == ms,
                 f"Fire aggregate gate mapped to wrong milestone: {b['id']}",
             )
-            require(
-                b["status"] in valid_statuses, f"Bad fire aggregate status: {b['id']}"
-            )
+            require(b["status"] in valid_statuses, f"Bad fire aggregate status: {b['id']}")
             if b["status"] == "validated":
                 require(
                     bool(b["evidence"]),
                     f"Validated fire aggregate lacks evidence: {b['id']}",
                 )
         checked.append(
-            "Nine FIRE-W tasks, fourteen FIRE-A specifications, E-parent DAG, synchronized prose and M4/M6/M7 gate coverage"
+            "Nine FIRE-W tasks, fourteen FIRE-A specifications, E-parent DAG, "
+            "synchronized prose and M4/M6/M7 gate coverage"
         )
 
         docs = sorted(
@@ -735,6 +790,7 @@ def main() -> int:
                 PROJECT_ROOT / "README.md",
                 PROJECT_ROOT / "AGENTS.md",
                 PROJECT_ROOT / "engine/AGENTS.override.md",
+                *(PROJECT_ROOT / ".github").rglob("*.md"),
             ]
         )
         anchor_cache: dict[Path, set[str]] = {}
@@ -759,19 +815,13 @@ def main() -> int:
                 links = parsed.links
                 anchor_cache[p.resolve()] = parsed.anchors
             else:
-                links = re.findall(
-                    r"\[[^\]\n]+\]\(([^\s)]+)(?:\s+\"[^\"]*\")?\)", without_fences(text)
-                )
+                links = re.findall(r"\[[^\]\n]+\]\(([^\s)]+)(?:\s+\"[^\"]*\")?\)", without_fences(text))
                 anchor_cache[p.resolve()] = markdown_anchors(text)
             for target in links:
                 url = urlsplit(target)
                 if url.scheme or url.netloc:
                     continue
-                resolved = (
-                    (p.parent / unquote(url.path)).resolve()
-                    if url.path
-                    else p.resolve()
-                )
+                resolved = (p.parent / unquote(url.path)).resolve() if url.path else p.resolve()
                 link_count += 1
                 require(
                     resolved.is_relative_to(PROJECT_ROOT.resolve()),
@@ -781,11 +831,7 @@ def main() -> int:
                     resolved.exists(),
                     f"Missing local target: {p.relative_to(PROJECT_ROOT)} -> {target}",
                 )
-                if (
-                    not resolved.exists()
-                    or not url.fragment
-                    or resolved.suffix not in {".md", ".html"}
-                ):
+                if not resolved.exists() or not url.fragment or resolved.suffix not in {".md", ".html"}:
                     continue
                 if resolved not in anchor_cache:
                     t = resolved.read_text(encoding="utf-8")
@@ -799,15 +845,11 @@ def main() -> int:
                     unquote(url.fragment) in anchor_cache[resolved],
                     f"Missing local anchor: {p.relative_to(PROJECT_ROOT)} -> {target}",
                 )
-        checked.append(
-            f"{len(docs)} authored Markdown/HTML documents and {link_count} working-tree links/anchors"
-        )
+        checked.append(f"{len(docs)} authored Markdown/HTML documents and {link_count} working-tree links/anchors")
 
         source = (ROOT / "plans/fluid-gpu-redesign/plan.md").read_bytes()
         rendered = HTMLLinks()
-        rendered.feed(
-            (ROOT / "plans/fluid-gpu-redesign/plan.html").read_text(encoding="utf-8")
-        )
+        rendered.feed((ROOT / "plans/fluid-gpu-redesign/plan.html").read_text(encoding="utf-8"))
         require(
             rendered.source_hash == hashlib.sha256(source).hexdigest(),
             "GPU HTML is stale; run mise run docs:render",
@@ -815,9 +857,7 @@ def main() -> int:
         checked.append("Generated GPU HTML matches the current Markdown source hash")
 
         original = ROOT / "history/original-docs-2026-09-21.zip"
-        hashes = json.loads(
-            (ROOT / "history/original-file-hashes.json").read_text(encoding="utf-8")
-        )
+        hashes = json.loads((ROOT / "history/original-file-hashes.json").read_text(encoding="utf-8"))
         require(
             hashlib.sha256(original.read_bytes()).hexdigest() == ORIGINAL_SHA256,
             "Original input archive was modified",
@@ -843,31 +883,21 @@ def main() -> int:
                 hashlib.sha256((ROOT / rel).read_bytes()).hexdigest() == hashes[rel],
                 f"Historical audit evidence modified: {name}",
             )
-        audit = json.loads(
-            (ROOT / "plans/fluid-gpu-redesign/current-audit-results.json").read_text(
-                encoding="utf-8"
-            )
-        )
+        audit = json.loads((ROOT / "plans/fluid-gpu-redesign/current-audit-results.json").read_text(encoding="utf-8"))
         passes = sum(1 for r in audit["results"] if r["passed"])
         require(
             len(audit["results"]) == 35 and passes == 24,
             "Historical audit summary no longer matches retained records",
         )
-        checked.append(
-            "Input archive CRC/SHA-256, all original paths, and three unchanged audit files"
-        )
-        prior_meta = json.loads(
-            (ROOT / "history/previous-revision.json").read_text(encoding="utf-8")
-        )
+        checked.append("Input archive CRC/SHA-256, all original paths, and three unchanged audit files")
+        prior_meta = json.loads((ROOT / "history/previous-revision.json").read_text(encoding="utf-8"))
         prior = ROOT / "history" / prior_meta["filename"]
         require(
             hashlib.sha256(prior.read_bytes()).hexdigest() == prior_meta["sha256"],
             "Prior documentation archive changed",
         )
         with ZipFile(prior) as archive:
-            require(
-                archive.testzip() is None, "CRC error in prior documentation archive"
-            )
+            require(archive.testzip() is None, "CRC error in prior documentation archive")
             for rel in (
                 "data/element-roadmap.json",
                 "data/element-roadmap.schema.json",
@@ -898,9 +928,7 @@ def main() -> int:
         for error in errors:
             print("FAIL:", error, file=sys.stderr)
         return 1
-    print(
-        "PASS: documentation package checks. No application, numerical, browser or GPU tests were run."
-    )
+    print("PASS: documentation package checks. No application, numerical, browser or GPU tests were run.")
     return 0
 
 

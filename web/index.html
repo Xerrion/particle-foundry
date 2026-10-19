@@ -19,7 +19,7 @@
   <body>
     <div class="app-shell">
       <header class="topbar">
-        <div class="brand" role="banner" aria-label="Particle Foundry">
+        <div class="brand">
           <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
           <span class="brand-copy"> 
             <strong>Particle Foundry</strong>
@@ -63,11 +63,11 @@
               aria-label="Interactive falling sand simulation. Draw with mouse or touch. Scroll to zoom and drag with Shift or right mouse button to pan."
             ></canvas>
             <div class="canvas-sheen" aria-hidden="true"></div>
-            <div class="view-controls" role="group" aria-label="World view controls">
+            <fieldset class="view-controls" aria-label="World view controls">
               <button id="zoomOutButton" type="button" aria-label="Zoom out" title="Zoom out">−</button>
               <button id="zoomResetButton" type="button" aria-label="Fit whole world" title="Fit whole world"><span id="zoomLevel">1×</span></button>
               <button id="zoomInButton" type="button" aria-label="Zoom in" title="Zoom in">+</button>
-            </div>
+            </fieldset>
             <section class="temperature-legend" id="temperatureLegend" aria-label="Temperature colour scale" hidden></section>
             <section class="temperature-legend" id="pressureLegend" aria-label="Pressure colour scale" hidden></section>
             <section class="temperature-legend" id="velocityLegend" aria-label="Velocity colour scale" hidden></section>
@@ -89,7 +89,7 @@
             <div class="section-heading"><h2 id="selectedMaterialLabel">Sand selected</h2><span>Hold to paint</span></div>
             <p id="selectionDescription">Loose grains settle into piles and sink through water.</p>
             <div class="range-row"><div><label for="brushSize">Brush radius</label><output id="brushOutput" for="brushSize">4 cells</output></div><input id="brushSize" type="range" min="1" max="12" value="4" /></div>
-            <div id="quickTools" class="quick-tools" role="group" aria-label="Brush tools"></div>
+            <fieldset id="quickTools" class="quick-tools" aria-label="Brush tools"></fieldset>
             <button id="showInteractionGuide" class="text-button" type="button">Interactions &amp; model limits ↓</button>
           </section>
           <div class="sidebar-tabs" role="tablist" aria-label="Sandbox controls">

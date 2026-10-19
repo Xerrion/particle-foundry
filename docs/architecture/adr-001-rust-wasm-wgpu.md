@@ -1,6 +1,6 @@
 # ADR-001: change the engine, keep the application
 
-**Date:** 21 September 2026. **Decision:** selected for the implementation plan. **Implementation status:** bootstrap and contracts exist; the [engine tracker](../data/engine-migration-work.json) owns work-item status. **Applies to:** P1-P9. Start with [START_HERE](../START_HERE.md).
+**Date:** 21 September 2026. **Decision:** selected for the implementation plan. **Implementation status:** bootstrap and contracts exist; the [engine tracker](../data/engine-migration-work.json) owns work-item status. **Applies to:** P1-P9. Start with [handbook](../README.md).
 
 ## Decision
 
@@ -8,16 +8,16 @@ Keep the existing TypeScript browser application. Introduce a Rust simulation en
 
 The GPU redesign is the migration vehicle. Do not create a separate prerequisite project to port every legacy TypeScript solver to Rust, and do not build a new TypeScript reference solver only to rewrite it in Rust afterwards. Implement corrected subsystem references directly in Rust f64, then their equivalent WGSL/f32 stages.
 
-| Layer | Selected ownership | What does not follow from this choice |
-| --- | --- | --- |
-| DOM, CSS, controls, menus, picker, viewport | Existing TypeScript application | No Rust UI, Bevy, egui, or application rewrite |
-| Browser lifecycle and user intent | TypeScript host and a narrow engine facade | No direct access to evolving engine arrays |
-| State schemas, identities, units, command/snapshot contracts | Rust `sim` crate with generated browser projections | A Rust struct need not hold a CPU mirror of GPU fields |
-| CPU reference and bounded irregular systems | Rust `sim-cpu` | A literal translation of the old cellular rules is not the new reference |
-| GPU resources, solver scheduling, rendering | Rust `sim-gpu` using wgpu | No second independent TypeScript WebGPU device for the same world |
-| Parallel numerical work | WGSL shaders | Compiling ordinary Rust to WASM does not compile it into a shader |
-| Browser bindings | `wasm-bindgen` in `engine/crates/wasm/` | No whole-world JS/WASM copy each tick |
-| Future native execution | Reuse the Rust crates with native wgpu | Native application UI/distribution is not a P1 requirement |
+| Layer                                                        | Selected ownership                                  | What does not follow from this choice                                    |
+| ------------------------------------------------------------ | --------------------------------------------------- | ------------------------------------------------------------------------ |
+| DOM, CSS, controls, menus, picker, viewport                  | Existing TypeScript application                     | No Rust UI, Bevy, egui, or application rewrite                           |
+| Browser lifecycle and user intent                            | TypeScript host and a narrow engine facade          | No direct access to evolving engine arrays                               |
+| State schemas, identities, units, command/snapshot contracts | Rust `sim` crate with generated browser projections | A Rust struct need not hold a CPU mirror of GPU fields                   |
+| CPU reference and bounded irregular systems                  | Rust `sim-cpu`                                      | A literal translation of the old cellular rules is not the new reference |
+| GPU resources, solver scheduling, rendering                  | Rust `sim-gpu` using wgpu                           | No second independent TypeScript WebGPU device for the same world        |
+| Parallel numerical work                                      | WGSL shaders                                        | Compiling ordinary Rust to WASM does not compile it into a shader        |
+| Browser bindings                                             | `wasm-bindgen` in `engine/crates/wasm/`             | No whole-world JS/WASM copy each tick                                    |
+| Future native execution                                      | Reuse the Rust crates with native wgpu              | Native application UI/distribution is not a P1 requirement               |
 
 wgpu supports browser execution through WASM and native graphics backends. Its browser path uses the browser WebGPU implementation. These facts support portability, not a guaranteed speedup over submitting equivalent WGSL from TypeScript. See [wgpu platform](../sources.md#wgpu-platforms) and [buffer semantics](../sources.md#wgpu-buffers).
 

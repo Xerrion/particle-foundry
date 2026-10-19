@@ -387,7 +387,7 @@ mod tests {
             .recv_timeout(Duration::from_secs(10))
             .unwrap()
             .unwrap();
-        let mapped = staging.get_mapped_range(..);
+        let mapped = staging.get_mapped_range(..).expect("fixture mapped range");
         let (words, remainder) = mapped.as_chunks::<4>();
         assert!(remainder.is_empty());
         let values = words

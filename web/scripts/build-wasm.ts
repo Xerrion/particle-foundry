@@ -23,10 +23,10 @@ const target = resolve(
 const version = Bun.spawnSync(["wasm-bindgen", "--version"]);
 if (
   version.exitCode !== 0 ||
-  version.stdout.toString().trim() !== "wasm-bindgen 0.2.108"
+  version.stdout.toString().trim() !== "wasm-bindgen 0.2.129"
 ) {
   throw new Error(
-    "Install the pinned bindings tool: cargo install wasm-bindgen-cli --version 0.2.108 --locked",
+    "Install the pinned bindings tool: cargo install wasm-bindgen-cli --version 0.2.129 --locked",
   );
 }
 const build = Bun.spawn(

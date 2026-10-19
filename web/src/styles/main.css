@@ -274,6 +274,8 @@ canvas:focus-visible {
 }
 
 .view-controls {
+  min-inline-size: 0;
+  margin: 0;
   position: absolute;
   right: 12px;
   bottom: 12px;
@@ -477,6 +479,10 @@ kbd {
   line-height: 1.5;
 }
 .quick-tools {
+  min-inline-size: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 6px;

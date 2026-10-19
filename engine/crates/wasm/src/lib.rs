@@ -16,7 +16,7 @@ pub use browser_scene::*;
 /// Exactly one selected lifecycle owner. GPU construction never creates a CPU world.
 enum Owner {
     Cpu(Box<ReferenceSession>),
-    Gpu(GpuContext),
+    Gpu(Box<GpuContext>),
 }
 
 /// Browser engine bootstrap. Numerical stepping remains unavailable until its gates pass.
@@ -50,7 +50,7 @@ impl Engine {
     pub fn validate_gpu_abi(&self) -> Result<JsValue, JsValue> {
         // Release the wasm-bindgen Engine borrow before JS can dispose it during this Promise.
         let context = match self.owner.as_ref() {
-            Some(Owner::Gpu(context)) => context.clone(),
+            Some(Owner::Gpu(context)) => context.as_ref().clone(),
             Some(Owner::Cpu(_)) => {
                 return Err(JsValue::from_str(
                     "GPU ABI validation requires a GPU engine",
@@ -82,7 +82,7 @@ impl Engine {
     pub fn validate_gpu_scene_fixture(&self) -> Result<JsValue, JsValue> {
         // The Promise owns its GPU context so JS can dispose the Engine while it runs.
         let context = match self.owner.as_ref() {
-            Some(Owner::Gpu(context)) => context.clone(),
+            Some(Owner::Gpu(context)) => context.as_ref().clone(),
             Some(Owner::Cpu(_)) => {
                 return Err(JsValue::from_str(
                     "GPU scene validation requires a GPU engine",
@@ -114,7 +114,7 @@ impl Engine {
     /// Stops ownership once. Repeated disposal is safe.
     pub fn dispose(&mut self) {
         if let Some(Owner::Gpu(context)) = self.owner.take() {
-            context.dispose();
+            (*context).dispose();
         }
     }
 }
@@ -125,11 +125,11 @@ pub async fn initialize(width: f64, height: f64, execution: String) -> Result<En
     let grid = Grid::new(width, height).map_err(JsValue::from_str)?;
     let owner = match execution.as_str() {
         "cpu-reference" => Owner::Cpu(Box::new(ReferenceSession::new(grid))),
-        "wgpu" => Owner::Gpu(
+        "wgpu" => Owner::Gpu(Box::new(
             GpuContext::new()
                 .await
                 .map_err(|error| JsValue::from_str(&error))?,
-        ),
+        )),
         _ => return Err(JsValue::from_str("unsupported execution backend")),
     };
     Ok(Engine { owner: Some(owner) })

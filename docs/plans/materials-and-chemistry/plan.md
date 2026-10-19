@@ -1,6 +1,6 @@
 # Materials and chemistry implementation plan
 
-**Status:** deferred. **Roadmap:** P3-P5. Each phase requires separate user activation and its recorded dependencies; P1 completion does not start this plan. The existing sandbox's bounded identity, property, composition and reaction support remains required in P1. [Start here](../../START_HERE.md).
+**Status:** deferred. **Roadmap:** P3-P5. Each phase requires separate user activation and its recorded dependencies; P1 completion does not start this plan. The existing sandbox's bounded identity, property, composition and reaction support remains required in P1. [Start here](../../README.md).
 
 ## Goal and boundaries
 
@@ -64,25 +64,25 @@ Add nonreactive or tightly bounded forms for the remaining core elements, then e
 
 Recommended mechanism batches:
 
-| Batch | Core identities | Initial work |
-| --- | --- | --- |
-| Atmosphere and excitation | He, Ne, Ar, Xe, H, N, O | Gas transport/properties; excitation off until energy-funded model exists |
-| Reactive nonmetals and alkali metals | F, Cl, Br, I, P, S, Li, Na, K | Specific forms and finite balanced interactions, added one at a time |
-| Common solids and structural metals | C, B, Si, Mg, Al, Ca, Ti, Cr, Zn, Fe, Co, Ni | Form properties, conduction, bounded oxidation/surface behavior |
-| Conductive and melting-focused metals | Cu, Ag, Au, Ga, Sn, Hg, Bi, W, Pt, Pb | Conductivity and phase behavior within supplied data ranges |
-| Nuclear-ready ordinary materials | Th, U | Bounded material behavior only; radioactive evolution remains a P6 feature |
+| Batch                                 | Core identities                              | Initial work                                                               |
+| ------------------------------------- | -------------------------------------------- | -------------------------------------------------------------------------- |
+| Atmosphere and excitation             | He, Ne, Ar, Xe, H, N, O                      | Gas transport/properties; excitation off until energy-funded model exists  |
+| Reactive nonmetals and alkali metals  | F, Cl, Br, I, P, S, Li, Na, K                | Specific forms and finite balanced interactions, added one at a time       |
+| Common solids and structural metals   | C, B, Si, Mg, Al, Ca, Ti, Cr, Zn, Fe, Co, Ni | Form properties, conduction, bounded oxidation/surface behavior            |
+| Conductive and melting-focused metals | Cu, Ag, Au, Ga, Sn, Hg, Bi, W, Pt, Pb        | Conductivity and phase behavior within supplied data ranges                |
+| Nuclear-ready ordinary materials      | Th, U                                        | Bounded material behavior only; radioactive evolution remains a P6 feature |
 
 Gallium's melting point near 29.76 degrees Celsius is a useful accessible phase-change fixture. Its other properties still need their own sources and domain checks. [Gallium reference](../../sources.md#rsc-gallium).
 
 Build essential compounds alongside the elements:
 
-| Family | Initial species/materials | Required distinction |
-| --- | --- | --- |
-| Water and atmosphere | H2O phases, defined air mixture, CO2 | Water phases share inventory; air is a mixture |
-| Oxidation and minerals | Selected explicit metal oxides, SO2, silica, calcium carbonate | Products have their own composition and properties |
-| Solutions | Water, dissolved ions, selected salts, acid/base equivalents | Concentration and excess reagent survive partial reaction |
-| Fuels and particulates | One defined simple fuel, soot, declared smoke mixture | Generic game oil/wood do not silently become pure carbon |
-| Structural presets | Silica-based sand and documented glass/stone profiles | Glass and stone are not universal pure chemical species |
+| Family                 | Initial species/materials                                      | Required distinction                                      |
+| ---------------------- | -------------------------------------------------------------- | --------------------------------------------------------- |
+| Water and atmosphere   | H2O phases, defined air mixture, CO2                           | Water phases share inventory; air is a mixture            |
+| Oxidation and minerals | Selected explicit metal oxides, SO2, silica, calcium carbonate | Products have their own composition and properties        |
+| Solutions              | Water, dissolved ions, selected salts, acid/base equivalents   | Concentration and excess reagent survive partial reaction |
+| Fuels and particulates | One defined simple fuel, soot, declared smoke mixture          | Generic game oil/wood do not silently become pure carbon  |
+| Structural presets     | Silica-based sand and documented glass/stone profiles          | Glass and stone are not universal pure chemical species   |
 
 **Exit:** every core identity has a bounded base-form implementation or a recorded blocking property gap; the phase cannot be declared complete with unlabelled placeholders. Compounds have explicit composition or a clearly scoped pseudo-material status.
 
@@ -118,14 +118,14 @@ Do not infer a universal bulk phase, reactivity, magnetism, or toxicity behavior
 
 Implement bounded examples of the following systems, with an independent reference and explicit exclusions for each:
 
-| System | First bounded result | Exclusions until separately validated |
-| --- | --- | --- |
-| Alloys | Composition-preserving steel, brass, bronze, and one low-melting alloy profile | Universal phase diagrams or linear interpolation assumed for all alloys |
-| Magnetism | A simplified field/force model with documented material and temperature dependence | Pure neodymium treated as an Nd-Fe-B magnet; magnetic confinement of fusion plasma |
-| Excitation and emission | Energy-funded excitation/light and de-excitation bookkeeping | Permanent neon glow; colour alone used as a radiation model |
-| Semiconductor behavior | A small calibrated electrical model with explicit materials and contacts | Arbitrary semiconductor physics inferred solely from periodic-table position |
-| Catalysis and surfaces | A named catalyst changes a supported reaction rate without supplying net energy | Infinite reaction energy or universal platinum catalysis |
-| Solutions and coatings | Selected concentration transport, corrosion/passivation, and bounded ion chemistry | Universal pH, activity, or electrochemistry |
+| System                  | First bounded result                                                               | Exclusions until separately validated                                              |
+| ----------------------- | ---------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| Alloys                  | Composition-preserving steel, brass, bronze, and one low-melting alloy profile     | Universal phase diagrams or linear interpolation assumed for all alloys            |
+| Magnetism               | A simplified field/force model with documented material and temperature dependence | Pure neodymium treated as an Nd-Fe-B magnet; magnetic confinement of fusion plasma |
+| Excitation and emission | Energy-funded excitation/light and de-excitation bookkeeping                       | Permanent neon glow; colour alone used as a radiation model                        |
+| Semiconductor behavior  | A small calibrated electrical model with explicit materials and contacts           | Arbitrary semiconductor physics inferred solely from periodic-table position       |
+| Catalysis and surfaces  | A named catalyst changes a supported reaction rate without supplying net energy    | Infinite reaction energy or universal platinum catalysis                           |
+| Solutions and coatings  | Selected concentration transport, corrosion/passivation, and bounded ion chemistry | Universal pH, activity, or electrochemistry                                        |
 
 The examples are proposed engineering scope, not new measured properties. Use a separately scoped feature flag for each system and do not make an unvalidated advanced mechanism a hidden requirement for basic element transport.
 

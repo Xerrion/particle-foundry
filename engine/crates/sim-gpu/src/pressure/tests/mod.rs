@@ -88,7 +88,7 @@ async fn read_f32(device: &wgpu::Device, queue: &wgpu::Queue, buffer: &wgpu::Buf
     encoder.copy_buffer_to_buffer(buffer, 0, &staging, 0, buffer.size());
     queue.submit([encoder.finish()]);
     wait_for_map(device, &staging).await.unwrap();
-    let mapped = staging.get_mapped_range(..);
+    let mapped = staging.get_mapped_range(..).expect("fixture mapped range");
     let values = mapped
         .as_chunks::<4>()
         .0

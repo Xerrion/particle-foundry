@@ -2,20 +2,20 @@
 
 **Evidence boundary:** this overview combines retained documentation, the [static review of src(3).zip](validation/source-review-2026-09-21.md), and the [historical fire characterization](validation/fire-combustion.md). The [combustion article](combustion.md) separately identifies its 27 September 2026 working-tree source review. Historical results are not current verification. Current Rust/GPU slices have separate evidence. Expanded chemistry and nuclear capabilities remain planned.
 
-This is a reproducible coarse-grained sandbox, not a validated engineering simulator. [The knowledge map](README.md) routes current topics; [START_HERE.md](START_HERE.md) is the migration brief and [roadmap.md](roadmap.md) explains phase order. The full original model description is preserved in [the input archive](history/README.md).
+This is a reproducible coarse-grained sandbox, not a validated engineering simulator. [The handbook](README.md) is the starting point for project work. [The roadmap](roadmap.md) explains phase order. The full original model description is preserved in [the input archive](history/README.md).
 
 ## Legacy scale and units
 
-| Quantity | Documented convention | Owner |
-| --- | --- | --- |
-| Cell width | 0.01 m | `web/src/legacy/simulation/physical-scale.ts` |
-| Represented depth | 0.01 m | Same module |
-| Cell volume | 0.000001 cubic metres | Derived from geometry |
-| Outer physics interval | 1/60 s | Physical scale and simulation clock |
-| Mass and parcel volume | kg and cubic metres | `world.massKg`, `world.volumeM3` |
-| Velocity and pressure | m/s and Pa | World velocity/pressure fields |
-| Thermal parcel enthalpy | J | `world.energy` |
-| Chemical, kinetic, potential energy | Legacy kJ convention | World/diagnostics fields |
+| Quantity                            | Documented convention | Owner                                         |
+| ----------------------------------- | --------------------- | --------------------------------------------- |
+| Cell width                          | 0.01 m                | `web/src/legacy/simulation/physical-scale.ts` |
+| Represented depth                   | 0.01 m                | Same module                                   |
+| Cell volume                         | 0.000001 cubic metres | Derived from geometry                         |
+| Outer physics interval              | 1/60 s                | Physical scale and simulation clock           |
+| Mass and parcel volume              | kg and cubic metres   | `world.massKg`, `world.volumeM3`              |
+| Velocity and pressure               | m/s and Pa            | World velocity/pressure fields                |
+| Thermal parcel enthalpy             | J                     | `world.energy`                                |
+| Chemical, kinetic, potential energy | Legacy kJ convention  | World/diagnostics fields                      |
 
 Legacy thermal state is total parcel enthalpy, `H = mass * specificEnthalpy`. The catalogue's phase curves use a 0.001 kg reference mass; runtime scales sensible and latent terms by actual mass. `cellHeatCapacity` is J/K at that reference mass. `lowerCellEnthalpy` and `upperCellEnthalpy` are reference-mass energies, not per-kg quantities. `heatTransferCoefficient` is a calibrated per-tick transfer coefficient, not conductivity in W/(m K). Displacement density, motion cadence, lifetimes, and generic rates remain gameplay parameters.
 

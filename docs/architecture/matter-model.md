@@ -1,18 +1,18 @@
 # Matter, composition, and GPU state contract
 
-**Status:** target architecture, not implemented. Minimal subset in P1/M1; full data pipeline in P3; nuclear populations activated in P6. Start from [the developer entrypoint](../START_HERE.md).
+**Status:** target architecture, not implemented. Minimal subset in P1/M1; full data pipeline in P3; nuclear populations activated in P6. Start from [the handbook](../README.md).
 
 ## 1. Separate identity from behavior
 
-| Concept | Stable identity | Meaning and example |
-| --- | --- | --- |
-| Element | Atomic number Z | Chemical identity: carbon, hydrogen, uranium |
-| Nuclide | Z, mass number A, nuclear-state key | A particular nuclear species, including isomers; do not infer A from rounded atomic weight |
-| Chemical species | Explicit species ID | Composition, charge, and bonding model: H2, O2, H2O, Na+, or a declared pseudo-species |
-| Material form | Explicit form ID | Structure and constitutive model: graphite, diamond, liquid metal, glass, granular silica |
-| Mixture or preset | Explicit recipe ID | Initial composition and settings: air, salt solution, steel, or generic game oil |
-| Runtime component | Scene-local index linked to stable definitions | A transported population of a species/form/isotopic signature |
-| Local physical state | Backend-owned fields | Component amounts, internal energy, phase volumes, momentum, damage, and supported auxiliary state |
+| Concept              | Stable identity                                | Meaning and example                                                                                |
+| -------------------- | ---------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| Element              | Atomic number Z                                | Chemical identity: carbon, hydrogen, uranium                                                       |
+| Nuclide              | Z, mass number A, nuclear-state key            | A particular nuclear species, including isomers; do not infer A from rounded atomic weight         |
+| Chemical species     | Explicit species ID                            | Composition, charge, and bonding model: H2, O2, H2O, Na+, or a declared pseudo-species             |
+| Material form        | Explicit form ID                               | Structure and constitutive model: graphite, diamond, liquid metal, glass, granular silica          |
+| Mixture or preset    | Explicit recipe ID                             | Initial composition and settings: air, salt solution, steel, or generic game oil                   |
+| Runtime component    | Scene-local index linked to stable definitions | A transported population of a species/form/isotopic signature                                      |
+| Local physical state | Backend-owned fields                           | Component amounts, internal energy, phase volumes, momentum, damage, and supported auxiliary state |
 
 An element's proton number and isotope distinctions are scientific identities. [IUPAC](../sources.md#iupac-periodic-table) and [NNDC](../sources.md#nndc-nudat) are the identity references. The registry boundaries and storage choices above are project architecture decisions.
 

@@ -1,268 +1,163 @@
-# Particle Foundry: phases and milestones
+# Faser og milepæle
 
-Read [Hvor er vi nu?](STATUS.md) for the short Danish view of the current P/M/E,
-latest delivery and next selected action.
+P1 flytter hele den nuværende sandbox til Rust/GPU.
+Målet er 60 viste FPS, simulering i realtid, hurtige værktøjer og fysisk troværdig adfærd.
+[Det fælles spilmål](plans/fluid-gpu-redesign/plan.md#final-gameplay-target-clarified-on-13-october-2026)
+fastlægger de målinger, der skal bevise resultatet.
 
-**The current goal is today's complete sandbox on Rust/GPU with 60 FPS,
-simulation in real time and physically credible behavior.**
-Painting and controls must remain responsive during normal play.
-The [shared gameplay target](plans/fluid-gpu-redesign/plan.md#final-gameplay-target-clarified-on-13-october-2026)
-defines the measurements and checks required to prove that result.
-New pressure-wave physics, more elements, broader chemistry and nuclear behavior
-are deferred. Finishing the GPU switch will be a point to review the result and
-choose what comes next; it will not automatically start another phase.
+Se [STATUS.md](STATUS.md) for den valgte opgave og seneste fremdrift.
+Brug [håndbogen](README.md), når du skal fortsætte arbejdet.
+[Roadmap](roadmap.md) beskriver den tekniske rækkefølge og afhængighederne.
 
-This is the plain-language guide. A **phase** is a major outcome; a **milestone**
-is a smaller result within it. A milestone is complete only when its tests and
-evidence pass. The [current sandbox scope](plans/rust-wasm-migration/current-sandbox-scope.md)
-holds the detailed checklist of what must work before the switch is complete.
+## Hvad betyder P, M og E?
 
-**Priority decision (6 October 2026):** Real-time interaction takes priority in
-the experimental GPU scene. The user accepts a modest loss of numerical
-precision to reach it. [XER-64](https://linear.app/xerrion/issue/XER-64/run-the-experimental-gpu-scene-in-real-time)
-owns this work. The [7 October comparison](validation/p1-m3-e08.md#rtx-pressure-and-transport-comparison-on-7-october-2026)
-found faster trial settings, but they missed the selected accuracy limit and
-the real-time target. The retained change reuses a pressure calculation without
-changing its results on the measured device. The
-[continued scheduling comparison](validation/p1-m3-e08.md#browser-completion-batch-comparison-on-7-october-2026)
-reduces browser completion waits. Repeated runs take 22.0% less time and keep
-identical final fields. Real time remains unmet. The next task is to reduce the
-GPU work in pressure or transport while keeping the required accuracy limits.
-The [13 October coarse pressure comparison](validation/p1-m3-e08.md#component-aware-coarse-pressure-on-13-october-2026)
-passes the existing accuracy limits and takes about fourteen wall seconds
-per model second on the measured Apple adapter. Real time remains unmet.
-The [next transport comparison](validation/p1-m3-e08.md#packed-transport-pair-comparison-on-13-october-2026)
-starts fewer GPU threads for the same calculation. It takes 12.6% less time
-in paired browser runs and keeps identical final fields. PR #24 is merged.
-The [next cost screening](validation/p1-m3-e08.md#transport-parameter-and-allocation-comparison-on-13-october-2026)
-rejects two changes that do not improve repeated duration. It records GPU buffer
-allocations for the next comparison. Real time remains open.
-The [buffer reuse comparison](validation/p1-m3-e08.md#resident-candidate-buffer-reuse-on-13-october-2026)
-then keeps the large working buffers for each scene. Paired runs take 5.3% less
-time with identical fields. The preview scheduling test submits about 10 frames
-per second, up from about 9.5. This is closer to the target, but it does not
-establish 60 displayed FPS or real-time simulation.
-The user clarified the final goal on 13 October: 60 FPS during normal play,
-simulation time that follows real time and physically credible behavior.
-Frame pacing, brush response, simulation speed and quality need separate checks.
-Current throughput measurements do not establish 60 FPS.
-The [14 October choice](plans/fluid-gpu-redesign/plan.md#realism-and-active-region-investigation-selected-on-14-october-2026)
-investigates whether regions without physical changes can avoid repeated work.
-The [measurements](validation/p1-m3-e08.md#transport-activity-investigation-on-14-october-2026)
-now show changes in every region containing fluid during the later water-brush
-samples. Skipping unchanged 16 x 16 regions is therefore rejected for this solver.
-The preview-pacing test submits about 9.5 frames per second. In the separate
-throughput test, one model second takes about 13.7 wall seconds. No new runtime
-optimization is retained.
-The [water-line correction](validation/p1-m3-e08.md#continuous-gpu-brush-strokes-on-14-october-2026)
-is merged in [PR #28](https://github.com/Xerrion/particle-foundry/pull/28), after
-[PR #27](https://github.com/Xerrion/particle-foundry/pull/27) delivered the activity
-investigation. The repeated teeth follow small scallops in the painted line.
-Continuous brush strokes connect pointer positions without changing the physics
-calculations. This fixes the input pattern; no simulation speedup is established.
-The pressure solver and its completion waits remain a proposed later investigation.
-Camera visibility cannot decide which parts of the world evolve. PR #26, which
-aligns the gameplay goal and acceptance rules, is merged with passing CI.
-The user resumed this work after the existing PRs were merged. See the [performance decision](plans/fluid-gpu-redesign/plan.md#interactive-performance-priority-on-6-october-2026)
-for the target, measurement rules and remaining correctness requirements.
+| Navn | Betydning                                        | Eksempel                                           |
+| ---- | ------------------------------------------------ | -------------------------------------------------- |
+| P    | Fase: et større samlet resultat                  | P1 flytter den nuværende sandbox til den nye motor |
+| M    | Milepæl: et afgrænset resultat i motorarbejdet   | M3 viser en lille GPU-scene i browseren            |
+| E    | Engineering item: en konkret teknisk opgave i P1 | E08 forbinder GPU-scenen med browseren             |
 
-**Where things stand (30 September 2026):** The browser sandbox still runs on
-the existing TypeScript engine. The Rust/WebAssembly foundation and browser
-contract exist. The small Rust CPU fluid reference has passed its local tests.
-A small GPU fluid fixture now steps on native and browser hardware, and a GPU
-buffer-layout check has passed on both. An opt-in browser scene now draws
-directly from GPU state. A local Chrome run completed 60 full-size ticks over
-one second of model time, and a native Metal run completed 120 ticks. Local
-repository checks passed locally and in GitHub CI. M3 is validated; P1 is under way;
-P2-P9 are deferred.
-The baseline (M0), engineering work E00-E03, and the Rust fluid work E05-E06 are
-validated locally. M1's separate circuit work (E04) remains planned. M2 is
-validated. For live status, see the
-[phase tracker](data/development-phases.json) and
-[engine work tracker](data/engine-migration-work.json).
+`P1 / M3 / E08` angiver dermed fase, milepæl og opgave.
+Det er projektets egne navne. De følger ikke en særlig Linear- eller Jira-standard.
 
-## The three checkpoints that matter now
+Andre faser har egne bogstaver for milepæle: W for trykbølger, C for materialer og kemi,
+N for atomkerner og Q for produktkontrol. De 35 milepæle forklares nedenfor.
+En milepæl er først færdig, når dens krav og dokumenterede kontroller består.
 
-1. **Prove a small GPU scene - M2-M3.** Get a simple liquid-and-gas scene running
-   correctly in the browser, with physics and drawing on the GPU.
-2. **Bring across today's sandbox - M4-M6.** Cover the current materials,
-   reactions, heat, sand, circuits, scenes and controls, including the eight
-   existing element models. Correct known physics errors as part of this work.
-3. **Prove the default switch - M7.** Check the complete current-feature list,
-   60 displayed FPS, simulation in real time, response, physical quality,
-   checkpoints and recovery before making GPU the default.
+## De tre checkpoints i P1
 
-All three checkpoints belong to P1. A fast demo alone does not finish the switch,
-and moving only a few scenes across does not finish the current-feature list.
-The existing engine stays available while the replacement is being proven.
+1. Bevis en lille GPU-scene i M2-M3. Væske, gas, fysik og tegning skal fungere i browseren.
+2. Flyt hele den nuværende sandbox i M4-M6. Det omfatter materialer, varme, sand, reaktioner, kredsløb, scener og værktøjer.
+3. Bevis standardskiftet i M7. Kontroller alle funktioner, ydelse på rigtige enheder, gemte tilstande og genopretning samlet.
 
-## P1 - Make today's sandbox work on the new engine
+Den gamle motor forbliver tilgængelig, mens erstatningen udvikles og testes.
+En hurtig prøvescene afslutter kun sit eget checkpoint.
+[Listen over nuværende funktioner](plans/rust-wasm-migration/current-sandbox-scope.md)
+fastlægger alt, der skal fungere før standardskiftet.
 
-Keep the browser interface and its useful behavior. Change the engine underneath
-it, with one engine owning each scene. New physics must preserve material and
-energy correctly; reproducing known bugs is not a requirement.
-[Detailed engine plan](plans/fluid-gpu-redesign/plan.md).
+## P1: Flyt den nuværende sandbox
 
-### Foundation already under way
+Browserens interface og nyttige funktioner bevares.
+Hver scene har én motor, der ejer dens tilstand.
+Den nye fysik skal bevare stof og energi. Kendte fejl i den gamle motor skal rettes.
+[Den tekniske migrationsplan](plans/rust-wasm-migration/plan.md) fastlægger E00-E14.
 
-- **M0 - Capture the starting point.** Record the existing behavior and tests so
-  later changes can be judged against real evidence. **Validated.**
-- **M1 - Establish the Rust/browser connection.** Define how scenes, materials,
-  commands and results move through the new engine. The foundation is in place;
-  the independent circuit reference is still planned. **Partly complete.**
+### Grundlag: M0-M1
 
-### Checkpoint 1: a working GPU proof
+- M0 registrerer udgangspunktet. Eksisterende adfærd og kontroller giver et grundlag for at vurdere ændringer.
+- M1 forbinder Rust og browseren. Den fastlægger materialer, kommandoer, resultater og en selvstændig reference for kredsløb.
 
-- **M2 - Prove fluid physics on the CPU.** Build a small, precise Rust model of
-  pressure, liquid movement and transport; show that it conserves what it should.
-  **Validated locally.**
-- **M3 - Show the first GPU scene.** Run the same basic fluid model in the browser
-  and draw it directly from GPU state. It is an experimental scene with limited
-  materials, not a replacement for every existing scene. **Validated locally.**
+### Checkpoint 1: M2-M3
 
-### Checkpoint 2: today's features work on the new engine
+- M2 beviser væskefysikken på CPU'en. En præcis Rust-model skal håndtere tryk og transport uden at miste stof.
+- M3 viser GPU-scenen i browseren. Den bruger en begrænset væske- og gasmodel og tegner direkte fra GPU'ens tilstand.
 
-- **M4 - Migrate heat and phase changes.** Cover today's heating, melting,
-  freezing and boiling behavior, including water, steam and air. Test material,
-  energy, volume and finite venting together. **In progress:** the first isolated
-  water reference is implemented; flow, other materials and GPU parity remain open.
-- **M5 - Add sand and moving solids.** Make grains, obstacles and liquids interact
-  without losing material when many things move at once. **Planned.**
-- **M6 - Complete the current interactions.** Migrate existing reactions,
-  corrected fire, circuits, tools, controls and scenes. Include the eight
-  current element models: hydrogen, helium, carbon, nitrogen, oxygen, sulfur,
-  iron and copper. **Planned.**
+### Checkpoint 2: M4-M6
 
-### Checkpoint 3: a verified default switch
+- M4 flytter varme og faseændringer. Vand, damp, luft, smeltning, frysning og kogning skal have korrekte stof- og energiregnskaber.
+- M5 tilføjer sand og bevægelige faste stoffer. Korn, forhindringer og væsker skal kunne påvirke hinanden uden tab af stof.
+- M6 samler de nuværende reaktioner, rettet brand, kredsløb, værktøjer, kontroller og scener.
 
-- **M7 - Prove the complete current sandbox is ready.** Test the agreed current
-  features together, browser behavior, performance on real devices, checkpoints and
-  recovery. Individual scenes can be tested earlier; the switch is complete
-  only when the full current-feature checklist passes. **Planned.**
+M6 omfatter de otte nuværende grundstofmodeller: brint, helium, kulstof, kvælstof,
+ilt, svovl, jern og kobber. Deres første migration til Rust/GPU hører til P1.
+Den bredere materialemodel i P4 er en senere udvidelse.
 
-After M7, stop and review the evidence. Later phases need a separate decision
-to start. The completed local engineering work is **E07-E08**. Checkpoint 2
-started with E09's isolated water reference. E04 circuits and complete M4-M6
-feature coverage remain open.
+### Checkpoint 3: M7
 
-## Deferred ideas: P2-P9
+M7 kontrollerer hele den nuværende sandbox samlet.
+Alle krævede funktioner, browserkontroller, gemte tilstande, genopretning og ydelsesmål skal bestå.
+Resultatet skal vise 60 FPS under normalt spil, simulering i realtid og fysisk troværdig adfærd.
 
-Everything below is retained for future planning. None of these phases is part
-of the current GPU-switch commitment, and their order does not authorize work
-to start. Any small prerequisite needed to migrate an existing feature belongs
-in the current scope; it does not activate a whole future phase.
+Efter M7 skal resultatet vurderes. De næste faser kræver en særskilt beslutning.
+Læs [acceptkravene](validation/backend-migration.md) for de præcise krav til standardskiftet.
 
-The letters identify milestone groups: **M** for the engine, **W** for waves,
-**C** for materials and chemistry, **N** for nuclear work, and **Q** for release
-quality. The E-numbers are smaller engineering tasks inside P1. All 35 milestone
-IDs remain listed here so the longer-term plans are easy to find.
+## P2-P9: Senere udvidelser
 
-### P2 - Add pressure waves and breakage - deferred
+Disse faser er udskudt. Deres afhængigheder giver ikke tilladelse til at begynde arbejdet.
+Små forudsætninger for at flytte en eksisterende funktion hører fortsat til P1.
 
-This phase adds a separate model for travelling pressure waves, explosions that
-spend finite fuel, and solids that can fracture. The P1 fluid model does not
-automatically provide these effects.
-[Detailed waves and breakage plan](plans/pressure-waves-breakage/plan.md).
+### P2: Trykbølger og brud
 
-- **W0 - Define the starting tests and supported scenes.**
-- **W1 - Prove gas waves and wall reflections in a Rust CPU model.**
-- **W2 - Match that model on the GPU and in the browser.**
-- **W3 - Add funded reactions, damage and moving fragments.**
-- **W4 - Test complete scenes, controls, saves and performance before release.**
+P2 tilføjer en særskilt model for trykbølger, eksplosioner med begrænset brændstof og faste stoffer, der kan brydes.
+[Planen for trykbølger og brud](plans/pressure-waves-breakage/plan.md) fastlægger kravene.
 
-### P3 - Give matter a broader data foundation - deferred
+- W0 fastlægger kontroller og understøttede scener.
+- W1 beviser gasbølger og refleksioner ved vægge i en Rust-model på CPU'en.
+- W2 gentager modellen på GPU'en og i browseren.
+- W3 tilføjer reaktioner med begrænsede ressourcer, skader og bevægelige fragmenter.
+- W4 kontrollerer komplette scener, indstillinger, gemte tilstande og ydelse før udgivelse.
 
-The reference catalogue can name all 118 elements, but a name alone does not
-mean the sandbox can simulate that material. P3 expands the checked data,
-composition and reaction systems beyond what the current-feature migration
-needs.
-[Detailed materials plan](plans/materials-and-chemistry/plan.md).
+### P3: Et bredere datagrundlag for stof
 
-- **C0 - Build a checked catalogue of elements, forms and properties.** Record
-  where values came from and which conditions they apply to.
-- **C1 - Extend composition tracking to the broader catalogue.** Keep the
-  migration's guarantees when more substances mix, melt, split and are saved.
-- **C2 - Generalize the reaction engine.** Add checked rules for a wider set of
-  substances while still using available ingredients and accounting for energy.
+Kataloget kan navngive 118 grundstoffer. Hvert stof kræver stadig data og en testet model, før sandboxen kan simulere det.
+[Materialeplanen](plans/materials-and-chemistry/plan.md) udvider data og reaktionssystemer ud over P1's behov.
 
-### P4 - Deliver 40 core element forms and essential compounds - deferred
+- C0 opbygger et kontrolleret katalog over grundstoffer, stofformer og egenskaber med kilder og gyldighedsområder.
+- C1 udvider registreringen af sammensætning, så flere stoffer kan blandes, smelte, deles og gemmes korrekt.
+- C2 udvider reaktionsmotoren med regler, der bruger tilgængelige ingredienser og gør rede for energien.
 
-Each of the 40 core element identities should have at least one tested material
-form in a stated range. This does not promise every possible phase or reaction.
-[Detailed materials plan](plans/materials-and-chemistry/plan.md).
+### P4: 40 grundstoffer og nødvendige forbindelser
 
-- **C3 - Recheck and extend the eight existing element models in the broader
-  data system.** Their first migration to the Rust/GPU engine belongs to P1.
-- **C4 - Add the remaining core forms and useful compounds**, including selected
-  water, air, mineral and fuel cases.
-- **C5 - Add selected reactions and solutions**, such as bounded oxidation and
-  acid/base behavior.
-- **C6 - Check the complete 40-element set** in real scenes, with visible limits
-  and source information.
+Hver af de 40 identiteter skal have mindst én testet stofform inden for et angivet gyldighedsområde.
+[Materialeplanen](plans/materials-and-chemistry/plan.md) fastlægger formerne og deres krav.
 
-### P5 - Expand to 83 element forms - deferred
+- C3 kontrollerer P1's otte grundstofmodeller i det bredere datasystem.
+- C4 tilføjer de øvrige grundstoffer i kernegruppen og udvalgte forbindelser med vand, luft, mineraler og brændstof.
+- C5 tilføjer udvalgte reaktioner og opløsninger, herunder begrænset oxidation og syre/base-adfærd.
+- C6 kontrollerer alle 40 identiteter i scener med synlige begrænsninger og kilder.
 
-Add 43 more element identities with tested base forms. Use shared material
-systems where they fit rather than inventing a unique physics engine for every
-element. [Detailed materials plan](plans/materials-and-chemistry/plan.md).
+### P5: 83 grundstoffer
 
-- **C7 - Add the exact 43-element extended group.**
-- **C8 - Add selected richer behaviors**, such as alloys, coatings and
-  semiconductor examples, where tests and data support them.
-- **C9 - Validate the 83-element set**, including mixtures, performance and
-  clearly labelled limits.
+P5 tilføjer præcis 43 identiteter til de første 40.
+Fælles fysiske systemer skal understøtte dem, hvor modeller og data passer.
+[Materialeplanen](plans/materials-and-chemistry/plan.md) ejer den præcise afgrænsning.
 
-### P6 - Add decay and radiation - deferred
+- C7 tilføjer den fastlagte gruppe med 43 grundstoffer.
+- C8 tilføjer udvalgte legeringer, belægninger, halvledere og andre testede egenskaber.
+- C9 kontrollerer de 83 identiteter, blandinger, ydelse og synlige modelgrænser.
 
-Add nuclear behavior to selected isotopes and 20 more element identities. The
-target of 103 identities means 83 material-first identities plus 20 that may
-initially exist mainly as isotopes; it does not mean 103 realistic bulk
-substances. [Detailed nuclear plan](plans/nuclear-simulation/plan.md).
+### P6: Henfald og stråling
 
-- **N0 - Import and check isotope and decay data.**
-- **N1 - Prove decay chains and daughter products in a CPU reference.**
-- **N2 - Account for radiation as it travels, deposits energy or escapes.**
-- **N3 - Add the 20 nuclear-first identities and usable isotope controls.**
+P6 tilføjer atomkerneadfærd for udvalgte isotoper og 20 nye grundstofidentiteter.
+Det giver 103 identiteter. Nogle findes først som isotoper og har endnu ingen almindelig stofform i sandboxen.
+[Planen for atomkernefysik](plans/nuclear-simulation/plan.md) fastlægger kravene.
 
-### P7 - Add selected fusion and fission - deferred
+- N0 importerer og kontrollerer data om isotoper og henfald.
+- N1 beviser henfaldskæder og datterprodukter i en CPU-reference.
+- N2 gør rede for stråling, der bevæger sig, afgiver energi eller forlader scenen.
+- N3 tilføjer de 20 identiteter og brugbare kontroller for isotoper.
 
-Model specific nuclear reactions with known inputs, products and energy
-accounting. This is a limited simulation, not a general reactor or star model.
-[Detailed nuclear plan](plans/nuclear-simulation/plan.md).
+### P7: Udvalgt fusion og fission
 
-- **N4 - Validate a small fusion reaction network.**
-- **N5 - Add selected isotope-specific fission and neutron interactions.**
-- **N6 - Connect approved nuclear reactions to supported scenes** and test
-  recovery, energy accounting and model limits.
+P7 modellerer bestemte reaktioner med kendte udgangsstoffer, produkter og energiregnskaber.
+[Planen for atomkernefysik](plans/nuclear-simulation/plan.md) beskriver det begrænsede anvendelsesområde.
 
-### P8 - Cover all 118 identities - deferred
+- N4 kontrollerer et lille netværk af fusionsreaktioner.
+- N5 tilføjer udvalgt fission og neutronreaktioner for bestemte isotoper.
+- N6 forbinder godkendte reaktioner med understøttede scener og kontrollerer energi, genopretning og modelgrænser.
 
-Add the final 15 superheavy identities. Where science has no measured bulk
-property, the sandbox should say so. Optional creative behavior must be clearly
-labelled and saved with the scene.
-[Detailed nuclear plan](plans/nuclear-simulation/plan.md).
+### P8: Alle 118 identiteter
 
-- **N7 - Add the last 15 identities with honest data/support labels.**
-- **N8 - Add optional creative material behavior** without presenting it as a
-  measured property.
+P8 tilføjer de sidste 15 supertunge grundstoffer.
+Ukendte egenskaber skal stå som ukendte.
+[Planen for atomkernefysik](plans/nuclear-simulation/plan.md) fastlægger kravene.
 
-### P9 - Check the expanded product - deferred
+- N7 tilføjer de sidste identiteter med synlig status for data og understøttelse.
+- N8 tilføjer valgfri kreativ stofadfærd, som tydeligt skelnes fra målte egenskaber og gemmes med scenen.
 
-Test the combinations of future engine modes, materials, reactions and settings.
-Make that expanded product understandable and recoverable for players. The
-current sandbox's usability, recovery and performance checks already belong
-to P1 and cannot wait for this phase.
-[Detailed release checks](validation/acceptance.md).
+### P9: Kontroller det udvidede produkt
 
-- **Q0 - Check the supported-feature matrix.** Reject combinations that the
-  simulation cannot safely or honestly run.
-- **Q1 - Finish the user experience and save/recovery paths.** Make materials,
-  explanations, controls and tutorial scenes usable.
-- **Q2 - Assemble release evidence.** Run numerical, browser and device tests;
-  align documentation and claims with the results.
+P9 kontrollerer kombinationerne af de senere motortilstande, materialer, reaktioner og indstillinger.
+[Acceptkravene](validation/acceptance.md) gælder for den udvidelse.
+Den nuværende sandbox skal allerede bestå sine brugbarheds-, genopretnings- og ydelseskrav i P1.
 
-**What the counts mean:** 40, 83, 103 and 118 count element *identities* at
-successive targets. They do not count fully realistic substances, all their
-isotopes, or every possible chemical reaction. Each phase ends only when its
-own [acceptance checks](validation/acceptance.md) pass for the scenes it claims
-to support.
+- Q0 kontrollerer hvilke kombinationer af funktioner der kan understøttes sikkert og korrekt.
+- Q1 færdiggør brugeroplevelsen, gemte tilstande, genopretning, forklaringer, kontroller og vejledende scener.
+- Q2 samler målinger fra numeriske kontroller, browsere og enheder samt dokumentation, der svarer til resultaterne.
+
+## Hvad tæller 40, 83, 103 og 118?
+
+Tallene tæller grundstofidentiteter ved hvert mål.
+De tæller ikke alle isotoper, alle reaktioner eller fuldt realistiske stoffer.
+Hver fase skal opfylde sine egne acceptkrav for de scener, den understøtter.
+[Grundstofoversigten](elements.md) ejer de præcise grupper.

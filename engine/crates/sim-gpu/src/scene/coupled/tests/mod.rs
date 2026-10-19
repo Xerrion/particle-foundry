@@ -109,7 +109,7 @@ fn read_f32(context: &GpuContext, source: &wgpu::Buffer) -> Vec<f32> {
         .recv_timeout(Duration::from_secs(10))
         .unwrap()
         .unwrap();
-    let mapped = staging.get_mapped_range(..);
+    let mapped = staging.get_mapped_range(..).expect("fixture mapped range");
     let values = mapped
         .as_chunks::<4>()
         .0
