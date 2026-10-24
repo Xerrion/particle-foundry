@@ -4,6 +4,8 @@ const expectedVersion = "wasm-bindgen 0.2.129";
 const engine = resolve(import.meta.dir, "../../engine");
 
 function installedVersion(): string | undefined {
+  if (!Bun.which("wasm-bindgen")) return undefined;
+
   const result = Bun.spawnSync(["wasm-bindgen", "--version"], {
     stdout: "pipe",
     stderr: "ignore",
