@@ -1,3 +1,4 @@
+import { gameConfig } from "../../game-config";
 import {
   BLAST,
   CARBON,
@@ -50,7 +51,7 @@ export function createBrush(
   ).blast,
 ): Brush {
   let selected = SAND;
-  let brushSize = 4;
+  let brushSize: number = gameConfig.brush.defaultRadius;
 
   function applyThermalBrush(index: number): void {
     const material = world.grid[index];

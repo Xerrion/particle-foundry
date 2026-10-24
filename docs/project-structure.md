@@ -19,15 +19,18 @@ particle-foundry/
   mise.toml                         Root tool versions and task orchestration
   .github/workflows/                GitHub CI uses the same mise tasks
   web/
-    index.html                      Live legacy Vite browser entry
+    index.html                      Live Vite entry; mounts the Svelte application
     gpu.html                        Opt-in experimental GPU preview entry
     package.json, bun.lock          Frontend dependencies
     vite.config.ts                  Build configuration; output is web/dist/
     tsconfig*.json, biome.json       Type checks, formatting and import boundaries
     src/
-      main.ts                       Live browser startup and frame loop
+      main.ts                       Svelte application mount and browser entry
+      App.svelte                    Main sandbox UI using shadcn-svelte components
+      game-config.ts                Shared default settings for the active sandbox
       gpu-main.ts                   Experimental GPU controls and loop
-      app/                          DOM, controls, viewport, pointer mapping, clock
+      app/                          Legacy DOM controls, viewport, pointer mapping, clock and simulation startup
+      lib/components/ui/            Authored shadcn-svelte components
       observability/                Optional browser and Rust panic error reporting
       engine-client/index.ts        Public browser access to the legacy backend
       engine-client/session.ts      Bounded experimental command/probe contract
@@ -35,7 +38,7 @@ particle-foundry/
       engine-client/legacy-adapter.ts  Retained synchronous scene adapter
       engine-client/wasm.ts         Experimental WASM lifecycle adapter
       materials/                    Authored catalogue, validation and reference content
-      styles/                       CSS
+      styles/                       Legacy sandbox CSS and shadcn/Tailwind theme
       legacy/
         simulation/                 World, orchestration, sandbox, scale, diagnostics, RNG
         physics/                    Existing solvers and reactions
@@ -44,6 +47,7 @@ particle-foundry/
         scenes/                     Existing world initialization
     tests/
       app/, materials/, types/      Browser behavior and catalogue checks
+      browser-controls.html         DOM fixture for controller regression tests
       legacy/                       Backend tests, integration cases and fixtures
       browser/                      Production-bundled WASM/WebGPU lifecycle smoke
     scripts/                        WASM/catalogue builds, browser and evidence tools
@@ -123,7 +127,17 @@ counters do not establish safe sleeping or a measured optimization gain. The
 the normal application build does not include it. See
 [E08 evidence](validation/p1-m3-e08.md) for the recorded protocol and results.
 
-## TypeScript ownership
+## Browser UI and TypeScript ownership
+
+`web/src/App.svelte` owns the active sandbox markup and mounts the existing
+synchronous UI/controller and simulation lifecycle after Svelte creates the DOM.
+The browser entry in `web/src/main.ts` mounts that component. The UI migration
+does not change the legacy engine or the `engine-client` boundary. The shadcn-svelte
+components live in `web/src/lib/components/ui/`; `components.json` and
+`web/src/styles/shadcn.css` define their aliases and Tailwind theme.
+`web/src/game-config.ts` owns default sandbox settings shared by the UI and the
+legacy brush. Physical units and material definitions remain in their existing
+model and catalogue modules.
 
 The browser imports simulation operations, observations and view metadata through
 `web/src/engine-client/index.ts`. The active UI reaches the existing synchronous

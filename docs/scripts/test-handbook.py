@@ -34,6 +34,25 @@ def digest_tree(root: Path) -> dict[str, str]:
     }
 
 
+def can_create_file_symlink() -> bool:
+    if sys.platform != "win32":
+        return True
+    with tempfile.TemporaryDirectory() as temporary:
+        root = Path(temporary)
+        target = root / "target.txt"
+        target.write_text("target\n")
+        try:
+            (root / "alias.txt").symlink_to(target)
+        except OSError as error:
+            if getattr(error, "winerror", None) == 1314:
+                return False
+            raise
+        return True
+
+
+FILE_SYMLINKS_AVAILABLE = can_create_file_symlink()
+
+
 class HandbookTests(unittest.TestCase):
     def setUp(self) -> None:
         self.directory = tempfile.TemporaryDirectory()
@@ -182,6 +201,10 @@ class HandbookTests(unittest.TestCase):
                     self.build()
         assert not self.output.exists()
 
+    @unittest.skipUnless(
+        FILE_SYMLINKS_AVAILABLE,
+        "the current Windows account cannot create file symlinks",
+    )
     def test_symbolic_links_cannot_bypass_excluded_paths(self) -> None:
         for private in (".env", "artifacts/private.txt"):
             with self.subTest(private=private):

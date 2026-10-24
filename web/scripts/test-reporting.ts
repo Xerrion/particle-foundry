@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { mkdtemp, readdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { basename, join, resolve } from "node:path";
+import { basename, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { SourceMapConsumer } from "source-map-js";
 import { createEvidenceDirectory } from "./evidence-output";
 import { prepareReportingBuild } from "./prepare-reporting";
@@ -240,7 +240,12 @@ const receiver = Bun.serve({
         site,
         decodeURIComponent(url.pathname.slice("/sentry-smoke/".length)),
       );
-      if (!path.startsWith(`${site}/`))
+      const relativePath = relative(site, path);
+      if (
+        relativePath === ".." ||
+        relativePath.startsWith(`..${sep}`) ||
+        isAbsolute(relativePath)
+      )
         return new Response("Invalid asset path", { status: 400 });
       const file = Bun.file(path);
       return (await file.exists())

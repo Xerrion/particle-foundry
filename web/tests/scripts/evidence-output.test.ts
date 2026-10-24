@@ -37,7 +37,11 @@ test("evidence output rejects a linked category", async () => {
   try {
     const validation = join(root, "artifacts", "validation");
     await mkdir(validation, { recursive: true });
-    await symlink(elsewhere, join(validation, "browser"));
+    await symlink(
+      elsewhere,
+      join(validation, "browser"),
+      process.platform === "win32" ? "junction" : "dir",
+    );
     await expect(
       createEvidenceDirectory(root, "artifacts/validation/browser/new-run", "browser"),
     ).rejects.toThrow("symbolic link");

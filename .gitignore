@@ -4,6 +4,7 @@ __pycache__/
 dist/
 engine/target/
 web/generated/
+.svelte-check/
 *.log
 .env
 .env.*

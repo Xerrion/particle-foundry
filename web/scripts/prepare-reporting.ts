@@ -13,11 +13,7 @@ import {
 } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
-import {
-  createSentrySDK,
-  type SentryOptions,
-  type SourcemapUploadParams,
-} from "sentry";
+import type { SentryOptions, SourcemapUploadParams } from "sentry";
 import { loadEnv } from "vite";
 
 interface SourceMapClient {
@@ -42,6 +38,63 @@ class ReportingBuildError extends Error {}
 const scriptPattern = /\.(?:js|mjs|cjs)$/;
 const mapPattern = /\.map(?:\.(?:gz|br))?$/;
 const uuidPattern = /^[a-f\d]{8}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{12}$/i;
+const workerResultPrefix = "PARTICLE_FOUNDRY_SENTRY_RESULT=";
+let sdkOperationQueue: Promise<void> = Promise.resolve();
+
+type SentryWorkerRequest = {
+  operation: "inject" | "upload";
+  options: SentryOptions;
+  parameters: { directory: string } | SourcemapUploadParams;
+};
+
+async function runSentryWorker<T>(request: SentryWorkerRequest): Promise<T> {
+  const worker = resolve(import.meta.dir, "reporting-sdk-worker.mjs");
+  const workerEnvironment = { ...process.env };
+  delete workerEnvironment.SENTRY_AUTH_TOKEN;
+  const child = Bun.spawn(["node", worker], {
+    cwd: resolve(import.meta.dir, ".."),
+    env: workerEnvironment,
+    stdin: "pipe",
+    stdout: "pipe",
+    stderr: "ignore",
+  });
+  child.stdin.write(JSON.stringify(request));
+  child.stdin.end();
+
+  const [exitCode, output] = await Promise.all([
+    child.exited,
+    new Response(child.stdout).text(),
+  ]);
+  if (exitCode !== 0) {
+    throw new Error("Sentry source-map worker failed.");
+  }
+  const result = output
+    .split(/\r?\n/)
+    .find((line) => line.startsWith(workerResultPrefix));
+  if (!result) {
+    throw new Error("Sentry source-map worker returned no result.");
+  }
+  return JSON.parse(result.slice(workerResultPrefix.length)) as T;
+}
+
+function createSentryClient(options: SentryOptions): SourceMapClient {
+  return {
+    sourcemap: {
+      inject: (parameters) =>
+        runSentryWorker({
+          operation: "inject",
+          options,
+          parameters,
+        }),
+      upload: (parameters) =>
+        runSentryWorker({
+          operation: "upload",
+          options,
+          parameters,
+        }),
+    },
+  };
+}
 
 /** Match the production Vite build. Invoke this CLI with Bun's automatic env loading disabled. */
 export function productionReportingEnvironment(
@@ -135,6 +188,15 @@ async function validateDirectories(site: string, archive: string): Promise<void>
 }
 
 async function withIsolatedSDK<T>(operation: () => Promise<T>): Promise<T> {
+  const result = sdkOperationQueue.then(() => withTemporarySDKConfig(operation));
+  sdkOperationQueue = result.then(
+    () => undefined,
+    () => undefined,
+  );
+  return result;
+}
+
+async function withTemporarySDKConfig<T>(operation: () => Promise<T>): Promise<T> {
   const names = [
     "SENTRY_CONFIG_DIR",
     "SENTRY_CLI_NO_TELEMETRY",
@@ -152,7 +214,12 @@ async function withIsolatedSDK<T>(operation: () => Promise<T>): Promise<T> {
       if (previous[index] === undefined) delete process.env[name];
       else process.env[name] = previous[index];
     }
-    await rm(config, { recursive: true, force: true });
+    await rm(config, {
+      recursive: true,
+      force: true,
+      maxRetries: 10,
+      retryDelay: 100,
+    });
   }
 }
 
@@ -223,7 +290,7 @@ export async function prepareReportingBuild(
   siteDirectory = "dist",
   archiveDirectory = "reporting-artifacts",
   environment: NodeJS.ProcessEnv = process.env,
-  createClient: ClientFactory = createSentrySDK,
+  createClient: ClientFactory = createSentryClient,
 ): Promise<ReportingBuildResult> {
   if (environment.SENTRY_AUTH_TOKEN?.trim()) uploadOptions(environment);
   const site = resolve(siteDirectory);
@@ -258,9 +325,10 @@ export async function prepareReportingBuild(
     for (const file of await listFiles(site)) {
       if (mapPattern.test(file)) await rm(file);
     }
-  } catch {
+  } catch (error) {
     throw new ReportingBuildError(
       "Source map preparation failed. Check the generated site maps.",
+      { cause: error },
     );
   } finally {
     await rm(staging, { recursive: true, force: true });
@@ -280,7 +348,7 @@ export async function prepareReportingBuild(
 export async function uploadReportingArtifacts(
   archiveDirectory = "reporting-artifacts",
   environment: NodeJS.ProcessEnv = process.env,
-  createClient: ClientFactory = createSentrySDK,
+  createClient: ClientFactory = createSentryClient,
 ): Promise<number> {
   const options = uploadOptions(environment);
   const archive = resolve(archiveDirectory);
@@ -320,9 +388,10 @@ export async function uploadReportingArtifacts(
       }
     });
     return options.length;
-  } catch {
+  } catch (error) {
     throw new ReportingBuildError(
       "Source map upload failed. Check the archive, instance settings, and build token.",
+      { cause: error },
     );
   } finally {
     await rm(temporary, { recursive: true, force: true });

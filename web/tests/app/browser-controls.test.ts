@@ -3,6 +3,7 @@ import { Window } from "happy-dom";
 import { bindControls } from "../../src/app/controls";
 import { createViewport } from "../../src/app/viewport";
 import type { Sandbox } from "../../src/engine-client";
+import { gameConfig } from "../../src/game-config";
 import { BLAST, GUNPOWDER, HYDROCHLORIC_ACID, WATER } from "../../src/materials";
 
 const window = new Window({ url: "http://localhost/" });
@@ -15,7 +16,7 @@ function installGlobal(key: PropertyKey, value: unknown): void {
 
 beforeAll(async () => {
   window.document.write(
-    await Bun.file(new URL("../../index.html", import.meta.url)).text(),
+    await Bun.file(new URL("../browser-controls.html", import.meta.url)).text(),
   );
   for (const [key, value] of Object.entries({
     window,
@@ -130,6 +131,7 @@ describe("browser control flow", () => {
 
     const viewport = createViewport(480, 270);
     const controls = bindControls(canvas, sandbox, viewport);
+    expect(calls.sizes.at(-1)).toBe(gameConfig.brush.defaultRadius);
     controls.getPointer().isInside = true;
     expect(controls.getPointer().isInside).toBe(false);
     element<HTMLButtonElement>("#zoomInButton").click();
@@ -381,5 +383,11 @@ describe("browser control flow", () => {
     );
     expect(viewport.left).toBeLessThan(leftBeforePan);
     expect(calls.circles).toBe(beforePan);
+    const selectionsBeforeDispose = calls.materials.length;
+    controls.dispose();
+    window.document.dispatchEvent(
+      new window.KeyboardEvent("keydown", { code: "KeyB" }),
+    );
+    expect(calls.materials.length).toBe(selectionsBeforeDispose);
   });
 });

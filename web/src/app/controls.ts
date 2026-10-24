@@ -7,6 +7,8 @@ import { bindViewControls } from "./view-controls";
 import { MAX_ZOOM, type Viewport } from "./viewport";
 
 export interface Controls {
+  /** Removes listeners that are attached outside the component's DOM subtree. */
+  dispose(): void;
   /** Returns a detached pointer reading; callers cannot change drawing state. */
   getPointer(): PointerState;
   getSpeed(): number;
@@ -120,6 +122,7 @@ export function bindControls(
   let lastPaintX = -1;
   let lastPaintY = -1;
   let hasInteracted = false;
+  const lifecycle = new AbortController();
 
   function viewportPoint(
     clientX: number,
@@ -255,9 +258,11 @@ export function bindControls(
     pointer.isInside = false;
     stopDrawing();
   }
-  window.addEventListener("blur", invalidatePointer);
-  window.addEventListener("resize", invalidatePointer);
-  document.addEventListener("fullscreenchange", invalidatePointer);
+  window.addEventListener("blur", invalidatePointer, { signal: lifecycle.signal });
+  window.addEventListener("resize", invalidatePointer, { signal: lifecycle.signal });
+  document.addEventListener("fullscreenchange", invalidatePointer, {
+    signal: lifecycle.signal,
+  });
   canvas.addEventListener("contextmenu", (event) => event.preventDefault());
   canvas.addEventListener(
     "wheel",
@@ -286,9 +291,11 @@ export function bindControls(
     const brushSize = Number(brushInput.value);
     sandbox.setBrushSize(brushSize);
     brushOutput.textContent = `${brushSize} cells`;
+    const minBrushSize = Number(brushInput.min);
+    const maxBrushSize = Number(brushInput.max);
     brushInput.style.setProperty(
       "--range-progress",
-      `${((brushSize - 1) / 11) * 100}%`,
+      `${((brushSize - minBrushSize) / (maxBrushSize - minBrushSize)) * 100}%`,
     );
   });
 
@@ -330,29 +337,34 @@ export function bindControls(
     }
   });
 
-  document.addEventListener("keydown", (event) => {
-    if (event.ctrlKey || event.altKey || event.metaKey) return;
-    if (
-      event.target instanceof Element &&
-      event.target.closest(
-        "input, textarea, select, [contenteditable]:not([contenteditable='false'])",
+  document.addEventListener(
+    "keydown",
+    (event) => {
+      if (event.ctrlKey || event.altKey || event.metaKey) return;
+      if (
+        event.target instanceof Element &&
+        event.target.closest(
+          "input, textarea, select, [contenteditable]:not([contenteditable='false'])",
+        )
       )
-    )
-      return;
-    if (event.code === "Space") {
-      if (event.target instanceof Element && event.target.closest("button")) return;
-      event.preventDefault();
-      togglePause();
-      return;
-    }
-    if (!event.repeat && views.selectShortcut(event.code)) return;
-    picker.selectShortcut(event.code);
-  });
+        return;
+      if (event.code === "Space") {
+        if (event.target instanceof Element && event.target.closest("button")) return;
+        event.preventDefault();
+        togglePause();
+        return;
+      }
+      if (!event.repeat && views.selectShortcut(event.code)) return;
+      picker.selectShortcut(event.code);
+    },
+    { signal: lifecycle.signal },
+  );
 
   brushInput.dispatchEvent(new Event("input"));
   picker.select("sand");
 
   return {
+    dispose: () => lifecycle.abort(),
     getPointer: () => ({ ...pointer }),
     getSpeed: () => Number(speedSelect.value),
     isPaused: () => paused,

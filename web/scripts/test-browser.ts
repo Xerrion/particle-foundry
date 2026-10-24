@@ -65,6 +65,23 @@ const profile = await mkdtemp(join(tmpdir(), "particle-foundry-smoke-"));
 let server: ReturnType<typeof Bun.spawn> | undefined;
 let browser: ReturnType<typeof Bun.spawn> | undefined;
 let timeout: ReturnType<typeof setTimeout> | undefined;
+
+async function stopProcessTree(
+  child: ReturnType<typeof Bun.spawn> | undefined,
+): Promise<void> {
+  if (!child) return;
+  if (child.exitCode === null && process.platform === "win32") {
+    const killer = Bun.spawn(["taskkill", "/PID", String(child.pid), "/T", "/F"], {
+      stdout: "ignore",
+      stderr: "ignore",
+    });
+    await killer.exited;
+  } else if (child.exitCode === null) {
+    child.kill("SIGKILL");
+  }
+  await child.exited;
+}
+
 try {
   const vite = [process.execPath, join(web, "node_modules/vite/bin/vite.js")];
   const build = Bun.spawn(
@@ -143,9 +160,12 @@ try {
 } finally {
   clearTimeout(timeout);
   await receiver.stop(true);
-  for (const process of [browser, server]) {
-    if (process?.exitCode === null) process.kill("SIGKILL");
-    await process?.exited;
-  }
-  await rm(profile, { recursive: true, force: true });
+  await stopProcessTree(browser);
+  await stopProcessTree(server);
+  await rm(profile, {
+    recursive: true,
+    force: true,
+    maxRetries: 10,
+    retryDelay: 250,
+  });
 }

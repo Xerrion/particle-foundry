@@ -234,8 +234,8 @@ canvas:focus-visible {
 
 .canvas-frame {
   position: relative;
-  width: min(100%, calc((100vh - 164px) * 16 / 9));
-  aspect-ratio: 16 / 9;
+  width: min(100%, calc((100vh - 164px) * var(--world-aspect-ratio, 16 / 9)));
+  aspect-ratio: var(--world-aspect-ratio, 16 / 9);
   overflow: hidden;
   border: 1px solid #24434c;
   border-radius: 14px;
@@ -649,6 +649,7 @@ kbd {
   border-bottom: 1px solid var(--line);
 }
 
+/* biome-ignore lint/style/noDescendingSpecificity: The selected brush dock has a scoped margin override. */
 .section-heading {
   display: flex;
   align-items: baseline;
@@ -657,6 +658,7 @@ kbd {
   margin-bottom: 13px;
 }
 
+/* biome-ignore lint/style/noDescendingSpecificity: Tab panels use a more specific heading style. */
 .section-heading h2 {
   margin: 0;
   font-size: 0.77rem;
@@ -685,8 +687,10 @@ kbd {
   margin-bottom: 7px;
 }
 
+/* biome-ignore lint/style/noDescendingSpecificity: Reference checkboxes override the shared input baseline. */
 .catalogue-filters input,
 .catalogue-filters select,
+/* biome-ignore lint/style/noDescendingSpecificity: Reference checkboxes override the shared input baseline. */
 .element-reference input {
   width: 100%;
   min-height: 36px;
@@ -718,6 +722,7 @@ kbd {
   display: none;
 }
 
+/* biome-ignore lint/style/noDescendingSpecificity: Tabbed panels reset the reference panel layout. */
 .element-reference {
   margin-top: 15px;
   padding-top: 13px;
@@ -736,6 +741,7 @@ kbd {
   line-height: 1.45;
 }
 
+/* biome-ignore lint/style/noDescendingSpecificity: Reference checkboxes override the shared input baseline. */
 .element-reference input {
   margin-bottom: 8px;
 }
@@ -746,6 +752,7 @@ kbd {
   color: var(--cyan);
 }
 
+/* biome-ignore lint/style/noDescendingSpecificity: The tabbed element grid overrides scroll behavior. */
 .element-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -754,6 +761,7 @@ kbd {
   overflow-y: auto;
 }
 
+/* biome-ignore lint/style/noDescendingSpecificity: Tabbed element tiles override the reference-grid layout. */
 .element-tile {
   display: flex;
   min-width: 0;
@@ -769,6 +777,7 @@ kbd {
   font-size: 0.6rem;
 }
 
+/* biome-ignore lint/style/noDescendingSpecificity: Tabbed element tiles use a larger symbol label. */
 .element-tile strong {
   color: var(--ink);
   font-size: 0.89rem;
@@ -875,6 +884,7 @@ kbd {
   gap: 3px;
 }
 
+/* biome-ignore lint/style/noDescendingSpecificity: This selector is separate from element-tile labels. */
 .toggle-row strong {
   color: #aabcbf;
   font-size: 0.8rem;
@@ -887,6 +897,7 @@ kbd {
   line-height: 1.35;
 }
 
+/* biome-ignore lint/style/noDescendingSpecificity: This selector is separate from reference checkboxes. */
 .toggle-row input {
   position: absolute;
   width: 1px;
@@ -996,6 +1007,7 @@ input[type="range"]::-moz-range-thumb {
   box-shadow: 0 0 0 1px var(--cyan);
 }
 
+/* biome-ignore lint/style/noDescendingSpecificity: Category selects use a full-width input override. */
 select {
   min-width: 76px;
   height: 34px;
@@ -1008,6 +1020,7 @@ select {
   font-size: 0.78rem;
 }
 
+/* biome-ignore lint/style/noDescendingSpecificity: The tool panel sets a scoped action-section layout. */
 .action-section {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -1073,6 +1086,7 @@ select {
   text-transform: uppercase;
 }
 
+/* biome-ignore lint/style/noDescendingSpecificity: Reaction markers and toggle tracks are separate UI elements. */
 .reaction-title span {
   width: 6px;
   height: 6px;
@@ -1234,7 +1248,9 @@ select {
   *,
   *::before,
   *::after {
+    /* biome-ignore lint/complexity/noImportantStyles: Reduced motion must override component transitions. */
     scroll-behavior: auto !important;
+    /* biome-ignore lint/complexity/noImportantStyles: Reduced motion must override component transitions. */
     transition-duration: 0.01ms !important;
   }
 }
