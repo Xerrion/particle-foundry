@@ -86,9 +86,11 @@ Use the work manifests and live Linear project for status. Keep test results in 
 
 | Location                                             | Responsibility                                                                                                       |
 | ---------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
-| `web/src/app/`, `web/src/main.ts`, `web/src/styles/` | Browser startup, DOM, controls, viewport, clock and CSS                                                              |
+| `web/src/App.svelte`, `web/src/main.ts`               | Svelte browser UI and browser entry                                                                                   |
+| `web/src/app/`, `web/src/styles/`                     | DOM controls, viewport, clock and CSS                                                                                 |
 | `web/src/engine-client/`                             | Browser-facing simulation entrypoint; currently delegates to the legacy backend                                      |
 | `web/src/legacy/`                                    | Existing TypeScript state, physics, renderer, tools and scene construction                                           |
+| `web/src/game-config.ts`                             | Shared defaults for the active sandbox UI and legacy simulation                                                      |
 | `web/src/materials/`                                 | Single authored legacy catalogue, validation, presentation and element reference                                     |
 | `web/tests/`, `web/benchmarks/`                      | TypeScript verification; backend-specific tests and fixtures live under `tests/legacy/`                              |
 | `web/` configuration                                 | Bun package/lockfile, Vite, TypeScript, Biome and browser HTML                                                       |

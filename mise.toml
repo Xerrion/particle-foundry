@@ -69,7 +69,7 @@ run = "biome format --write ."
 description = "Check TypeScript types"
 dir = "{{config_root}}/web"
 depends = ["install", "build:wasm"]
-run = "tsc --noEmit"
+run = "svelte-check --tsconfig ./tsconfig.json --tsgo"
 
 [tasks."typecheck:catalogue"]
 description = "Check material IDs and catalogue types with strict indexing"
@@ -153,11 +153,7 @@ run = "rustup show"
 description = "Verify or install the wasm-bindgen CLI paired with the locked Rust library"
 dir = "{{config_root}}/engine"
 depends = ["rust:toolchain"]
-run = """
-if test "$(wasm-bindgen --version 2>/dev/null)" != 'wasm-bindgen 0.2.129'; then
-  cargo install wasm-bindgen-cli --version 0.2.129 --locked
-fi
-"""
+run = "bun ../web/scripts/ensure-wasm-bindgen.ts"
 
 [tasks."rust:fmt"]
 description = "Check Rust formatting"

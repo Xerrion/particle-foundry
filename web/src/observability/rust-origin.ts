@@ -35,9 +35,10 @@ export function annotateRustOrigin(
   }
   if (typeof value !== "object" || value === null) return;
   const location = value as Record<string, unknown>;
+  const sourceFile =
+    typeof location.file === "string" ? location.file.replaceAll("\\", "/") : "";
   if (
-    typeof location.file !== "string" ||
-    !/^crates\/[a-zA-Z0-9_/-]+\/src\/[a-zA-Z0-9_/-]+\.rs$/.test(location.file) ||
+    !/^crates\/[a-zA-Z0-9_/-]+\/src\/[a-zA-Z0-9_/-]+\.rs$/.test(sourceFile) ||
     typeof location.line !== "number" ||
     !Number.isSafeInteger(location.line) ||
     location.line < 1 ||
@@ -47,7 +48,7 @@ export function annotateRustOrigin(
   )
     return;
   const origin = {
-    file: `engine/${location.file}`,
+    file: `engine/${sourceFile}`,
     line: location.line,
     column: location.column,
   };

@@ -3,8 +3,14 @@
     "target": "ES2022",
     "lib": ["DOM", "ES2022"],
     "types": ["bun"],
+    "paths": {
+      "$lib": ["./src/lib"],
+      "$lib/*": ["./src/lib/*"]
+    },
     "module": "ESNext",
     "moduleResolution": "bundler",
+    "verbatimModuleSyntax": true,
+    "isolatedModules": true,
     "strict": true,
     "noEmit": true,
     "skipLibCheck": true

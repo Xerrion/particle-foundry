@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test";
+import { gameConfig } from "../../../src/game-config";
 import {
   energyAtTemperature,
   initialTemperature,
@@ -61,13 +62,15 @@ function snapshot(world: World): ParticleState {
 }
 
 describe("brush geometry and input boundary", (): void => {
-  test("defaults to a radius-4 sand circle in the supplied world", (): void => {
+  test("uses the configured radius for the default sand circle", (): void => {
     const { world, brush, disturbances } = createFixture(13, 13);
-    expect(brush.getSize()).toBe(4);
+    const defaultRadius = gameConfig.brush.defaultRadius;
+    expect(brush.getSize()).toBe(defaultRadius);
     brush.paintCircle(6, 6);
     for (let y = 0; y < world.height; y += 1) {
       for (let x = 0; x < world.width; x += 1) {
-        const expected = (x - 6) ** 2 + (y - 6) ** 2 <= 16 ? SAND : EMPTY;
+        const expected =
+          (x - 6) ** 2 + (y - 6) ** 2 <= defaultRadius * defaultRadius ? SAND : EMPTY;
         expect(world.getCell(x, y).material).toBe(expected);
       }
     }

@@ -3,7 +3,7 @@ import { access, mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promise
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { gunzipSync, inflateRawSync } from "node:zlib";
-import { createSentrySDK, type SentryOptions } from "sentry";
+import type { SentryOptions } from "sentry";
 import { SourceMapConsumer, SourceMapGenerator } from "source-map-js";
 import {
   prepareReportingBuild,
@@ -194,17 +194,28 @@ test("requires explicit upload credentials and instance configuration", async ()
 
 test("a configured preparation upload failure stops the build and retains exact retry artifacts", async () => {
   const build = await fixture();
-  const createClient = (options: SentryOptions) => {
-    const client = createSentrySDK(options);
-    return {
-      sourcemap: {
-        inject: client.sourcemap.inject,
-        async upload() {
-          throw new Error("synthetic-build-token private response");
-        },
+  const createClient = () => ({
+    sourcemap: {
+      async inject({ directory }: { directory: string }) {
+        const script = join(directory, "assets", "diagnostic.js");
+        const id = "00000000-0000-4000-8000-000000000001";
+        const code = await readFile(script, "utf8");
+        const map = JSON.parse(await readFile(`${script}.map`, "utf8"));
+        map.debug_id = id;
+        await writeFile(`${script}.map`, JSON.stringify(map));
+        await writeFile(
+          script,
+          code.replace(
+            "//# sourceMappingURL=",
+            `//# debugId=${id}\n//# sourceMappingURL=`,
+          ),
+        );
       },
-    };
-  };
+      async upload() {
+        throw new Error("synthetic-build-token private response");
+      },
+    },
+  });
   await expect(
     prepareReportingBuild(
       build.site,
@@ -303,13 +314,24 @@ test.each([false, true])(
           expect(temporaryConfig).not.toBe(originalConfig);
           expect(process.env.SENTRY_CLI_NO_TELEMETRY).toBe("1");
           expect(process.env.DO_NOT_TRACK).toBe("1");
-          const client = createSentrySDK(options);
           return {
             sourcemap: {
-              async inject(parameters) {
+              async inject(parameters: { directory: string }) {
                 await access(temporaryConfig);
                 if (fail) throw new Error("private injection detail");
-                return client.sourcemap.inject(parameters);
+                const script = join(parameters.directory, "assets", "diagnostic.js");
+                const id = "00000000-0000-4000-8000-000000000001";
+                const code = await readFile(script, "utf8");
+                const map = JSON.parse(await readFile(`${script}.map`, "utf8"));
+                map.debug_id = id;
+                await writeFile(`${script}.map`, JSON.stringify(map));
+                await writeFile(
+                  script,
+                  code.replace(
+                    "//# sourceMappingURL=",
+                    `//# debugId=${id}\n//# sourceMappingURL=`,
+                  ),
+                );
               },
               async upload() {
                 throw new Error("Unexpected upload");

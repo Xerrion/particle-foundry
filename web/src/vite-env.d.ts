@@ -1,5 +1,12 @@
 /// <reference types="vite/client" />
 
+declare module "*.svelte" {
+  import type { Component } from "svelte";
+
+  const component: Component;
+  export default component;
+}
+
 declare const __PF_VERIFY_LIVE__: boolean;
 
 interface ImportMetaEnv {

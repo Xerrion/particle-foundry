@@ -46,6 +46,27 @@ test("retains the origin without a link when the revision is unknown", () => {
   expect(report.exception?.values?.[0]?.stacktrace?.frames?.[0]?.lineno).toBe(44);
 });
 
+test("normalizes Windows source paths before attaching the panic origin", () => {
+  const report = event();
+  annotateRustOrigin(
+    report,
+    Object.assign(new Error("verification"), {
+      name: "RustPanic",
+      rustLocation: {
+        file: String.raw`crates\wasm\src\reporting.rs`,
+        line: 44,
+        column: 5,
+      },
+    }),
+  );
+  expect(report.exception?.values?.[0]?.stacktrace?.frames?.[0]).toMatchObject({
+    filename: "engine/crates/wasm/src/reporting.rs",
+    lineno: 44,
+    colno: 5,
+    platform: "rust",
+  });
+});
+
 test("rejects paths and positions that cannot identify an authored Rust file", () => {
   for (const location of [
     { file: "crates/../../.env", line: 1, column: 1 },

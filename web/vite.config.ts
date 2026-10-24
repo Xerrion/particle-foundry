@@ -1,4 +1,6 @@
 import { dirname, relative, resolve, sep } from "node:path";
+import { svelte } from "@sveltejs/vite-plugin-svelte";
+import tailwindcss from "@tailwindcss/vite";
 import { defineConfig } from "vite";
 
 export default defineConfig(({ mode }) => ({
@@ -7,8 +9,12 @@ export default defineConfig(({ mode }) => ({
     ? `/${mode}/`
     : "/",
   resolve: {
-    alias:
-      mode === "sentry-smoke"
+    alias: [
+      {
+        find: "$lib",
+        replacement: resolve(import.meta.dirname, "src/lib"),
+      },
+      ...(mode === "sentry-smoke"
         ? [
             {
               find: "../../generated/wasm/particle_wasm",
@@ -18,7 +24,8 @@ export default defineConfig(({ mode }) => ({
               ),
             },
           ]
-        : [],
+        : []),
+    ],
   },
   build: {
     sourcemap: true,
@@ -35,13 +42,16 @@ export default defineConfig(({ mode }) => ({
             .join("/"),
       },
       input:
-        mode === "engine-smoke"
-          ? ["tests/browser/engine-smoke.html", "benchmarks/gpu.html"]
-          : mode === "gpu-activity"
-            ? "gpu-activity.html"
-            : mode === "sentry-smoke"
-              ? "tests/browser/sentry-smoke.html"
-              : ["index.html", "gpu.html"],
+        mode === "svelte-smoke"
+          ? "index.html"
+          : mode === "engine-smoke"
+            ? ["tests/browser/engine-smoke.html", "benchmarks/gpu.html"]
+            : mode === "gpu-activity"
+              ? "gpu-activity.html"
+              : mode === "sentry-smoke"
+                ? "tests/browser/sentry-smoke.html"
+                : ["index.html", "gpu.html"],
     },
   },
+  plugins: [tailwindcss(), svelte()],
 }));
