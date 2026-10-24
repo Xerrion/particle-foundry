@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="source-sha256" content="666ae98c89d155c8655c966a31ccd4731d922de6b7b24c0250e1b7500d82b6d5">
+<meta name="source-sha256" content="03d7e13d80664fccc6f1ff939fb7ffeaa95d4cfb894f17cab883840dd4494f07">
 <meta name="description" content="Particle Foundry P1 implementation plan: Rust reference, WASM delivery, wgpu/WGSL execution, and future-ready composition.">
 <title>Fluid and GPU redesign | Particle Foundry</title>
 <style>
@@ -523,7 +523,10 @@ terms. Explicit <code>fma</code> expressions retain small updates on the tested 
 and browser path. Residuals and face corrections evaluate both terms.
 <a href="https://gpuweb.github.io/gpuweb/wgsl/#reassociation-and-fusion">WGSL permits reassociation</a>,
 so this representation needs device checks and is not a portable f64 claim.</p>
-<p>The coarse profile maps completion after eight PCG iterations. The 512-iteration
+<p>The coarse profile maps completion after 16 PCG iterations in browser WASM
+and eight in native builds. This compile-time policy follows the
+<a href="../../validation/p1-m3-e08.md#coarse-pressure-completion-batching-on-24-october-2026">24 October browser comparison</a>.
+The 512-iteration
 cap, <code>1e-5</code> pressure gates, 256 transport closure rounds, volume/CFL gates,
 finite and nonnegative quantities, accepted time and atomic publication remain.
 Reference and compensated-point controls remain separate private test profiles.

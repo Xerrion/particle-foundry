@@ -1,5 +1,32 @@
 # Documentation change log
 
+## 24 October 2026: record the XER-97 browser batching comparison
+
+Added [fresh Windows/Chrome evidence](validation/p1-m3-e08.md#coarse-pressure-completion-batching-on-24-october-2026)
+for coarse-pressure completion batches eight, 16 and 32. Browser batch 16
+reduces paired duration by a median 11.9836%, with exact complete fields and
+accepted progress. Separate complete journals reconcile pressure readback changes.
+Native batching stays eight. Recorded the frozen rotation, WASM identities,
+separate pacing results and local delivery limits.
+
+Recorded Windows checkout repairs for pre-existing CRLF-only differences.
+Preserved audit and frontend files are restored to canonical HEAD bytes.
+Two `.gitattributes` rules require LF for `.mjs` and `.svelte` files, preventing
+the exposed formatter mismatch on fresh checkouts. No frontend semantics or
+historical integrity baseline changes.
+
+Updated current status and work ownership without changing historical evidence.
+Full local CI, three explicit native GPU regressions and the required sustained
+browser GPU check pass. Corrected the delivery blocker: the guard blocked
+`git switch` in the shared checkout, not feature-branch creation through
+`git worktree add`. The verified patch is applied in the separate worktree
+`E:/Projects/particle-foundry-xer-97`, on `perf/xer-97-pressure-completion-batches`.
+The shared `main` checkout and its existing edits remain unchanged.
+The guard remains enabled. [XER-97](https://linear.app/xerrion/issue/XER-97)
+records live PR and review status. No merge or deployment is claimed.
+This comparison does not establish real time, displayed FPS, input latency
+or complete sandbox readiness.
+
 ## 19 October 2026: consolidate continuation and compile the complete handbook
 
 Made [the handbook index](README.md) the single starting point for project work.

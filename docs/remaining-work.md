@@ -70,7 +70,7 @@ defines the accepted precision tradeoff and retained correctness requirements.
 | XER-81 through XER-95                                                                                    | Fifteen delivery records from PR #17 through PR #30, including retained changes, rejected comparisons, tooling and RTX qualification |
 | [XER-80](https://linear.app/xerrion/issue/XER-80/profile-pressure-convergence-and-gpu-completion-timing) | Pressure convergence diagnostics, host/GPU timing, browser tracing and a measured recommendation                                     |
 | XER-96                                                                                                   | Displayed-frame and interaction measurements                                                                                         |
-| XER-97                                                                                                   | Next measured optimization, dependent on XER-80                                                                                      |
+| [XER-97](https://linear.app/xerrion/issue/XER-97) | Browser coarse-pressure batch 16 implemented and locally validated. Native eight unchanged. Isolated feature branch created. See XER-97 for live delivery/review status. |
 | XER-98                                                                                                   | Final limited-scene qualification of real time and 60 displayed FPS, dependent on XER-96 and XER-97                                  |
 
 [XER-63](https://linear.app/xerrion/issue/XER-63/fix-gpu-pressure-nonconvergence-during-sustained-browser-scene)
@@ -86,6 +86,25 @@ cover PR #31. The
 [RTX baseline](validation/p1-m3-e08.md#rtx-qualification-and-baseline-after-reboot-on-14-october-2026)
 records Linux/NVIDIA launch requirements and qualification limits.
 Throughput and render submissions do not establish displayed FPS or input latency.
+
+The [24 October XER-97 comparison](validation/p1-m3-e08.md#coarse-pressure-completion-batching-on-24-october-2026)
+retains browser batch 16 after three interleaved Windows/Chrome rounds, with
+11.9836% median paired duration reduction and exact complete fields/progress.
+Complete separate pressure journals reconcile the expected transfer reduction.
+This is a fresh platform baseline, not a timing comparison with Linux.
+Explicit native GPU regressions, the required sustained browser GPU check and
+full local CI pass. The final WASM is byte-identical to measured batch 16.
+The local implementation and required local validation are complete.
+The verified patch was applied in the separate worktree
+`E:/Projects/particle-foundry-xer-97`, on `perf/xer-97-pressure-completion-batches`.
+The shared `main` checkout and its existing edits remain unchanged.
+The guard remains enabled. It blocked the initial `git switch` attempt,
+not feature-branch creation through `git worktree add`.
+See [XER-97](https://linear.app/xerrion/issue/XER-97) for live PR and review status.
+This record claims no merge or deployment. Native builds keep batch eight.
+XER-96 is the next unselected
+displayed-frame/interaction measurement task. XER-98's final qualification
+remains blocked. Neither task is started by this comparison.
 
 Earlier comparisons remain in that article: [pressure/transport](validation/p1-m3-e08.md#rtx-pressure-and-transport-comparison-on-7-october-2026),
 [completion batching](validation/p1-m3-e08.md#browser-completion-batch-comparison-on-7-october-2026),

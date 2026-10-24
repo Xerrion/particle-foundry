@@ -522,7 +522,10 @@ and browser path. Residuals and face corrections evaluate both terms.
 [WGSL permits reassociation](https://gpuweb.github.io/gpuweb/wgsl/#reassociation-and-fusion),
 so this representation needs device checks and is not a portable f64 claim.
 
-The coarse profile maps completion after eight PCG iterations. The 512-iteration
+The coarse profile maps completion after 16 PCG iterations in browser WASM
+and eight in native builds. This compile-time policy follows the
+[24 October browser comparison](../../validation/p1-m3-e08.md#coarse-pressure-completion-batching-on-24-october-2026).
+The 512-iteration
 cap, `1e-5` pressure gates, 256 transport closure rounds, volume/CFL gates,
 finite and nonnegative quantities, accepted time and atomic publication remain.
 Reference and compensated-point controls remain separate private test profiles.
