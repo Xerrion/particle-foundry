@@ -3,6 +3,21 @@ import { svelte } from "@sveltejs/vite-plugin-svelte";
 import tailwindcss from "@tailwindcss/vite";
 import { defineConfig } from "vite";
 
+function buildInput(mode: string): string | string[] {
+  switch (mode) {
+    case "svelte-smoke":
+      return "index.html";
+    case "engine-smoke":
+      return ["tests/browser/engine-smoke.html", "benchmarks/gpu.html"];
+    case "gpu-activity":
+      return "gpu-activity.html";
+    case "sentry-smoke":
+      return "tests/browser/sentry-smoke.html";
+    default:
+      return ["index.html", "gpu.html"];
+  }
+}
+
 export default defineConfig(({ mode }) => ({
   define: { __PF_VERIFY_LIVE__: false },
   base: ["engine-smoke", "sentry-smoke", "gpu-activity"].includes(mode)
@@ -41,16 +56,7 @@ export default defineConfig(({ mode }) => ({
             .split(sep)
             .join("/"),
       },
-      input:
-        mode === "svelte-smoke"
-          ? "index.html"
-          : mode === "engine-smoke"
-            ? ["tests/browser/engine-smoke.html", "benchmarks/gpu.html"]
-            : mode === "gpu-activity"
-              ? "gpu-activity.html"
-              : mode === "sentry-smoke"
-                ? "tests/browser/sentry-smoke.html"
-                : ["index.html", "gpu.html"],
+      input: buildInput(mode),
     },
   },
   plugins: [tailwindcss(), svelte()],
