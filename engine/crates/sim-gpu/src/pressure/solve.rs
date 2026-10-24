@@ -161,7 +161,8 @@ impl GpuPressureProjector {
         while status.converged == 0 && status.iterations < config.max_iterations {
             let previous_iterations = status.iterations;
             let batch_iterations = if coarse.is_some() {
-                8
+                // Browser measurements select 16. Native keeps its existing batch size.
+                if cfg!(target_arch = "wasm32") { 16 } else { 8 }
             } else {
                 ITERATIONS_PER_BATCH
             };
