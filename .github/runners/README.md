@@ -24,17 +24,17 @@ official runner, but that tooling has no Docker daemon connection.
 
 ## Image and tool pins
 
-The base is the official `ghcr.io/actions/actions-runner:2.338.0` image, pinned
-to digest `sha256:4ffadc0002b2581327e06101fc8c06cd189232baf79fe561fac9caeb76f5e807`.
+The base is the official `ghcr.io/actions/actions-runner:2.338.2` image, pinned
+to digest `sha256:759a1d94a15b05941aba5196974ff43fe15b4cbba29b694b35cbc32a1166b232`.
 Its Linux distribution is Ubuntu 24.04. The tool image versions and digests
-match the [production Dockerfile](../../Dockerfile): Bun `1.4.3`, Node
-`26.12.0`, Python `3.15.0`, mise `2026.10.14` and Rust `1.99.1`.
-Rustfmt, Clippy, `wasm32-unknown-unknown` and wasm-bindgen CLI `0.2.129` are
+match the [production Dockerfile](../../Dockerfile): Bun `1.4.4`, Node
+`26.13.0`, Python `3.15.2`, mise `2026.11.2` and Rust `1.99.1`.
+Rustfmt, Clippy, `wasm32-unknown-unknown` and wasm-bindgen CLI `0.2.130` are
 installed during the image build.
 
-Chrome is `155.0.8059.84-1`, downloaded from Google's official Debian package
+Chrome is `157.0.8103.38-1`, downloaded from Google's official Debian package
 URL. The build verifies SHA256
-`8fbd2ae69cdf7ee98b7513c3396a7b5e06f974f8625fdd590df3091dd0c3e9de`
+`a62b277dc03da2cff50cc04589deb66f6875be339c066d46adb49b49eedb629d`
 before installation. Initial requests and redirects are restricted to HTTPS.
 Chrome runs with its sandbox enabled. CI uses headless
 Chrome and localhost ports `4174` and `4175`; it needs no Xvfb or public port.

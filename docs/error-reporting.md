@@ -147,6 +147,9 @@ and listener cleanup. The dedicated
 [`browser smoke`](../web/scripts/test-reporting.ts) uses synthetic local projects
 and a separate WASM build. Its `sentry-smoke` Cargo feature exposes a deliberate
 verification panic. Normal production builds omit that function.
+The [WASM build script](../web/scripts/build-wasm.ts) creates both target
+directories before Cargo starts. This prevents a directory-creation race when
+normal and reporting builds start in parallel without an existing target tree.
 
 Run `mise run test:reporting` for the real browser error and WASM panic check.
 The local receiver must accept exactly one event for each project. The check

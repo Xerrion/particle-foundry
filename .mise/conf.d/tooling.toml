@@ -101,13 +101,13 @@ dir = "{{ vars.python_dir }}"
 run = "ty check --python-version {{ vars.python_version | quote }} {{ vars.python_files }}"
 
 [tools]
-biome = "2.5.15"
+biome = "2.6.5"
 hadolint = "2.15.1"
-markdownlint-cli2 = "0.23.3"
+markdownlint-cli2 = "0.24.0"
 prettier = "3.9.10"
-ruff = "0.17.1"
-ty = "0.0.89"
-uv = "0.13.1"
+ruff = "0.17.3"
+ty = "0.0.97"
+uv = "0.13.7"
 
 [vars]
 docker_build_args = ""

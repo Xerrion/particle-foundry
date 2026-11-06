@@ -1,6 +1,6 @@
 import { resolve } from "node:path";
 
-const expectedVersion = "wasm-bindgen 0.2.129";
+const expectedVersion = "wasm-bindgen 0.2.130";
 const engine = resolve(import.meta.dir, "../../engine");
 
 function installedVersion(): string | undefined {
@@ -15,7 +15,7 @@ function installedVersion(): string | undefined {
 
 if (installedVersion() !== expectedVersion) {
   const install = Bun.spawnSync(
-    ["cargo", "install", "wasm-bindgen-cli", "--version", "0.2.129", "--locked"],
+    ["cargo", "install", "wasm-bindgen-cli", "--version", "0.2.130", "--locked"],
     {
       cwd: engine,
       stdout: "inherit",

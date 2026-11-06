@@ -1,14 +1,14 @@
-FROM oven/bun:1.4.3@sha256:ec06c3b6cea04192ae6770c434f668ca41d343ad19fa6472216c7b48be39c598 AS bun
-FROM node:26.12.0-bookworm@sha256:a856ae5e25d498bbe5ec85fde88f00f5ed99908fda803ba39d7735ab8574f58c AS node
-FROM jdxcode/mise:2026.10.14@sha256:7cb6019fd7e60dfc3622b1d667d3e57628549fbc9e36b4a5768265388342f754 AS mise
-FROM rust:1.99.1-bookworm@sha256:e12566d5abc17a0da741628782cdb504b68b8961f5bfcf677936bf3e8b32de29 AS rust
+FROM oven/bun:1.4.4@sha256:1d22548f177f4ff38e0c15baa3c2c46c6c2060ba2d1bc573bb4720b407548f1d AS bun
+FROM node:26.13.0-bookworm@sha256:a546d3f8acd2af4382668a7e6acd3bc4418e6a27478373e3246f8162f5181509 AS node
+FROM jdxcode/mise:2026.11.2@sha256:39cd8aad519a3dbc860eceb64dfd8cb5efe4cdbb8ad741a6867b544b2787b79c AS mise
+FROM rust:1.99.1-bookworm@sha256:e6f2cff35d0f309acf8433b4f05878ed77092602c5065cc81801177da0bb3a9c AS rust
 
 RUN rustup component add rustfmt clippy \
     && rustup target add wasm32-unknown-unknown \
-    && cargo install wasm-bindgen-cli --version 0.2.129 --locked \
+    && cargo install wasm-bindgen-cli --version 0.2.130 --locked \
     && rm -rf /usr/local/cargo/registry /usr/local/cargo/git
 
-FROM python:3.15.0-bookworm@sha256:589def1896e0bb0f4d73278a020391b4f91c16cccc3736631f6ab53a3d6c5acc AS build
+FROM python:3.15.2-bookworm@sha256:6f060cab421d9509c6c6a6a7762c651baf03c3f1d0145befe16b688762b7fe81 AS build
 
 ENV CARGO_HOME=/usr/local/cargo \
     RUSTUP_HOME=/usr/local/rustup \
@@ -34,9 +34,9 @@ COPY --from=mise /usr/local/bin/mise /usr/local/bin/mise
 COPY --from=rust /usr/local/cargo /usr/local/cargo
 COPY --from=rust /usr/local/rustup /usr/local/rustup
 
-RUN mise link bun@1.4.3 /opt/bun \
-    && mise link node@26.12.0 /opt/node \
-    && mise link python@3.15.0 /usr/local
+RUN mise link bun@1.4.4 /opt/bun \
+    && mise link node@26.13.0 /opt/node \
+    && mise link python@3.15.2 /usr/local
 
 WORKDIR /app
 COPY . .
@@ -51,7 +51,7 @@ RUN mise trust /app/mise.toml \
 FROM scratch AS reporting-artifacts
 COPY --from=build /app/web/reporting-artifacts/ /
 
-FROM nginx:1.31.7-alpine@sha256:892bb2152464f0c5d8972593a5f5afaf8054552580b699d95f8ff4af08c2d33d AS runtime
+FROM nginx:1.31.8-alpine@sha256:b2f80f8f88146b0772fdcc7d92cea621aa8c2889fa8d07ed61d4884fcea53e09 AS runtime
 
 RUN rm -rf /usr/share/nginx/html/* \
     && sed -i -e '/^user[[:space:]]/d' \
