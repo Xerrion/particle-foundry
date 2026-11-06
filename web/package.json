@@ -1,27 +1,27 @@
 {
   "type": "module",
   "dependencies": {
-    "@sentry/browser": "11.8.0",
-    "svelte": "5.57.2"
+    "@sentry/browser": "11.11.0",
+    "svelte": "5.57.3"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.5.15",
+    "@biomejs/biome": "2.6.5",
     "@fontsource-variable/inter": "5.3.0",
-    "@lucide/svelte": "1.61.0",
+    "@lucide/svelte": "1.70.0",
     "@sveltejs/vite-plugin-svelte": "7.3.1",
-    "@tailwindcss/vite": "4.3.3",
-    "@types/bun": "1.4.3",
+    "@tailwindcss/vite": "4.3.4",
+    "@types/bun": "1.4.4",
     "@typescript/native": "npm:typescript@7.0.2",
-    "cn": "0.5.0",
-    "happy-dom": "21.0.3",
-    "sentry": "0.47.0",
-    "shadcn-svelte": "1.7.1",
+    "cn": "0.5.2",
+    "happy-dom": "21.0.4",
+    "sentry": "0.48.0",
+    "shadcn-svelte": "1.8.0",
     "source-map-js": "1.2.2",
-    "svelte-check": "4.7.7",
-    "tailwind-variants": "3.3.1",
-    "tailwindcss": "4.3.3",
+    "svelte-check": "4.7.8",
+    "tailwind-variants": "4.0.1",
+    "tailwindcss": "4.3.4",
     "tw-animate-css": "1.4.0",
     "typescript": "6.0.3",
-    "vite": "8.3.4"
+    "vite": "8.3.6"
   }
 }
