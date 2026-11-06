@@ -29,6 +29,8 @@ if (
     "Install the pinned bindings tool: cargo install wasm-bindgen-cli --version 0.2.129 --locked",
   );
 }
+// Cargo must not race to create nested target directories during parallel builds.
+await mkdir(target, { recursive: true });
 const build = Bun.spawn(
   [
     "cargo",
