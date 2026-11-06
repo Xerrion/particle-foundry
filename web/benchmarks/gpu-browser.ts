@@ -225,7 +225,7 @@ async function benchmark(canvas: HTMLCanvasElement) {
       },
       quality: {
         pressureIterations: 512,
-        pressureBatchIterations: 8,
+        pressureBatchIterations: 16,
         pressureMethod: "component-aware Galerkin V-cycle",
         pressureAccumulation: "large and small f32 terms with explicit fma",
         pressureSmoothingSweeps: 2,
